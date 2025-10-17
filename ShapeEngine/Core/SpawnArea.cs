@@ -1,13 +1,9 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.RectDef;
 
-//TODO: Is it possible to have bounds be empty by default and instead:
-// - set (valid) bounds and the spawn area will enforce those bounds (How to enforce them? Notify objects that they are out of bounds? Remove them? Call a function to request valid position with bounds parameter?)
-// - leave them empty and there will be no bounds enforcement?
 namespace ShapeEngine.Core
 {
     /// <summary>
@@ -21,6 +17,7 @@ namespace ShapeEngine.Core
     /// </remarks>
     public class SpawnArea : IDrawable, IBounds
     {
+        #region Public Members
         /// <summary>
         /// Occurs when a <see cref="GameObject"/> is added to the area.
         /// <list type="bullet">
@@ -44,24 +41,44 @@ namespace ShapeEngine.Core
         /// Gets the total number of game objects in the area.
         /// </summary>
         public int Count { get; private set; }
-        /// <summary>
-        /// Gets or sets the bounds of the spawn area.
-        /// </summary>
-        public Rect Bounds { get; protected set; }
+        
         /// <summary>
         /// Gets or sets the parallax position for the area.
         /// </summary>
         public Vector2 ParallaxePosition { get; set; } = new(0f);
+        #endregion
         
+        #region Private Members
         private readonly SortedList<uint, List<GameObject>> allObjects = new();
         private readonly List<GameObject> drawToGameTextureObjects = [];
         private readonly List<GameObject> drawToGameUiTextureObjects = [];
 
+        private Rect bounds;
+        private bool hasValidBounds;
+        
         private Rect clearArea;
         private bool clearAreaActive;
         private BitFlag clearAreaMask;
 
         private List<GameObject> removalList = new(1024);
+        
+        #endregion
+        
+        #region Constructors
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpawnArea"/> class with no bounds.
+        /// </summary>
+        public SpawnArea()
+        {
+            bounds = new(0f, 0f, 0f, 0f);
+            
+            if(bounds.Width <= 0f || bounds.Height <= 0f)
+            {
+                hasValidBounds = false;
+            }
+            
+            hasValidBounds = true;
+        }
         /// <summary>
         /// Initializes a new instance of the <see cref="SpawnArea"/> class with the specified position and size.
         /// </summary>
@@ -71,7 +88,14 @@ namespace ShapeEngine.Core
         /// <param name="h">The height of the spawn area.</param>
         public SpawnArea(float x, float y, float w, float h)
         {
-            Bounds = new(x, y, w, h);
+            bounds = new(x, y, w, h);
+            
+            if(bounds.Width <= 0f || bounds.Height <= 0f)
+            {
+                hasValidBounds = false;
+            }
+            
+            hasValidBounds = true;
         }
         /// <summary>
         /// Initializes a new instance of the <see cref="SpawnArea"/> class with the specified bounds.
@@ -79,16 +103,18 @@ namespace ShapeEngine.Core
         /// <param name="bounds">The bounds of the spawn area.</param>
         public SpawnArea(Rect bounds)
         {
-            Bounds = bounds;
+            this.bounds = bounds;
+            
+            if(bounds.Width <= 0f || bounds.Height <= 0f)
+            {
+                hasValidBounds = false;
+            }
+            
+            hasValidBounds = true;
         }
+        #endregion
         
-        /// <summary>
-        /// Determines whether the specified layer exists in the spawn area.
-        /// </summary>
-        /// <param name="layer">The layer to check.</param>
-        /// <returns><c>true</c> if the layer exists; otherwise, <c>false</c>.</returns>
-        public bool HasLayer(uint layer) { return allObjects.ContainsKey(layer); }
-
+        #region Game Object 
         /// <summary>
         /// Retrieves a list of game objects in the specified layer that match the given criteria.
         /// </summary>
@@ -159,7 +185,6 @@ namespace ShapeEngine.Core
                 }
             }
         }
-
         /// <summary>
         /// Retrieves all game objects in the spawn area.
         /// </summary>
@@ -187,7 +212,6 @@ namespace ShapeEngine.Core
                 result.AddRange(layerGroup);
             }
         }
-
         /// <summary>
         /// Retrieves a list of all game objects in the spawn area that match the given criteria.
         /// </summary>
@@ -284,8 +308,6 @@ namespace ShapeEngine.Core
                 RemoveGameObject(ao);
             }
         }
-        
-        
         /// <summary>
         /// Removes game objects from the specified layer that match the given criteria.
         /// </summary>
@@ -352,7 +374,16 @@ namespace ShapeEngine.Core
                 RemoveGameObject(o);
             }
         }
-
+        #endregion
+        
+        #region Public Methods
+        /// <summary>
+        /// Determines whether the specified layer exists in the spawn area.
+        /// </summary>
+        /// <param name="layer">The layer to check.</param>
+        /// <returns><c>true</c> if the layer exists; otherwise, <c>false</c>.</returns>
+        public bool HasLayer(uint layer) { return allObjects.ContainsKey(layer); }
+        
         /// <summary>
         /// Clears a specified area of the spawn area, removing all game objects within it that match the layer mask.
         /// </summary>
@@ -364,6 +395,21 @@ namespace ShapeEngine.Core
             clearAreaMask = areaLayerMask;
             clearAreaActive = true;
         }
+        #endregion
+
+        #region Private Methods
+
+        private void AddLayer(uint layer, int capacityEstimate = 128)
+        {
+            if (!allObjects.ContainsKey(layer))
+            {
+                allObjects.Add(layer, new(capacityEstimate));
+            }
+        }
+
+        #endregion
+        
+        #region Virtual Methods
         
         /// <summary>
         /// Called when a game object is added to the spawn area.
@@ -427,13 +473,38 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Draws debug information for the spawn area.
         /// </summary>
-        /// <param name="bounds">The color for the bounds.</param>
-        /// <param name="border">The color for the border.</param>
-        /// <param name="fill">The color for the fill.</param>
-        public virtual void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)
+        /// <param name="boundsColor">The color for the bounds.</param>
+        /// <param name="borderColor">The color for the border.</param>
+        /// <param name="fillColor">The color for the fill.</param>
+        public virtual void DrawDebug(ColorRgba boundsColor, ColorRgba borderColor, ColorRgba fillColor)
         {
-            this.Bounds.DrawLines(15f, bounds);
+            this.bounds.DrawLines(15f, boundsColor);
         }
+        
+        /// <summary>
+        /// Draws the game objects that are marked for drawing to the game area.
+        /// </summary>
+        /// <param name="game">The screen information for the game area.</param>
+        public virtual void DrawGame(ScreenInfo game)
+        {
+            foreach (var obj in drawToGameTextureObjects)
+            {
+                obj.DrawGame(game);
+            }
+        }
+        /// <summary>
+        /// Draws the game objects that are marked for drawing to the game UI area.
+        /// </summary>
+        /// <param name="gameUi">The screen information for the game UI area.</param>
+        public virtual void DrawGameUI(ScreenInfo gameUi)
+        {
+            foreach (var obj in drawToGameUiTextureObjects)
+            {
+                obj.DrawGameUI(gameUi);
+            }
+        }
+
+        #endregion
         
         #region Open Framerate
         /// <summary>
@@ -448,9 +519,9 @@ namespace ShapeEngine.Core
         {
             if (fixedFramerateMode)
             {
-                if (clearAreaActive)
+                if (clearAreaActive && HasValidBounds())
                 {
-                    if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
+                    if (!bounds.OverlapShape(clearArea)) clearAreaActive = false;
                 }
             
                 foreach (var layer in allObjects)
@@ -482,9 +553,9 @@ namespace ShapeEngine.Core
                 drawToGameTextureObjects.Clear();
                 drawToGameUiTextureObjects.Clear();
 
-                if (clearAreaActive)
+                if (clearAreaActive && HasValidBounds())
                 {
-                    if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
+                    if (!bounds.OverlapShape(clearArea)) clearAreaActive = false;
                 }
                 
                 foreach (var layer in allObjects)
@@ -512,10 +583,10 @@ namespace ShapeEngine.Core
                         if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
                         
                         obj.Update(time, game, gameUi, ui);
-                        
-                        if (obj.IsDead || obj.HasLeftBounds(Bounds))
+
+                        if (obj.IsDead || HasValidBounds() && obj.HasLeftBounds(bounds))
                         {
-                            RemoveGameObject(obj); //Note: Currenty out of bounds objects are removed.
+                            RemoveGameObject(obj);
                         }
                     }
                 }
@@ -551,7 +622,7 @@ namespace ShapeEngine.Core
                     
                     obj.FixedUpdate(fixedTime, game, gameUi, ui);
                     
-                    if (obj.IsDead || obj.HasLeftBounds(Bounds))
+                    if (obj.IsDead || HasValidBounds() && obj.HasLeftBounds(bounds))
                     {
                         RemoveGameObject(obj);
                     }
@@ -589,50 +660,50 @@ namespace ShapeEngine.Core
         
         #endregion
         
+        #region Bounds
         /// <summary>
-        /// Draws the game objects that are marked for drawing to the game area.
+        /// Gets the bounds of the spawn area. Use <see cref="HasValidBounds"/> to check if the bounds are valid.
         /// </summary>
-        /// <param name="game">The screen information for the game area.</param>
-        public virtual void DrawGame(ScreenInfo game)
-        {
-            foreach (var obj in drawToGameTextureObjects)
-            {
-                obj.DrawGame(game);
-            }
-        }
-        /// <summary>
-        /// Draws the game objects that are marked for drawing to the game UI area.
-        /// </summary>
-        /// <param name="gameUi">The screen information for the game UI area.</param>
-        public virtual void DrawGameUI(ScreenInfo gameUi)
-        {
-            foreach (var obj in drawToGameUiTextureObjects)
-            {
-                obj.DrawGameUI(gameUi);
-            }
-        }
-
-        private void AddLayer(uint layer, int capacityEstimate = 128)
-        {
-            if (!allObjects.ContainsKey(layer))
-            {
-                allObjects.Add(layer, new(capacityEstimate));
-            }
-        }
-
+        /// <remarks>
+        /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
+        /// Objects that have left the bounds are automatically removed.
+        /// If bounds are invalid, this enforcement is disabled.
+        /// </remarks>
         public Rect GetBounds()
         {
-            return Bounds;
+            return bounds;
         }
-
+        /// <summary>
+        /// Sets the bounds of the spawn area. A width or height less than or equal to zero will invalidate the bounds.
+        /// </summary>
+        /// <param name="newBounds">The new bounds to set for the spawn area.</param>
+        /// <remarks>
+        /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
+        /// Objects that have left the bounds are automatically removed.
+        /// If bounds are invalid, this enforcement is disabled.
+        /// </remarks>
         public virtual void SetBounds(Rect newBounds)
         {
-            Bounds = newBounds;
+            bounds = newBounds;
+            
+            if(bounds.Width <= 0f || bounds.Height <= 0f)
+            {
+                hasValidBounds = false;
+            }
+            
+            hasValidBounds = true;
         }
 
-        public bool HasValidBounds()
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Returns whether the spawn area has valid bounds. Valid bounds have a width and height greater than zero.
+        /// </summary>
+        /// <remarks>
+        /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
+        /// Objects that have left the bounds are automatically removed.
+        /// If bounds are invalid, this enforcement is disabled.
+        /// </remarks>
+        public bool HasValidBounds() => hasValidBounds;
+
+        #endregion
     }
 }
