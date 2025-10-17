@@ -15,26 +15,126 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
-//TODO: Docs
+
+/// <summary>
+/// Implements a dynamic spatial hash broadphase for collision detection.
+/// Efficiently manages colliders in spatial buckets for fast broadphase queries.
+/// Only creates and stores buckets that contain colliders, optimizing memory usage.
+/// Old buckets that become empty are recycled for future use.
+/// Does not maintain persistent bounds; bounds are recalculated each frame based on added colliders.
+/// </summary>
 public class BroadphaseDynamicSpatialHash : IBroadphase
 {
+    #region Members
+    /// <summary>
+    /// Stores the current bounds of all colliders added to the spatial hash for this frame.
+    /// Calculated dynamically from the colliders and used for broadphase queries and debug drawing.
+    /// </summary>
     private Rect currentBounds = new();//calculated from added colliders
     
+    /// <summary>
+    /// Register for tracking colliders and their associated <see cref="BroadphaseBucket"/>s during the current frame.
+    /// Used to efficiently manage which buckets each collider is assigned to.
+    /// </summary>
     private readonly BroadphaseColliderRegister<BroadphaseBucket> register = new();
+    
+    /// <summary>
+    /// Register for static colliders, mapping each collider to its associated spatial hash coordinates.
+    /// Used to efficiently track and update static collider positions within the spatial hash.
+    /// </summary>
     private readonly BroadphaseStaticColliderRegister<Coordinates> staticRegister = new();
     
+    /// <summary>
+    /// Maps spatial hash <see cref="Coordinates"/> to their corresponding <see cref="BroadphaseBucket"/>.
+    /// Only buckets containing colliders are stored, optimizing memory usage.
+    /// </summary>
     private readonly Dictionary<Coordinates, BroadphaseBucket> buckets = new();
+    
+    /// <summary>
+    /// Stores buckets that are currently available for reuse.
+    /// Helps minimize allocations by recycling empty buckets instead of creating new ones.
+    /// </summary>
     private readonly HashSet<BroadphaseBucket> availableBuckets = []; //could be a queue or stack as well
+    
+    /// <summary>
+    /// Tracks buckets that were used but are now empty, mapping each <see cref="BroadphaseBucket"/> to its <see cref="Coordinates"/>.
+    /// Used for efficient recycling and removal of unused buckets.
+    /// </summary>
     private readonly Dictionary<BroadphaseBucket, Coordinates> emptyUsedBuckets = [];
+    
+    /// <summary>
+    /// The maximum number of buckets allowed in the spatial hash.
+    /// Controls memory usage and bucket creation limits.
+    /// 0 or less means unlimited buckets.
+    /// </summary>
     private readonly int maxBuckets;
+    /// <summary>
+    /// The size of each spatial hash bucket, defined by width and height.
+    /// Determines the granularity of spatial partitioning for collision detection.
+    /// </summary>
+    /// <remarks>
+    /// Smaller buckets lead to less objects per bucket but more buckets overall.
+    /// </remarks>
     private readonly Size bucketSize;
+    /// <summary>
+    /// Tracks the total number of buckets created by this instance.
+    /// Used to enforce the <see cref="maxBuckets"/> limit and manage bucket recycling.
+    /// </summary>
     private int createdBuckets = 0;
+    
+    #endregion
+    
+    #region Constructors
+    /// <summary>
+    /// Initializes a new instance of <see cref="BroadphaseDynamicSpatialHash"/> with the specified bucket width, height, and maximum number of buckets.
+    /// </summary>
+    /// <param name="bucketWidth">The width of each spatial hash bucket.</param>
+    /// <param name="bucketHeight">The height of each spatial hash bucket.</param>
+    /// <param name="maxBuckets">The maximum number of buckets allowed. 0 or less means unlimited.</param>
     public BroadphaseDynamicSpatialHash(float bucketWidth, float bucketHeight, int maxBuckets)
     {
         this.maxBuckets = maxBuckets;
         bucketSize = new Size(bucketWidth, bucketHeight);
     }
+    /// <summary>
+    /// Initializes a new instance of <see cref="BroadphaseDynamicSpatialHash"/> with the specified bucket size and maximum number of buckets.
+    /// </summary>
+    /// <param name="bucketSize">The size of each spatial hash bucket.</param>
+    /// <param name="maxBuckets">The maximum number of buckets allowed. 0 or less means unlimited.</param>
+    public BroadphaseDynamicSpatialHash(Size bucketSize, int maxBuckets)
+    {
+        this.maxBuckets = maxBuckets;
+        this.bucketSize = bucketSize;
+    }
+    /// <summary>
+    /// Initializes a new instance of <see cref="BroadphaseDynamicSpatialHash"/> with a square bucket size and a maximum number of buckets.
+    /// </summary>
+    /// <param name="bucketSize">The width and height of each spatial hash bucket.</param>
+    /// <param name="maxBuckets">The maximum number of buckets allowed. 0 or less means unlimited.</param>
+    public BroadphaseDynamicSpatialHash(float bucketSize, int maxBuckets)
+    {
+        this.maxBuckets = maxBuckets;
+        this.bucketSize = new Size(bucketSize, bucketSize);
+    }
+    /// <summary>
+    /// Initializes a new instance of <see cref="BroadphaseDynamicSpatialHash"/> with the specified bucket size.
+    /// Sets <c>maxBuckets</c> to unlimited (0).
+    /// </summary>
+    /// <param name="bucketSize">The size of each spatial hash bucket.</param>
+    public BroadphaseDynamicSpatialHash(Size bucketSize)
+    {
+        maxBuckets = 0;
+        this.bucketSize = bucketSize;
+    }
 
+    #endregion
+    
+    #region Public methods
+    /// <summary>
+    /// Populates the spatial hash with the provided collection of <see cref="CollisionObject"/>s.
+    /// Clears previous state, recalculates bounds, and assigns colliders to buckets for broadphase collision detection.
+    /// </summary>
+    /// <param name="collisionBodies">Enumerable of collision objects to add to the spatial hash for this frame.</param>
     public void Fill(IEnumerable<CollisionObject> collisionBodies)
     {
         Clear();
@@ -52,6 +152,78 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         register.Clean();
         staticRegister.Clean();
     }
+    /// <summary>
+    /// Releases all resources used by the spatial hash, clearing all buckets, registers, and bounds.
+    /// Resets the internal state for reuse or disposal.
+    /// </summary>
+    public void Close()
+    {
+        register.Close();
+        staticRegister.Close();
+        buckets.Clear();
+        availableBuckets.Clear();
+        emptyUsedBuckets.Clear();
+        createdBuckets = 0;
+        currentBounds = new();
+    }
+    /// <summary>
+    /// Gets the current bounds of all colliders in the spatial hash for this frame.
+    /// </summary>
+    public Rect GetBounds() => currentBounds;
+    /// <summary>
+    /// This method is currently not implemented and does not modify internal state.
+    /// Bounds are calculated dynamically each frame.
+    /// </summary>
+    /// <param name="targetBounds">The bounds to set for the spatial hash.</param>
+    public void SetBounds(Rect targetBounds) { }
+    /// <summary>
+    /// Determines whether the current bounds of the spatial hash are valid.
+    /// Returns true if both width and height are greater than zero.
+    /// </summary>
+    public bool HasValidBounds()
+    {
+        if (currentBounds.Width <= 0) return false;
+        return currentBounds.Height > 0;
+    }
+    /// <summary>
+    /// Draws debug visualization for the spatial hash.
+    /// Renders the current bounds and all buckets, using specified border and fill colors.
+    /// Empty buckets are drawn with reduced alpha.
+    /// </summary>
+    public void DebugDraw(ColorRgba border, ColorRgba fill)
+    {
+        var borderLineThickness = currentBounds.Size.Max() * 0.0025f;
+        if (borderLineThickness <= 1f) borderLineThickness = 1f;
+        currentBounds.DrawLines(borderLineThickness, border);
+        
+        var lineThickness = bucketSize.Max() * 0.0025f;
+        if(lineThickness <= 0.5f) lineThickness = 0.5f;
+        
+        foreach (var kvp in buckets)
+        {
+            var coords = kvp.Key;
+            var bucket = kvp.Value;
+            var rect = GetBucketBounds(coords);
+            if (bucket.Count == 0)
+            {
+                rect.Draw(fill.ChangeAlpha(100));
+                rect.DrawLines(lineThickness, border.ChangeAlpha(100));
+            }
+            else
+            {
+                rect.Draw(fill);
+                rect.DrawLines(lineThickness, border);
+            }
+            
+        }
+    }
+    #endregion
+    
+    #region Private methods
+    /// <summary>
+    /// Clears and resets the spatial hash for a new frame.
+    /// Recycles empty buckets, removes unused buckets, and prepares all buckets for reuse.
+    /// </summary>
     private void Clear()
     {
         foreach (var kvp in emptyUsedBuckets)
@@ -78,17 +250,12 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             }
         }
     }
-    public void Close()
-    {
-        register.Close();
-        staticRegister.Close();
-        buckets.Clear();
-        availableBuckets.Clear();
-        emptyUsedBuckets.Clear();
-        createdBuckets = 0;
-        currentBounds = new();
-    }
-    
+    /// <summary>
+    /// Adds a <see cref="Collider"/> to the spatial hash, assigning it to the appropriate buckets based on its position and motion type.
+    /// Handles both static and dynamic colliders, updating internal registers and bounds accordingly.
+    /// </summary>
+    /// <param name="collider">The collider to add.</param>
+    /// <param name="motionType">The motion type of the collider (static or dynamic).</param>
     private void AddCollider(Collider collider, MotionType motionType)
     {
         if (!collider.Enabled) return;
@@ -175,6 +342,14 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         }
 
     }
+    /// <summary>
+    /// Adds the specified <see cref="Collider"/> to the bucket at the given <see cref="Coordinates"/>.
+    /// Updates the <paramref name="registerSet"/> with the bucket reference.
+    /// Handles bucket creation, recycling, and memory management.
+    /// </summary>
+    /// <param name="collider">The collider to add to the bucket.</param>
+    /// <param name="coords">The spatial hash coordinates of the target bucket.</param>
+    /// <param name="registerSet">Reference to the set tracking buckets for this collider.</param>
     private void AddColliderToBucket(Collider collider, Coordinates coords, ref HashSet<BroadphaseBucket> registerSet)
     {
         if (buckets.TryGetValue(coords, out var bucket))//bucket already exists
@@ -239,50 +414,39 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             registerSet.Add(bucket);
         }
     }
-    
+    /// <summary>
+    /// Checks if the specified <see cref="Collider"/> overlaps with the bounds of the bucket at the given <see cref="Coordinates"/>.
+    /// Used to optimize bucket assignment for colliders with <c>BroadphaseType.FullShape</c>.
+    /// </summary>
+    /// <param name="coords">The spatial hash coordinates of the bucket.</param>
+    /// <param name="collider">The collider to test for overlap.</param>
+    /// <returns><c>true</c> if the collider overlaps the bucket bounds; otherwise, <c>false</c>.</returns>
     private bool OverlapsColliderShapeWithBucketRect(Coordinates coords, Collider collider)
     {
         var bucketRect = GetBucketBounds(coords);
         return collider.Overlap(bucketRect);
     }
+    /// <summary>
+    /// Calculates and returns the bounds of the bucket at the specified spatial hash <paramref name="coords"/>.
+    /// The bounds are determined by multiplying the coordinates by the bucket size.
+    /// </summary>
+    /// <param name="coords">The spatial hash coordinates of the bucket.</param>
+    /// <returns>A <see cref="Rect"/> representing the bounds of the bucket.</returns>
     private Rect GetBucketBounds(Coordinates coords)
     {
         return new Rect(coords.X * bucketSize.Width, coords.Y * bucketSize.Height, bucketSize.Width, bucketSize.Height);
     }
-    public Rect GetBounds() => currentBounds;
-    public void SetBounds(Rect targetBounds) { }
-    /// <inheritdoc cref="IBounds.HasValidBounds"/>
-    public bool HasValidBounds() => false;
-
-    public void DebugDraw(ColorRgba border, ColorRgba fill)
-    {
-        var borderLineThickness = currentBounds.Size.Max() * 0.0025f;
-        if (borderLineThickness <= 1f) borderLineThickness = 1f;
-        currentBounds.DrawLines(borderLineThickness, border);
-        
-        var lineThickness = bucketSize.Max() * 0.0025f;
-        if(lineThickness <= 0.5f) lineThickness = 0.5f;
-        
-        foreach (var kvp in buckets)
-        {
-            var coords = kvp.Key;
-            var bucket = kvp.Value;
-            var rect = GetBucketBounds(coords);
-            if (bucket.Count == 0)
-            {
-                rect.Draw(fill.ChangeAlpha(100));
-                rect.DrawLines(lineThickness, border.ChangeAlpha(100));
-            }
-            else
-            {
-                rect.Draw(fill);
-                rect.DrawLines(lineThickness, border);
-            }
-            
-        }
-    }
+    #endregion
     
-    
+    #region GetCandidateBuckets methods
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="CollisionObject"/>.
+    /// Iterates through each collider in the object and accumulates their candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="collisionObject">The collision object whose colliders are to be checked.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for all colliders in the object.</returns>
     public int GetCandidateBuckets(CollisionObject collisionObject, ref List<BroadphaseBucket> candidateBuckets)
     {
         var count = 0;
@@ -294,6 +458,14 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return count;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain the specified <see cref="Collider"/>.
+    /// Uses the internal register if available, otherwise falls back to shape-based queries.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="collider">The collider to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the collider.</returns>
     public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
     {
         if (!collider.Enabled) return 0;
@@ -329,6 +501,14 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return 0;
     }
+    /// <summary>
+    /// Retrieves the candidate bucket containing the specified point.
+    /// Calculates the spatial hash coordinates for the point and adds the corresponding bucket to the candidate list if it exists and is not empty.
+    /// Returns the number of buckets added (0 or 1).
+    /// </summary>
+    /// <param name="point">The point to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The number of candidate buckets found (0 or 1).</returns>
     public int GetCandidateBuckets(Vector2 point, ref List<BroadphaseBucket> candidateBuckets)
     {
         int added = 0;
@@ -345,10 +525,26 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Triangle"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="triangle">The triangle shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the triangle.</returns>
     public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(triangle, ref candidateBuckets, true);
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Rect"/>.
+    /// Iterates over all buckets overlapping the rectangle and adds non-empty buckets to the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="rect">The rectangle shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the rectangle.</returns>
     public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
     {
         var minX = (int)Math.Floor(rect.Left / bucketSize.Width);
@@ -387,36 +583,101 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Quad"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="quad">The quad shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the quad.</returns>
     public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(quad, ref candidateBuckets, true);
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Polygon"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="poly">The polygon shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the polygon.</returns>
     public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(poly, ref candidateBuckets, true);
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Polyline"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="polyLine">The polyline shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the polyline.</returns>
     public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(polyLine, ref candidateBuckets, true);
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Segment"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="segment">The segment shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the segment.</returns>
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(segment, ref candidateBuckets, true);
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Line"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="line">The line shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the line.</returns>
     public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(line, ref candidateBuckets, true);
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Ray"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="ray">The ray shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the ray.</returns>
     public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(ray, ref candidateBuckets, true);
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Circle"/>.
+    /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="circle">The circle shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <returns>The total number of candidate buckets found for the circle.</returns>
     public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
     {
         return GetCandidateBucketsExtended(circle, ref candidateBuckets, true);
     }
     
-    
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Segment"/>.
+    /// Iterates over all buckets overlapping the segment's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the segment are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="segment">The segment shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the segment.</returns>
     private int GetCandidateBucketsExtended(Segment segment, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = segment.GetBoundingBox();
@@ -463,6 +724,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Line"/>.
+    /// Iterates over all buckets overlapping the line's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the line are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="line">The line shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the line.</returns>
     private int GetCandidateBucketsExtended(Line line, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = line.GetBoundingBox();
@@ -509,6 +780,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Ray"/>.
+    /// Iterates over all buckets overlapping the ray's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the ray are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="ray">The ray shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the ray.</returns>
     private int GetCandidateBucketsExtended(Ray ray, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = ray.GetBoundingBox();
@@ -555,6 +836,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Circle"/>.
+    /// Iterates over all buckets overlapping the circle's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the circle are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="circle">The circle shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the circle.</returns>
     private int GetCandidateBucketsExtended(Circle circle, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = circle.GetBoundingBox();
@@ -601,6 +892,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Triangle"/>.
+    /// Iterates over all buckets overlapping the triangle's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the triangle are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="triangle">The triangle shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the triangle.</returns>
     private int GetCandidateBucketsExtended(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = triangle.GetBoundingBox();
@@ -647,6 +948,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Quad"/>.
+    /// Iterates over all buckets overlapping the quad's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the quad are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="quad">The quad shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the quad.</returns>
     private int GetCandidateBucketsExtended(Quad quad, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = quad.GetBoundingBox();
@@ -693,6 +1004,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Polygon"/>.
+    /// Iterates over all buckets overlapping the polygon's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the polygon are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="poly">The polygon shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the polygon.</returns>
     private int GetCandidateBucketsExtended(Polygon poly, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = poly.GetBoundingBox();
@@ -739,6 +1060,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    /// <summary>
+    /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Polyline"/>.
+    /// Iterates over all buckets overlapping the polyline's bounding box and adds non-empty buckets to the provided list.
+    /// If <paramref name="testFullShape"/> is true, only buckets whose bounds overlap the polyline are included.
+    /// Returns the total number of candidate buckets found.
+    /// </summary>
+    /// <param name="polyLine">The polyline shape to check for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to the list where candidate buckets will be added.</param>
+    /// <param name="testFullShape">Whether to test for full shape overlap with bucket bounds.</param>
+    /// <returns>The total number of candidate buckets found for the polyline.</returns>
     private int GetCandidateBucketsExtended(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = polyLine.GetBoundingBox();
@@ -786,4 +1117,5 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
     
+    #endregion
 }
