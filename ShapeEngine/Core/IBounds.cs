@@ -21,4 +21,9 @@ public interface IBounds
     /// </summary>
     /// <param name="newBounds">The new rectangular bounds to set.</param>
     public void SetBounds(Rect newBounds);
+    
+    /// <summary>
+    /// Determines whether the object currently has valid rectangular bounds.
+    /// </summary>
+    public bool HasValidBounds();
 }

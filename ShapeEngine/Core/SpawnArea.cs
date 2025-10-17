@@ -629,5 +629,10 @@ namespace ShapeEngine.Core
         {
             Bounds = newBounds;
         }
+
+        public bool HasValidBounds()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

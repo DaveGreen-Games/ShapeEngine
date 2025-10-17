@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.LineDef;
@@ -146,7 +147,10 @@ public class BroadphaseSpatialHash : IBroadphase
         newBounds = targetBounds;
         boundsResizeQueued = true;
     }
-    
+
+    /// <inheritdoc cref="IBounds.HasValidBounds"/>
+    public bool HasValidBounds() => true;
+
     /// <summary>
     /// Changes the number of rows and columns in the grid. This operation clears all buckets.
     /// </summary>

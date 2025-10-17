@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
@@ -15,7 +16,6 @@ using ShapeEngine.Geometry.TriangleDef;
 namespace ShapeEngine.Geometry.CollisionSystem;
 
 //TODO: Docs
-//BUG: adding objects outside of region for gameobject handler leaves buckets in the structure...
 public class BroadphaseDynamicSpatialHash : IBroadphase
 {
     private Rect currentBounds = new();//calculated from added colliders
@@ -251,7 +251,9 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     }
     public Rect GetBounds() => currentBounds;
     public void SetBounds(Rect targetBounds) { }
-    
+    /// <inheritdoc cref="IBounds.HasValidBounds"/>
+    public bool HasValidBounds() => false;
+
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
         var borderLineThickness = currentBounds.Size.Max() * 0.0025f;
