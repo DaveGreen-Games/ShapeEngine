@@ -51,13 +51,33 @@ public class BroadphaseSpatialHash : IBroadphase
     #endregion
 
     #region Private Members
+    /// <summary>
+    /// Array of buckets representing the spatial hash grid cells.
+    /// Each bucket stores colliders that overlap its region.
+    /// </summary>
     private BroadphaseBucket[] buckets;
-    
+    /// <summary>
+    /// Register for tracking colliders and their associated bucket IDs in the spatial hash.
+    /// Used for efficient lookup and management of dynamic colliders.
+    /// </summary>
     private readonly BroadphaseColliderRegister<int> register = new();
+    /// <summary>
+    /// Register for caching static colliders and their associated bucket IDs in the spatial hash.
+    /// Used to optimize lookups for colliders that do not move.
+    /// </summary>
     private readonly BroadphaseStaticColliderRegister<int> staticRegister = new();
-    
+    /// <summary>
+    /// Indicates whether a bounds resize has been queued to be applied on the next clear.
+    /// </summary>
     private bool boundsResizeQueued;
+    /// <summary>
+    /// Stores the new bounds to be applied to the spatial hash grid on the next clear operation.
+    /// </summary>
     private Rect newBounds;
+    /// <summary>
+    /// Temporary holder for cell IDs (bucket indices) during spatial queries.
+    /// Used to avoid repeated allocations when collecting candidate buckets or colliders.
+    /// </summary>
     private HashSet<int> idHolder = new(128);
     #endregion
     
@@ -706,8 +726,6 @@ public class BroadphaseSpatialHash : IBroadphase
         if(ids == null) return; //already added this frame
         
         var boundingRect = GetCellIDs(collider, ref ids);
-        //TODO: Remove from static register? How to handle static colliders out of bounds?
-        // or just leave it the way it is?
         if (ids.Count <= 0) return; 
 
         if (staticColliderIds != null)
