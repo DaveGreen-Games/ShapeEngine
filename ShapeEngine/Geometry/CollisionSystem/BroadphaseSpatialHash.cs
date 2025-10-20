@@ -93,15 +93,15 @@ public class BroadphaseSpatialHash : IBroadphase
     /// <param name="cols">The number of columns in the grid.</param>
     public BroadphaseSpatialHash(float x, float y, float w, float h, int rows, int cols)
     {
-        this.Bounds = new(x, y, w, h);
-        this.Rows = rows;
-        this.Cols = cols;
-        this.SetSpacing();
-        this.BucketCount = rows * cols;
-        this.buckets = new BroadphaseBucket[this.BucketCount];
-        for (int i = 0; i < BucketCount; i++)
+        Bounds = new(x, y, w, h);
+        Rows = rows;
+        Cols = cols;
+        SetSpacing();
+        BucketCount = rows * cols;
+        buckets = new BroadphaseBucket[this.BucketCount];
+        for (var i = 0; i < BucketCount; i++)
         {
-            this.buckets[i] = new();
+            buckets[i] = [];
         }
     }
     /// <summary>
@@ -112,15 +112,104 @@ public class BroadphaseSpatialHash : IBroadphase
     /// <param name="cols">The number of columns in the grid.</param>
     public BroadphaseSpatialHash(Rect bounds, int rows, int cols)
     {
-        this.Bounds = bounds;
-        this.Rows = rows;
-        this.Cols = cols;
-        this.SetSpacing();
-        this.BucketCount = rows * cols;
-        this.buckets = new BroadphaseBucket[this.BucketCount];
-        for (int i = 0; i < BucketCount; i++)
+        Bounds = bounds;
+        Cols = cols;
+        Rows = rows;
+        SetSpacing();
+        BucketCount = rows * cols;
+        buckets = new BroadphaseBucket[BucketCount];
+        for (var i = 0; i < BucketCount; i++)
         {
-            this.buckets[i] = new();
+            buckets[i] = [];
+        }
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BroadphaseSpatialHash"/> class using the provided bounding rectangle
+    /// and a desired bucket size.
+    /// The grid's column and row counts are computed by dividing the bounds' dimensions by
+    /// <paramref name="bucketSize"/> and rounding up so the grid fully covers the bounds.
+    /// </summary>
+    /// <param name="bounds">The bounding rectangle for the grid.</param>
+    /// <param name="bucketSize">The desired width and height of each bucket cell.</param>
+    /// <remarks>
+    /// The values of <see cref="SpacingX"/> and <see cref="SpacingY"/> are derived from the resolved
+    /// <see cref="Rows"/> and <see cref="Cols"/> (rather than being set directly from
+    /// <paramref name="bucketSize"/>). This ensures the grid cells evenly partition the provided
+    /// <paramref name="bounds"/> and that the grid fully covers it even when the bounds' dimensions
+    /// are not exact multiples of the requested bucket size.
+    /// </remarks>
+    public BroadphaseSpatialHash(Rect bounds, Size bucketSize)
+    {
+        Bounds = bounds;
+        Cols = (int)Math.Ceiling(bounds.Width / bucketSize.Width);
+        Rows = (int)Math.Ceiling(bounds.Height / bucketSize.Height);
+        SetSpacing();
+        BucketCount = Rows * Cols;
+        buckets = new BroadphaseBucket[BucketCount];
+        for (var i = 0; i < BucketCount; i++)
+        {
+            buckets[i] = [];
+        }
+    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BroadphaseSpatialHash"/> class using the provided bounding rectangle
+    /// and a desired bucket cell width and height.
+    /// </summary>
+    /// <param name="bounds">The bounding rectangle that the grid must cover.</param>
+    /// <param name="bucketWidth">Desired width for each bucket cell. The actual cell width is computed so cells evenly partition <paramref name="bounds"/>.</param>
+    /// <param name="bucketHeight">Desired height for each bucket cell. The actual cell height is computed so cells evenly partition <paramref name="bounds"/>.</param>
+    /// <remarks>
+    /// The values of <see cref="SpacingX"/> and <see cref="SpacingY"/> are derived from the resolved
+    /// <see cref="Rows"/> and <see cref="Cols"/> (rather than being set directly from
+    /// <paramref name="bucketWidth"/>/<paramref name="bucketHeight"/>). This ensures the grid cells evenly partition the provided
+    /// <paramref name="bounds"/> and that the grid fully covers it even when the bounds' dimensions
+    /// are not exact multiples of the requested bucket size.
+    /// </remarks>
+    public BroadphaseSpatialHash(Rect bounds, float bucketWidth, float bucketHeight)
+    {
+        Bounds = bounds;
+        Cols = (int)Math.Ceiling(bounds.Width / bucketWidth);
+        Rows = (int)Math.Ceiling(bounds.Height / bucketHeight);
+        SetSpacing();
+        BucketCount = Rows * Cols;
+        buckets = new BroadphaseBucket[BucketCount];
+        for (var i = 0; i < BucketCount; i++)
+        {
+            buckets[i] = [];
+        }
+    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BroadphaseSpatialHash"/> class using explicit bounds
+    /// defined by (x, y, w, h) and a desired bucket cell width and height.
+    /// </summary>
+    /// <param name="x">The X coordinate of the grid's top-left corner.</param>
+    /// <param name="y">The Y coordinate of the grid's top-left corner.</param>
+    /// <param name="w">The width of the grid bounds.</param>
+    /// <param name="h">The height of the grid bounds.</param>
+    /// <param name="bucketWidth">
+    /// Desired width for each bucket cell. The actual number of columns is computed as
+    /// <c>Ceiling(w / bucketWidth)</c> so the grid fully covers the bounds.
+    /// </param>
+    /// <param name="bucketHeight">
+    /// Desired height for each bucket cell. The actual number of rows is computed as
+    /// <c>Ceiling(h / bucketHeight)</c> so the grid fully covers the bounds.
+    /// </param>
+    /// <remarks>
+    /// The values of <see cref="SpacingX"/> and <see cref="SpacingY"/> are derived from
+    /// the computed <see cref="Rows"/> and <see cref="Cols"/> to evenly partition the provided bounds.
+    /// </remarks>
+    public BroadphaseSpatialHash(float x, float y, float w, float h, float bucketWidth, float bucketHeight)
+    {
+        Bounds = new(x, y, w, h);
+        Cols = (int)Math.Ceiling(w / bucketWidth);
+        Rows = (int)Math.Ceiling(h / bucketHeight);
+        SetSpacing();
+        BucketCount = Rows * Cols;
+        buckets = new BroadphaseBucket[BucketCount];
+        for (var i = 0; i < BucketCount; i++)
+        {
+            buckets[i] = [];
         }
     }
     #endregion
