@@ -4,7 +4,6 @@ using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
-using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
@@ -529,13 +528,11 @@ namespace Examples.Scenes.ExampleScenes
     public class GameObjectHandlerExample : ExampleScene
     {
         private readonly Rect boundaryRect;
-        private Font font;
+        // private Font font;
 
-        private Vector2 startPoint = new();
-        private bool segmentStarted = false;
-        private bool drawDebug = false;
-
-        // private InputDeviceType currentInputActionDeviceType = InputDeviceType.None;
+        private Vector2 startPoint;
+        private bool segmentStarted;
+        private bool drawDebug;
         
         private readonly InputAction iaSpawnRock;
         private readonly InputAction iaSpawnBall;
@@ -554,14 +551,14 @@ namespace Examples.Scenes.ExampleScenes
         
         private readonly InputActionTree inputActionTree;
 
-        private Vector2 clearAreaStartPoint = new();
-        private bool clearAreaActive = false;
+        private Vector2 clearAreaStartPoint;
+        private bool clearAreaActive;
         private readonly BitFlag clearAreaMask;
         public GameObjectHandlerExample()
         {
             Title = "Gameobject Handler Example";
 
-            font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
+            // font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
 
             InputActionSettings defaultSettings = new();
             
@@ -636,10 +633,10 @@ namespace Examples.Scenes.ExampleScenes
                 SpawnArea.OnGameObjectRemoved += OnGameObjectDied;
             }
             
-            // var spatialHash = new BroadphaseSpatialHash(boundaryRect, 50, 50);
-            // InitCollisionHandler(spatialHash);
-            var dynamicSpatialHash = new BroadphaseDynamicSpatialHash(150, 150, 10000);
-            InitCollisionHandler(dynamicSpatialHash);
+            var spatialHash = new BroadphaseSpatialHash(boundaryRect, 50, 50);
+            InitCollisionHandler(spatialHash);
+            // var dynamicSpatialHash = new BroadphaseDynamicSpatialHash(100, 100, 10000);
+            // InitCollisionHandler(dynamicSpatialHash);
             
             SetupBoundary();
 
