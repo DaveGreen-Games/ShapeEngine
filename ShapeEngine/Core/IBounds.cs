@@ -13,11 +13,17 @@ public interface IBounds
     /// <summary>
     /// Gets the rectangular bounds of the object.
     /// </summary>
-    public Rect Bounds { get; }
+    /// <returns>The current rectangular bounds as a <see cref="Rect"/>.</returns>
+    public Rect GetBounds();
 
     /// <summary>
-    /// Resizes the bounds of the object.
+    /// Sets the rectangular bounds of the object.
     /// </summary>
-    /// <param name="newBounds">The new rectangular bounds to apply.</param>
-    public void ResizeBounds(Rect newBounds);
+    /// <param name="newBounds">The new rectangular bounds to set.</param>
+    public void SetBounds(Rect newBounds);
+    
+    /// <summary>
+    /// Determines whether the object currently has valid rectangular bounds.
+    /// </summary>
+    public bool HasValidBounds();
 }

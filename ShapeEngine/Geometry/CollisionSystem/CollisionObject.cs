@@ -3,6 +3,7 @@ using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
@@ -129,6 +130,14 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     public CollisionPointsFilterType CollisionPointsFilterType = CollisionPointsFilterType.Closest;
 
+    /// <summary>
+    /// Gets or sets the motion type of this object for collision detection optimizations.
+    /// <para>
+    /// <see cref="MotionType.Dynamic"/> is the default and should be used for moving objects.
+    /// <see cref="MotionType.Static"/> is optimized for non-moving objects and can improve broadphase collision detection performance.
+    /// </para>
+    /// </summary>
+    public MotionType MotionType = MotionType.Dynamic;
     
    
     /// <summary>

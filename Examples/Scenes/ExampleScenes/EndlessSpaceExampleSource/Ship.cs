@@ -4,6 +4,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Input;

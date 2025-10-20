@@ -116,6 +116,13 @@ public abstract class Collider : Shape
     /// Gets or sets whether this collider should compute intersection details (if false, only overlaps are reported).
     /// </summary>
     public bool ComputeIntersections { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the broadphase collision detection strategy for this collider.
+    /// Determines how the collider is represented in the broadphase collision system.
+    /// </summary>
+    public BroadphaseType BroadphaseType { get; set; } = BroadphaseType.FullShape;
+    
   
     /// <summary>
     /// Initializes a new instance of the <see cref="Collider"/> class with default offset values.

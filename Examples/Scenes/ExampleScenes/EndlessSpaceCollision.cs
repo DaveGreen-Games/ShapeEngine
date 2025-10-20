@@ -10,6 +10,7 @@ using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.StripedDrawingDef;
@@ -119,7 +120,7 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly float cellSize;
 
     private bool gameOverScreenActive = false;
-
+    private readonly BroadphaseSpatialHash spatialHash;
     public EndlessSpaceCollision()
     {
         drawInputDeviceInfo = false;
@@ -130,7 +131,9 @@ public class EndlessSpaceCollision : ExampleScene
 
         DestroyerPosition = universe.Center + Rng.Instance.RandVec2(UniverseSize * 1.25f, UniverseSize * 2f);
 
-        InitCollisionHandler(universe, CollisionRows, CollisionCols);
+        spatialHash = new BroadphaseSpatialHash(universe, CollisionRows, CollisionCols);
+        InitCollisionHandler(spatialHash);
+        
         cellSize = UniverseSize / CollisionRows;
         camera = new();
         follower = new(0, 300, 500);
@@ -613,7 +616,7 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
         
-        CollisionHandler?.ResizeBounds(universe);
+        spatialHash.SetBounds(universe);
         CollisionHandler?.Update(time.Delta);
 
         // var removed = 0;

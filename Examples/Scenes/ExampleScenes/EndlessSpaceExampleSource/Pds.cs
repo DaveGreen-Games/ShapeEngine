@@ -2,6 +2,7 @@ using System.Numerics;
 using Examples.PayloadSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 

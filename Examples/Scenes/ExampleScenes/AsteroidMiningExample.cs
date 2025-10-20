@@ -8,6 +8,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
@@ -554,13 +555,15 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaDragLaser;
         private readonly InputAction iaShootLaser;
         private readonly InputActionTree inputActionTree;
-        
+
+        private readonly BroadphaseSpatialHash spatialHash;
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
             UpdateBoundaryRect(Game.Instance.GameScreenInfo.Area);
             InitSpawnArea(boundaryRect);
-            InitCollisionHandler(boundaryRect, 4, 4);
+            spatialHash = new BroadphaseSpatialHash(boundaryRect, 4, 4);
+            InitCollisionHandler(spatialHash);
             
             InputActionSettings defaultSettings = new();
             
@@ -655,8 +658,8 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
-            SpawnArea?.ResizeBounds(boundaryRect);
-            CollisionHandler?.ResizeBounds(boundaryRect);
+            SpawnArea?.SetBounds(boundaryRect);
+            spatialHash.SetBounds(boundaryRect);
             // spawnArea.Update(time, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)
