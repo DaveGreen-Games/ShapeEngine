@@ -1,5 +1,8 @@
-﻿using ShapeEngine.Color;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
@@ -19,6 +22,13 @@ public partial class CollisionHandler
     /// Gets the number of registered <see cref="CollisionObject"/> instances in the collision system.
     /// </summary>
     public int Count => collisionBodyRegister.AllObjects.Count;
+
+    public bool ParallelProcessing = true;
+    private Stopwatch stopwatch = new();
+    private long totalFillTime = 0;
+    private long totalProcessTime = 0;
+    private long totalResolveTime = 0;
+    private int updates = 0;
     
     private readonly CollisionObjectRegister collisionBodyRegister;
     
@@ -136,196 +146,296 @@ public partial class CollisionHandler
     /// </remarks>
     public void Update(float dt)
     {
+        stopwatch.Restart();
         broadphase.Fill(collisionBodyRegister.AllObjects);
-
-        ProcessCollisions(dt);
+        var fillTime = stopwatch.ElapsedMilliseconds;
+        totalFillTime += fillTime;
         
+        stopwatch.Restart();
+        ProcessCollisions(dt);
+        var processTime = stopwatch.ElapsedMilliseconds;
+        totalProcessTime += processTime;
+        
+        stopwatch.Restart();
         Resolve();
+        var resolveTime = stopwatch.ElapsedMilliseconds;
+        totalResolveTime += resolveTime;
+        
+        updates++;
+
+        if (updates > 60)
+        {
+            double averageFillTime = totalFillTime / (double)updates;
+            double averageProcessTime = totalProcessTime / (double)updates;
+            double averageResolveTime = totalResolveTime / (double)updates;
+            
+            Console.WriteLine($"Collision Handler Average Times over {updates} updates:");
+            Console.WriteLine($" - Broadphase Fill Time: {averageFillTime:F2} ms");
+            Console.WriteLine($" - Collision Processing Time: {averageProcessTime:F2} ms");
+            Console.WriteLine($" - Collision Resolve Time: {averageResolveTime:F2} ms");
+            
+            totalFillTime = 0;
+            totalProcessTime = 0;
+            totalResolveTime = 0;
+            updates = 0;
+        }
+
     }
     
     #endregion
     
     #region Private Functions
     
+    
+    
+    // private void ProcessCollisions(float dt)
+    // {
+    //     if (ParallelProcessing)
+    //     {
+    //         // Thread-local storage for collision candidates
+    //         var threadLocalData = new ThreadLocal<(
+    //             List<BroadphaseBucket> buckets,
+    //             HashSet<Collider> checkRegister
+    //         )>(() => (new List<BroadphaseBucket>(), new HashSet<Collider>()));
+    //
+    //         // Thread-safe collection for collision registers
+    //         var collisionRegisters = new ConcurrentBag<(CollisionObject obj, CollisionRegister register)>();
+    //
+    //         Parallel.ForEach(collisionBodyRegister.AllObjects, collisionBody =>
+    //         {
+    //             if (!collisionBody.Enabled || !collisionBody.HasColliders) return;
+    //
+    //             CollisionRegister? collisionRegister = null;
+    //             var (buckets, checkRegister) = threadLocalData.Value!;
+    //
+    //             ProcessCollisionObject(collisionBody, dt, buckets, checkRegister, ref collisionRegister);
+    //
+    //             if (collisionRegister != null)
+    //             {
+    //                 collisionRegisters.Add((collisionBody, collisionRegister));
+    //             }
+    //         });
+    //
+    //         // Merge results back to collision stack
+    //         foreach (var (obj, register) in collisionRegisters)
+    //         {
+    //             collisionStack.AddCollisionRegister(obj, register);
+    //         }
+    //
+    //         threadLocalData.Dispose();
+    //     }
+    //     else
+    //     {
+    //         foreach (var collisionBody in collisionBodyRegister.AllObjects)
+    //         {
+    //             if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
+    //
+    //             CollisionRegister? collisionRegister = null;
+    //
+    //             ProcessCollisionObject(collisionBody, dt, collisionCandidateBuckets, collisionCandidateCheckRegister, ref collisionRegister);
+    //
+    //             if (collisionRegister != null)
+    //             {
+    //                 collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
+    //             }
+    //         }
+    //     }
+    // }
+    //
+    // private void ProcessCollisionObject(CollisionObject collisionBody, float dt, List<BroadphaseBucket> buckets, HashSet<Collider> checkRegister, ref CollisionRegister? collisionRegister)
+    // {
+    //     var passivChecking = collisionBody.Passive;
+    //     foreach (var collider in collisionBody.Colliders)
+    //     {
+    //         if (!collider.Enabled) continue;
+    //         if (collider.Parent == null) continue;
+    //
+    //         Polygon? projectedShape = null;
+    //         if (collisionBody.ProjectShape)
+    //         {
+    //             projectedShape = collider.Project(collisionBody.Velocity * dt);
+    //             if (projectedShape == null) continue;
+    //         }
+    //
+    //         buckets.Clear();
+    //         checkRegister.Clear();
+    //         if (projectedShape != null) broadphase.GetCandidateBuckets(projectedShape, ref buckets);
+    //         else broadphase.GetCandidateBuckets(collider, ref buckets);
+    //
+    //         if (buckets.Count <= 0) continue;
+    //
+    //         var mask = collider.CollisionMask;
+    //         bool computeIntersections = collider.ComputeIntersections;
+    //
+    //         foreach (var bucket in buckets)
+    //         {
+    //             foreach (var candidate in bucket)
+    //             {
+    //                 if (candidate == collider) continue;
+    //                 if (candidate.Parent == null) continue;
+    //                 if (candidate.Parent == collider.Parent) continue;
+    //                 if (!mask.Has(candidate.CollisionLayer)) continue;
+    //                 if (!checkRegister.Add(candidate)) continue;
+    //
+    //                 bool overlap = projectedShape?.Overlap(candidate) ?? collider.Overlap(candidate);
+    //                 if (overlap)
+    //                 {
+    //                     var removed = collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
+    //                     var added = collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+    //                     bool firstContactCollisionObject = !removed && added;
+    //
+    //                     bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
+    //                     colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
+    //
+    //                     if (computeIntersections)
+    //                     {
+    //                         IntersectionPoints? collisionPoints;
+    //                         if (passivChecking)
+    //                         {
+    //                             collisionPoints = projectedShape != null ? candidate.Intersect(projectedShape) : candidate.Intersect(collider);
+    //                         }
+    //                         else
+    //                         {
+    //                             collisionPoints = projectedShape?.Intersect(candidate) ?? collider.Intersect(candidate);
+    //                         }
+    //
+    //                         if (collisionPoints == null || collisionPoints.Count <= 0)
+    //                         {
+    //                             var refPoint = collider.PrevTransform.Position;
+    //                             if (!candidate.ContainsPoint(refPoint))
+    //                             {
+    //                                 var closest = candidate.GetClosestPoint(refPoint, out float _);
+    //                                 collisionPoints ??= new();
+    //                                 collisionPoints.Add(closest);
+    //                             }
+    //                         }
+    //
+    //                         Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
+    //                         collisionRegister ??= new();
+    //                         collisionRegister.AddCollision(c, firstContactCollisionObject);
+    //                     }
+    //                     else
+    //                     {
+    //                         Collision c = new(collider, candidate, firstContactCollider);
+    //                         collisionRegister ??= new();
+    //                         collisionRegister.AddCollision(c, firstContactCollisionObject);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    //
+    //
+    
+    
+    
     private void ProcessCollisions(float dt)
     {
         foreach (var collisionBody in collisionBodyRegister.AllObjects)
         {
             if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
-
+    
             CollisionRegister? collisionRegister = null;
-            // var oldOverlapRegister = oldOverlapStack.GetRegister(collisionBody);
             
-            var passivChecking = collisionBody.Passive;
-            if (collisionBody.ProjectShape)
-            {
-                foreach (var collider in collisionBody.Colliders)
-                {
-                    if (!collider.Enabled) continue;
-                    if (collider.Parent == null) continue;
-
-                    var projected = collider.Project(collisionBody.Velocity * dt);
-                    if(projected == null) continue;
-                    collisionCandidateBuckets.Clear();
-                    collisionCandidateCheckRegister.Clear();
-                    broadphase.GetCandidateBuckets(projected, ref collisionCandidateBuckets);
-                    
-                    if(collisionCandidateBuckets.Count <= 0) continue;     
-                    
-                    var mask = collider.CollisionMask;
-                    bool computeIntersections = collider.ComputeIntersections;
-                    
-                    foreach (var bucket in collisionCandidateBuckets)
-                    {
-                        foreach (var candidate in bucket)
-                        {
-
-                            if (candidate == collider) continue;
-                            if (candidate.Parent == null) continue;
-                            if (candidate.Parent == collider.Parent) continue;
-                            if (!mask.Has(candidate.CollisionLayer)) continue;
-                            if (!collisionCandidateCheckRegister.Add(candidate)) continue;
-
-                            bool overlap = projected.Overlap(candidate);
-                            if (overlap)
-                            {
-                                //multiple colliders can be involved with the same pair of collision objects, therefore we also have to check if the collision object pair was already added to the temp register.
-                                var removed = collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
-                                var added = collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
-                                bool firstContactCollisionObject = !removed && added;
-                                
-                                bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
-                                colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
-                                
-                                if (computeIntersections)
-                                {
-                                    IntersectionPoints? collisionPoints;
-                                    if (passivChecking)
-                                    {
-                                        collisionPoints = candidate.Intersect(projected);
-                                    }
-                                    else
-                                    {
-                                        collisionPoints = projected.Intersect(candidate);
-                                    }
-                                    
-                                    //shapes overlap but no collision points means collidable is completely inside other
-                                    //closest point on bounds of other are now used for intersection point
-                                    if (collisionPoints == null || collisionPoints.Count <= 0)
-                                    {
-                                        var refPoint = collider.PrevTransform.Position;// PrevPosition;
-                                        if (!candidate.ContainsPoint(refPoint))
-                                        {
-                                            var closest = candidate.GetClosestPoint(refPoint, out float _);
-                                            collisionPoints ??= new();
-                                            collisionPoints.Add(closest);
-                                        }
-                                    }
-
-                                    Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
-                                    collisionRegister??= new();
-                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
-                                }
-                                else
-                                {
-                                    Collision c = new(collider, candidate, firstContactCollider);
-                                    collisionRegister??= new();
-                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
-                                }
-                            }
-                        }
-                    }
-                    
-                }
-            
-            }
-            else
-            {
-                foreach (var collider in collisionBody.Colliders)
-                {
-                    if (!collider.Enabled) continue;
-                    if (collider.Parent == null) continue;
-                    collisionCandidateBuckets.Clear();
-                    collisionCandidateCheckRegister.Clear();
-                    broadphase.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
-                    
-                    if(collisionCandidateBuckets.Count <= 0) continue;     
-                    
-                    var mask = collider.CollisionMask;
-                    bool computeIntersections = collider.ComputeIntersections;
-                    
-                    foreach (var bucket in collisionCandidateBuckets)
-                    {
-                        foreach (var candidate in bucket)
-                        {
-                            //Only enabled colliders are added to the spatial hash
-                            //Therefore only enabled colliders are in each bucket!
-                            if (candidate == collider) continue;
-                            if (candidate.Parent == null) continue;
-                            if (candidate.Parent == collider.Parent) continue;
-                            if (!mask.Has(candidate.CollisionLayer)) continue;
-                            if (!collisionCandidateCheckRegister.Add(candidate)) continue;
-
-                            bool overlap = collider.Overlap(candidate);
-                            if (overlap)
-                            {
-                                //multiple colliders can be involved with the same pair of collision objects, therefore we also have to check if the collision object pair was already added to the temp register.
-                                var removed = collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
-                                var added = collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
-                                bool firstContactCollisionObject = !removed && added;
-                                
-                                bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
-                                colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
-                                
-                                if (computeIntersections)
-                                {                                                         
-                                    IntersectionPoints? collisionPoints;
-                                    if (passivChecking)
-                                    {
-                                        collisionPoints = candidate.Intersect(collider);
-                                    }
-                                    else
-                                    {
-                                        collisionPoints = collider.Intersect(candidate);
-                                    }
-                                    
-                                    //shapes overlap but no collision points means collidable is completely inside other
-                                    //closest point on bounds of other are now used for intersection point
-                                    if (collisionPoints == null || collisionPoints.Count <= 0)
-                                    {
-                                        var refPoint = collider.PrevTransform.Position;// PrevPosition;
-                                        if (!candidate.ContainsPoint(refPoint))
-                                        {
-                                            var closest = candidate.GetClosestPoint(refPoint, out float _);
-                                            collisionPoints ??= [];
-                                            collisionPoints.Add(closest);
-                                        }
-                                    }
-
-                                    Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
-                                    collisionRegister??= new();
-                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
-                                }
-                                else
-                                {
-                                    Collision c = new(collider, candidate, firstContactCollider);
-                                    collisionRegister??= new();
-                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
-                                }
-                            }
-                        }
-                    }
-                }
-            
-            }
-
+            ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
+    
             if (collisionRegister != null)
             {
                 collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
             }
+        }
+    }
+    private void ProcessCollisionObject(CollisionObject collisionBody, float dt, ref CollisionRegister? collisionRegister)
+    {
+        var passivChecking = collisionBody.Passive;
+        foreach (var collider in collisionBody.Colliders)
+        {
+            if (!collider.Enabled) continue;
+            if (collider.Parent == null) continue;
+
+            Polygon? projectedShape = null;
+            if (collisionBody.ProjectShape)
+            {
+                projectedShape = collider.Project(collisionBody.Velocity * dt);
+                if(projectedShape == null) continue;
+            }
+            
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            if(projectedShape != null) broadphase.GetCandidateBuckets(projectedShape, ref collisionCandidateBuckets);
+            else broadphase.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+            
+            if(collisionCandidateBuckets.Count <= 0) continue;     
+            
+            var mask = collider.CollisionMask;
+            bool computeIntersections = collider.ComputeIntersections;
+            
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+
+                    if (candidate == collider) continue;
+                    if (candidate.Parent == null) continue;
+                    if (candidate.Parent == collider.Parent) continue;
+                    if (!mask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+
+                    bool overlap = projectedShape?.Overlap(candidate) ?? collider.Overlap(candidate);
+                    if (overlap)
+                    {
+                        //multiple colliders can be involved with the same pair of collision objects, therefore we also have to check if the collision object pair was already added to the temp register.
+                        var removed = collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
+                        var added = collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+                        bool firstContactCollisionObject = !removed && added;
+                        
+                        bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
+                        colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
+                        
+                        if (computeIntersections)
+                        {
+                            IntersectionPoints? collisionPoints;
+                            if (passivChecking)
+                            {
+                                collisionPoints = projectedShape != null ? candidate.Intersect(projectedShape) : candidate.Intersect(collider);
+                            }
+                            else
+                            {
+                                collisionPoints = projectedShape?.Intersect(candidate) ?? collider.Intersect(candidate);
+                            }
+                            
+                            //shapes overlap but no collision points means collidable is completely inside other
+                            //closest point on bounds of other are now used for intersection point
+                            if (collisionPoints == null || collisionPoints.Count <= 0)
+                            {
+                                var refPoint = collider.PrevTransform.Position;// PrevPosition;
+                                if (!candidate.ContainsPoint(refPoint))
+                                {
+                                    var closest = candidate.GetClosestPoint(refPoint, out float _);
+                                    collisionPoints ??= new();
+                                    collisionPoints.Add(closest);
+                                }
+                            }
+
+                            Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
+                            collisionRegister??= new();
+                            collisionRegister.AddCollision(c, firstContactCollisionObject);
+                        }
+                        else
+                        {
+                            Collision c = new(collider, candidate, firstContactCollider);
+                            collisionRegister??= new();
+                            collisionRegister.AddCollision(c, firstContactCollisionObject);
+                        }
+                    }
+                }
+            }
             
         }
     }
+    
+    
     private void Resolve()
     {
         collisionBodyRegister.Process();
