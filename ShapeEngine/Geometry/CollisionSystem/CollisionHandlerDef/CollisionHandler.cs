@@ -1,9 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using ShapeEngine.Color;
-using ShapeEngine.Core;
 using ShapeEngine.Geometry.PolygonDef;
-using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 
@@ -24,6 +22,10 @@ public partial class CollisionHandler
     public int Count => collisionBodyRegister.AllObjects.Count;
 
     public bool ParallelProcessing = true;
+    private readonly object objFirstContactLock = new();
+    private readonly object colliderFirstContactLock = new();
+    
+    
     private Stopwatch stopwatch = new();
     private long totalFillTime = 0;
     private long totalProcessTime = 0;
@@ -184,168 +186,291 @@ public partial class CollisionHandler
     
     #endregion
     
-    #region Private Functions
+    #region Collision Processing
     
-    
-    
+    #region Parallel
+    // Variant 2 (1k polygons + 9k circles -> Broadphase Fill: 7ms, Collision Processing:  2.16ms)
     // private void ProcessCollisions(float dt)
     // {
-    //     if (ParallelProcessing)
+    //     if (!ParallelProcessing)
     //     {
-    //         // Thread-local storage for collision candidates
-    //         var threadLocalData = new ThreadLocal<(
-    //             List<BroadphaseBucket> buckets,
-    //             HashSet<Collider> checkRegister
-    //         )>(() => (new List<BroadphaseBucket>(), new HashSet<Collider>()));
-    //
-    //         // Thread-safe collection for collision registers
-    //         var collisionRegisters = new ConcurrentBag<(CollisionObject obj, CollisionRegister register)>();
-    //
-    //         Parallel.ForEach(collisionBodyRegister.AllObjects, collisionBody =>
-    //         {
-    //             if (!collisionBody.Enabled || !collisionBody.HasColliders) return;
-    //
-    //             CollisionRegister? collisionRegister = null;
-    //             var (buckets, checkRegister) = threadLocalData.Value!;
-    //
-    //             ProcessCollisionObject(collisionBody, dt, buckets, checkRegister, ref collisionRegister);
-    //
-    //             if (collisionRegister != null)
-    //             {
-    //                 collisionRegisters.Add((collisionBody, collisionRegister));
-    //             }
-    //         });
-    //
-    //         // Merge results back to collision stack
-    //         foreach (var (obj, register) in collisionRegisters)
-    //         {
-    //             collisionStack.AddCollisionRegister(obj, register);
-    //         }
-    //
-    //         threadLocalData.Dispose();
-    //     }
-    //     else
-    //     {
+    //         // Original sequential code
     //         foreach (var collisionBody in collisionBodyRegister.AllObjects)
     //         {
     //             if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
+    //             CollisionRegister? collisionRegister = null;
+    //             ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
+    //             if (collisionRegister != null)
+    //                 collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
+    //         }
+    //         return;
+    //     }
+    //
+    //     // Parallel version
+    //     var collisionRegisters = new ConcurrentBag<(CollisionObject obj, CollisionRegister register)>();
+    //     var localObjContacts = new ConcurrentBag<FirstContactStack<CollisionObject, CollisionObject>>();
+    //     var localColliderContacts = new ConcurrentBag<FirstContactStack<Collider, Collider>>();
+    //
+    //     Parallel.ForEach(collisionBodyRegister.AllObjects, () =>
+    //         (
+    //             objFirstContact: new FirstContactStack<CollisionObject, CollisionObject>(64),
+    //             colliderFirstContact: new FirstContactStack<Collider, Collider>(64),
+    //             buckets: new List<BroadphaseBucket>(),
+    //             checkRegister: new HashSet<Collider>()
+    //         ),
+    //         (collisionBody, loopState, threadLocal) =>
+    //         {
+    //             if (!collisionBody.Enabled || !collisionBody.HasColliders) return threadLocal;
     //
     //             CollisionRegister? collisionRegister = null;
-    //
-    //             ProcessCollisionObject(collisionBody, dt, collisionCandidateBuckets, collisionCandidateCheckRegister, ref collisionRegister);
+    //             ProcessCollisionObjectThreadSafe(collisionBody, dt, ref collisionRegister,
+    //                 threadLocal.buckets, threadLocal.checkRegister,
+    //                 threadLocal.objFirstContact, threadLocal.colliderFirstContact,
+    //                 collisionObjectFirstContactRegisterActive,  // Pass active register
+    //                 colliderFirstContactRegisterActive);        // Pass active register
     //
     //             if (collisionRegister != null)
-    //             {
-    //                 collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
-    //             }
-    //         }
-    //     }
-    // }
+    //                 collisionRegisters.Add((collisionBody, collisionRegister));
     //
-    // private void ProcessCollisionObject(CollisionObject collisionBody, float dt, List<BroadphaseBucket> buckets, HashSet<Collider> checkRegister, ref CollisionRegister? collisionRegister)
-    // {
-    //     var passivChecking = collisionBody.Passive;
-    //     foreach (var collider in collisionBody.Colliders)
-    //     {
-    //         if (!collider.Enabled) continue;
-    //         if (collider.Parent == null) continue;
-    //
-    //         Polygon? projectedShape = null;
-    //         if (collisionBody.ProjectShape)
+    //             return threadLocal;
+    //         },
+    //         threadLocal =>
     //         {
-    //             projectedShape = collider.Project(collisionBody.Velocity * dt);
-    //             if (projectedShape == null) continue;
-    //         }
+    //             localObjContacts.Add(threadLocal.objFirstContact);
+    //             localColliderContacts.Add(threadLocal.colliderFirstContact);
+    //         });
     //
-    //         buckets.Clear();
-    //         checkRegister.Clear();
-    //         if (projectedShape != null) broadphase.GetCandidateBuckets(projectedShape, ref buckets);
-    //         else broadphase.GetCandidateBuckets(collider, ref buckets);
+    //     // Add collision registers
+    //     foreach (var (obj, register) in collisionRegisters)
+    //         collisionStack.AddCollisionRegister(obj, register);
     //
-    //         if (buckets.Count <= 0) continue;
+    //     // Merge first contact data into TEMP register (not active)
+    //     foreach (var localObjContact in localObjContacts)
+    //         MergeFirstContacts(localObjContact, collisionObjectFirstContactRegisterTemp);
     //
-    //         var mask = collider.CollisionMask;
-    //         bool computeIntersections = collider.ComputeIntersections;
-    //
-    //         foreach (var bucket in buckets)
-    //         {
-    //             foreach (var candidate in bucket)
-    //             {
-    //                 if (candidate == collider) continue;
-    //                 if (candidate.Parent == null) continue;
-    //                 if (candidate.Parent == collider.Parent) continue;
-    //                 if (!mask.Has(candidate.CollisionLayer)) continue;
-    //                 if (!checkRegister.Add(candidate)) continue;
-    //
-    //                 bool overlap = projectedShape?.Overlap(candidate) ?? collider.Overlap(candidate);
-    //                 if (overlap)
-    //                 {
-    //                     var removed = collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
-    //                     var added = collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
-    //                     bool firstContactCollisionObject = !removed && added;
-    //
-    //                     bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
-    //                     colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
-    //
-    //                     if (computeIntersections)
-    //                     {
-    //                         IntersectionPoints? collisionPoints;
-    //                         if (passivChecking)
-    //                         {
-    //                             collisionPoints = projectedShape != null ? candidate.Intersect(projectedShape) : candidate.Intersect(collider);
-    //                         }
-    //                         else
-    //                         {
-    //                             collisionPoints = projectedShape?.Intersect(candidate) ?? collider.Intersect(candidate);
-    //                         }
-    //
-    //                         if (collisionPoints == null || collisionPoints.Count <= 0)
-    //                         {
-    //                             var refPoint = collider.PrevTransform.Position;
-    //                             if (!candidate.ContainsPoint(refPoint))
-    //                             {
-    //                                 var closest = candidate.GetClosestPoint(refPoint, out float _);
-    //                                 collisionPoints ??= new();
-    //                                 collisionPoints.Add(closest);
-    //                             }
-    //                         }
-    //
-    //                         Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
-    //                         collisionRegister ??= new();
-    //                         collisionRegister.AddCollision(c, firstContactCollisionObject);
-    //                     }
-    //                     else
-    //                     {
-    //                         Collision c = new(collider, candidate, firstContactCollider);
-    //                         collisionRegister ??= new();
-    //                         collisionRegister.AddCollision(c, firstContactCollisionObject);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
+    //     foreach (var localColliderContact in localColliderContacts)
+    //         MergeFirstContacts(localColliderContact, colliderFirstContactRegisterTemp);
     // }
-    //
-    //
     
-    
-    
+    private class ThreadLocalData
+    {
+        public FirstContactStack<CollisionObject, CollisionObject> ObjFirstContact { get; }
+        public FirstContactStack<Collider, Collider> ColliderFirstContact { get; }
+        public List<BroadphaseBucket> Buckets { get; }
+        public HashSet<Collider> CheckRegister { get; }
+
+        public ThreadLocalData(int capacity)
+        {
+            ObjFirstContact = new FirstContactStack<CollisionObject, CollisionObject>(capacity);
+            ColliderFirstContact = new FirstContactStack<Collider, Collider>(capacity);
+            Buckets = new List<BroadphaseBucket>();
+            CheckRegister = new HashSet<Collider>();
+        }
+
+        public void Clear()
+        {
+            ObjFirstContact.Clear();
+            ColliderFirstContact.Clear();
+            Buckets.Clear();
+            CheckRegister.Clear();
+        }
+    }
+    private readonly ConcurrentBag<ThreadLocalData> threadLocalPool = [];
+    private ThreadLocalData RentThreadLocalData()
+    {
+        if (threadLocalPool.TryTake(out var data))
+        {
+            data.Clear();
+            return data;
+        }
+        return new ThreadLocalData(64);
+    }
+    private void ReturnThreadLocalData(ThreadLocalData data)
+    {
+        threadLocalPool.Add(data);
+    }
     private void ProcessCollisions(float dt)
     {
-        foreach (var collisionBody in collisionBodyRegister.AllObjects)
+        if (!ParallelProcessing)
         {
-            if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
-    
-            CollisionRegister? collisionRegister = null;
-            
-            ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
-    
-            if (collisionRegister != null)
+            // Original sequential code
+            foreach (var collisionBody in collisionBodyRegister.AllObjects)
             {
-                collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
+                if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
+                CollisionRegister? collisionRegister = null;
+                ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
+                if (collisionRegister != null)
+                    collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
+            }
+            return;
+        }
+    
+        // Parallel version with pooling
+        var collisionRegisters = new ConcurrentBag<(CollisionObject obj, CollisionRegister register)>();
+        var usedThreadLocalData = new ConcurrentBag<ThreadLocalData>();
+    
+        Parallel.ForEach(collisionBodyRegister.AllObjects,
+            () => RentThreadLocalData(),  // Rent from pool
+            (collisionBody, loopState, threadLocal) =>
+            {
+                if (!collisionBody.Enabled || !collisionBody.HasColliders) return threadLocal;
+    
+                CollisionRegister? collisionRegister = null;
+                ProcessCollisionObjectThreadSafe(collisionBody, dt, ref collisionRegister,
+                    threadLocal.Buckets, threadLocal.CheckRegister,
+                    threadLocal.ObjFirstContact, threadLocal.ColliderFirstContact,
+                    collisionObjectFirstContactRegisterActive,
+                    colliderFirstContactRegisterActive);
+    
+                if (collisionRegister != null)
+                    collisionRegisters.Add((collisionBody, collisionRegister));
+    
+                return threadLocal;
+            },
+            threadLocal =>
+            {
+                usedThreadLocalData.Add(threadLocal);  // Collect for merging
+            });
+    
+        // Add collision registers
+        foreach (var (obj, register) in collisionRegisters)
+            collisionStack.AddCollisionRegister(obj, register);
+    
+        // Merge first contact data and return to pool
+        foreach (var threadLocal in usedThreadLocalData)
+        {
+            MergeFirstContacts(threadLocal.ObjFirstContact, collisionObjectFirstContactRegisterTemp);
+            MergeFirstContacts(threadLocal.ColliderFirstContact, colliderFirstContactRegisterTemp);
+            ReturnThreadLocalData(threadLocal);  // Return to pool
+        }
+    }
+    private void ProcessCollisionObjectThreadSafe(
+        CollisionObject collisionBody,
+        float dt,
+        ref CollisionRegister? collisionRegister,
+        List<BroadphaseBucket> buckets,
+        HashSet<Collider> checkRegister,
+        FirstContactStack<CollisionObject, CollisionObject> objFirstContact,
+        FirstContactStack<Collider, Collider> colliderFirstContact,
+        FirstContactStack<CollisionObject, CollisionObject> objFirstContactActive,
+        FirstContactStack<Collider, Collider> colliderFirstContactActive)
+    {
+        var passivChecking = collisionBody.Passive;
+        foreach (var collider in collisionBody.Colliders)
+        {
+            if (!collider.Enabled) continue;
+            if (collider.Parent == null) continue;
+
+            Polygon? projectedShape = null;
+            if (collisionBody.ProjectShape)
+            {
+                projectedShape = collider.Project(collisionBody.Velocity * dt);
+                if (projectedShape == null) continue;
+            }
+
+            buckets.Clear();
+            checkRegister.Clear();
+            if (projectedShape != null) broadphase.GetCandidateBuckets(projectedShape, ref buckets);
+            else broadphase.GetCandidateBuckets(collider, ref buckets);
+
+            if (buckets.Count <= 0) continue;
+
+            var mask = collider.CollisionMask;
+            bool computeIntersections = collider.ComputeIntersections;
+
+            foreach (var bucket in buckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (candidate == collider) continue;
+                    if (candidate.Parent == null) continue;
+                    if (candidate.Parent == collider.Parent) continue;
+                    if (!mask.Has(candidate.CollisionLayer)) continue;
+                    if (!checkRegister.Add(candidate)) continue;
+
+                    bool overlap = projectedShape?.Overlap(candidate) ?? collider.Overlap(candidate);
+                    if (overlap)
+                    {
+                        bool removed;
+                        lock (objFirstContactLock)
+                        {
+                            removed = objFirstContactActive.RemoveEntry(collider.Parent, candidate.Parent);
+                        }
+                        var added = objFirstContact.AddEntry(collider.Parent, candidate.Parent);
+                        bool firstContactCollisionObject = !removed && added;
+
+                        bool firstContactCollider;
+                        lock (colliderFirstContactLock)
+                        {
+                            firstContactCollider = !colliderFirstContactActive.RemoveEntry(collider, candidate);
+                        }
+                        colliderFirstContact.AddEntry(candidate, collider);
+
+                        if (computeIntersections)
+                        {
+                            IntersectionPoints? collisionPoints;
+                            if (passivChecking)
+                            {
+                                collisionPoints = projectedShape != null ? candidate.Intersect(projectedShape) : candidate.Intersect(collider);
+                            }
+                            else
+                            {
+                                collisionPoints = projectedShape?.Intersect(candidate) ?? collider.Intersect(candidate);
+                            }
+
+                            if (collisionPoints == null || collisionPoints.Count <= 0)
+                            {
+                                var refPoint = collider.PrevTransform.Position;
+                                if (!candidate.ContainsPoint(refPoint))
+                                {
+                                    var closest = candidate.GetClosestPoint(refPoint, out float _);
+                                    collisionPoints ??= new();
+                                    collisionPoints.Add(closest);
+                                }
+                            }
+
+                            Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
+                            collisionRegister ??= new();
+                            collisionRegister.AddCollision(c, firstContactCollisionObject);
+                        }
+                        else
+                        {
+                            Collision c = new(collider, candidate, firstContactCollider);
+                            collisionRegister ??= new();
+                            collisionRegister.AddCollision(c, firstContactCollisionObject);
+                        }
+                    }
+                }
             }
         }
     }
+    private void MergeFirstContacts<T1, T2>(FirstContactStack<T1, T2> source, FirstContactStack<T1, T2> dest) where T1 : class where T2 : class
+    {
+        foreach (var kvp in source)
+        {
+            foreach (var second in kvp.Value)
+                dest.AddEntry(kvp.Key, second);
+        }
+    }
+    #endregion
+    
+    #region Sequential
+    // private void ProcessCollisions(float dt)
+    // {
+    //     foreach (var collisionBody in collisionBodyRegister.AllObjects)
+    //     {
+    //         if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
+    //
+    //         CollisionRegister? collisionRegister = null;
+    //         
+    //         ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
+    //
+    //         if (collisionRegister != null)
+    //         {
+    //             collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
+    //         }
+    //     }
+    // }
     private void ProcessCollisionObject(CollisionObject collisionBody, float dt, ref CollisionRegister? collisionRegister)
     {
         var passivChecking = collisionBody.Passive;
@@ -434,8 +559,6 @@ public partial class CollisionHandler
             
         }
     }
-    
-    
     private void Resolve()
     {
         collisionBodyRegister.Process();
@@ -471,7 +594,8 @@ public partial class CollisionHandler
         colliderFirstContactRegisterActive.Clear();
         (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
     }
-    
+    #endregion
+   
     #endregion
 
     #region Debug
