@@ -21,9 +21,99 @@ public partial class CollisionHandler
     /// </summary>
     public int Count => collisionBodyRegister.AllObjects.Count;
 
+    /// <summary>
+    /// Enables or disables parallel processing of collision detection.
+    /// When <c>true</c>, the handler uses the parallel processing path
+    /// (<see cref="ProcessCollisionsParallel"/>) to process collision objects.
+    /// When <c>false</c>, the sequential path (<see cref="ProcessCollisionsSequential"/>) is used.
+    /// </summary>
+    /// <remarks>
+    /// Default is <c>true</c>. If enabled, ensure any external state accessed by collision callbacks
+    /// is safe for concurrent access.
+    /// </remarks>
     public bool ParallelProcessing = true;
+    
+    /// <summary>
+    /// Pool of per-thread temporary data objects used by the parallel collision processing path.
+    /// Rent instances with <see cref="RentThreadLocalData"/> and return them with <see cref="ReturnThreadLocalData"/>.
+    /// Using a <see cref="ConcurrentBag{T}"/> allows concurrent reuse across threads and reduces allocations.
+    /// </summary>
+    private readonly ConcurrentBag<ThreadLocalData> threadLocalPool = [];
+    
+    /// <summary>
+    /// Lock object used to synchronize removals/additions in the
+    /// collision-object-level first-contact register across threads.
+    /// Protects access to <see cref="collisionObjectFirstContactRegisterActive"/> during parallel processing.
+    /// </summary>
     private readonly object objFirstContactLock = new();
+
+    /// <summary>
+    /// Lock object used to synchronize removals/additions in the
+    /// collider-level first-contact register across threads.
+    /// Protects access to <see cref="colliderFirstContactRegisterActive"/> during parallel processing.
+    /// </summary>
     private readonly object colliderFirstContactLock = new();
+
+    /// <summary>
+    /// Register that stores and manages all <see cref="CollisionObject"/> instances.
+    /// Used for adding/removing objects and applying pending register changes.
+    /// </summary>
+    private readonly CollisionObjectRegister collisionBodyRegister;
+       
+    /// <summary>
+    /// Broadphase spatial structure used to query candidate buckets for collision checks
+    /// and to perform debug drawing of the spatial partition.
+    /// </summary>
+    private readonly IBroadphase broadphase;
+
+    /// <summary>
+    /// Accumulates detected collisions as <see cref="CollisionRegister"/> entries for
+    /// later resolution by <see cref="Resolve"/>.
+    /// </summary>
+    private readonly CollisionStack collisionStack;
+
+    /// <summary>
+    /// Active first-contact stack for collision object pairs. Represents contacts that
+    /// were reported in the previous processing cycle and are considered 'active'.
+    /// </summary>
+    private FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterActive;
+
+    /// <summary>
+    /// Temporary first-contact stack for collision object pairs. Populated during the
+    /// current processing cycle and swapped with the active stack after resolution.
+    /// </summary>
+    private FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterTemp;
+       
+    /// <summary>
+    /// Active first-contact stack for collider pairs. Represents per-collider first-contact
+    /// bookkeeping for the previous frame.
+    /// </summary>
+    private FirstContactStack<Collider, Collider> colliderFirstContactRegisterActive;
+
+    /// <summary>
+    /// Temporary first-contact stack for collider pairs. Collected during processing and
+    /// swapped into the active register after resolution.
+    /// </summary>
+    private FirstContactStack<Collider, Collider> colliderFirstContactRegisterTemp;
+
+    /// <summary>
+    /// Reusable deduplication set used by the sequential processing path to avoid checking
+    /// the same candidate collider multiple times per source collider.
+    /// </summary>
+    private readonly HashSet<Collider> collisionCandidateCheckRegister = [];
+
+    /// <summary>
+    /// Reusable list of broadphase buckets used by the sequential processing path to store
+    /// candidate buckets returned by the broadphase query.
+    /// </summary>
+    private List<BroadphaseBucket> collisionCandidateBuckets = [];
+
+    /// <summary>
+    /// Cache mapping <see cref="CollisionObject"/> to its <see cref="IntersectSpaceRegister"/>,
+    /// used to store intersection-related state and reduce repeated allocations/lookups.
+    /// Initialized with a moderate default capacity.
+    /// </summary>
+    private readonly Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(128);
     
     
     private Stopwatch stopwatch = new();
@@ -31,22 +121,6 @@ public partial class CollisionHandler
     private long totalProcessTime = 0;
     private long totalResolveTime = 0;
     private int updates = 0;
-    
-    private readonly CollisionObjectRegister collisionBodyRegister;
-    
-    private readonly IBroadphase broadphase;
-    private readonly CollisionStack collisionStack;
-
-    private  FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterActive;
-    private  FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterTemp;
-    
-    private  FirstContactStack<Collider, Collider> colliderFirstContactRegisterActive;
-    private  FirstContactStack<Collider, Collider> colliderFirstContactRegisterTemp;
- 
-    private readonly HashSet<Collider> collisionCandidateCheckRegister = [];
-    private List<BroadphaseBucket> collisionCandidateBuckets = [];
-
-    private readonly Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(128);
     #endregion
 
     #region Constructors
@@ -154,7 +228,8 @@ public partial class CollisionHandler
         totalFillTime += fillTime;
         
         stopwatch.Restart();
-        ProcessCollisions(dt);
+        if(ParallelProcessing) ProcessCollisionsParallel(dt);
+        else ProcessCollisionsSequential(dt);
         var processTime = stopwatch.ElapsedMilliseconds;
         totalProcessTime += processTime;
         
@@ -188,70 +263,64 @@ public partial class CollisionHandler
     
     #region Collision Processing
     
-    #region Parallel
-    // Variant 2 (1k polygons + 9k circles -> Broadphase Fill: 7ms, Collision Processing:  2.16ms)
-    // private void ProcessCollisions(float dt)
-    // {
-    //     if (!ParallelProcessing)
-    //     {
-    //         // Original sequential code
-    //         foreach (var collisionBody in collisionBodyRegister.AllObjects)
-    //         {
-    //             if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
-    //             CollisionRegister? collisionRegister = null;
-    //             ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
-    //             if (collisionRegister != null)
-    //                 collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
-    //         }
-    //         return;
-    //     }
-    //
-    //     // Parallel version
-    //     var collisionRegisters = new ConcurrentBag<(CollisionObject obj, CollisionRegister register)>();
-    //     var localObjContacts = new ConcurrentBag<FirstContactStack<CollisionObject, CollisionObject>>();
-    //     var localColliderContacts = new ConcurrentBag<FirstContactStack<Collider, Collider>>();
-    //
-    //     Parallel.ForEach(collisionBodyRegister.AllObjects, () =>
-    //         (
-    //             objFirstContact: new FirstContactStack<CollisionObject, CollisionObject>(64),
-    //             colliderFirstContact: new FirstContactStack<Collider, Collider>(64),
-    //             buckets: new List<BroadphaseBucket>(),
-    //             checkRegister: new HashSet<Collider>()
-    //         ),
-    //         (collisionBody, loopState, threadLocal) =>
-    //         {
-    //             if (!collisionBody.Enabled || !collisionBody.HasColliders) return threadLocal;
-    //
-    //             CollisionRegister? collisionRegister = null;
-    //             ProcessCollisionObjectThreadSafe(collisionBody, dt, ref collisionRegister,
-    //                 threadLocal.buckets, threadLocal.checkRegister,
-    //                 threadLocal.objFirstContact, threadLocal.colliderFirstContact,
-    //                 collisionObjectFirstContactRegisterActive,  // Pass active register
-    //                 colliderFirstContactRegisterActive);        // Pass active register
-    //
-    //             if (collisionRegister != null)
-    //                 collisionRegisters.Add((collisionBody, collisionRegister));
-    //
-    //             return threadLocal;
-    //         },
-    //         threadLocal =>
-    //         {
-    //             localObjContacts.Add(threadLocal.objFirstContact);
-    //             localColliderContacts.Add(threadLocal.colliderFirstContact);
-    //         });
-    //
-    //     // Add collision registers
-    //     foreach (var (obj, register) in collisionRegisters)
-    //         collisionStack.AddCollisionRegister(obj, register);
-    //
-    //     // Merge first contact data into TEMP register (not active)
-    //     foreach (var localObjContact in localObjContacts)
-    //         MergeFirstContacts(localObjContact, collisionObjectFirstContactRegisterTemp);
-    //
-    //     foreach (var localColliderContact in localColliderContacts)
-    //         MergeFirstContacts(localColliderContact, colliderFirstContactRegisterTemp);
-    // }
+    /// <summary>
+    /// Resolves collisions after detection by processing queued collision data and notifying
+    /// collision objects and colliders about contact end events.
+    /// </summary>
+    /// <remarks>
+    /// This method:
+    /// - Applies pending changes in the collision body register.
+    /// - Processes and clears the collision stack (performs resolution).
+    /// - Iterates active first-contact registers and calls the appropriate
+    ///   ResolveContactEnded / ResolveColliderContactEnded callbacks for ended contacts.
+    /// - Swaps and clears active/temp first-contact registers to prepare for the next update.
+    /// </remarks>
+    private void Resolve()
+    {
+        collisionBodyRegister.Process();
+
+        collisionStack.ProcessCollisions();
+        collisionStack.Clear();
+
+        foreach (var kvp in collisionObjectFirstContactRegisterActive)
+        {
+            var resolver = kvp.Key;
+            var others = kvp.Value;
+            if(others.Count <= 0) continue;
+            foreach (var other in others)
+            {
+                resolver.ResolveContactEnded(other);
+            }
+        }
+        collisionObjectFirstContactRegisterActive.Clear();
+        (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
+        
+        foreach (var kvp in colliderFirstContactRegisterActive)
+        {
+            var self = kvp.Key;
+            var resolver = self.Parent;
+            if(resolver == null) continue;
+            var others = kvp.Value;
+            if(others.Count <= 0) continue;
+            foreach (var other in others)
+            {
+                resolver.ResolveColliderContactEnded(self, other);
+            }
+        }
+        colliderFirstContactRegisterActive.Clear();
+        (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
+    }
     
+    #region Parallel
+    /// <summary>
+    /// Holds per-thread temporary data used by the parallel collision processing path.
+    /// This pooled structure prevents repeated allocations by reusing:
+    /// - <see cref="ObjFirstContact"/>: first-contact stack for collision object pairs.
+    /// - <see cref="ColliderFirstContact"/>: first-contact stack for collider pairs.
+    /// - <see cref="Buckets"/>: candidate broadphase buckets collected for the current thread.
+    /// - <see cref="CheckRegister"/>: deduplication set for candidate colliders within this thread.
+    /// Instances are rented from a concurrent pool and cleared before reuse.
+    /// </summary>
     private class ThreadLocalData
     {
         public FirstContactStack<CollisionObject, CollisionObject> ObjFirstContact { get; }
@@ -275,7 +344,15 @@ public partial class CollisionHandler
             CheckRegister.Clear();
         }
     }
-    private readonly ConcurrentBag<ThreadLocalData> threadLocalPool = [];
+    /// <summary>
+    /// Rents a pooled <see cref="ThreadLocalData"/> instance for use in parallel collision processing.
+    /// </summary>
+    /// <remarks>
+    /// Tries to obtain an instance from <see cref="threadLocalPool"/>. If an instance is available
+    /// it is cleared and returned. If the pool is empty a new instance is created with a default
+    /// capacity suitable for typical workloads.
+    /// </remarks>
+    /// <returns>A cleared <see cref="ThreadLocalData"/> ready for use by the caller.</returns>
     private ThreadLocalData RentThreadLocalData()
     {
         if (threadLocalPool.TryTake(out var data))
@@ -285,27 +362,35 @@ public partial class CollisionHandler
         }
         return new ThreadLocalData(64);
     }
+    /// <summary>
+    /// Returns a rented <see cref="ThreadLocalData"/> instance to the internal concurrent pool for reuse.
+    /// </summary>
+    /// <param name="data">The <see cref="ThreadLocalData"/> instance to return. Must not be <c>null</c>.</param>
+    /// <remarks>
+    /// The pool is a <see cref="System.Collections.Concurrent.ConcurrentBag{ThreadLocalData}"/>, allowing
+    /// concurrent returns from multiple threads. The instance is not cleared here; callers should ensure
+    /// that rented instances are cleared on rent (see <see cref="RentThreadLocalData"/> which calls <c>Clear</c>).
+    /// </remarks>
     private void ReturnThreadLocalData(ThreadLocalData data)
     {
         threadLocalPool.Add(data);
     }
-    private void ProcessCollisions(float dt)
+
+    /// <summary>
+    /// Processes registered collision objects in parallel using a per-thread pooled data structure.
+    /// Detects collisions for each object and enqueues resulting <see cref="CollisionRegister"/> instances
+    /// for later resolution.
+    /// </summary>
+    /// <param name="dt">Delta time since the last update, in seconds.</param>
+    /// <remarks>
+    /// This method uses <c>Parallel.ForEach</c> and rents <see cref="ThreadLocalData"/> instances
+    /// via <see cref="RentThreadLocalData"/> to avoid per-iteration allocations. Per-thread first-contact
+    /// information is collected and later merged into the handler-level temporary first-contact registers.
+    /// Care is taken to synchronize removals from shared active first-contact stacks; merging and returning
+    /// of thread-local data happens after the parallel loop completes.
+    /// </remarks>
+    private void ProcessCollisionsParallel(float dt)
     {
-        if (!ParallelProcessing)
-        {
-            // Original sequential code
-            foreach (var collisionBody in collisionBodyRegister.AllObjects)
-            {
-                if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
-                CollisionRegister? collisionRegister = null;
-                ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
-                if (collisionRegister != null)
-                    collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
-            }
-            return;
-        }
-    
-        // Parallel version with pooling
         var collisionRegisters = new ConcurrentBag<(CollisionObject obj, CollisionRegister register)>();
         var usedThreadLocalData = new ConcurrentBag<ThreadLocalData>();
     
@@ -344,6 +429,31 @@ public partial class CollisionHandler
             ReturnThreadLocalData(threadLocal);  // Return to pool
         }
     }
+    
+    /// <summary>
+    /// Thread-safe processing of a single <see cref="CollisionObject"/> used by the parallel
+    /// collision processing path.
+    /// </summary>
+    /// <remarks>
+    /// Inspects each enabled <see cref="Collider"/> on <paramref name="collisionBody"/>, queries
+    /// the provided broadphase candidate buckets via <paramref name="buckets"/>, computes overlap
+    /// tests and optional intersection points, and populates <paramref name="collisionRegister"/>
+    /// when collisions are detected. Uses the per-thread collections (<paramref name="buckets"/>,
+    /// <paramref name="checkRegister"/>, <paramref name="objFirstContact"/>, and
+    /// <paramref name="colliderFirstContact"/>) to avoid allocations and aggregate first-contact
+    /// data locally. Shared active first-contact stacks (<paramref name="objFirstContactActive"/> and
+    /// <paramref name="colliderFirstContactActive"/>) are used for removals under locks to ensure
+    /// correct first-contact semantics across threads.
+    /// </remarks>
+    /// <param name="collisionBody">The collision object being processed.</param>
+    /// <param name="dt">Elapsed time since the last update in seconds.</param>
+    /// <param name="collisionRegister">Reference to a <see cref="CollisionRegister"/> that will be created and filled when collisions are found.</param>
+    /// <param name="buckets">Per-thread list reused to collect candidate broadphase buckets.</param>
+    /// <param name="checkRegister">Per-thread deduplication set for candidate <see cref="Collider"/> instances.</param>
+    /// <param name="objFirstContact">Per-thread first-contact stack for collision object pairs.</param>
+    /// <param name="colliderFirstContact">Per-thread first-contact stack for collider pairs.</param>
+    /// <param name="objFirstContactActive">Shared active first-contact stack for collision object pairs (used for removals under lock).</param>
+    /// <param name="colliderFirstContactActive">Shared active first-contact stack for collider pairs (used for removals under lock).</param>
     private void ProcessCollisionObjectThreadSafe(
         CollisionObject collisionBody,
         float dt,
@@ -444,6 +554,20 @@ public partial class CollisionHandler
             }
         }
     }
+    
+    /// <summary>
+    /// Merge all entries from <paramref name="source"/> into <paramref name="dest"/>.
+    /// For each key in <paramref name="source"/>, this method adds every associated second-entry
+    /// to the destination stack.
+    /// </summary>
+    /// <typeparam name="T1">Type of the first key (reference type).</typeparam>
+    /// <typeparam name="T2">Type of the second key (reference type).</typeparam>
+    /// <param name="source">Source <see cref="FirstContactStack{T1,T2}"/> to copy entries from.</param>
+    /// <param name="dest">Destination <see cref="FirstContactStack{T1,T2}"/> to receive entries.</param>
+    /// <remarks>
+    /// Existing entries in <paramref name="dest"/> are preserved; duplicate handling is delegated
+    /// to the <see cref="FirstContactStack{T1,T2}"/> implementation.
+    /// </remarks>
     private void MergeFirstContacts<T1, T2>(FirstContactStack<T1, T2> source, FirstContactStack<T1, T2> dest) where T1 : class where T2 : class
     {
         foreach (var kvp in source)
@@ -455,22 +579,48 @@ public partial class CollisionHandler
     #endregion
     
     #region Sequential
-    // private void ProcessCollisions(float dt)
-    // {
-    //     foreach (var collisionBody in collisionBodyRegister.AllObjects)
-    //     {
-    //         if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
-    //
-    //         CollisionRegister? collisionRegister = null;
-    //         
-    //         ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
-    //
-    //         if (collisionRegister != null)
-    //         {
-    //             collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
-    //         }
-    //     }
-    // }
+
+    /// <summary>
+    /// Sequentially processes all registered collision objects and populates the collision stack.
+    /// </summary>
+    /// <param name="dt">Elapsed time in seconds since the last update.</param>
+    /// <remarks>
+    /// This is the non-parallel processing path used when <c>ParallelProcessing</c> is <c>false</c>.
+    /// For each enabled <see cref="CollisionObject"/> the method calls <see cref="ProcessCollisionObject"/>
+    /// to detect collisions and add resulting <see cref="CollisionRegister"/> instances to the
+    /// <see cref="collisionStack"/>.
+    /// </remarks>
+    private void ProcessCollisionsSequential(float dt)
+    {
+        foreach (var collisionBody in collisionBodyRegister.AllObjects)
+        {
+            if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
+            CollisionRegister? collisionRegister = null;
+            ProcessCollisionObject(collisionBody, dt, ref collisionRegister);
+            if (collisionRegister != null)
+                collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
+        }
+    }
+    
+    /// <summary>
+    /// Processes a single <see cref="CollisionObject"/> in the sequential collision processing path.
+    /// </summary>
+    /// <param name="collisionBody">The collision object whose colliders will be checked against candidates.</param>
+    /// <param name="dt">Delta time in seconds since the last update. Used for shape projection when <see cref="CollisionObject.ProjectShape"/> is enabled.</param>
+    /// <param name="collisionRegister">
+    /// Reference to an optional <see cref="CollisionRegister"/> that will be created and populated when collisions are detected.
+    /// If no collisions are found the value remains <c>null</c>.
+    /// </param>
+    /// <remarks>
+    /// - Iterates through each enabled <see cref="Collider"/> of <paramref name="collisionBody"/>.
+    /// - Uses the <see cref="IBroadphase"/> to obtain candidate buckets and a per-handler check register to avoid duplicate candidate checks.
+    /// - Supports projected shapes (for continuous motion) when <see cref="CollisionObject.ProjectShape"/> is true.
+    /// - Determines overlap and optionally computes intersection points. If shapes overlap but no intersection points are returned,
+    ///   a fallback closest-point on the candidate is added so collidable-inside-collidable cases yield at least one contact point.
+    /// - Manages first-contact bookkeeping using the handler-level first-contact registers:
+    ///   collision object first-contact and collider first-contact registers are updated to compute "first contact" flags.
+    /// - This method does not perform collision resolution; it only fills <paramref name="collisionRegister"/> with detected collisions.
+    /// </remarks>
     private void ProcessCollisionObject(CollisionObject collisionBody, float dt, ref CollisionRegister? collisionRegister)
     {
         var passivChecking = collisionBody.Passive;
@@ -559,43 +709,8 @@ public partial class CollisionHandler
             
         }
     }
-    private void Resolve()
-    {
-        collisionBodyRegister.Process();
-
-        collisionStack.ProcessCollisions();
-        collisionStack.Clear();
-
-        foreach (var kvp in collisionObjectFirstContactRegisterActive)
-        {
-            var resolver = kvp.Key;
-            var others = kvp.Value;
-            if(others.Count <= 0) continue;
-            foreach (var other in others)
-            {
-                resolver.ResolveContactEnded(other);
-            }
-        }
-        collisionObjectFirstContactRegisterActive.Clear();
-        (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
-        
-        foreach (var kvp in colliderFirstContactRegisterActive)
-        {
-            var self = kvp.Key;
-            var resolver = self.Parent;
-            if(resolver == null) continue;
-            var others = kvp.Value;
-            if(others.Count <= 0) continue;
-            foreach (var other in others)
-            {
-                resolver.ResolveColliderContactEnded(self, other);
-            }
-        }
-        colliderFirstContactRegisterActive.Clear();
-        (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
-    }
     #endregion
-   
+  
     #endregion
 
     #region Debug
