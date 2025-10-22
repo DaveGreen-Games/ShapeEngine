@@ -68,7 +68,7 @@ public partial class CollisionHandler
 
     /// <summary>
     /// Accumulates detected collisions as <see cref="CollisionRegister"/> entries for
-    /// later resolution by <see cref="Resolve"/>.
+    /// later resolution by <see cref="ResolveSequential"/>/<see cref="ResolveParallel"/>.
     /// </summary>
     private readonly CollisionStack collisionStack;
 
@@ -234,7 +234,8 @@ public partial class CollisionHandler
         totalProcessTime += processTime;
         
         stopwatch.Restart();
-        Resolve();
+        if(ParallelProcessing) ResolveParallel();
+        else ResolveSequential();
         var resolveTime = stopwatch.ElapsedMilliseconds;
         totalResolveTime += resolveTime;
         
@@ -262,54 +263,6 @@ public partial class CollisionHandler
     #endregion
     
     #region Collision Processing
-    
-    /// <summary>
-    /// Resolves collisions after detection by processing queued collision data and notifying
-    /// collision objects and colliders about contact end events.
-    /// </summary>
-    /// <remarks>
-    /// This method:
-    /// - Applies pending changes in the collision body register.
-    /// - Processes and clears the collision stack (performs resolution).
-    /// - Iterates active first-contact registers and calls the appropriate
-    ///   ResolveContactEnded / ResolveColliderContactEnded callbacks for ended contacts.
-    /// - Swaps and clears active/temp first-contact registers to prepare for the next update.
-    /// </remarks>
-    private void Resolve()
-    {
-        collisionBodyRegister.Process();
-
-        collisionStack.ProcessCollisions();
-        collisionStack.Clear();
-
-        foreach (var kvp in collisionObjectFirstContactRegisterActive)
-        {
-            var resolver = kvp.Key;
-            var others = kvp.Value;
-            if(others.Count <= 0) continue;
-            foreach (var other in others)
-            {
-                resolver.ResolveContactEnded(other);
-            }
-        }
-        collisionObjectFirstContactRegisterActive.Clear();
-        (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
-        
-        foreach (var kvp in colliderFirstContactRegisterActive)
-        {
-            var self = kvp.Key;
-            var resolver = self.Parent;
-            if(resolver == null) continue;
-            var others = kvp.Value;
-            if(others.Count <= 0) continue;
-            foreach (var other in others)
-            {
-                resolver.ResolveColliderContactEnded(self, other);
-            }
-        }
-        colliderFirstContactRegisterActive.Clear();
-        (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
-    }
     
     #region Parallel
     /// <summary>
@@ -556,6 +509,57 @@ public partial class CollisionHandler
     }
     
     /// <summary>
+    /// Resolves collisions after parallel detection by processing queued collision data and notifying
+    /// collision objects and colliders about contact end events in parallel.
+    /// </summary>
+    /// <remarks>
+    /// - Applies pending register changes.
+    /// - Processes and clears the collision stack.
+    /// - Iterates the active first-contact registers in parallel and invokes the appropriate
+    ///   contact-ended callbacks on collision objects and colliders.
+    /// - Clears and swaps active/temp first-contact registers to prepare for the next update.
+    /// This method corresponds to the parallel processing path and should be used when
+    /// <see cref="ParallelProcessing"/> is enabled.
+    /// </remarks>
+    private void ResolveParallel()
+    {
+        collisionBodyRegister.Process();
+
+        collisionStack.ProcessCollisions();
+        collisionStack.Clear();
+
+        // Parallel processing of collision object contact endings
+        Parallel.ForEach(collisionObjectFirstContactRegisterActive, kvp =>
+        {
+            var resolver = kvp.Key;
+            var others = kvp.Value;
+            if(others.Count <= 0) return;
+            foreach (var other in others)
+            {
+                resolver.ResolveContactEnded(other);
+            }
+        });
+        collisionObjectFirstContactRegisterActive.Clear();
+        (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
+
+        // Parallel processing of collider contact endings
+        Parallel.ForEach(colliderFirstContactRegisterActive, kvp =>
+        {
+            var self = kvp.Key;
+            var resolver = self.Parent;
+            if(resolver == null) return;
+            var others = kvp.Value;
+            if(others.Count <= 0) return;
+            foreach (var other in others)
+            {
+                resolver.ResolveColliderContactEnded(self, other);
+            }
+        });
+        colliderFirstContactRegisterActive.Clear();
+        (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
+    }
+    
+    /// <summary>
     /// Merge all entries from <paramref name="source"/> into <paramref name="dest"/>.
     /// For each key in <paramref name="source"/>, this method adds every associated second-entry
     /// to the destination stack.
@@ -708,6 +712,54 @@ public partial class CollisionHandler
             }
             
         }
+    }
+    
+    /// <summary>
+    /// Resolves collisions in sequential mdoe after detection by processing queued collision data and notifying
+    /// collision objects and colliders about contact end events.
+    /// </summary>
+    /// <remarks>
+    /// This method:
+    /// - Applies pending changes in the collision body register.
+    /// - Processes and clears the collision stack (performs resolution).
+    /// - Iterates active first-contact registers and calls the appropriate
+    ///   ResolveContactEnded / ResolveColliderContactEnded callbacks for ended contacts.
+    /// - Swaps and clears active/temp first-contact registers to prepare for the next update.
+    /// </remarks>
+    private void ResolveSequential()
+    {
+        collisionBodyRegister.Process();
+
+        collisionStack.ProcessCollisions();
+        collisionStack.Clear();
+
+        foreach (var kvp in collisionObjectFirstContactRegisterActive)
+        {
+            var resolver = kvp.Key;
+            var others = kvp.Value;
+            if(others.Count <= 0) continue;
+            foreach (var other in others)
+            {
+                resolver.ResolveContactEnded(other);
+            }
+        }
+        collisionObjectFirstContactRegisterActive.Clear();
+        (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
+        
+        foreach (var kvp in colliderFirstContactRegisterActive)
+        {
+            var self = kvp.Key;
+            var resolver = self.Parent;
+            if(resolver == null) continue;
+            var others = kvp.Value;
+            if(others.Count <= 0) continue;
+            foreach (var other in others)
+            {
+                resolver.ResolveColliderContactEnded(self, other);
+            }
+        }
+        colliderFirstContactRegisterActive.Clear();
+        (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
     }
     #endregion
   
