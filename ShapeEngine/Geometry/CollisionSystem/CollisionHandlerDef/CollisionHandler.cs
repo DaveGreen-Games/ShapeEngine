@@ -31,7 +31,7 @@ public partial class CollisionHandler
     /// Default is <c>true</c>. If enabled, ensure any external state accessed by collision callbacks
     /// is safe for concurrent access.
     /// </remarks>
-    public bool ParallelProcessing = true;
+    public bool ParallelProcessing = false;
     
     /// <summary>
     /// Pool of per-thread temporary data objects used by the parallel collision processing path.
@@ -115,7 +115,7 @@ public partial class CollisionHandler
     /// </summary>
     private readonly Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(128);
     
-    
+    //TODO: Remove once profiling is done
     private Stopwatch stopwatch = new();
     private long totalFillTime = 0;
     private long totalProcessTime = 0;
@@ -247,7 +247,8 @@ public partial class CollisionHandler
             double averageProcessTime = totalProcessTime / (double)updates;
             double averageResolveTime = totalResolveTime / (double)updates;
             
-            Console.WriteLine($"Collision Handler Average Times over {updates} updates:");
+            var processingMode = ParallelProcessing ? "Parallel Processing" : "Sequential Processing";
+            Console.WriteLine($"Collision Handler Average Times over {updates} updates using {processingMode}:");
             Console.WriteLine($" - Broadphase Fill Time: {averageFillTime:F2} ms");
             Console.WriteLine($" - Collision Processing Time: {averageProcessTime:F2} ms");
             Console.WriteLine($" - Collision Resolve Time: {averageResolveTime:F2} ms");
