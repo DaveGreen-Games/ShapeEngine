@@ -31,7 +31,7 @@ public partial class CollisionHandler
     /// Default is <c>true</c>. If enabled, ensure any external state accessed by collision callbacks
     /// is safe for concurrent access.
     /// </remarks>
-    public bool ParallelProcessing = false;
+    public bool ParallelProcessing = true;
     
     /// <summary>
     /// Pool of per-thread temporary data objects used by the parallel collision processing path.
@@ -114,13 +114,6 @@ public partial class CollisionHandler
     /// Initialized with a moderate default capacity.
     /// </summary>
     private readonly Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(128);
-    
-    //TODO: Remove once profiling is done
-    private Stopwatch stopwatch = new();
-    private long totalFillTime = 0;
-    private long totalProcessTime = 0;
-    private long totalResolveTime = 0;
-    private int updates = 0;
     #endregion
 
     #region Constructors
@@ -222,43 +215,17 @@ public partial class CollisionHandler
     /// </remarks>
     public void Update(float dt)
     {
-        stopwatch.Restart();
         broadphase.Fill(collisionBodyRegister.AllObjects);
-        var fillTime = stopwatch.ElapsedMilliseconds;
-        totalFillTime += fillTime;
-        
-        stopwatch.Restart();
-        if(ParallelProcessing) ProcessCollisionsParallel(dt);
-        else ProcessCollisionsSequential(dt);
-        var processTime = stopwatch.ElapsedMilliseconds;
-        totalProcessTime += processTime;
-        
-        stopwatch.Restart();
-        if(ParallelProcessing) ResolveParallel();
-        else ResolveSequential();
-        var resolveTime = stopwatch.ElapsedMilliseconds;
-        totalResolveTime += resolveTime;
-        
-        updates++;
-
-        if (updates > 60)
+        if (ParallelProcessing)
         {
-            double averageFillTime = totalFillTime / (double)updates;
-            double averageProcessTime = totalProcessTime / (double)updates;
-            double averageResolveTime = totalResolveTime / (double)updates;
-            
-            var processingMode = ParallelProcessing ? "Parallel Processing" : "Sequential Processing";
-            Console.WriteLine($"Collision Handler Average Times over {updates} updates using {processingMode}:");
-            Console.WriteLine($" - Broadphase Fill Time: {averageFillTime:F2} ms");
-            Console.WriteLine($" - Collision Processing Time: {averageProcessTime:F2} ms");
-            Console.WriteLine($" - Collision Resolve Time: {averageResolveTime:F2} ms");
-            
-            totalFillTime = 0;
-            totalProcessTime = 0;
-            totalResolveTime = 0;
-            updates = 0;
+            ProcessCollisionsParallel(dt);
+            ResolveParallel();
         }
-
+        else
+        {
+            ProcessCollisionsSequential(dt);
+            ResolveSequential();
+        }
     }
     
     #endregion
