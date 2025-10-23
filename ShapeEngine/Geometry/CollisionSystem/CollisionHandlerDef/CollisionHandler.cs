@@ -683,7 +683,7 @@ public partial class CollisionHandler
     }
     
     /// <summary>
-    /// Resolves collisions in sequential mdoe after detection by processing queued collision data and notifying
+    /// Resolves collisions in sequential mode after detection by processing queued collision data and notifying
     /// collision objects and colliders about contact end events.
     /// </summary>
     /// <remarks>
