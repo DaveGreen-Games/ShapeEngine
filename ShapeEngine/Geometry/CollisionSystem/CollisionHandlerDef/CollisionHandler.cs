@@ -386,7 +386,7 @@ public partial class CollisionHandler
         FirstContactStack<CollisionObject, CollisionObject> objFirstContactActive,
         FirstContactStack<Collider, Collider> colliderFirstContactActive)
     {
-        var passivChecking = collisionBody.Passive;
+        var passiveChecking = collisionBody.Passive;
         foreach (var collider in collisionBody.Colliders)
         {
             if (!collider.Enabled) continue;
@@ -440,7 +440,7 @@ public partial class CollisionHandler
                         if (computeIntersections)
                         {
                             IntersectionPoints? collisionPoints;
-                            if (passivChecking)
+                            if (passiveChecking)
                             {
                                 collisionPoints = projectedShape != null ? candidate.Intersect(projectedShape) : candidate.Intersect(collider);
                             }
@@ -595,7 +595,7 @@ public partial class CollisionHandler
     /// </remarks>
     private void ProcessCollisionObject(CollisionObject collisionBody, float dt, ref CollisionRegister? collisionRegister)
     {
-        var passivChecking = collisionBody.Passive;
+        var passiveChecking = collisionBody.Passive;
         foreach (var collider in collisionBody.Colliders)
         {
             if (!collider.Enabled) continue;
@@ -643,7 +643,7 @@ public partial class CollisionHandler
                         if (computeIntersections)
                         {
                             IntersectionPoints? collisionPoints;
-                            if (passivChecking)
+                            if (passiveChecking)
                             {
                                 collisionPoints = projectedShape != null ? candidate.Intersect(projectedShape) : candidate.Intersect(collider);
                             }
@@ -660,7 +660,7 @@ public partial class CollisionHandler
                                 if (!candidate.ContainsPoint(refPoint))
                                 {
                                     var closest = candidate.GetClosestPoint(refPoint, out float _);
-                                    collisionPoints ??= new();
+                                    collisionPoints ??= [];
                                     collisionPoints.Add(closest);
                                 }
                             }
