@@ -401,9 +401,10 @@ public partial class CollisionHandler
 
             buckets.Clear();
             checkRegister.Clear();
-            if (projectedShape != null) broadphase.GetCandidateBuckets(projectedShape, ref buckets);
-            else broadphase.GetCandidateBuckets(collider, ref buckets);
-
+            
+            if (projectedShape != null) broadphase.GetCandidateBucketsThreadSafe(projectedShape, ref buckets); 
+            else broadphase.GetCandidateBucketsThreadSafe(collider, ref buckets);
+            
             if (buckets.Count <= 0) continue;
 
             var mask = collider.CollisionMask;

@@ -619,6 +619,30 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     {
         return GetCandidateBucketsExtended(polyLine, ref candidateBuckets, true);
     }
+
+    /// <summary>
+    /// Thread-safe wrapper for retrieving candidate broadphase buckets for a <see cref="Collider"/>.
+    /// Forwards the call to <see cref="GetCandidateBuckets(Collider, ref List{BroadphaseBucket})"/>.
+    /// </summary>
+    /// <param name="collider">The collider to query for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to a list that will be populated with candidate <see cref="BroadphaseBucket"/> instances.</param>
+    /// <returns>The number of candidate buckets added to <paramref name="candidateBuckets"/>.</returns>
+    public int GetCandidateBucketsThreadSafe(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
+    {
+        return GetCandidateBuckets(collider, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Thread-safe wrapper for retrieving candidate broadphase buckets for a <see cref="Polygon"/>.
+    /// Forwards the call to <see cref="GetCandidateBuckets(Polygon, ref List{BroadphaseBucket})"/>.
+    /// </summary>
+    /// <param name="poly">The polygon to query for candidate buckets.</param>
+    /// <param name="candidateBuckets">A reference to a list that will be populated with candidate <see cref="BroadphaseBucket"/> instances.</param>
+    /// <returns>The number of candidate buckets added to <paramref name="candidateBuckets"/>.</returns>
+    public int GetCandidateBucketsThreadSafe(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
+    {
+        return GetCandidateBuckets(poly, ref candidateBuckets);
+    }
+
     /// <summary>
     /// Retrieves all candidate buckets that may contain colliders for the given <see cref="Segment"/>.
     /// Uses extended shape-based queries to accumulate candidate buckets into the provided list.
