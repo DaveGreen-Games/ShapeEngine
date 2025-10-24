@@ -28,10 +28,11 @@ public partial class CollisionHandler
     /// When <c>false</c>, the sequential path (<see cref="ProcessCollisionsSequential"/>) is used.
     /// </summary>
     /// <remarks>
-    /// Default is <c>true</c>. If enabled, ensure any external state accessed by collision callbacks
+    /// Default is <c>false</c>.
+    /// If enabled, ensure any external state accessed by collision callbacks
     /// is safe for concurrent access.
     /// </remarks>
-    public bool ParallelProcessing = true;
+    public bool ParallelProcessing = false;
     
     /// <summary>
     /// Pool of per-thread temporary data objects used by the parallel collision processing path.
