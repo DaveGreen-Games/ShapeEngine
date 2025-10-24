@@ -1,5 +1,9 @@
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Geometry;
 
@@ -14,8 +18,6 @@ public interface ICellCollider
     public bool CollidedWith(ICellCollider other);
     public void CellEnteredBy(ICellCollider other);
 }
-
-
 public class CellCollisionSystem(Size cellSize)
 {
     private class ColliderContainer
@@ -323,4 +325,195 @@ public class CellCollisionSystem(Size cellSize)
         return cellLayer;
     }
     
+}
+
+
+
+
+// Simple example collider implementing ICellCollider
+public class SimpleCollider : ICellCollider
+{
+    private const int BlueId = 1;
+    private const uint BlueLayer = 1;
+    private static readonly BitFlag BlueMask = new(RedLayer);
+    private static readonly ColorRgba BlueColor = new ColorRgba(System.Drawing.Color.Blue);
+    
+    private const int RedId = 1;
+    private const uint RedLayer = 2;
+    private static readonly BitFlag RedMask = new(BlueLayer);
+    private static readonly ColorRgba RedColor = new ColorRgba(System.Drawing.Color.Red);
+    
+    
+    private Vector2 position;
+    private Vector2 velocity;
+    private float radius;
+    private uint layer;
+    private BitFlag mask;
+    private int typeId;
+    private ColorRgba color;
+    private readonly Rect bounds;
+    
+    public SimpleCollider(bool redTeam, Rect bounds)
+    { 
+        this.bounds = bounds;
+        if (redTeam)
+        {
+            typeId = RedId;
+            layer = RedLayer;
+            mask = RedMask;
+            color = RedColor;
+        }
+        else
+        {
+            typeId = BlueId;
+            layer = BlueLayer;
+            mask = BlueMask;
+            color = BlueColor;
+        }
+        
+        var randPos = bounds.GetRandomPointInside();
+        var randSpeed = Rng.Instance.RandF(25, 75);
+        var randVel = Rng.Instance.RandVec2() * randSpeed;
+        var randRadius = randSpeed / 5f;
+        
+        position = randPos;
+        velocity = randVel;
+        radius = randRadius;
+    }
+
+    
+    
+    public int GetTypeId() => typeId;
+    public uint GetCollisionLayer() => layer;
+    public BitFlag GetCollisionMask() => mask;
+
+    // Move advances position by velocity * dt and returns new position
+    public void Move(float dt, out Vector2 newPosition)
+    {
+        position += velocity * dt;
+        
+        // Bounce off bounds
+        if (position.X - radius < bounds.Left)
+        {
+            position.X = bounds.Left + radius;
+            velocity.X = -velocity.X;
+        }
+        else if (position.X + radius > bounds.Right)
+        {
+            position.X = bounds.Right - radius;
+            velocity.X = -velocity.X;
+        }
+        if (position.Y - radius < bounds.Top)
+        {
+            position.Y = bounds.Top + radius;
+            velocity.Y = -velocity.Y;
+        }
+        else if (position.Y + radius > bounds.Bottom)
+        {
+            position.Y = bounds.Bottom - radius;
+            velocity.Y = -velocity.Y;
+        }
+        
+        newPosition = position;
+    }
+
+    public Vector2 GetPosition() => position;
+
+    public void Damage()
+    {
+        radius -= 1f;
+        if (radius <= 0f)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        var randPos = bounds.GetRandomPointInside();
+        float randSpeed = Rng.Instance.RandF(25, 75);
+        var randVel = Rng.Instance.RandVec2() * randSpeed;
+        float randRadius = randSpeed / 5f;
+        
+        position = randPos;
+        velocity = randVel;
+        radius = randRadius;
+
+        if (typeId == RedId)
+        {
+            typeId = BlueId;
+            layer = BlueLayer;
+            mask = BlueMask;
+            color = BlueColor;
+        }
+        else
+        {
+            typeId = RedId;
+            layer = RedLayer;
+            mask = RedMask;
+            color = RedColor;
+        }
+    }
+    // Simple circle-vs-circle collision test
+    public bool CollidedWith(ICellCollider other)
+    {
+        if (other is not SimpleCollider sc) return false;
+        
+        if (sc.radius > radius) Damage();
+        else sc.Damage();
+
+        return false;
+    }
+
+    public void CellEnteredBy(ICellCollider other)
+    {
+        // Console.WriteLine($"Collider (type {typeId}, layer {layer}) entered by other on layer {other.GetCollisionLayer()} at {position}");
+    }
+
+    public void Draw()
+    {
+        CircleDrawing.DrawCircleFast(position, radius,color);
+    }
+}
+public class CellCollisionDemo
+{
+    private CellCollisionSystem cellCollisionSystem;
+
+
+    public CellCollisionDemo(Rect bounds, Size cellSize, int amount)
+    {
+        cellCollisionSystem = new CellCollisionSystem(cellSize);
+        
+        uint blueLayer = 1;
+        uint redLayer = 2;
+        
+        var blueMask = new BitFlag(redLayer);
+        var redMask = new BitFlag(blueLayer);
+
+        for (int i = 0; i < amount; i++)
+        {
+            if(i % 2 == 0)
+            {
+                var col = new SimpleCollider(redTeam:false, bounds:bounds);
+                cellCollisionSystem.Add(col);
+            }
+            else
+            {
+                var col = new SimpleCollider(redTeam:true,  bounds:bounds);
+                cellCollisionSystem.Add(col);
+            }
+        }
+        
+        
+    }
+
+    public void Update(float dt)
+    {
+        cellCollisionSystem.Update(dt);
+    }
+
+    public void Draw()
+    {
+        
+    }
 }
