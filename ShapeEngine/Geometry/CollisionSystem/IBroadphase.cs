@@ -136,4 +136,26 @@ public interface IBroadphase : IBounds
     /// <param name="candidateBuckets">A reference to the list to populate with candidate buckets.</param>
     /// <returns>The number of candidate buckets found.</returns>
     public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets);
+    
+    
+    
+    /// <summary>
+    /// Thread-safe variant of <see cref="GetCandidateBuckets(Collider, ref List{BroadphaseBucket})"/>.
+    /// Retrieves candidate buckets for collision checks based on the specified <see cref="Collider"/>
+    /// and populates <paramref name="candidateBuckets"/> in a manner safe for concurrent callers.
+    /// </summary>
+    /// <param name="collider">The collider to check.</param>
+    /// <param name="candidateBuckets">A reference to the list to populate with candidate buckets.</param>
+    /// <returns>The number of candidate buckets found.</returns>
+    public int GetCandidateBucketsThreadSafe(Collider collider, ref List<BroadphaseBucket> candidateBuckets);
+    
+    /// <summary>
+    /// Thread-safe variant of <see cref="GetCandidateBuckets(Polygon, ref List{BroadphaseBucket})"/>.
+    /// Retrieves candidate buckets for collision checks based on the specified <see cref="Polygon"/>
+    /// and populates <paramref name="candidateBuckets"/> in a manner safe for concurrent callers.
+    /// </summary>
+    /// <param name="poly">The polygon to check.</param>
+    /// <param name="candidateBuckets">A reference to the list to populate with candidate buckets.</param>
+    /// <returns>The number of candidate buckets found.</returns>
+    public int GetCandidateBucketsThreadSafe(Polygon poly, ref List<BroadphaseBucket> candidateBuckets);
 }

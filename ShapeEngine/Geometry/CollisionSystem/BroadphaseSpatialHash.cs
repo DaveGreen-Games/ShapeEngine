@@ -79,6 +79,14 @@ public class BroadphaseSpatialHash : IBroadphase
     /// Used to avoid repeated allocations when collecting candidate buckets or colliders.
     /// </summary>
     private HashSet<int> idHolder = new(128);
+    /// <summary>
+    /// Thread-local storage for a per-thread temporary set of cell IDs (bucket indices).
+    /// Used to collect bucket indices during thread-safe queries to avoid allocations
+    /// and contention between threads.
+    /// Each thread receives its own <see cref="HashSet{Int32}"/> instance with an initial capacity of 128.
+    /// The ThreadLocal is disposed in <see cref="Dispose"/>.
+    /// </summary>
+    private readonly ThreadLocal<HashSet<int>> idHolderThreadSafe = new(() => new HashSet<int>(128));
     #endregion
     
     #region Constructors
@@ -246,6 +254,7 @@ public class BroadphaseSpatialHash : IBroadphase
         register.Close();
         staticRegister.Close();
         buckets = [];
+        idHolderThreadSafe.Dispose();
     }
     /// <summary>
     /// Queues a resize of the spatial hash bounds to the specified rectangle. The resize is applied on the next clear.
@@ -476,7 +485,62 @@ public class BroadphaseSpatialHash : IBroadphase
         GetCellIDs(polyLine, ref idHolder);
         return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
-  
+
+    
+    /// <summary>
+    /// Thread-safe retrieval of candidate buckets that may contain colliders overlapping the given <paramref name="collider"/>.
+    /// </summary>
+    /// <param name="collider">The collider to query. Disabled colliders are ignored.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets that may contain overlapping colliders.</param>
+    /// <returns>The number of buckets added to <paramref name="candidateBuckets"/>.</returns>
+    /// <remarks>
+    /// Uses a thread-local temporary <see cref="HashSet{Int32}"/> to collect cell IDs and avoid per-call allocations.
+    /// If the collider already has cached bucket ids in the register, those are used directly.
+    /// </remarks>
+    public int GetCandidateBucketsThreadSafe(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
+    {
+        if (!collider.Enabled) return 0;
+        int count = 0;
+        
+        if (register.TryGetEntry(collider, out var bucketIds) && bucketIds != null)
+        {
+            if (bucketIds.Count <= 0) return 0;
+            foreach (int id in bucketIds)
+            {
+                var bucket = buckets[id];
+                if (bucket.Count > 0)
+                {
+                    count++;
+                    candidateBuckets.Add(buckets[id]);
+                }
+            }
+            
+            return count;
+        }
+        
+        var ids = idHolderThreadSafe.Value;
+        if (ids == null) return 0;
+        ids.Clear();
+        GetCellIDs(collider, ref ids);
+        return FillCandidateBuckets(ids, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Thread-safe retrieval of candidate buckets that may contain colliders overlapping the specified polygon.
+    /// Uses a thread-local temporary <see cref="HashSet{Int32}"/> to collect cell IDs and avoid per-call allocations.
+    /// </summary>
+    /// <param name="poly">The polygon to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets that may contain overlapping colliders.</param>
+    /// <returns>The number of buckets added to <paramref name="candidateBuckets"/>.</returns>
+    public int GetCandidateBucketsThreadSafe(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
+    {
+        var ids = idHolderThreadSafe.Value;
+        if (ids == null) return 0;
+        ids.Clear();
+        GetCellIDs(poly, ref ids);
+        return FillCandidateBuckets(ids, ref candidateBuckets);
+    }
+
+    
     /// <summary>
     /// Gets all unique colliders that may overlap the given collision object.
     /// </summary>
@@ -682,7 +746,7 @@ public class BroadphaseSpatialHash : IBroadphase
         if (bucketIds.Count <= 0) return 0;
 
         int count = 0;
-        foreach (var id in bucketIds)
+        foreach (var id in bucketIds)//NOTE: issue
         {
             var bucket = buckets[id];
             if (bucket.Count > 0)

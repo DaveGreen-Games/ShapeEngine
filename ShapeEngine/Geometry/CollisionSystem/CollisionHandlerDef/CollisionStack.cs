@@ -20,8 +20,10 @@ public partial class CollisionHandler
                 var resolver = entry.Key;
                 var register = entry.Value;
                 if (register.Count <= 0) continue;
-                foreach (var info in register.Values)
+                
+                foreach (var collisionInfo in register)
                 {
+                    var info = collisionInfo.Value;
                     if (resolver.FilterCollisionPoints && info.TotalCollisionPointCount > 0)
                     {
                         info.GenerateFilteredCollisionPoint(resolver.CollisionPointsFilterType, resolver.Transform.Position);
