@@ -496,33 +496,34 @@ public partial class CollisionHandler
         collisionStack.ProcessCollisions();
         collisionStack.Clear();
 
-        // Parallel processing of collision object contact endings
-        Parallel.ForEach(collisionObjectFirstContactRegisterActive, kvp =>
+        // Snapshot to arrays to avoid Parallel.ForEach\`s dynamic partitioner allocations.
+        var objEntries = collisionObjectFirstContactRegisterActive.ToArray();
+        if (objEntries.Length > 0)
         {
-            var resolver = kvp.Key;
-            var others = kvp.Value;
-            if(others.Count <= 0) return;
-            foreach (var other in others)
+            Parallel.For(0, objEntries.Length, i =>
             {
-                resolver.ResolveContactEnded(other);
-            }
-        });
+                var (colObject, others) = objEntries[i];
+                if (others.Count <= 0) return;
+                foreach (var other in others)
+                    colObject.ResolveContactEnded(other);
+            });
+        }
         collisionObjectFirstContactRegisterActive.Clear();
         (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
 
-        // Parallel processing of collider contact endings
-        Parallel.ForEach(colliderFirstContactRegisterActive, kvp =>
+        var colEntries = colliderFirstContactRegisterActive.ToArray();
+        if (colEntries.Length > 0)
         {
-            var self = kvp.Key;
-            var resolver = self.Parent;
-            if(resolver == null) return;
-            var others = kvp.Value;
-            if(others.Count <= 0) return;
-            foreach (var other in others)
+            Parallel.For(0, colEntries.Length, i =>
             {
-                resolver.ResolveColliderContactEnded(self, other);
-            }
-        });
+                var (collider, others) = colEntries[i];
+                var resolver = collider.Parent;
+                if (resolver == null) return;
+                if (others.Count <= 0) return;
+                foreach (var other in others)
+                    resolver.ResolveColliderContactEnded(collider, other);
+            });
+        }
         colliderFirstContactRegisterActive.Clear();
         (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
     }
