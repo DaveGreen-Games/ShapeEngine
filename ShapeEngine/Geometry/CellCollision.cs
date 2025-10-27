@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.Intrinsics.X86;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
@@ -12,7 +13,7 @@ public interface ICellCollider
     public int GetTypeId();
     public uint GetCollisionLayer();
     public BitFlag GetCollisionMask();
-    public void Move(float dt, out Vector2 position);
+    public void Update(float dt, out Vector2 position);
     public Vector2 GetPosition();
     
     public bool CollidedWith(ICellCollider other);
@@ -191,7 +192,7 @@ public class CellCollisionSystem(Size cellSize)
         }
     }
 
-
+    
     private readonly Dictionary<Coordinates, CellLayer> cellLayers = new();
     private readonly Dictionary<ICellCollider, ColliderContainer> occupants = [];
     private readonly HashSet<ICellCollider> occupantsToAdd = [];
@@ -239,6 +240,56 @@ public class CellCollisionSystem(Size cellSize)
         return occupantsToRemove.Add(collider);
     }
 
+    public int GetAllOccupants<T>(ref HashSet<T> result) where T : ICellCollider
+    {
+        var count = 0;
+        foreach (var kvp in occupants)
+        {
+            if (kvp.Key is T t)
+            {
+                result.Add(t);
+                count++;
+            }
+        }
+        return count;
+    }
+    public void DrawDebug(ColorRgba lineColor, ColorRgba fillColor, ColorRgba borderColor)
+    {
+        float lt = cellSize.Max() * 0.01f;
+
+        var minCoords = Coordinates.MaxValue;
+        var maxCoords = Coordinates.MinValue;
+        
+        foreach (var kvp in cellLayers)
+        {
+            var coords = kvp.Key;
+            
+            minCoords = minCoords.Min(coords);
+            maxCoords = maxCoords.Max(coords);
+            
+            var cellLayer = kvp.Value;
+            var filled = !cellLayer.IsEmpty;
+            var rect = new Rect(
+                coords.X * cellSize.Width,
+                coords.Y * cellSize.Height,
+                cellSize.Width,
+                cellSize.Height);
+
+            rect.DrawLines(lt, lineColor);
+            if (filled)
+            {
+                rect.ScaleSize(0.75f, AnchorPoint.Center).Draw(fillColor);
+            }
+        }
+        
+        var borderRect = new Rect(
+            minCoords.X * cellSize.Width,
+            minCoords.Y * cellSize.Height,
+            (maxCoords.X - minCoords.X + 1) * cellSize.Width,
+            (maxCoords.Y - minCoords.Y + 1) * cellSize.Height);
+        borderRect.DrawLines(lt * 2f, borderColor);
+    }
+    
     private void ProcessOccupants(float dt)
     {
         foreach (var kvp in occupants)
@@ -248,14 +299,27 @@ public class CellCollisionSystem(Size cellSize)
     }
     private void ProcessOccupant(ICellCollider collider, ColliderContainer container, float dt)
     {
-        collider.Move(dt, out var newPosition);
+        collider.Update(dt, out var newPosition);
         var newCoords = GetCoordinates(newPosition);
-        if (newCoords != container.Coordinates) //collider moved to a new cell
-        { 
-            if(container.Coordinates != null && cellLayers.TryGetValue((Coordinates)container.Coordinates, out var oldLayer))
+        var oldCoords = container.Coordinates;
+        if (oldCoords == null || newCoords != oldCoords) //collider moved to a new cell
+        {
+            if (oldCoords != null)
             {
-                oldLayer.Remove(collider);
+                var validOldCoordinates = (Coordinates)oldCoords;
+                if(cellLayers.TryGetValue(validOldCoordinates, out var oldLayer))
+                {
+                    if (oldLayer.Remove(collider))
+                    {
+                        if (oldLayer.IsEmpty)
+                        {
+                            cellLayers.Remove(validOldCoordinates);
+                            CellLayer.ReturnInstance(oldLayer);
+                        }
+                    }
+                }
             }
+            
             var cellLayer = GetCellLayer(newCoords);
             bool added = cellLayer.Add(collider);
             if (added)
@@ -309,6 +373,14 @@ public class CellCollisionSystem(Size cellSize)
         var y = (int)Math.Floor(point.Y / cellSize.Height);
         return new Coordinates(x, y);
     }
+    private Rect GetCellRect(Coordinates coords)
+    {
+        return new Rect(
+            coords.X * cellSize.Width,
+            coords.Y * cellSize.Height,
+            cellSize.Width,
+            cellSize.Height);
+    }
     private CellLayer GetCellLayer(Coordinates coords)
     {
         CellLayer cellLayer;
@@ -338,11 +410,15 @@ public class SimpleCollider : ICellCollider
     private static readonly BitFlag BlueMask = new(RedLayer);
     private static readonly ColorRgba BlueColor = new ColorRgba(System.Drawing.Color.Blue);
     
-    private const int RedId = 1;
+    private const int RedId = 2;
     private const uint RedLayer = 2;
     private static readonly BitFlag RedMask = new(BlueLayer);
     private static readonly ColorRgba RedColor = new ColorRgba(System.Drawing.Color.Red);
-    
+    private static readonly ColorRgba DamageColor = new ColorRgba(System.Drawing.Color.NavajoWhite);
+    private const float MinSize = 1f;
+    private const float MaxSize = 10f;
+    private const float DamageValue = 0.2f;
+    private const float FoodValue = 0.1f;
     
     private Vector2 position;
     private Vector2 velocity;
@@ -352,6 +428,8 @@ public class SimpleCollider : ICellCollider
     private int typeId;
     private ColorRgba color;
     private readonly Rect bounds;
+    private float damageTimer = 0f;
+    private const float damagedDuration = 0.2f;
     
     public SimpleCollider(bool redTeam, Rect bounds)
     { 
@@ -372,9 +450,9 @@ public class SimpleCollider : ICellCollider
         }
         
         var randPos = bounds.GetRandomPointInside();
-        var randSpeed = Rng.Instance.RandF(25, 75);
+        var randSpeed = 100f; //Rng.Instance.RandF(75, 125);
         var randVel = Rng.Instance.RandVec2() * randSpeed;
-        var randRadius = randSpeed / 5f;
+        var randRadius = Rng.Instance.RandF(MinSize, MaxSize);
         
         position = randPos;
         velocity = randVel;
@@ -388,8 +466,14 @@ public class SimpleCollider : ICellCollider
     public BitFlag GetCollisionMask() => mask;
 
     // Move advances position by velocity * dt and returns new position
-    public void Move(float dt, out Vector2 newPosition)
+    public void Update(float dt, out Vector2 newPosition)
     {
+        if (damageTimer > 0)
+        {
+            damageTimer -= dt;
+            if (damageTimer < 0f) damageTimer = 0f;
+        }
+        
         position += velocity * dt;
         
         // Bounce off bounds
@@ -419,21 +503,34 @@ public class SimpleCollider : ICellCollider
 
     public Vector2 GetPosition() => position;
 
-    public void Damage()
+    public void Grow()
     {
-        radius -= 1f;
-        if (radius <= 0f)
+        radius += FoodValue;
+        if (radius > MaxSize)
         {
             Die();
+        }
+    }
+    public void Damage()
+    {
+        radius -= DamageValue;
+        if (radius < MinSize)
+        {
+            Die();
+        }
+        else
+        {
+            damageTimer = damagedDuration;
         }
     }
 
     private void Die()
     {
+        damageTimer = 0f;
         var randPos = bounds.GetRandomPointInside();
-        float randSpeed = Rng.Instance.RandF(25, 75);
+        var randSpeed = 100f; //Rng.Instance.RandF(75, 125);
         var randVel = Rng.Instance.RandVec2() * randSpeed;
-        float randRadius = randSpeed / 5f;
+        var randRadius = Rng.Instance.RandF(MinSize, MaxSize);
         
         position = randPos;
         velocity = randVel;
@@ -458,9 +555,20 @@ public class SimpleCollider : ICellCollider
     public bool CollidedWith(ICellCollider other)
     {
         if (other is not SimpleCollider sc) return false;
-        
-        if (sc.radius > radius) Damage();
-        else sc.Damage();
+
+        if (radius > sc.radius)
+        {
+            Grow();
+            sc.Damage();
+        }
+        // if (sc.radius > radius)
+        // {
+        //     Damage();
+        // }
+        // else
+        // {
+        //     sc.Damage();
+        // }
 
         return false;
     }
@@ -472,25 +580,20 @@ public class SimpleCollider : ICellCollider
 
     public void Draw()
     {
-        CircleDrawing.DrawCircleFast(position, radius,color);
+        CircleDrawing.DrawCircleFast(position, radius, damageTimer > 0f ? DamageColor : color);
     }
 }
 public class CellCollisionDemo
 {
     private CellCollisionSystem cellCollisionSystem;
-
+    private HashSet<SimpleCollider> drawableColliders;
 
     public CellCollisionDemo(Rect bounds, Size cellSize, int amount)
     {
         cellCollisionSystem = new CellCollisionSystem(cellSize);
+        drawableColliders = new HashSet<SimpleCollider>(amount);
         
-        uint blueLayer = 1;
-        uint redLayer = 2;
-        
-        var blueMask = new BitFlag(redLayer);
-        var redMask = new BitFlag(blueLayer);
-
-        for (int i = 0; i < amount; i++)
+        for (var i = 0; i < amount; i++)
         {
             if(i % 2 == 0)
             {
@@ -514,6 +617,13 @@ public class CellCollisionDemo
 
     public void Draw()
     {
+        // cellCollisionSystem.DrawDebug(new ColorRgba(System.Drawing.Color.DarkOliveGreen), new ColorRgba(System.Drawing.Color.DarkCyan), new ColorRgba(System.Drawing.Color.Aquamarine));
         
+        drawableColliders.Clear();
+        int count = cellCollisionSystem.GetAllOccupants(ref drawableColliders);
+        foreach (var col in drawableColliders)
+        {
+            col.Draw();
+        }
     }
 }
