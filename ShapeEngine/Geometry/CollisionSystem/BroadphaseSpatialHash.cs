@@ -746,7 +746,7 @@ public class BroadphaseSpatialHash : IBroadphase
         if (bucketIds.Count <= 0) return 0;
 
         int count = 0;
-        foreach (var id in bucketIds)//NOTE: issue
+        foreach (var id in bucketIds)
         {
             var bucket = buckets[id];
             if (bucket.Count > 0)
