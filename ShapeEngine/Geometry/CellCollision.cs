@@ -7,15 +7,7 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Random;
 
 namespace ShapeEngine.Geometry;
-
-//TODO: Change to: (current fps was 30 - 35 range with CellCollisionDemo)
-// - CellCollisionSystem has a Dict<Coordinates, Cell> only.
-// - Cell just holds all ICellColliders in that cell, regardless of layer.
-// - On adding a collider, we add it to the cell at its coordinates.
-// - On updating a collider, we check if it moved to a new cell. If so, we remove it from the old cell and add it to the new cell.
-// - On collision checks, we check all colliders in the same cell, and see if their layers/masks allow collision.
-// This simplifies the structure and reduces the number of nested dictionaries, at the cost of checking more colliders per cell.
-
+//TODO: Docs
 public interface ICellCollider
 {
     public int GetTypeId();
@@ -23,147 +15,18 @@ public interface ICellCollider
     public BitFlag GetCollisionMask();
     public void Update(float dt, out Vector2 position);
     public Vector2 GetPosition();
+
+
+    public void OnEnterCell(Coordinates coordinates);
+    // public void OnRemainInCell(Coordinates coordinates, float dt);
+    public void OnExitCell(Coordinates coordinates);
     
-    public bool CollidedWith(ICellCollider other);
-    public void CellEnteredBy(ICellCollider other);
+    public void OnCollisionStartedWith(ICellCollider other);
+    // public void OnCollisionOngoingWith(ICellCollider other, float dt);
+    public void OnCollisionEndedWith(ICellCollider other);
 }
 public class CellCollisionSystem(Size cellSize)
 {
-    private class ColliderContainer
-    {
-        private static readonly Queue<ColliderContainer> pool = [];
-        public static ColliderContainer RentInstance(ICellCollider collider, Coordinates coordinates, CellLayer cellLayer)
-        {
-            if (pool.Count <= 0) return new ColliderContainer(collider, coordinates, cellLayer);
-            
-            var container = pool.Dequeue();
-            container.Collider = collider;
-            container.Coordinates = coordinates;
-            container.CellLayer = cellLayer;
-            return container;
-        }
-        public static void ReturnInstance(ColliderContainer container)
-        {
-            container.Clear();
-            pool.Enqueue(container);
-        }
-        
-        
-        public ICellCollider? Collider;
-        public Coordinates? Coordinates;
-        public CellLayer? CellLayer;
-
-        private ColliderContainer(ICellCollider collider, Coordinates coordinates, CellLayer cellLayer)
-        {
-            Collider = collider;
-            Coordinates = coordinates;
-            CellLayer = cellLayer;
-        }
-        
-        public void Clear()
-        {
-            Collider = null;
-            Coordinates = null;
-            CellLayer = null;
-        }
-    }
-    private class CellLayer
-    {
-        private static readonly Queue<CellLayer> pool = [];
-        public static CellLayer RentInstance()
-        {
-            if (pool.Count <= 0) return new CellLayer(4);
-            var layer = pool.Dequeue();
-            return layer;
-        }
-        public static void ReturnInstance(CellLayer layer)
-        {
-            layer.Clear();
-            pool.Enqueue(layer);
-        }
-        
-        
-        private readonly Dictionary<uint, Cell> cells;
-        
-        private CellLayer(int capacity)
-        {
-            cells = new Dictionary<uint, Cell>(capacity);
-        }
-
-        public bool Add(ICellCollider collider)
-        {
-            var layer = collider.GetCollisionLayer();
-            if (cells.TryGetValue(layer, out var value))
-            {
-                if (value.Add(collider)) return true;
-                return false;
-            }
-
-            var cell = Cell.RentInstance();
-            cell.Add(collider);
-            cells.Add(layer, cell);
-            return true;
-        }
-        public bool Remove(ICellCollider collider)
-        {
-            var layer = collider.GetCollisionLayer();
-            if(cells.TryGetValue(layer, out var cell))
-            {
-                var removed = cell.Remove(collider);
-                if (removed && cell.IsEmpty)
-                {
-                    cells.Remove(layer);
-                    Cell.ReturnInstance(cell);
-                }
-                return removed;
-            }
-
-            return false;
-        }
-        public bool IsOccupied(uint layer)
-        {
-            return cells.TryGetValue(layer, out var value) && !value.IsEmpty;
-        }
-        public bool Clear(uint layer)
-        {
-            return cells.Remove(layer);
-        }
-        public void Collide(ICellCollider collider)
-        {
-            uint layer = collider.GetCollisionLayer();
-            var mask = collider.GetCollisionMask();
-            foreach (var (curLayer, curCell) in cells)
-            {
-                if(curLayer == layer) continue;
-                if(!mask.Has(curLayer)) continue;
-                foreach (var other in curCell.Occupants)
-                {
-                    var otherMask = other.GetCollisionMask();
-                    if(!otherMask.Has(layer)) continue;
-                    if (collider.CollidedWith(other))
-                    {
-                        other.CellEnteredBy(collider);
-                    }
-                }
-            }
-        }
-        public bool Contains(ICellCollider collider)
-        {
-            var layer = collider.GetCollisionLayer();
-            return cells.ContainsKey(layer) && cells[layer].Contains(collider);
-        }
-        
-        public bool IsEmpty => cells.Count <= 0;
-
-        public void Clear()
-        {
-            foreach (var cell in cells.Values)
-            {
-                Cell.ReturnInstance(cell);
-            }
-            cells.Clear();
-        }
-    }
     private class Cell
     {
         private static readonly Queue<Cell> pool = [];
@@ -179,54 +42,54 @@ public class CellCollisionSystem(Size cellSize)
             pool.Enqueue(cell);
         }
         
-        private readonly HashSet<ICellCollider> occupants;
+        public readonly HashSet<ICellCollider> Occupants;
 
         private Cell()
         {
-            occupants = new HashSet<ICellCollider>(32);
+            Occupants = new HashSet<ICellCollider>(32);
         }
-        
-        public HashSet<ICellCollider> Occupants => occupants;
 
-        public bool Add(ICellCollider c) => occupants.Add(c);
-        public bool Remove(ICellCollider c) => occupants.Remove(c);
-        public bool Contains(ICellCollider c) => occupants.Contains(c);
-        public bool IsEmpty => occupants.Count == 0;
+        public bool Add(ICellCollider c) => Occupants.Add(c);
+        public bool Remove(ICellCollider c) => Occupants.Remove(c);
+        public bool Contains(ICellCollider c) => Occupants.Contains(c);
+        public bool IsEmpty => Occupants.Count == 0;
 
         public void Clear()
         {
-            occupants.Clear();
+            Occupants.Clear();
         }
     }
-
     
-    private readonly Dictionary<Coordinates, CellLayer> cellLayers = new();
-    private readonly Dictionary<ICellCollider, ColliderContainer> occupants = [];
-    private readonly HashSet<ICellCollider> occupantsToAdd = [];
-    private readonly HashSet<ICellCollider> occupantsToRemove = [];
+    private readonly Dictionary<Coordinates, Cell> cells = new();
+    private readonly HashSet<ICellCollider> collidersToAdd = [];
+    private readonly HashSet<ICellCollider> collidersToRemove = [];
+    
+    private readonly Dictionary<ICellCollider, Coordinates> colliders = [];
+    private readonly Dictionary<ICellCollider, (Coordinates, Coordinates)> collisionRegister = new(500);
 
     public void Update(float dt)
     {
-        ProcessPendingOccupants();
-        ProcessOccupants(dt);
+        ProcessPendingColliders();
+        UpdateColliders(dt);
+        ResolveColliderCollisions(dt);
     }
     public void Clear()
     {
-        occupantsToAdd.Clear();
-        occupantsToRemove.Clear();
-        foreach (var kvp in occupants)
-        {
-            kvp.Value.Clear();
-            ColliderContainer.ReturnInstance(kvp.Value);
-        }
-        occupants.Clear();
+        collidersToAdd.Clear();
+        collidersToRemove.Clear();
+        // foreach (var kvp in colliders)
+        // {
+        //     ColliderContainer.ReturnInstance(kvp.Value);
+        // }
+        colliders.Clear();
         
-        foreach (var cellLayer in cellLayers.Values)
+        foreach (var kvp in cells)
         {
-            cellLayer.Clear();
-            CellLayer.ReturnInstance(cellLayer);
+            var cell = kvp.Value;
+            cell.Clear();
+            Cell.ReturnInstance(cell);
         }
-        cellLayers.Clear();
+        cells.Clear();
     }
     public void Close()
     {
@@ -235,22 +98,22 @@ public class CellCollisionSystem(Size cellSize)
     
     public bool Add(ICellCollider collider)
     {
-        if(occupantsToRemove.Contains(collider)) return false;
-        return occupantsToAdd.Add(collider);
+        if(collidersToRemove.Contains(collider)) return false;
+        return collidersToAdd.Add(collider);
     }
     public bool Remove(ICellCollider collider)
     {
-        if(occupantsToAdd.Contains(collider))
+        if(collidersToAdd.Contains(collider))
         {
-            occupantsToAdd.Remove(collider);
+            collidersToAdd.Remove(collider);
         }
-        return occupantsToRemove.Add(collider);
+        return collidersToRemove.Add(collider);
     }
 
-    public int GetAllOccupants<T>(ref HashSet<T> result) where T : ICellCollider
+    public int GetAllColliders<T>(ref HashSet<T> result) where T : ICellCollider
     {
         var count = 0;
-        foreach (var kvp in occupants)
+        foreach (var kvp in colliders)
         {
             if (kvp.Key is T t)
             {
@@ -267,7 +130,7 @@ public class CellCollisionSystem(Size cellSize)
         var minCoords = Coordinates.MaxValue;
         var maxCoords = Coordinates.MinValue;
         
-        foreach (var kvp in cellLayers)
+        foreach (var kvp in cells)
         {
             var coords = kvp.Key;
             
@@ -297,81 +160,168 @@ public class CellCollisionSystem(Size cellSize)
         borderRect.DrawLines(lt * 2f, borderColor);
     }
     
-    private void ProcessOccupants(float dt)
+    private void ProcessPendingColliders()
     {
-        foreach (var kvp in occupants)
-        {
-            ProcessOccupant(kvp.Key, kvp.Value, dt);
-        }
-    }
-    private void ProcessOccupant(ICellCollider collider, ColliderContainer container, float dt)
-    {
-        collider.Update(dt, out var newPosition);
-        var newCoords = GetCoordinates(newPosition);
-        var oldCoords = container.Coordinates;
-        if (oldCoords == null || newCoords != oldCoords) //collider moved to a new cell
-        {
-            if (oldCoords != null)
-            {
-                var validOldCoordinates = (Coordinates)oldCoords;
-                if(cellLayers.TryGetValue(validOldCoordinates, out var oldLayer))
-                {
-                    if (oldLayer.Remove(collider))
-                    {
-                        if (oldLayer.IsEmpty)
-                        {
-                            cellLayers.Remove(validOldCoordinates);
-                            CellLayer.ReturnInstance(oldLayer);
-                        }
-                    }
-                }
-            }
-            
-            var cellLayer = GetCellLayer(newCoords);
-            bool added = cellLayer.Add(collider);
-            if (added)
-            {
-                container.Coordinates = newCoords;
-                container.CellLayer = cellLayer;
-                cellLayer.Collide(collider);
-            }
-        }
-    }
-    private void ProcessPendingOccupants()
-    {
-        foreach (var collider in occupantsToAdd)
+        foreach (var collider in collidersToAdd)
         {
             AddCollider(collider);
         }
-        occupantsToAdd.Clear();
+        collidersToAdd.Clear();
         
-        foreach (var collider in occupantsToRemove)
+        foreach (var collider in collidersToRemove)
         {
             RemoveCollider(collider);
         }
-        occupantsToRemove.Clear();
+        collidersToRemove.Clear();
     }
+    
+    private void UpdateColliders(float dt)
+    {
+        foreach (var kvp in colliders)
+        {
+            UpdateCollider(kvp.Key, kvp.Value, dt);
+        }
+    }
+    private void UpdateCollider(ICellCollider collider, Coordinates oldCoords, float dt)
+    {
+        collider.Update(dt, out var newPosition);
+        var newCoords = GetCoordinates(newPosition);
+        // var oldCoords = container.Coordinates;
+
+        if (oldCoords == newCoords) return;
+
+        if (cells.TryGetValue(oldCoords, out var oldCell))
+        {
+            if (oldCell.Remove(collider))
+            {
+                if (oldCell.IsEmpty)
+                {
+                    cells.Remove(oldCoords);
+                    Cell.ReturnInstance(oldCell);
+                }
+            }
+        }
+        
+        var newCell = GetCell(newCoords);
+        if (newCell.Add(collider))
+        {
+            collisionRegister.Add(collider, (oldCoords, newCoords));
+        }
+    }
+    
+    private void ResolveColliderCollisions(float dt)
+    {
+        foreach (var (collider, (previousCoords, currentCoords)) in collisionRegister)
+        {
+            colliders[collider] = currentCoords;
+            
+            var layer = collider.GetCollisionLayer();
+            var mask = collider.GetCollisionMask();
+            
+            collider.OnExitCell(previousCoords);
+            if (cells.TryGetValue(previousCoords, out var oldCell))
+            {
+                foreach (var c in oldCell.Occupants)
+                {
+                    var otherLayer = c.GetCollisionLayer();
+                    var otherMask = c.GetCollisionMask();
+                    if(otherLayer == layer) continue;
+                    if (mask.Has(otherLayer))
+                    {
+                        collider.OnCollisionEndedWith(c);
+                    }
+                
+                    if (otherMask.Has(layer))
+                    {
+                        c.OnCollisionEndedWith(collider);
+                    }
+                }
+            }
+
+            collider.OnEnterCell(currentCoords);
+            if (cells.TryGetValue(currentCoords, out var newCell))
+            {
+                foreach (var c in newCell.Occupants)
+                {
+                    var otherLayer = c.GetCollisionLayer();
+                    var otherMask = c.GetCollisionMask();
+                    if(otherLayer == layer) continue;
+                    if (mask.Has(otherLayer))
+                    {
+                        collider.OnCollisionStartedWith(c);
+                    }
+
+                    if (otherMask.Has(layer))
+                    {
+                        c.OnCollisionStartedWith(collider);
+                    }
+                }
+            }
+        }
+        collisionRegister.Clear();
+    }
+    
     private bool AddCollider(ICellCollider collider)
     {
         var coords = GetCoordinates(collider.GetPosition());
-        var cellLayer = GetCellLayer(coords);
-        var added = cellLayer.Add(collider);
-        if (!added) return false;
-        
-        var container = ColliderContainer.RentInstance(collider, coords, cellLayer);
-        occupants.Add(collider, container);
+        if (cells.TryGetValue(coords, out var cell))
+        {
+            if (!cell.Add(collider)) return false;
+        }
+        else
+        {
+            var newCell = Cell.RentInstance();
+            if (newCell.Add(collider))
+            {
+                cells.Add(coords, newCell);
+            }
+            else
+            {
+                Cell.ReturnInstance(newCell);
+                return false;
+            }
+        }
+        colliders.Add(collider, coords);
         return true;
     }
     private bool RemoveCollider(ICellCollider collider)
     {
-        if (occupants.TryGetValue(collider, out var container))
+        if (colliders.TryGetValue(collider, out var coords))
         {
-            container.CellLayer?.Remove(collider);
-            occupants.Remove(collider);
-            ColliderContainer.ReturnInstance(container);
+            if (cells.TryGetValue(coords, out var cell))
+            {
+                cell.Remove(collider);
+                collider.OnExitCell(coords);
+                if (cell.IsEmpty)
+                {
+                    cells.Remove(coords);
+                    Cell.ReturnInstance(cell);
+                }
+                else
+                {
+                    var layer = collider.GetCollisionLayer();
+                    var mask = collider.GetCollisionMask();
+                    
+                    foreach (var c in cell.Occupants)
+                    {
+                        var otherLayer = c.GetCollisionLayer();
+                        var otherMask = c.GetCollisionMask();
+                        if(otherLayer == layer) continue;
+                        if (mask.Has(otherLayer))
+                        {
+                            collider.OnCollisionEndedWith(c);
+                        }
+                
+                        if (otherMask.Has(layer))
+                        {
+                            c.OnCollisionEndedWith(collider);
+                        }
+                    }
+                }
+            }
+            colliders.Remove(collider);
             return true;
         }
-
         return false;
     }
     private Coordinates GetCoordinates(Vector2 point)
@@ -388,249 +338,20 @@ public class CellCollisionSystem(Size cellSize)
             cellSize.Width,
             cellSize.Height);
     }
-    private CellLayer GetCellLayer(Coordinates coords)
+    private Cell GetCell(Coordinates coords)
     {
-        CellLayer cellLayer;
-        if (cellLayers.TryGetValue(coords, out var cellLayer1))
+        Cell cell;
+        if (cells.TryGetValue(coords, out var cellLayer1))
         {
-            cellLayer = cellLayer1;
+            cell = cellLayer1;
         }
         else
         {
-            cellLayer = CellLayer.RentInstance();
-            cellLayers.Add(coords, cellLayer);
+            cell = Cell.RentInstance();
+            cells.Add(coords, cell);
         }
 
-        return cellLayer;
+        return cell;
     }
     
-}
-
-
-
-
-// Simple example collider implementing ICellCollider
-public class SimpleCollider : ICellCollider
-{
-    private const int BlueId = 1;
-    private const uint BlueLayer = 1;
-    private static readonly BitFlag BlueMask = new(RedLayer);
-    private static readonly ColorRgba BlueColor = new ColorRgba(System.Drawing.Color.Blue);
-    
-    private const int RedId = 2;
-    private const uint RedLayer = 2;
-    private static readonly BitFlag RedMask = new(BlueLayer);
-    private static readonly ColorRgba RedColor = new ColorRgba(System.Drawing.Color.Red);
-    private static readonly ColorRgba DamageColor = new ColorRgba(System.Drawing.Color.NavajoWhite);
-    private const float MinSize = 1f;
-    private const float MaxSize = 10f;
-    private const float DamageValue = 0.2f;
-    private const float FoodValue = 0.1f;
-    
-    private Vector2 position;
-    private Vector2 velocity;
-    private float radius;
-    private uint layer;
-    private BitFlag mask;
-    private int typeId;
-    private ColorRgba color;
-    private readonly Rect bounds;
-    private float damageTimer = 0f;
-    private const float damagedDuration = 0.2f;
-    
-    public SimpleCollider(bool redTeam, Rect bounds)
-    { 
-        this.bounds = bounds;
-        if (redTeam)
-        {
-            typeId = RedId;
-            layer = RedLayer;
-            mask = RedMask;
-            color = RedColor;
-        }
-        else
-        {
-            typeId = BlueId;
-            layer = BlueLayer;
-            mask = BlueMask;
-            color = BlueColor;
-        }
-        
-        var randPos = bounds.GetRandomPointInside();
-        var randSpeed = 100f; //Rng.Instance.RandF(75, 125);
-        var randVel = Rng.Instance.RandVec2() * randSpeed;
-        var randRadius = Rng.Instance.RandF(MinSize, MaxSize);
-        
-        position = randPos;
-        velocity = randVel;
-        radius = randRadius;
-    }
-
-    
-    
-    public int GetTypeId() => typeId;
-    public uint GetCollisionLayer() => layer;
-    public BitFlag GetCollisionMask() => mask;
-
-    // Move advances position by velocity * dt and returns new position
-    public void Update(float dt, out Vector2 newPosition)
-    {
-        if (damageTimer > 0)
-        {
-            damageTimer -= dt;
-            if (damageTimer < 0f) damageTimer = 0f;
-        }
-        
-        position += velocity * dt;
-        
-        // Bounce off bounds
-        if (position.X - radius < bounds.Left)
-        {
-            position.X = bounds.Left + radius;
-            velocity.X = -velocity.X;
-        }
-        else if (position.X + radius > bounds.Right)
-        {
-            position.X = bounds.Right - radius;
-            velocity.X = -velocity.X;
-        }
-        if (position.Y - radius < bounds.Top)
-        {
-            position.Y = bounds.Top + radius;
-            velocity.Y = -velocity.Y;
-        }
-        else if (position.Y + radius > bounds.Bottom)
-        {
-            position.Y = bounds.Bottom - radius;
-            velocity.Y = -velocity.Y;
-        }
-        
-        newPosition = position;
-    }
-
-    public Vector2 GetPosition() => position;
-
-    public void Grow()
-    {
-        radius += FoodValue;
-        if (radius > MaxSize)
-        {
-            Die();
-        }
-    }
-    public void Damage()
-    {
-        radius -= DamageValue;
-        if (radius < MinSize)
-        {
-            Die();
-        }
-        else
-        {
-            damageTimer = damagedDuration;
-        }
-    }
-
-    private void Die()
-    {
-        damageTimer = 0f;
-        var randPos = bounds.GetRandomPointInside();
-        var randSpeed = 100f; //Rng.Instance.RandF(75, 125);
-        var randVel = Rng.Instance.RandVec2() * randSpeed;
-        var randRadius = Rng.Instance.RandF(MinSize, MaxSize);
-        
-        position = randPos;
-        velocity = randVel;
-        radius = randRadius;
-
-        if (typeId == RedId)
-        {
-            typeId = BlueId;
-            layer = BlueLayer;
-            mask = BlueMask;
-            color = BlueColor;
-        }
-        else
-        {
-            typeId = RedId;
-            layer = RedLayer;
-            mask = RedMask;
-            color = RedColor;
-        }
-    }
-    // Simple circle-vs-circle collision test
-    public bool CollidedWith(ICellCollider other)
-    {
-        if (other is not SimpleCollider sc) return false;
-
-        if (radius > sc.radius)
-        {
-            Grow();
-            sc.Damage();
-        }
-        // if (sc.radius > radius)
-        // {
-        //     Damage();
-        // }
-        // else
-        // {
-        //     sc.Damage();
-        // }
-
-        return false;
-    }
-
-    public void CellEnteredBy(ICellCollider other)
-    {
-        // Console.WriteLine($"Collider (type {typeId}, layer {layer}) entered by other on layer {other.GetCollisionLayer()} at {position}");
-    }
-
-    public void Draw()
-    {
-        CircleDrawing.DrawCircleFast(position, radius, damageTimer > 0f ? DamageColor : color);
-    }
-}
-public class CellCollisionDemo
-{
-    private CellCollisionSystem cellCollisionSystem;
-    private HashSet<SimpleCollider> drawableColliders;
-
-    public CellCollisionDemo(Rect bounds, Size cellSize, int amount)
-    {
-        cellCollisionSystem = new CellCollisionSystem(cellSize);
-        drawableColliders = new HashSet<SimpleCollider>(amount);
-        
-        for (var i = 0; i < amount; i++)
-        {
-            if(i % 2 == 0)
-            {
-                var col = new SimpleCollider(redTeam:false, bounds:bounds);
-                cellCollisionSystem.Add(col);
-            }
-            else
-            {
-                var col = new SimpleCollider(redTeam:true,  bounds:bounds);
-                cellCollisionSystem.Add(col);
-            }
-        }
-        
-        
-    }
-
-    public void Update(float dt)
-    {
-        cellCollisionSystem.Update(dt);
-    }
-
-    public void Draw()
-    {
-        // cellCollisionSystem.DrawDebug(new ColorRgba(System.Drawing.Color.DarkOliveGreen), new ColorRgba(System.Drawing.Color.DarkCyan), new ColorRgba(System.Drawing.Color.Aquamarine));
-        
-        drawableColliders.Clear();
-        int count = cellCollisionSystem.GetAllOccupants(ref drawableColliders);
-        foreach (var col in drawableColliders)
-        {
-            col.Draw();
-        }
-    }
 }
