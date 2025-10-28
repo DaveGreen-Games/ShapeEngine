@@ -8,6 +8,14 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Geometry;
 
+//TODO: Change to: (current fps was 30 - 35 range with CellCollisionDemo)
+// - CellCollisionSystem has a Dict<Coordinates, Cell> only.
+// - Cell just holds all ICellColliders in that cell, regardless of layer.
+// - On adding a collider, we add it to the cell at its coordinates.
+// - On updating a collider, we check if it moved to a new cell. If so, we remove it from the old cell and add it to the new cell.
+// - On collision checks, we check all colliders in the same cell, and see if their layers/masks allow collision.
+// This simplifies the structure and reduces the number of nested dictionaries, at the cost of checking more colliders per cell.
+
 public interface ICellCollider
 {
     public int GetTypeId();
@@ -64,7 +72,7 @@ public class CellCollisionSystem(Size cellSize)
         private static readonly Queue<CellLayer> pool = [];
         public static CellLayer RentInstance()
         {
-            if (pool.Count <= 0) return new CellLayer(64);
+            if (pool.Count <= 0) return new CellLayer(4);
             var layer = pool.Dequeue();
             return layer;
         }
@@ -128,8 +136,7 @@ public class CellCollisionSystem(Size cellSize)
             {
                 if(curLayer == layer) continue;
                 if(!mask.Has(curLayer)) continue;
-                var occupants = curCell.Occupants;
-                foreach (var other in occupants)
+                foreach (var other in curCell.Occupants)
                 {
                     var otherMask = other.GetCollisionMask();
                     if(!otherMask.Has(layer)) continue;
@@ -176,10 +183,10 @@ public class CellCollisionSystem(Size cellSize)
 
         private Cell()
         {
-            occupants = [];
+            occupants = new HashSet<ICellCollider>(32);
         }
         
-        public IReadOnlyCollection<ICellCollider> Occupants => occupants;
+        public HashSet<ICellCollider> Occupants => occupants;
 
         public bool Add(ICellCollider c) => occupants.Add(c);
         public bool Remove(ICellCollider c) => occupants.Remove(c);
