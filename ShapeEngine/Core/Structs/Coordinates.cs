@@ -10,7 +10,16 @@ namespace ShapeEngine.Core.Structs;
 /// </remarks>
 public readonly struct Coordinates : IEquatable<Coordinates>
 {
+    /// <summary>
+    /// The column / horizontal component of the coordinate.
+    /// Read-only field representing the X (column) value.
+    /// </summary>
     public readonly int X;
+    
+    /// <summary>
+    /// The row / vertical component of the coordinate.
+    /// Read-only field representing the Y (row) value.
+    /// </summary>
     public readonly int Y;
 
     /// <summary>
@@ -138,10 +147,24 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     }
 
 
+    /// <summary>
+    /// Returns a coordinate composed of the component-wise minimum between this and <paramref name="other"/>.
+    /// </summary>
+    /// <param name="other">The coordinate to compare with.</param>
+    /// <returns>
+    /// A new <see cref="Coordinates"/> where each component is the minimum of the corresponding components.
+    /// </returns>
     public Coordinates Min(Coordinates other)
     {
         return new Coordinates(Math.Min(X, other.X), Math.Min(Y, other.Y));
     }
+    /// <summary>
+    /// Returns a coordinate composed of the component-wise maximum between this and <paramref name="other"/>.
+    /// </summary>
+    /// <param name="other">The coordinate to compare with.</param>
+    /// <returns>
+    /// A new <see cref="Coordinates"/> where each component is the maximum of the corresponding components.
+    /// </returns>
     public Coordinates Max(Coordinates other)
     {
         return new Coordinates(Math.Max(X, other.X), Math.Max(Y, other.Y));
