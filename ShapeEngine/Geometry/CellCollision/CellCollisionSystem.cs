@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 
@@ -202,7 +203,7 @@ public class CellCollisionSystem(Size cellSize)
         foreach (var kvp in colliders)
         {
             if (kvp.Key is not T t) continue;
-            if(result.Add(t)) count++;
+            if (result.Add(t)) count++;
         }
         return count;
     }
@@ -311,22 +312,16 @@ public class CellCollisionSystem(Size cellSize)
 
         if (oldCoords == newCoords) return;
 
-        if (cells.TryGetValue(oldCoords, out var oldCell))
+        if (cells.TryGetValue(oldCoords, out var oldCell) && oldCell.Remove(collider) && oldCell.IsEmpty)
         {
-            if (oldCell.Remove(collider))
-            {
-                if (oldCell.IsEmpty)
-                {
-                    cells.Remove(oldCoords);
-                    Cell.ReturnInstance(oldCell);
-                }
-            }
+            cells.Remove(oldCoords);
+            Cell.ReturnInstance(oldCell);
         }
         
         var newCell = GetCell(newCoords);
         if (newCell.Add(collider))
         {
-            collisionRegister.Add(collider, (oldCoords, newCoords));
+            collisionRegister[collider] = (oldCoords, newCoords);
         }
     }
    

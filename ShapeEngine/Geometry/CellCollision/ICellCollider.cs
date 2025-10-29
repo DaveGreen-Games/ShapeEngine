@@ -41,7 +41,6 @@ public interface ICellCollider
     /// </summary>
     public Vector2 GetPosition();
 
-
     /// <summary>
     /// Called when the collider has entered a new cell identified by <paramref name="coordinates"/>.
     /// </summary>
@@ -55,7 +54,7 @@ public interface ICellCollider
     public void OnExitCell(Coordinates coordinates);
     
     /// <summary>
-    /// Called when a collision with <paramref name="other"/> has started. Happens when this  collider enteres a new cell.
+    /// Called when a collision with <paramref name="other"/> has started. Happens when this collider enters a new cell.
     /// </summary>
     /// <param name="other">The other collider involved in the collision.</param>
     public void OnCollisionStartedWith(ICellCollider other);
