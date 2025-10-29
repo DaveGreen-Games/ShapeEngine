@@ -29,6 +29,19 @@ public class Pathfinder
 
     #region Public
     /// <summary>
+    /// How many agent requests are handled each frame.
+    /// If the value is smaller or equal to zero, all incoming requests are handled.
+    /// This also affects the maximum number of requests that are handled in parallel processing,
+    /// when <see cref="ParallelProcessing"/> is <c>true</c>.
+    /// </summary>
+    public int RequestsPerFrame = 25;
+    /// <summary>
+    /// If true, path requests will be processed in parallel using the thread pool.
+    /// When enabled, a thread-local <c>AStar</c> instance is used for each worker.
+    /// Disable to process requests serially on the main thread (uses <c>localAstar</c>).
+    /// </summary>
+    public bool ParallelProcessing = true;
+    /// <summary>
     /// The size of each cell in the grid.
     /// </summary>
     public Size CellSize { get; private set; }
@@ -45,14 +58,11 @@ public class Pathfinder
     private HashSet<GridNode> nodeHelper2 = new(1024);
     private HashSet<GridNode> resultSet = new(1024);
     
-    /// <summary>
-    /// How many agent requests are handled each frame.
-    /// If the value is smaller or equal to zero, all incoming requests are handled.
-    /// </summary>
-    public int RequestsPerFrame = 25;
     private readonly List<PathRequest> pathRequests = new(256);
     private readonly Dictionary<IPathfinderAgent, PathRequest?> agents = new(1024);
-    // private readonly Dictionary<IPathfinderObstacle, List<GridNode>> obstacles = new(256);
+    
+    private readonly AStar localAstar = new(1024);
+    private static readonly ThreadLocal<AStar> threadLocalAStar = new(() => new AStar(1024));
     
     #endregion
 
@@ -127,8 +137,8 @@ public class Pathfinder
     /// <param name="dt">The delta time.</param>
     public void Update(float dt)
     {
-        // HandleObstacles();
-        HandlePathRequests();
+        if(ParallelProcessing) HandlePathRequestsParallel();
+        else HandlePathRequests();
     }
 
     /// <summary>
@@ -296,7 +306,6 @@ public class Pathfinder
         agents[request.Agent] = request;
         pathRequests.Add(request);
     }
-
     private void HandlePathRequests()
     {
         if (pathRequests.Count <= 0) return;
@@ -316,30 +325,76 @@ public class Pathfinder
             if (request.Agent == null) continue; //should not happen
             agents[request.Agent] = null; //handled and therefore cleared
             requests ++;
-            var path = GetPath(request.Start, request.End, request.Agent.GetLayer()); //GetPath(request.Start, request.End, request.Agent.GetLayer());
+            
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
             if(path == null) continue;
             request.Agent.ReceiveRequestedPath(path, request);
+            
         }
         pathRequests.Clear();
-        
-        // int endIndex = RequestsPerFrame > 0 ? ShapeMath.MaxInt(pathRequests.Count - RequestsPerFrame, 0) : 0;
-        //
-        // for (int i = pathRequests.Count - 1; i >= endIndex; i--)
-        // {
-        //     var request = pathRequests[i];
-        //     // pathRequests.RemoveAt(i);
-        //     if (request.Agent == null) continue; //should not happen
-        //     agents[request.Agent] = null; //handled and therefor cleared
-        //     var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
-        //     if(path == null) continue;
-        //     request.Agent.ReceiveRequestedPath(path, request);
-        // }
-        // pathRequests.Clear();
-        
-        
-        
     }
+    private void HandlePathRequestsParallel()
+    {
+        if (pathRequests.Count <= 0) return;
 
+        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
+        {
+            pathRequests.Sort((a, b) => a.Priority - b.Priority);
+        }
+
+        int requestsToProcess = RequestsPerFrame > 0 
+            ? Math.Min(pathRequests.Count, RequestsPerFrame) 
+            : pathRequests.Count;
+
+        var batch = pathRequests.GetRange(pathRequests.Count - requestsToProcess, requestsToProcess);
+        pathRequests.RemoveRange(pathRequests.Count - requestsToProcess, requestsToProcess);
+
+        // Clear agent tracking for processed requests
+        foreach (var request in batch)
+        {
+            if (request.Agent != null) agents[request.Agent] = null;
+        }
+
+        //VARIANT 1
+        // // Process in parallel using thread pool
+        // Parallel.ForEach(batch, request =>
+        // {
+        //     if (request.Agent == null) return;
+        //
+        //     var astar = threadLocalAStar.Value!;
+        //     var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
+        //
+        //     if (path != null)
+        //     {
+        //         request.Agent.ReceiveRequestedPath(path, request);
+        //     }
+        // });
+        
+
+        //VARIANT 2
+        // Collect results from worker threads and invoke callbacks on the main thread
+        var results = new System.Collections.Concurrent.ConcurrentQueue<(IPathfinderAgent Agent, Path Path, PathRequest Request)>();
+
+        Parallel.ForEach(batch, request =>
+        {
+            if (request.Agent == null) return;
+
+            var astar = threadLocalAStar.Value!;
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
+
+            if (path != null)
+            {
+                results.Enqueue((request.Agent, path, request));
+            }
+        });
+
+        // Drain queue on the main thread to make callback invocation thread-safe
+        while (results.TryDequeue(out var item))
+        {
+            item.Agent.ReceiveRequestedPath(item.Path, item.Request);
+        }
+    }
+    
     /// <summary>
     /// Gets a path from the start to the end position for the given layer.
     /// </summary>
@@ -348,6 +403,50 @@ public class Pathfinder
     /// <param name="layer">The layer to get the path for.</param>
     /// <returns>The path from start to end, or null if no path was found.</returns>
     public Path? GetPath(Vector2 start, Vector2 end, uint layer)
+    {
+        return GetPath(start, end, layer, localAstar);
+    }
+    
+    /// <summary>
+    /// Asynchronously finds a path between two world positions using A\* on this pathfinder.
+    /// The start and end positions are clamped to the pathfinder bounds. If the clamped start or end
+    /// cell is not traversable, the nearest traversable cell will be used; if none is available the
+    /// method returns null.
+    /// Using the async version makes sense when pathfinding may take a long time, e.g. on large grids or very complex paths.
+    /// </summary>
+    /// <param name="start">Start world position.</param>
+    /// <param name="end">End world position.</param>
+    /// <param name="layer">Traversal layer used for weight and traversability checks.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the pathfinding operation.</param>
+    /// <returns>
+    /// A task that completes with the found <see cref="Path"/> or null if no path exists
+    /// or valid traversable start/end cells could not be found.
+    /// </returns>
+    public async Task<Path?> GetPathAsync(Vector2 start, Vector2 end, uint layer, CancellationToken cancellationToken = default)
+    {
+        var startNode = GetNodeClamped(start);
+        
+        if (!startNode.IsTraversable())
+        {
+            var newStartNode = startNode.GetClosestTraversableCell();
+            if (newStartNode is GridNode rn) startNode = rn;
+            else return null;
+        }
+        
+        var endNode = GetNodeClamped(end);
+        if (!endNode.IsTraversable())
+        {
+            var newEndNode = endNode.GetClosestTraversableCell();
+            if (newEndNode is GridNode rn) endNode = rn;
+            else return null;
+        }
+        return await localAstar.GetPathAsync(startNode, endNode, layer, cancellationToken);
+    }
+    
+    
+    //TODO: implement function that can process multiple path requests in parallel GetPaths(IEnumerable<(start, end, layer, token))> requests)
+    
+    private Path? GetPath(Vector2 start, Vector2 end, uint layer, AStar astar)
     {
         var startNode = GetNodeClamped(start);
         
@@ -366,9 +465,8 @@ public class Pathfinder
             else return null;
         }
 
-        return AStar.GetPath(startNode, endNode, layer);
+        return astar.GetPath(startNode, endNode, layer);
     }
-    
     #endregion
     
     #region Connections
