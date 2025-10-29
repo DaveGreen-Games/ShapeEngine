@@ -1,75 +1,9 @@
 using System.Numerics;
-using System.Runtime.Intrinsics.X86;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Random;
 
-namespace ShapeEngine.Geometry;
-/// <summary>
-/// Represents an object that can participate in the cell-based collision system.
-/// Implementers are queried for position, collision layer/mask and receive lifecycle callbacks
-/// when they enter/exit cells or start/end collisions with other colliders.
-/// </summary>
-public interface ICellCollider
-{
-    /// <summary>
-    /// Returns an integer identifier for the collider's concrete type.
-    /// Used for type-discrimination or lookup by the collision system.
-    /// </summary>
-    public int GetTypeId();
-
-    /// <summary>
-    /// Returns the collision layer bit for this collider.
-    /// Layers are represented as a <see cref="uint"/> bitmask where a single bit denotes the layer.
-    /// </summary>
-    public uint GetCollisionLayer();
-
-    /// <summary>
-    /// Returns the collision mask for this collider.
-    /// The mask indicates which layers this collider should interact with.
-    /// </summary>
-    public BitFlag GetCollisionMask();
-
-    /// <summary>
-    /// Advance the collider's internal state by <paramref name="dt"/> seconds.
-    /// The current world position must be written to <paramref name="position"/>.
-    /// </summary>
-    /// <param name="dt">Delta time in seconds since last update.</param>
-    /// <param name="position">Output parameter that receives the collider's current position.</param>
-    public void Update(float dt, out Vector2 position);
-
-    /// <summary>
-    /// Returns the collider's current position in world coordinates.
-    /// </summary>
-    public Vector2 GetPosition();
-
-
-    /// <summary>
-    /// Called when the collider has entered a new cell identified by <paramref name="coordinates"/>.
-    /// </summary>
-    /// <param name="coordinates">Cell coordinates that were entered.</param>
-    public void OnEnterCell(Coordinates coordinates);
-
-    /// <summary>
-    /// Called when the collider has exited a cell identified by <paramref name="coordinates"/>.
-    /// </summary>
-    /// <param name="coordinates">Cell coordinates that were exited.</param>
-    public void OnExitCell(Coordinates coordinates);
-    
-    /// <summary>
-    /// Called when a collision with <paramref name="other"/> has started. Happens when this  collider enteres a new cell.
-    /// </summary>
-    /// <param name="other">The other collider involved in the collision.</param>
-    public void OnCollisionStartedWith(ICellCollider other);
-
-    /// <summary>
-    /// Called when a collision with <paramref name="other"/> has ended. Happens when this collider exits the previous cell.
-    /// </summary>
-    /// <param name="other">The other collider involved in the collision.</param>
-    public void OnCollisionEndedWith(ICellCollider other);
-}
+namespace ShapeEngine.Geometry.CellCollision;
 
 /// <summary>
 /// Cell-based collision system that partitions world space into a grid of cells of the specified size.
@@ -342,7 +276,14 @@ public class CellCollisionSystem(Size cellSize)
         }
         collidersToRemove.Clear();
     }
-    
+   
+    /// <summary>
+    /// Update all registered colliders for this frame.
+    /// Iterates the internal collider registry and advances each collider's state by <paramref name="dt"/> seconds.
+    /// For each collider this calls <see cref="UpdateCollider(ICellCollider, Coordinates, float)"/>,
+    /// which handles moving the collider between cells and registering any cell changes for later collision resolution.
+    /// </summary>
+    /// <param name="dt">Delta time in seconds since the last update.</param>
     private void UpdateColliders(float dt)
     {
         foreach (var kvp in colliders)
@@ -350,6 +291,18 @@ public class CellCollisionSystem(Size cellSize)
             UpdateCollider(kvp.Key, kvp.Value, dt);
         }
     }
+    
+    /// <summary>
+    /// Updates a single collider by advancing its internal state and handling cell transitions.
+    /// Calls <c>collider.Update(dt, out var newPosition)</c> and computes the new cell coordinates.
+    /// If the collider moved to a different cell this method:
+    /// - removes it from the old cell (returning the pooled cell when emptied),
+    /// - adds it to the new cell,
+    /// - records the move in <c>collisionRegister</c> for later collision resolution.
+    /// </summary>
+    /// <param name="collider">The collider to update.</param>
+    /// <param name="oldCoords">The collider's previous cell coordinates.</param>
+    /// <param name="dt">Delta time in seconds since the last update.</param>
     private void UpdateCollider(ICellCollider collider, Coordinates oldCoords, float dt)
     {
         collider.Update(dt, out var newPosition);
@@ -376,7 +329,20 @@ public class CellCollisionSystem(Size cellSize)
             collisionRegister.Add(collider, (oldCoords, newCoords));
         }
     }
-    
+   
+    /// <summary>
+    /// Resolves enter/exit cell events and collision start/end callbacks for colliders
+    /// that moved during the current update (stored in <c>collisionRegister</c>).
+    /// For each moved collider this method:
+    /// - updates the collider's recorded cell in <c>colliders</c>,
+    /// - invokes <c>OnExitCell</c> for the previous cell and notifies occupants in that cell
+    ///   about ended collisions (respecting layers and masks),
+    /// - invokes <c>OnEnterCell</c> for the new cell and notifies occupants in that cell
+    ///   about started collisions (respecting layers and masks).
+    /// The method clears <c>collisionRegister</c> after processing.
+    /// </summary>
+    /// <param name="dt">Delta time in seconds since the last update (present for symmetry with Update,
+    /// but not currently used by this method).</param>
     private void ResolveColliderCollisions(float dt)
     {
         foreach (var (collider, (previousCoords, currentCoords)) in collisionRegister)
@@ -429,6 +395,15 @@ public class CellCollisionSystem(Size cellSize)
         collisionRegister.Clear();
     }
     
+    /// <summary>
+    /// Attempts to add the given <see cref="ICellCollider"/> to the cell corresponding to its current position.
+    /// If the target cell already exists the collider is added to it; otherwise a pooled <see cref="Cell"/> is rented
+    /// and inserted into the cell map. On success the collider is recorded in the internal <c>colliders</c> map.
+    /// </summary>
+    /// <param name="collider">The collider to register with the collision system.</param>
+    /// <returns>
+    /// <c>true</c> if the collider was successfully added and registered; <c>false</c> if the collider could not be added
+    /// (for example it was already present in the target cell or adding failed).</returns>
     private bool AddCollider(ICellCollider collider)
     {
         var coords = GetCoordinates(collider.GetPosition());
@@ -452,6 +427,15 @@ public class CellCollisionSystem(Size cellSize)
         colliders.Add(collider, coords);
         return true;
     }
+    
+    /// <summary>
+    /// Unregisters the specified <see cref="ICellCollider"/> from the collision system.
+    /// Removes the collider from its current cell (returning the pooled cell if empty),
+    /// invokes exit and collision end callbacks for other occupants in the cell,
+    /// and removes the collider from the internal registry.
+    /// </summary>
+    /// <param name="collider">The collider to remove from the system.</param>
+    /// <returns>True if the collider was present and removed; otherwise false.</returns>
     private bool RemoveCollider(ICellCollider collider)
     {
         if (colliders.TryGetValue(collider, out var coords))
@@ -492,20 +476,28 @@ public class CellCollisionSystem(Size cellSize)
         }
         return false;
     }
+    
+    /// <summary>
+    /// Converts a world-space point to discrete grid cell coordinates.
+    /// Divides the point by the configured <c>cellSize</c> and uses <see cref="MathF.Floor"/>
+    /// to produce consistent integer cell indices (handles negative positions correctly).
+    /// </summary>
+    /// <param name="point">World-space position to convert.</param>
+    /// <returns>Corresponding <see cref="Coordinates"/> for the grid cell containing the point.</returns>
     private Coordinates GetCoordinates(Vector2 point)
     {
-        var x = (int)Math.Floor(point.X / cellSize.Width);
-        var y = (int)Math.Floor(point.Y / cellSize.Height);
+        var x = (int)MathF.Floor(point.X / cellSize.Width);
+        var y = (int)MathF.Floor(point.Y / cellSize.Height);
         return new Coordinates(x, y);
     }
-    private Rect GetCellRect(Coordinates coords)
-    {
-        return new Rect(
-            coords.X * cellSize.Width,
-            coords.Y * cellSize.Height,
-            cellSize.Width,
-            cellSize.Height);
-    }
+    
+    /// <summary>
+    /// Retrieve or create the pooled <see cref="Cell"/> for the specified grid coordinates.
+    /// If a <see cref="Cell"/> already exists for <paramref name="coords"/> it is returned;
+    /// otherwise a new instance is rented from the internal pool and inserted into the map.
+    /// </summary>
+    /// <param name="coords">The discrete grid coordinates identifying the target cell.</param>
+    /// <returns>The <see cref="Cell"/> instance corresponding to <paramref name="coords"/>.</returns>
     private Cell GetCell(Coordinates coords)
     {
         Cell cell;
