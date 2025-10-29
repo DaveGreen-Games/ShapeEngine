@@ -10,9 +10,58 @@ namespace ShapeEngine.Core.Structs;
 /// </remarks>
 public readonly struct Coordinates : IEquatable<Coordinates>
 {
+    /// <summary>
+    /// The column / horizontal component of the coordinate.
+    /// Read-only field representing the X (column) value.
+    /// </summary>
     public readonly int X;
+    
+    /// <summary>
+    /// The row / vertical component of the coordinate.
+    /// Read-only field representing the Y (row) value.
+    /// </summary>
     public readonly int Y;
 
+    /// <summary>
+    /// The origin coordinate (0,0).
+    /// </summary>
+    public static Coordinates Zero => new(0, 0);
+    
+    /// <summary>
+    /// A coordinate with both components set to one (1,1).
+    /// </summary>
+    public static Coordinates One => new(1, 1);
+    
+    /// <summary>
+    /// A unit step upward on the grid (0,1).
+    /// </summary>
+    public static Coordinates Up => new(0, 1);
+    
+    /// <summary>
+    /// A unit step downward on the grid (0,-1).
+    /// </summary>
+    public static Coordinates Down => new(0, -1);
+    
+    /// <summary>
+    /// A unit step to the left on the grid (-1,0).
+    /// </summary>
+    public static Coordinates Left => new(-1, 0);
+    
+    /// <summary>
+    /// A unit step to the right on the grid (1,0).
+    /// </summary>
+    public static Coordinates Right => new(1, 0);
+    
+    /// <summary>
+    /// The maximum representable coordinate (int.MaxValue,int.MaxValue).
+    /// </summary>
+    public static Coordinates MaxValue => new(int.MaxValue, int.MaxValue);
+    
+    /// <summary>
+    /// The minimum representable coordinate (int.MinValue,int.MinValue).
+    /// </summary>
+    public static Coordinates MinValue => new(int.MinValue, int.MinValue);
+    
     /// <summary>
     /// The row index of the coordinate.
     /// </summary>
@@ -97,6 +146,30 @@ public readonly struct Coordinates : IEquatable<Coordinates>
         return Y + X * rows;
     }
 
+
+    /// <summary>
+    /// Returns a coordinate composed of the component-wise minimum between this and <paramref name="other"/>.
+    /// </summary>
+    /// <param name="other">The coordinate to compare with.</param>
+    /// <returns>
+    /// A new <see cref="Coordinates"/> where each component is the minimum of the corresponding components.
+    /// </returns>
+    public Coordinates Min(Coordinates other)
+    {
+        return new Coordinates(Math.Min(X, other.X), Math.Min(Y, other.Y));
+    }
+    /// <summary>
+    /// Returns a coordinate composed of the component-wise maximum between this and <paramref name="other"/>.
+    /// </summary>
+    /// <param name="other">The coordinate to compare with.</param>
+    /// <returns>
+    /// A new <see cref="Coordinates"/> where each component is the maximum of the corresponding components.
+    /// </returns>
+    public Coordinates Max(Coordinates other)
+    {
+        return new Coordinates(Math.Max(X, other.X), Math.Max(Y, other.Y));
+    }
+    
     /// <summary>
     /// Converts a 2D point to grid coordinates based on the grid's origin, spacing, and dimensions.
     /// </summary>
