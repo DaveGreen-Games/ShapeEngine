@@ -118,7 +118,6 @@ public class Pathfinder
         }
         
     }
-
     
     #region Public
 
@@ -220,7 +219,6 @@ public class Pathfinder
         var pos = Bounds.TopLeft + CellSize * coordinates.ToVector2();
         return new Rect(pos, CellSize, new (0f));
     }
-
     
     /// <summary>
     /// Gets the weight of the cell at the given index.
@@ -306,94 +304,10 @@ public class Pathfinder
         agents[request.Agent] = request;
         pathRequests.Add(request);
     }
-    private void HandlePathRequests()
-    {
-        if (pathRequests.Count <= 0) return;
-        
-        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
-        {
-            //sorted from highest priority to lowest in ascending order (highest is at the end for easier removing)
-            pathRequests.Sort((a, b) => a.Priority - b.Priority); 
-        }
 
-        int requests = 0;
-        while (pathRequests.Count > 0 && (RequestsPerFrame <= 0 || requests <= RequestsPerFrame))
-        {
-            var lastIndex = pathRequests.Count - 1;
-            var request = pathRequests[lastIndex];
-            pathRequests.RemoveAt(lastIndex);
-            if (request.Agent == null) continue; //should not happen
-            agents[request.Agent] = null; //handled and therefore cleared
-            requests ++;
-            
-            var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
-            if(path == null) continue;
-            request.Agent.ReceiveRequestedPath(path, request);
-            
-        }
-        pathRequests.Clear();
-    }
-    private void HandlePathRequestsParallel()
-    {
-        if (pathRequests.Count <= 0) return;
-
-        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
-        {
-            pathRequests.Sort((a, b) => a.Priority - b.Priority);
-        }
-
-        int requestsToProcess = RequestsPerFrame > 0 
-            ? Math.Min(pathRequests.Count, RequestsPerFrame) 
-            : pathRequests.Count;
-
-        var batch = pathRequests.GetRange(pathRequests.Count - requestsToProcess, requestsToProcess);
-        pathRequests.RemoveRange(pathRequests.Count - requestsToProcess, requestsToProcess);
-
-        // Clear agent tracking for processed requests
-        foreach (var request in batch)
-        {
-            if (request.Agent != null) agents[request.Agent] = null;
-        }
-
-        //VARIANT 1
-        // // Process in parallel using thread pool
-        // Parallel.ForEach(batch, request =>
-        // {
-        //     if (request.Agent == null) return;
-        //
-        //     var astar = threadLocalAStar.Value!;
-        //     var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
-        //
-        //     if (path != null)
-        //     {
-        //         request.Agent.ReceiveRequestedPath(path, request);
-        //     }
-        // });
-        
-
-        //VARIANT 2
-        // Collect results from worker threads and invoke callbacks on the main thread
-        var results = new System.Collections.Concurrent.ConcurrentQueue<(IPathfinderAgent Agent, Path Path, PathRequest Request)>();
-
-        Parallel.ForEach(batch, request =>
-        {
-            if (request.Agent == null) return;
-
-            var astar = threadLocalAStar.Value!;
-            var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
-
-            if (path != null)
-            {
-                results.Enqueue((request.Agent, path, request));
-            }
-        });
-
-        // Drain queue on the main thread to make callback invocation thread-safe
-        while (results.TryDequeue(out var item))
-        {
-            item.Agent.ReceiveRequestedPath(item.Path, item.Request);
-        }
-    }
+    #endregion
+    
+    #region GetPaths
     
     /// <summary>
     /// Gets a path from the start to the end position for the given layer.
@@ -406,7 +320,29 @@ public class Pathfinder
     {
         return GetPath(start, end, layer, localAstar);
     }
+    private Path? GetPath(Vector2 start, Vector2 end, uint layer, AStar astar)
+    {
+        var startNode = GetNodeClamped(start);
+        
+        if (!startNode.IsTraversable())
+        {
+            var newStartNode = startNode.GetClosestTraversableCell();
+            if (newStartNode is GridNode rn) startNode = rn;
+            else return null;
+        }
+        
+        var endNode = GetNodeClamped(end);
+        if (!endNode.IsTraversable())
+        {
+            var newEndNode = endNode.GetClosestTraversableCell();
+            if (newEndNode is GridNode rn) endNode = rn;
+            else return null;
+        }
+
+        return astar.GetPath(startNode, endNode, layer);
+    }
     
+    #region Async
     /// <summary>
     /// Asynchronously finds a path between two world positions using A\* on this pathfinder.
     /// The start and end positions are clamped to the pathfinder bounds. If the clamped start or end
@@ -442,31 +378,145 @@ public class Pathfinder
         }
         return await localAstar.GetPathAsync(startNode, endNode, layer, cancellationToken);
     }
+    #endregion
+
+    #region Parallel
     
-    
-    //TODO: implement function that can process multiple path requests in parallel GetPaths(IEnumerable<(start, end, layer, token))> requests)
-    
-    private Path? GetPath(Vector2 start, Vector2 end, uint layer, AStar astar)
+    /// <summary>
+    /// Static array holding batched path requests for parallel processing.
+    /// The static approach avoids capturing variables in the <c>Parallel.For</c> lambda.
+    /// Each element is a tuple of (start, end, layer).
+    /// </summary>
+    /// <remarks>
+    /// This field is nullable and is set to <c>null</c> when no batched parallel operation is active to
+    /// avoid stale state.
+    /// </remarks>
+    private static (Vector2 start, Vector2 end, uint layer)[]? staticRequestArray;
+    /// <summary>
+    /// Static array used to store computed path results for a batched parallel pathfinding run.
+    /// The static approach avoids capturing variables in the <c>Parallel.For</c> lambda.
+    /// Each element corresponds to a request in <see cref="staticRequestArray"/> and may be <c>null</c> if no path was found.
+    /// </summary>
+    /// <remarks>
+    /// This field is nullable and is set to <c>null</c> when no batched parallel operation is active to
+    /// avoid stale state.
+    /// </remarks>
+    private static Path?[]? staticPathResults;
+    /// <summary>
+    /// Shared reference to the active <see cref="Pathfinder"/> used by the static parallel helpers.
+    /// The static approach avoids capturing variables in the <c>Parallel.For</c> lambda.
+    /// </summary>
+    /// <remarks>
+    /// This field is nullable and is set to <c>null</c> when no batched parallel operation is active to
+    /// avoid stale state.
+    /// </remarks>
+    private static Pathfinder? staticPathfinderInstance;
+    /// <summary>
+    /// Worker helper invoked by the parallel loop to process a single request.
+    /// Retrieves the request tuple from <see cref="staticRequestArray"/>, obtains a thread-local
+    /// <see cref="AStar"/> instance and stores the computed <see cref="Path"/> (or null) into
+    /// <see cref="staticPathResults"/> at the same index.
+    /// </summary>
+    /// <param name="i">The index of the request to process in <see cref="staticRequestArray"/>.</param>
+    /// <remarks>
+    /// This method assumes <see cref="staticRequestArray"/>, <see cref="staticPathResults"/> and
+    /// <see cref="staticPathfinderInstance"/> have been initialized by the caller and are not null.
+    /// It is intended to be safe for concurrent execution: each invocation writes to a unique slot
+    /// in <see cref="staticPathResults"/> and uses a thread-local <see cref="AStar"/> instance.
+    /// </remarks>
+    private static void StaticProcessIndex(int i)
     {
-        var startNode = GetNodeClamped(start);
-        
-        if (!startNode.IsTraversable())
+        var req = staticRequestArray![i];
+        var astar = threadLocalAStar.Value!;
+        staticPathResults![i] = staticPathfinderInstance!.GetPath(req.start, req.end, req.layer, astar);
+    }
+    
+    /// <summary>
+    /// Executes multiple pathfinding requests in parallel and returns an array of results.
+    /// Each element in the returned array corresponds to the request at the same index in <paramref name="requests"/>.
+    /// Returns <c>null</c> if <paramref name="requests"/> is empty or if the operation was cancelled.
+    /// </summary>
+    /// <param name="requests">A list of tuples where each tuple contains the start position, end position and traversal layer.</param>
+    /// <param name="cancellationToken">Optional cancellation token to cancel the parallel operation.</param>
+    /// <returns>
+    /// An array of <see cref="Path"/>? results matching the request order, or <c>null</c> if no requests were provided or the operation was cancelled.
+    /// </returns>
+    public Path?[]? GetPathsParallel(List<(Vector2 start, Vector2 end, uint layer)> requests, CancellationToken cancellationToken = default)
+    {
+        if (requests.Count <= 0) return null;
+
+        int count = requests.Count;
+        staticRequestArray = requests.ToArray();
+        staticPathResults = new Path?[count];
+        staticPathfinderInstance = this;
+
+        var po = new ParallelOptions { CancellationToken = cancellationToken };
+
+        try
         {
-            var newStartNode = startNode.GetClosestTraversableCell();
-            if (newStartNode is GridNode rn) startNode = rn;
-            else return null;
+            Parallel.For(0, count, po, StaticProcessIndex);
         }
-        
-        var endNode = GetNodeClamped(end);
-        if (!endNode.IsTraversable())
+        catch (OperationCanceledException)
         {
-            var newEndNode = endNode.GetClosestTraversableCell();
-            if (newEndNode is GridNode rn) endNode = rn;
-            else return null;
+            // clear static state
+            staticRequestArray = null;
+            staticPathResults = null;
+            staticPathfinderInstance = null;
+            return null;
         }
 
-        return astar.GetPath(startNode, endNode, layer);
+        var resultCopy = staticPathResults;
+        
+        // clear static state
+        staticRequestArray = null;
+        staticPathResults = null;
+        staticPathfinderInstance = null;
+
+        return resultCopy;
     }
+    // public Path?[]? GetPathsParallel(List<(Vector2 start, Vector2 end, uint layer)> requests, CancellationToken cancellationToken = default)
+    // {
+    //     if (requests.Count <= 0) return null;
+    //
+    //     int count = requests.Count;
+    //     var results = new Path?[count];
+    //     var po = new ParallelOptions { CancellationToken = cancellationToken };
+    //
+    //     try
+    //     {
+    //         Parallel.For(0, count, po, i =>
+    //         {
+    //             var req = requests[i];
+    //             var astar = threadLocalAStar.Value!;
+    //             results[i] = GetPath(req.start, req.end, req.layer, astar);
+    //         });
+    //     }
+    //     catch (OperationCanceledException)
+    //     {
+    //         return null;
+    //     }
+    //     
+    //     return results;
+    //     
+    //     // if (requests.Count <= 0) return null;
+    //     //
+    //     // List<Path> paths = new(requests.Count);
+    //     // Parallel.ForEach(requests, request =>
+    //     // {
+    //     //     var astar = threadLocalAStar.Value!;
+    //     //     var path = GetPath(request.start, request.end, request.layer, astar);
+    //     //
+    //     //     lock (paths)
+    //     //     {
+    //     //         paths.Add(path!);
+    //     //     }
+    //     // });
+    //     //
+    //     // return paths;
+    // }
+    //
+    #endregion
+    
     #endregion
     
     #region Connections
@@ -988,7 +1038,6 @@ public class Pathfinder
 
     #region Private
     
-    
     #region GetCells
 
     private GridNode? GetNode(int index)
@@ -1227,6 +1276,95 @@ public class Pathfinder
         return true;
     }
     #endregion
+    
+    private void HandlePathRequests()
+    {
+        if (pathRequests.Count <= 0) return;
+        
+        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
+        {
+            //sorted from highest priority to lowest in ascending order (highest is at the end for easier removing)
+            pathRequests.Sort((a, b) => a.Priority - b.Priority); 
+        }
+
+        int requests = 0;
+        while (pathRequests.Count > 0 && (RequestsPerFrame <= 0 || requests <= RequestsPerFrame))
+        {
+            var lastIndex = pathRequests.Count - 1;
+            var request = pathRequests[lastIndex];
+            pathRequests.RemoveAt(lastIndex);
+            if (request.Agent == null) continue; //should not happen
+            agents[request.Agent] = null; //handled and therefore cleared
+            requests ++;
+            
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
+            if(path == null) continue;
+            request.Agent.ReceiveRequestedPath(path, request);
+            
+        }
+        pathRequests.Clear();
+    }
+    private void HandlePathRequestsParallel()
+    {
+        if (pathRequests.Count <= 0) return;
+
+        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
+        {
+            pathRequests.Sort((a, b) => a.Priority - b.Priority);
+        }
+
+        int requestsToProcess = RequestsPerFrame > 0 
+            ? Math.Min(pathRequests.Count, RequestsPerFrame) 
+            : pathRequests.Count;
+
+        var batch = pathRequests.GetRange(pathRequests.Count - requestsToProcess, requestsToProcess);
+        pathRequests.RemoveRange(pathRequests.Count - requestsToProcess, requestsToProcess);
+
+        // Clear agent tracking for processed requests
+        foreach (var request in batch)
+        {
+            if (request.Agent != null) agents[request.Agent] = null;
+        }
+
+        //VARIANT 1
+        // // Process in parallel using thread pool
+        // Parallel.ForEach(batch, request =>
+        // {
+        //     if (request.Agent == null) return;
+        //
+        //     var astar = threadLocalAStar.Value!;
+        //     var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
+        //
+        //     if (path != null)
+        //     {
+        //         request.Agent.ReceiveRequestedPath(path, request);
+        //     }
+        // });
+        
+
+        //VARIANT 2
+        // Collect results from worker threads and invoke callbacks on the main thread
+        var results = new System.Collections.Concurrent.ConcurrentQueue<(IPathfinderAgent Agent, Path Path, PathRequest Request)>();
+
+        Parallel.ForEach(batch, request =>
+        {
+            if (request.Agent == null) return;
+
+            var astar = threadLocalAStar.Value!;
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
+
+            if (path != null)
+            {
+                results.Enqueue((request.Agent, path, request));
+            }
+        });
+
+        // Drain queue on the main thread to make callback invocation thread-safe
+        while (results.TryDequeue(out var item))
+        {
+            item.Agent.ReceiveRequestedPath(item.Path, item.Request);
+        }
+    }
     
     private void ResolveRegenerationRequested()
     {
