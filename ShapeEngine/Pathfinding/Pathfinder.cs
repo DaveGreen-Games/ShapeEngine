@@ -34,13 +34,13 @@ public class Pathfinder
     /// This also affects the maximum number of requests that are handled in parallel processing,
     /// when <see cref="ParallelProcessing"/> is <c>true</c>.
     /// </summary>
-    public int RequestsPerFrame = 25;
+    public int RequestsPerFrame;
     /// <summary>
     /// If true, path requests will be processed in parallel using the thread pool.
     /// When enabled, a thread-local <c>AStar</c> instance is used for each worker.
     /// Disable to process requests serially on the main thread (uses <c>localAstar</c>).
     /// </summary>
-    public bool ParallelProcessing = true;
+    public bool ParallelProcessing;
     /// <summary>
     /// The size of each cell in the grid.
     /// </summary>
@@ -52,16 +52,23 @@ public class Pathfinder
     #endregion
 
     #region Private
+    
+    public const int DefaultHelperCapacity = 1024;
+    public const int DefaultAgentCapacity = 1024;
+    public const int DefaultPathRequestCapacity = 256;
+    public const int DefaultAStarCapacity = 1024;
+    public const int DefaultRequestsPerFrame = 24;
+    
     private Rect bounds;
     private readonly List<GridNode> nodes;
-    private HashSet<GridNode> nodeHelper1 = new(1024);
-    private HashSet<GridNode> nodeHelper2 = new(1024);
-    private HashSet<GridNode> resultSet = new(1024);
+    private HashSet<GridNode> nodeHelper1;
+    private HashSet<GridNode> nodeHelper2;
+    private HashSet<GridNode> resultSet;
     
-    private readonly List<PathRequest> pathRequests = new(256);
-    private readonly Dictionary<IPathfinderAgent, PathRequest?> agents = new(1024);
+    private readonly List<PathRequest> pathRequests;
+    private readonly Dictionary<IPathfinderAgent, PathRequest?> agents;
     
-    private readonly AStar localAstar = new(1024);
+    private readonly AStar localAstar;
     private static readonly ThreadLocal<AStar> threadLocalAStar = new(() => new AStar(1024));
     
     #endregion
@@ -95,7 +102,20 @@ public class Pathfinder
     /// <param name="bounds">The bounds of the pathfinder.</param>
     /// <param name="cols">The amount of columns in the grid.</param>
     /// <param name="rows">The amount of rows in the grid.</param>
-    public Pathfinder(Rect bounds, int cols, int rows)
+    /// <param name="requestsPerFrame">The maximum number of path requests that are handled per frame.
+    /// Set to 0 or a negative number to handle all incoming path requests.</param>
+    /// <param name="parallelProcessing">If set to true all path request that are handled this frame will be processed in parallel.</param>
+    /// <param name="initialHelperCapacity"> Sets the initial capacity of all internal helper Collections.</param>
+    /// <param name="initialAgentCapacity"> Sets the initial capacity of all the agent collection.
+    /// Set this to a number representing the max number of agents that will be added to this pathfinder. </param>
+    /// <param name="initialPathRequestCapacity"> Sets the initial capacity of the collection storing path requests.</param>
+    /// <param name="initialAStarCapacity"> Sets the initial capacity for the used AStar class.</param>
+    public Pathfinder(Rect bounds, int cols, int rows, 
+        int requestsPerFrame = DefaultRequestsPerFrame,  bool parallelProcessing = false,
+        int initialHelperCapacity = DefaultHelperCapacity,
+        int initialAgentCapacity = DefaultAgentCapacity,
+        int initialPathRequestCapacity = DefaultPathRequestCapacity,
+        int initialAStarCapacity = DefaultAStarCapacity)
     {
         this.bounds = bounds;
         Grid = new(cols, rows);
@@ -106,8 +126,6 @@ public class Pathfinder
             var coordinates = Grid.IndexToCoordinates(i);
             var node = new GridNode(coordinates, this);
             nodes.Add(node);
-            // GScores.Add(0);
-            // FScores.Add(0);
         }
         
         for (var i = 0; i < Grid.Count; i++)
@@ -116,6 +134,16 @@ public class Pathfinder
             var neighbors = GetNeighbors(node);
             node.SetNeighbors(neighbors);
         }
+        
+        nodeHelper1 = new(initialHelperCapacity);
+        nodeHelper2 = new(initialHelperCapacity);
+        resultSet = new(initialHelperCapacity);
+        pathRequests = new(initialPathRequestCapacity);
+        agents = new(initialAgentCapacity);
+        localAstar = new(initialAStarCapacity);
+        
+        RequestsPerFrame = requestsPerFrame;
+        ParallelProcessing = parallelProcessing;
         
     }
     
@@ -316,10 +344,27 @@ public class Pathfinder
     /// <param name="end">The end position.</param>
     /// <param name="layer">The layer to get the path for.</param>
     /// <returns>The path from start to end, or null if no path was found.</returns>
+    /// <remarks>
+    /// Path is a pooled classed.
+    /// Instances should be returned to the pool via <see cref="Path.ReturnPath(Path)"/> or <see cref="Path.ReturnInstance"/> when no longer needed.
+    /// Returned instances should not be accessed afterwards.
+    /// </remarks>
     public Path? GetPath(Vector2 start, Vector2 end, uint layer)
     {
         return GetPath(start, end, layer, localAstar);
     }
+    /// <summary>
+    /// Finds a path between two world positions using the supplied A\* instance.
+    /// The start and end positions are clamped to the pathfinder bounds. If the clamped
+    /// start or end cell is not traversable, the nearest traversable cell will be used.
+    /// Returns <c>null</c> when no valid traversable start/end cell can be found or when
+    /// no path exists.
+    /// </summary>
+    /// <param name="start">World-space start position.</param>
+    /// <param name="end">World-space end position.</param>
+    /// <param name="layer">Traversal layer used for weight and traversability checks.</param>
+    /// <param name="astar">The A\* instance used to compute the path (can be a thread-local worker).</param>
+    /// <returns>A <see cref="Path"/> if a path was found; otherwise <c>null</c>.</returns>
     private Path? GetPath(Vector2 start, Vector2 end, uint layer, AStar astar)
     {
         var startNode = GetNodeClamped(start);
@@ -358,6 +403,11 @@ public class Pathfinder
     /// A task that completes with the found <see cref="Path"/> or null if no path exists
     /// or valid traversable start/end cells could not be found.
     /// </returns>
+    /// <remarks>
+    /// Path is a pooled classed.
+    /// Instances should be returned to the pool via <see cref="Path.ReturnPath(Path)"/> or <see cref="Path.ReturnInstance"/> when no longer needed.
+    /// Returned instances should not be accessed afterwards.
+    /// </remarks>
     public async Task<Path?> GetPathAsync(Vector2 start, Vector2 end, uint layer, CancellationToken cancellationToken = default)
     {
         var startNode = GetNodeClamped(start);
@@ -441,6 +491,11 @@ public class Pathfinder
     /// <returns>
     /// An array of <see cref="Path"/>? results matching the request order, or <c>null</c> if no requests were provided or the operation was cancelled.
     /// </returns>
+    /// <remarks>
+    /// Path is a pooled classed.
+    /// Instances should be returned to the pool via <see cref="Path.ReturnPath(Path)"/> or <see cref="Path.ReturnInstance"/> when no longer needed.
+    /// Returned instances should not be accessed afterwards.
+    /// </remarks>
     public Path?[]? GetPathsParallel(List<(Vector2 start, Vector2 end, uint layer)> requests, CancellationToken cancellationToken = default)
     {
         if (requests.Count <= 0) return null;

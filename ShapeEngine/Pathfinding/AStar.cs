@@ -28,6 +28,8 @@ internal class AStar
     
     /// <summary>
     /// Finds a path between two nodes using the A* algorithm for a given layer.
+    /// <see cref="Path"/> is using a pooling system to minimize allocations,
+    /// so remember to return it to the pool after use either by using <see cref="Path.ReturnPath"/>/<see cref="Path.ReturnInstance"/>.
     /// </summary>
     /// <param name="startNode">The starting node.</param>
     /// <param name="endNode">The ending node.</param>
@@ -56,10 +58,11 @@ internal class AStar
             if (current == endNode)
             {
                 var countEstimate = startNode.EstimateCellCount(endNode);
-                var pathPoints = ReconstructPath(current, countEstimate);
-    
-                return new Path(startNode.GetPosition(), endNode.GetPosition(), pathPoints);
-                
+                var path = Path.RentPath(startNode.GetPosition(), endNode.GetPosition(), countEstimate);
+                ReconstructPath(current, ref path);
+                if (path.IsValid) return path;
+                Path.ReturnPath(path);
+                return null;
             }
 
             openSetCells.Remove(current);
@@ -132,17 +135,16 @@ internal class AStar
         
         return null;
     }
+   
     /// <summary>
     /// Reconstructs the path from the end node to the start node.
     /// </summary>
     /// <param name="from">The end node.</param>
-    /// <param name="capacityEstimate">Estimated capacity for the path list.</param>
+    /// <param name="path">The path to fill with rects.</param>
     /// <returns>A list of rectangles representing the path.</returns>
-    private List<Rect> ReconstructPath(Node from, int capacityEstimate)
+    private void ReconstructPath(Node from, ref Path path)
     {
-        //List<Rect> nodes = new(capacityEstimate) { from.GetRect() };
-        List<Rect> nodes = new(capacityEstimate > 0 ? capacityEstimate : 4);
-        nodes.Add(from.GetRect());
+        path.Rects.Add(from.GetRect());
     
         var current = from;
     
@@ -151,14 +153,13 @@ internal class AStar
             if (cellPath.ContainsKey(current))
             {
                 current = cellPath[current];
-                nodes.Add(current.GetRect());
+                path.Rects.Add(current.GetRect());
             }
             else current = null;
     
         } while (current != null);
     
-        nodes.Reverse();
-        return nodes;
+        path.Rects.Reverse();
     }
     
 
@@ -166,6 +167,8 @@ internal class AStar
     
     /// <summary>
     /// Finds a path between two nodes using the A* algorithm for a given layer asynchronously.
+    /// <see cref="Path"/> is using a pooling system to minimize allocations,
+    /// so remember to return it to the pool after use either by using <see cref="Path.ReturnPath"/>/<see cref="Path.ReturnInstance"/>.
     /// </summary>
     /// <param name="startNode">The starting node.</param>
     /// <param name="endNode">The ending node.</param>
@@ -197,9 +200,11 @@ internal class AStar
                 if (current == endNode)
                 {
                     var countEstimate = startNode.EstimateCellCount(endNode);
-                    var pathPoints = ReconstructPath(current, countEstimate);
-
-                    return new Path(startNode.GetPosition(), endNode.GetPosition(), pathPoints);
+                    var path = Path.RentPath(startNode.GetPosition(), endNode.GetPosition(), countEstimate);
+                    ReconstructPath(current, ref path);
+                    if (path.IsValid) return path;
+                    Path.ReturnPath(path);
+                    return null;
                 }
 
                 openSetCells.Remove(current);

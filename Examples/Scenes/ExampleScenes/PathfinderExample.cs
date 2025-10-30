@@ -104,9 +104,7 @@ internal class PathfinderFlag
         private PathfinderFlag startFlag;
         private PathfinderFlag endFlag;
         private Path? path = null;
-        // private List<PathfinderFlag> endFlags = new();
-        // private List<Path> paths = new();
-
+        
         private Circle? connectionCircleA = null;
         private Circle? connectionCircleB = null;
 
@@ -201,7 +199,7 @@ internal class PathfinderFlag
         public override void Reset()
         {
             pathfinder.ResetNodes();
-            path = null;
+            ClearPath();
             SetupEndFlags();
         }
 
@@ -266,20 +264,8 @@ internal class PathfinderFlag
             if (iaCalculatePath.State.Pressed)
             {
                 path = pathfinder.GetPath(startFlag.Position, endFlag.Position, 0);
-                // paths.Clear();
-                // for (int i = 0; i < endFlags.Count; i++)
-                // {
-                //     var flag = endFlags[i];
-                //     var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
-                //     if(path != null) paths.Add(path);
-                // }
             }
 
-            // if (Raylib.IsKeyPressed(KeyboardKey.H))
-            // {
-            //     var flag = new PathfinderFlag(mousePosGame, 32);
-            //     endFlags.Add(flag);
-            // }
 
             if (iaPortal.State.Pressed)
             {
@@ -358,26 +344,9 @@ internal class PathfinderFlag
                     rect.ScaleSize(0.3f, new AnchorPoint(0.5f)).Draw(Colors.PcText.ColorRgba);
                 }
             }
-
-            // if (paths.Count > 0)
-            // {
-            //     foreach (var path in paths)
-            //     {
-            //         foreach (var rect in path.Rects)
-            //         {
-            //             rect.ScaleSize(0.3f, new Vector2(0.5f)).Draw(new ColorRgba(Color.DodgerBlue));
-            //         }
-            //     }
-            //     
-            // }
             
             startFlag.Draw(Colors.PcHighlight.ColorRgba);
             endFlag.Draw(Colors.PcWarm.ColorRgba);
-            // foreach (var flag in endFlags)
-            // {
-            //     flag.Draw(new ColorRgba(Color.Fuchsia));
-            // }
-            
 
             connectionCircleA?.DrawLines(8f, Colors.PcHighlight.ColorRgba);
             connectionCircleB?.DrawLines(8f, Colors.PcWarm.ColorRgba);
@@ -437,6 +406,13 @@ internal class PathfinderFlag
             
             textFont.ColorRgba = Colors.Special;
             textFont.DrawTextWrapNone(textBottom, split.bottom, new(0.5f));
+        }
+
+        private void ClearPath()
+        {
+            if (path == null) return;
+            Path.ReturnPath(path);
+            path = null;
         }
     }
 

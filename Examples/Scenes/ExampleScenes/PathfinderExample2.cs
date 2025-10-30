@@ -8,14 +8,12 @@ using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
-using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Input;
 using ShapeEngine.Pathfinding;
-using Color = System.Drawing.Color;
 using Path = ShapeEngine.Pathfinding.Path;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes;
@@ -284,7 +282,7 @@ public class PathfinderExample2 : ExampleScene
         public void Reset(Vector2 pos)
         {
             body = new Circle(pos, body.Radius);
-            currentPath = null;
+            ClearCurrentPath();
             ClearPathTimer();
             lastTargetPosition = new();
             currentPathIndex = -1;
@@ -396,7 +394,7 @@ public class PathfinderExample2 : ExampleScene
                 if (disSq < 10 * 10)
                 {
                     if (!SetNextPathPoint()) currentPathIndex++;
-                    else currentPath = null; //finished
+                    else ClearCurrentPath(); //finished
                 }
             }
 
@@ -426,26 +424,7 @@ public class PathfinderExample2 : ExampleScene
             // body. DrawLines(body.Radius * 0.25f, Colors.Special);
             var c = Predictor ? Colors.PcHighlight : Colors.PcSpecial;
             CircleDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
-
-
-            // if (Predictor)
-            // {
-            //     GetTargetPosition().Draw(36f, new ColorRgba(Color.Lime));
-            // }
-            // if (currentPath != null)
-            // {
-            //     currentPath.Start.Draw(8f, new ColorRgba(Color.LawnGreen));
-            //     currentPath.End.Draw(8f, new ColorRgba(Color.OrangeRed));
-            //     if (currentPath.Rects.Count > 0)
-            //     {
-            //         foreach (var r in currentPath.Rects)
-            //         {
-            //             // r.ScaleSize(0.25f, new Vector2(0.5f)).Draw(new ColorRgba(Color.DodgerBlue));
-            //             r.DrawLines(4f, new ColorRgba(Color.DodgerBlue));
-            //         }
-            //     }
-            //     nextPathPoint.Draw(12f, new ColorRgba(Color.Yellow));
-            // }
+            
         }
 
         private Vector2 GetTargetPosition()
@@ -481,20 +460,6 @@ public class PathfinderExample2 : ExampleScene
                 );
             OnRequestPath?.Invoke(request);
             
-            // currentPath = pathfinder.GetPath(body.Center, chasePos, 0);
-            // if (currentPath != null)
-            // {
-            //     if (currentPath.Rects.Count > 0)
-            //     {
-            //         lastTargetPosition = chasePos;
-            //         nextPathPoint = currentPath.Rects[0].GetClosestPoint(chasePos).Closest.Point;
-            //         currentPathIndex = 1;
-            //         return;
-            //     }
-            //
-            //     currentPath = null;
-            //
-            // }
         }
 
         private bool SetNextPathPoint()
@@ -507,7 +472,7 @@ public class PathfinderExample2 : ExampleScene
             var index = pathfinder.GetIndex(nextPos);
             if (!pathfinder.IsTraversable(index))
             {
-                currentPath = null;
+                ClearCurrentPath();
                 return true;
             }
             nextPathPoint = nextPos;
@@ -517,6 +482,7 @@ public class PathfinderExample2 : ExampleScene
         public event Action<PathRequest>? OnRequestPath;
         public void ReceiveRequestedPath(Path? path, PathRequest request)
         {
+            ClearCurrentPath();
             currentPath = path;
             
             if (path != null)
@@ -524,12 +490,12 @@ public class PathfinderExample2 : ExampleScene
                 if (path.Rects.Count > 0)
                 {
                     lastTargetPosition = request.End;
-                    nextPathPoint = path.Rects[0].GetClosestPoint(request.End, out float disSquared).Point; // path.Rects[0].GetClosestPoint(request.End).Closest.Point;
+                    nextPathPoint = path.Rects[0].GetClosestPoint(request.End, out float disSquared).Point;
                     currentPathIndex = 1;
                     return;
                 }
         
-                currentPath = null;
+                ClearCurrentPath();
             }
         }
         
@@ -543,6 +509,13 @@ public class PathfinderExample2 : ExampleScene
         public void RemovedFromPathfinder()
         {
             
+        }
+
+        private void ClearCurrentPath()
+        {
+            if (currentPath == null) return;
+            Path.ReturnPath(currentPath);
+            currentPath = null;
         }
     }
 
@@ -641,7 +614,7 @@ public class PathfinderExample2 : ExampleScene
         universeShape = universe.ToPolygon();
         var cols = (int)(universeWidth / CellSize);
         var rows = (int)(universeHeight / CellSize);
-        pathfinder = new(universe, cols, rows);
+        pathfinder = new(universe, cols, rows, 240, true);
         
         camera = new();
         follower = new(0, 300, 500);
@@ -665,11 +638,6 @@ public class PathfinderExample2 : ExampleScene
         
         AddAsteroids(AsteroidCount);
         AddChasers(250);
-
-        pathfinder.RequestsPerFrame = 30;
-
-
-        
     }
 
     protected override void OnActivate(Scene oldScene)
