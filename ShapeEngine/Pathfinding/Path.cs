@@ -16,6 +16,7 @@ namespace ShapeEngine.Pathfinding;
 /// </remarks>
 public class Path
 {
+    #region Pooling
     private static readonly ConcurrentQueue<Path> PathPool = new();
     
     /// <summary>
@@ -35,10 +36,12 @@ public class Path
 
         instance.Start = start;
         instance.End = end;
-        if (instance.Rects.Capacity < capacity)
+        if (instance.RectsList.Capacity < capacity)
         {
-            instance.Rects.Capacity = capacity;
+            instance.RectsList.Capacity = capacity;
         }
+
+        instance.rented = true;
         return instance;
     }
     
@@ -49,7 +52,9 @@ public class Path
     /// <param name="path">The <see cref="Path"/> instance to enqueue for reuse.</param>
     public static void ReturnPath(Path path)
     {
-        path.Rects.Clear();
+        if (!path.rented) return;
+        path.RectsList.Clear();
+        path.rented = false;
         PathPool.Enqueue(path);
     }
     
@@ -71,6 +76,9 @@ public class Path
         }
     }
 
+    #endregion
+    
+    #region Members
     /// <summary>
     /// The starting position of the path.
     /// </summary>
@@ -80,26 +88,77 @@ public class Path
     /// </summary>
     public Vector2 End;
     /// <summary>
-    /// The list of rectangles (cells) that make up the path.
+    /// Internal list that stores the sequence of <see cref="Rect"/> instances composing the path.
+    /// This is the mutable backing store for the public <see cref="Rects"/> property.
     /// </summary>
-    public readonly List<Rect> Rects;
+    /// <remarks>
+    /// Intended for internal use only. Do not modify directly from external code; use the public APIs
+    /// such as <see cref="GetRectsCopy"/> or the pool rent/return methods. The list is cleared when a
+    /// <see cref="Path"/> is returned to the pool.
+    /// </remarks>
+    internal readonly List<Rect> RectsList;
+    /// <summary>
+    /// Indicates whether this instance is currently rented from the internal pool.
+    /// When true the instance is considered in-use and should not be enqueued again
+    /// or accessed after being returned via <see cref="ReturnInstance"/> / <see cref="ReturnPath(Path)"/>.
+    /// </summary>
+    private bool rented;
+    #endregion
+
+    #region Getters
     
+    /// <summary>
+    /// Provides a read-only view of the internal list of rectangles that compose this path.
+    /// </summary>
+    /// <remarks>
+    /// Returns the internal <see cref="RectsList"/> as an <see cref="IReadOnlyList{Rect}"/>.
+    /// Treat the returned collection as read-only: the underlying list is cleared when the
+    /// instance is returned to the pool and must not be retained or modified by callers.
+    /// </remarks>
+    public IReadOnlyList<Rect> Rects => RectsList; 
+    /// <summary>
+    /// Creates and returns a new list containing the rectangles from the internal backing list.
+    /// </summary>
+    /// <returns>
+    /// A new <see cref="List{Rect}"/> containing the path's rectangles. The returned list is a copy and
+    /// can be modified independently of the <see cref="Path"/> instance.
+    /// </returns>
+    /// <remarks>
+    /// This method allocates a new list. Prefer using the <see cref="Rects"/> property for a non-allocating
+    /// read-only view when possible. Do not rely on the original <see cref="Path"/> after it has been
+    /// returned to the pool; the returned copy is the only safe representation to hold beyond that.
+    /// </remarks>
+    public List<Rect> GetRectsCopy()
+    {
+        return RectsList.ToList();
+    }
     /// <summary>
     /// Gets a value indicating whether this path contains at least one rectangle.
     /// </summary>
     /// <remarks>
     /// A path is considered valid when its <see cref="Rects"/> collection is not empty.
     /// </remarks>
-    public bool IsValid => Rects.Count > 0;
+    public bool IsValid => RectsList.Count > 0;
+    #endregion
     
-
+    #region Constructor
     private Path(Vector2 start, Vector2 end, int capacity)
     {
         Start = start;
         End = end;
-        Rects = new List<Rect>(capacity);
+        RectsList = new List<Rect>(capacity);
+        rented = true;
     }
+    private Path(Vector2 start, Vector2 end, List<Rect> rectsList)
+    {
+        Start = start;
+        End = end;
+        RectsList = rectsList;
+        rented = true;
+    }
+    #endregion
 
+    #region Methods
     /// <summary>
     /// Returns this rented <see cref="Path"/> instance to the internal pool for reuse.
     /// </summary>
@@ -111,4 +170,21 @@ public class Path
     {
         ReturnPath(this);
     }
+
+    /// <summary>
+    /// Creates a deep copy of this <see cref="Path"/>.
+    /// </summary>
+    /// <returns>
+    /// A new <see cref="Path"/> instance with the same <see cref="Start"/> and <see cref="End"/> values
+    /// and an independent copy of the internal rectangles list (created via <see cref="GetRectsCopy"/>).
+    /// The returned instance is marked as rented; callers can return it to the pool using
+    /// <see cref="ReturnInstance"/> / <see cref="ReturnPath(Path)"/> when finished or keep it for independent use.
+    /// Once returned to the pool, the original instance should not be accessed further.
+    /// </returns>
+    public Path Copy()
+    {
+        return new Path(Start, End, GetRectsCopy());
+    }
+    
+    #endregion
 }

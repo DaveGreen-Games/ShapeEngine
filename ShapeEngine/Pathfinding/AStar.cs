@@ -144,8 +144,9 @@ internal class AStar
     /// <returns>A list of rectangles representing the path.</returns>
     private void ReconstructPath(Node from, ref Path path)
     {
-        path.Rects.Add(from.GetRect());
-    
+        path.RectsList.Add(from.GetRect());
+        // path.AddRect(from.GetRect());
+        
         var current = from;
     
         do
@@ -153,13 +154,15 @@ internal class AStar
             if (cellPath.ContainsKey(current))
             {
                 current = cellPath[current];
-                path.Rects.Add(current.GetRect());
+                path.RectsList.Add(current.GetRect());
+                // path.AddRect(current.GetRect());
             }
             else current = null;
     
         } while (current != null);
     
-        path.Rects.Reverse();
+        path.RectsList.Reverse();
+        // path.ReverseRects();
     }
     
 
