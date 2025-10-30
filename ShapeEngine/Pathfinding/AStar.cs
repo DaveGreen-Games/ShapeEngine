@@ -1,3 +1,4 @@
+using System.Buffers;
 using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Pathfinding;
@@ -32,7 +33,7 @@ internal class AStar
     /// <param name="endNode">The ending node.</param>
     /// <param name="layer">The layer to consider for traversability and weights.</param>
     /// <returns>A <see cref="Path"/> if a path is found; otherwise, null.</returns>
-    public  Path? GetPath(Node startNode, Node endNode, uint layer)
+    public Path? GetPath(Node startNode, Node endNode, uint layer)
     {
         cellPath.Clear();
         closedSet.Clear();
@@ -139,11 +140,12 @@ internal class AStar
     /// <returns>A list of rectangles representing the path.</returns>
     private List<Rect> ReconstructPath(Node from, int capacityEstimate)
     {
-        //TODO: Optimize allocations here (DPA issue)
-        List<Rect> nodes = new(capacityEstimate) { from.GetRect() };
-
+        //List<Rect> nodes = new(capacityEstimate) { from.GetRect() };
+        List<Rect> nodes = new(capacityEstimate > 0 ? capacityEstimate : 4);
+        nodes.Add(from.GetRect());
+    
         var current = from;
-
+    
         do
         {
             if (cellPath.ContainsKey(current))
@@ -152,12 +154,16 @@ internal class AStar
                 nodes.Add(current.GetRect());
             }
             else current = null;
-
+    
         } while (current != null);
-
+    
         nodes.Reverse();
         return nodes;
     }
+    
+
+    
+    
     /// <summary>
     /// Finds a path between two nodes using the A* algorithm for a given layer asynchronously.
     /// </summary>
