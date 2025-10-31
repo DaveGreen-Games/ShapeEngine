@@ -119,7 +119,7 @@ public class Path
     /// Treat the returned collection as read-only: the underlying list is cleared when the
     /// instance is returned to the pool and must not be retained or modified by callers.
     /// </remarks>
-    public IReadOnlyList<Rect> Rects => RectsList; 
+    public IReadOnlyList<Rect> Rects => RectsList;
     /// <summary>
     /// Creates and returns a new list containing the rectangles from the internal backing list.
     /// </summary>
@@ -135,6 +135,18 @@ public class Path
     public List<Rect> GetRectsCopy()
     {
         return RectsList.ToList();
+    }
+    /// <summary>
+    /// Creates and returns a new <see cref="HashSet{Rect}"/> containing the rectangles
+    /// that compose this path.
+    /// </summary>
+    /// <returns>
+    /// A new hash set populated from the internal backing list. The returned set is an
+    /// independent copy and can be modified without affecting the <see cref="Path"/>.
+    /// </returns>
+    public HashSet<Rect> GetRectsSetCopy()
+    {
+        return RectsList.ToHashSet();
     }
     /// <summary>
     /// Gets a value indicating whether this path contains at least one rectangle.
