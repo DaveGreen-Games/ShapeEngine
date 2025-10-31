@@ -1,3 +1,4 @@
+using System.Drawing;
 using ShapeEngine.Core;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
@@ -16,6 +17,8 @@ using ShapeEngine.Input;
 using ShapeEngine.Pathfinding;
 using Path = ShapeEngine.Pathfinding.Path;
 using ShapeEngine.Random;
+using Size = ShapeEngine.Core.Structs.Size;
+
 namespace Examples.Scenes.ExampleScenes;
 
 public class PathfinderExample2 : ExampleScene
@@ -30,12 +33,14 @@ public class PathfinderExample2 : ExampleScene
         private Vector2 pivot;
         private Vector2 movementDir;
         private float angleRad;
-        private float stopTimer = 0f;
-        private float accelTimer = 0f;
+        private float stopTimer;
+        private float accelTimer;
         private const float AccelTime = 0.25f;
         private const float StopTime = 0.5f;
         public const float Speed = 750;
-    
+
+        private int MaxObstacles = 5;
+        private readonly Queue<Rect> obstacles = [];
         
         private readonly PaletteColor hullColor = Colors.PcCold;
     
@@ -126,7 +131,6 @@ public class PathfinderExample2 : ExampleScene
             inputActionTree.CurrentGamepad = Game.Instance.Input.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(dt);
             
-            
             if (Game.Instance.Input.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
 
@@ -186,9 +190,6 @@ public class PathfinderExample2 : ExampleScene
                 }
             }
             
-            
-            
-
             var nodeIndex = pathfinder.GetIndex(hull.A);
             if (lastTraversableNodeIndex != nodeIndex && pathfinder.IsTraversable(nodeIndex))
             {
@@ -196,16 +197,28 @@ public class PathfinderExample2 : ExampleScene
                 var r = pathfinder.GetRect(nodeIndex);
                 chasePosition = r.Center;
             }
+
+            if (ShapeKeyboardButton.Q.GetInputState().Pressed)
+            {
+                if(obstacles.Count >= MaxObstacles)
+                {
+                    var oldObstacle = obstacles.Dequeue();
+                    var nodeValueReset = new NodeValue(NodeValueType.Reset);
+                    pathfinder.ApplyNodeValue(oldObstacle, nodeValueReset);
+                }
+                var obstacleRect = new Rect(chasePosition, new Size(shipSize, shipSize) * 8f, AnchorPoint.Center);
+                var nodeValue = new NodeValue(NodeValueType.Block);
+                pathfinder.ApplyNodeValue(obstacleRect, nodeValue);
+                obstacles.Enqueue(obstacleRect);
+            }
         }
         public void Draw()
         {
-            // var rightThruster = movementDir.RotateDeg(-25);
-            // var leftThruster = movementDir.RotateDeg(25);
-            // ShapeDrawing.DrawCircle(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
-            // ShapeDrawing.DrawCircle(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
-            // Hull.Draw(hullColor.ColorRgba);
-            // ShapeDrawing.DrawCircle(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
-            //
+            foreach (var obstacleRect in obstacles)
+            {
+                obstacleRect.Draw(new ColorRgba(Color.DarkRed));
+                obstacleRect.DrawLines(8f, new ColorRgba(Color.Crimson));
+            }
             hull.DrawLines(4f, hullColor.ColorRgba);
         }
         
@@ -236,13 +249,6 @@ public class PathfinderExample2 : ExampleScene
 
     private class Chaser : IPathfinderAgent
     {
-        
-        // public static int RequestCount = 0;
-        // private static readonly int MaxRequestsPerFrame = 150;
-        // private static bool RequestSlotAvailable => RequestCount < MaxRequestsPerFrame;
-        // private static void RequestSlotUsed() => RequestCount++;
-        // public static void ClearRequestCount() => RequestCount = 0;
-        
         private Circle body;
         private float speed;
         private bool Predictor => predictionSeconds > 0f;
@@ -252,19 +258,11 @@ public class PathfinderExample2 : ExampleScene
         private Pathfinder pathfinder;
         private Path? currentPath = null;
         private int currentPathIndex = -1;
-        private Vector2 nextPathPoint = new();
-        // private float endMovementTimer = 0f;
-        // private const float EndMovementTime = 5f;
+        private Vector2 nextPathPoint;
         
         private float pathTimer = 0f;
         private const float pathTimerInterval = 1f;
-        private Vector2 lastTargetPosition = new();
-
-        
-        
-        // public const float MaxPathRequestDistance = 5000f;
-        // private const float MaxPathRequestDistanceSquared = MaxPathRequestDistance * MaxPathRequestDistance;
-        // private bool directChase = false;
+        private Vector2 lastTargetPosition;
 
         public Chaser(Vector2 pos, float size, float speed, Pathfinder pathfinder)
         {
@@ -572,7 +570,6 @@ public class PathfinderExample2 : ExampleScene
         public float GetValue() => 0;
     }
     
-    // private const int chaserCount = 100;
     private Rect universe;
     private Polygon universeShape;
     private Pathfinder pathfinder;

@@ -28,7 +28,7 @@ internal class AStar
     
     /// <summary>
     /// Finds a path between two nodes using the A* algorithm for a given layer.
-    /// <see cref="Path"/> is using a pooling system to minimize allocations,
+    /// <see cref="Path"/> uses a pooling system to minimize allocations,
     /// so remember to return it to the pool after use either by using <see cref="Path.ReturnPath"/>/<see cref="Path.ReturnInstance"/>.
     /// </summary>
     /// <param name="startNode">The starting node.</param>
@@ -170,7 +170,7 @@ internal class AStar
     
     /// <summary>
     /// Finds a path between two nodes using the A* algorithm for a given layer asynchronously.
-    /// <see cref="Path"/> is using a pooling system to minimize allocations,
+    /// <see cref="Path"/> uses a pooling system to minimize allocations,
     /// so remember to return it to the pool after use either by using <see cref="Path.ReturnPath"/>/<see cref="Path.ReturnInstance"/>.
     /// </summary>
     /// <param name="startNode">The starting node.</param>

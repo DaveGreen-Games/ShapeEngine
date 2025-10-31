@@ -8,7 +8,7 @@ namespace ShapeEngine.Pathfinding;
 /// Represents a path used by the pathfinding system.
 /// Contains the start and end positions and the sequence of rectangles that form the path.
 /// Instances are intended to be rented from and returned to an internal pool
-/// using <see cref="RentPath(Vector2,Vector2,int)"/> and <see cref="ReturnPath(Path)"/> to minimize allocations.
+/// using <see cref="Path.RentPath(Vector2,Vector2,int)"/> and <see cref="Path.ReturnPath(Path)"/> to minimize allocations.
 /// </summary>
 /// <remarks>
 /// Returned instances will have their <see cref="Rects"/> collection cleared before being reused.
@@ -79,14 +79,18 @@ public class Path
     #endregion
     
     #region Members
+
     /// <summary>
     /// The starting position of the path.
     /// </summary>
-    public Vector2 Start;
+    public Vector2 Start { get; private set; }
+
     /// <summary>
     /// The ending position of the path.
     /// </summary>
-    public Vector2 End;
+    public Vector2 End { get; private set; }
+
+
     /// <summary>
     /// Internal list that stores the sequence of <see cref="Rect"/> instances composing the path.
     /// This is the mutable backing store for the public <see cref="Rects"/> property.

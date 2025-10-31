@@ -49,15 +49,33 @@ public class Pathfinder
     /// The grid used by the pathfinder.
     /// </summary>
     public readonly Grid Grid;
+    
+    /// <summary>
+    /// Default initial capacity for internal helper collections (e.g. HashSet, List)
+    /// used by the pathfinder for temporary operations and batching.
+    /// </summary>
+    public const int DefaultHelperCapacity = 1024;
+    /// <summary>
+    /// Default initial capacity for the internal agent collection.
+    /// Use this to size the agents dictionary to avoid re-allocations when many agents are added.
+    /// </summary>
+    public const int DefaultAgentCapacity = 1024;
+    /// <summary>
+    /// Default initial capacity for the collection storing pending path requests.
+    /// </summary>
+    public const int DefaultPathRequestCapacity = 256;
+    /// <summary>
+    /// Default initial capacity passed to the AStar allocator to reserve node structures.
+    /// </summary>
+    public const int DefaultAStarCapacity = 1024;
+    /// <summary>
+    /// Default number of path requests processed per frame.
+    /// If this value is less than or equal to zero, all incoming requests are handled in a frame.
+    /// </summary>
+    public const int DefaultRequestsPerFrame = 24;
     #endregion
 
     #region Private
-    
-    public const int DefaultHelperCapacity = 1024;
-    public const int DefaultAgentCapacity = 1024;
-    public const int DefaultPathRequestCapacity = 256;
-    public const int DefaultAStarCapacity = 1024;
-    public const int DefaultRequestsPerFrame = 24;
     
     private Rect bounds;
     private readonly List<GridNode> nodes;
@@ -69,7 +87,7 @@ public class Pathfinder
     private readonly Dictionary<IPathfinderAgent, PathRequest?> agents;
     
     private readonly AStar localAstar;
-    private static readonly ThreadLocal<AStar> threadLocalAStar = new(() => new AStar(1024));
+    private static readonly ThreadLocal<AStar> threadLocalAStar = new(() => new AStar(DefaultAStarCapacity));
     
     #endregion
 
@@ -492,9 +510,9 @@ public class Pathfinder
     /// An array of <see cref="Path"/>? results matching the request order, or <c>null</c> if no requests were provided or the operation was cancelled.
     /// </returns>
     /// <remarks>
-    /// Path is a pooled classed.
+    /// Path is a pooled class.
     /// Instances should be returned to the pool via <see cref="Path.ReturnPath(Path)"/> or <see cref="Path.ReturnInstance"/> when no longer needed.
-    /// Returned instances should not be accessed afterwards.
+    /// Returned instances should not be accessed afterward.
     /// </remarks>
     public Path?[]? GetPathsParallel(List<(Vector2 start, Vector2 end, uint layer)> requests, CancellationToken cancellationToken = default)
     {
@@ -529,47 +547,6 @@ public class Pathfinder
 
         return resultCopy;
     }
-    // public Path?[]? GetPathsParallel(List<(Vector2 start, Vector2 end, uint layer)> requests, CancellationToken cancellationToken = default)
-    // {
-    //     if (requests.Count <= 0) return null;
-    //
-    //     int count = requests.Count;
-    //     var results = new Path?[count];
-    //     var po = new ParallelOptions { CancellationToken = cancellationToken };
-    //
-    //     try
-    //     {
-    //         Parallel.For(0, count, po, i =>
-    //         {
-    //             var req = requests[i];
-    //             var astar = threadLocalAStar.Value!;
-    //             results[i] = GetPath(req.start, req.end, req.layer, astar);
-    //         });
-    //     }
-    //     catch (OperationCanceledException)
-    //     {
-    //         return null;
-    //     }
-    //     
-    //     return results;
-    //     
-    //     // if (requests.Count <= 0) return null;
-    //     //
-    //     // List<Path> paths = new(requests.Count);
-    //     // Parallel.ForEach(requests, request =>
-    //     // {
-    //     //     var astar = threadLocalAStar.Value!;
-    //     //     var path = GetPath(request.start, request.end, request.layer, astar);
-    //     //
-    //     //     lock (paths)
-    //     //     {
-    //     //         paths.Add(path!);
-    //     //     }
-    //     // });
-    //     //
-    //     // return paths;
-    // }
-    //
     #endregion
     
     #endregion
@@ -732,6 +709,7 @@ public class Pathfinder
     }
     #endregion
     
+    //TODO: If a node value is changed all agents should be notified to re-evaluate their paths?
     #region Set Node Values
     
     #region Index
@@ -1343,7 +1321,7 @@ public class Pathfinder
         }
 
         int requests = 0;
-        while (pathRequests.Count > 0 && (RequestsPerFrame <= 0 || requests <= RequestsPerFrame))
+        while (pathRequests.Count > 0 && (RequestsPerFrame <= 0 || requests < RequestsPerFrame))
         {
             var lastIndex = pathRequests.Count - 1;
             var request = pathRequests[lastIndex];
