@@ -102,10 +102,12 @@ public class PathfinderExample2 : ExampleScene
         }
         public void Reset(Vector2 pos, float size)
         {
+            obstacles.Clear();
             CreateHull(pos, size);
             chasePosition = hull.A;
             movementDir = new(0, 0);
             angleRad = 0f;
+            
         }
 
         private void Move(float dt, Vector2 dir, float speed)
@@ -206,7 +208,7 @@ public class PathfinderExample2 : ExampleScene
                     var nodeValueReset = new NodeValue(NodeValueType.Reset);
                     pathfinder.ApplyNodeValue(oldObstacle, nodeValueReset);
                 }
-                var obstacleRect = new Rect(chasePosition, new Size(shipSize, shipSize) * 8f, AnchorPoint.Center);
+                var obstacleRect = new Rect(chasePosition, new Size(shipSize, shipSize) * 12f, AnchorPoint.Center);
                 var nodeValue = new NodeValue(NodeValueType.Block);
                 pathfinder.ApplyNodeValue(obstacleRect, nodeValue);
                 obstacles.Enqueue(obstacleRect);
@@ -295,22 +297,6 @@ public class PathfinderExample2 : ExampleScene
                 return;
             }
             pathTimer = Rng.Instance.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 1.5f);
-            // var disSq = (GetTargetPosition() - body.Center).LengthSquared();
-            // if (disSq < MaxPathRequestDistanceSquared)
-            // {
-            //     pathTimer = ShapeRandom.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 1.5f);
-            // }
-            // else
-            // {
-            //     pathTimer = ShapeRandom.RandF(pathTimerInterval * 1.5f, pathTimerInterval * 3f);
-            // }
-            
-            
-            // var disSq = (target.GetChasePosition() - body.Center).LengthSquared();
-            // var baseDisSq = 5000f * 5000f;
-            // float f = ShapeMath.Clamp(disSq / baseDisSq, 0.2f, 1f);
-            //
-            // pathTimer = ShapeRandom.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 2f) * f;
         }
 
         private void ClearPathTimer() => pathTimer = 0f;
@@ -327,34 +313,10 @@ public class PathfinderExample2 : ExampleScene
 
             var chasePos = GetTargetPosition();
             var targetDisSq = (chasePos - body.Center).LengthSquared();
-            // if (targetDisSq > MaxPathRequestDistanceSquared)
-            // {
-            //     if (endMovementTimer <= EndMovementTime)
-            //     {
-            //         endMovementTimer += dt;
-            //         float f = 1f - ( endMovementTimer / EndMovementTime );
-            //         var newPos = body.Center.MoveTowards(chasePos, speed * dt * f);
-            //         body = new Circle(newPos, body.Radius);
-            //     }
-            //     
-            //     return;
-            // }
-            //
-            // endMovementTimer = 0f;
-            //
-            // if (targetDisSq < MinPathRequestDistance)
-            // {
-            //     float f = 0.8f;
-            //     var newPos = body.Center.MoveTowards(chasePos, speed * dt * f);
-            //     body = new Circle(newPos, body.Radius);
-            //     return;
-            // }
             
-            
-            
-            if (targetDisSq < MinPathRequestDistanceSquared)// || targetDisSq > MaxPathRequestDistanceSquared)
+            if (targetDisSq < MinPathRequestDistanceSquared)
             {
-                float f = 0.8f; // targetDisSq > MaxPathRequestDistanceSquared ? 0.25f : 0.8f;
+                var f = 0.8f;
                 var newPos = body.Center.MoveTowards(chasePos, speed * dt * f);
                 body = new Circle(newPos, body.Radius);
                 return;
@@ -367,12 +329,10 @@ public class PathfinderExample2 : ExampleScene
                 {
                     GetNewPath();
                     SetPathTimer();
-                    // if (currentPath == null) directChase = true;
 
                 }
                 else
                 {
-                    // var chasePos = target.GetChasePosition();
                     if ((chasePos - lastTargetPosition).LengthSquared() > 250 * 250)
                     {
                         GetNewPath();
@@ -381,10 +341,6 @@ public class PathfinderExample2 : ExampleScene
                     SetPathTimer();
                 }
             }
-            // if (target != null && currentPath == null)
-            // {
-            //     GetNewPath();
-            // }
 
             if (currentPath != null)
             {
@@ -398,18 +354,7 @@ public class PathfinderExample2 : ExampleScene
 
             if (currentPath != null)
             {
-                // float speedFactor = 1f;
-                // if (target != null)
-                // {
-                //     float targetDisSq = (target.GetChasePosition() - body.Center).LengthSquared();
-                //     float maxDisSq = 5000f * 5000f;
-                //     float thresholdSq = 1000f * 1000f;
-                //     
-                //     var factor = ShapeMath.Clamp(targetDisSq - thresholdSq / maxDisSq - thresholdSq, 0f, 0.8f);
-                //     speedFactor = 1f - factor;
-                // }
-                
-                
+               
                 var newPos = body.Center.MoveTowards(nextPathPoint, speed * dt);
                 body = new Circle(newPos, body.Radius);
             }
@@ -444,10 +389,8 @@ public class PathfinderExample2 : ExampleScene
         private void GetNewPath()
         {
             if (target == null) return;
-            // if (!RequestSlotAvailable) return;
-            // RequestSlotUsed();
 
-            var chasePos = GetTargetPosition(); // target.GetChasePosition();
+            var chasePos = GetTargetPosition();
             
             PathRequest request = 
                 new(
