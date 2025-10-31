@@ -194,12 +194,25 @@ internal abstract class Node : IComparable<Node>
         if (value.Layer > 0)
         {
             if (weights == null) weights = new();
-            if (!weights.ContainsKey(value.Layer))
+
+            if (weights.TryGetValue(value.Layer, out var nodeWeight))
+            {
+                nodeWeight.Apply(value);
+            }
+            else
             {
                 var w = new NodeWeight();
                 w.Apply(value);
                 weights.Add(value.Layer, w);
             }
+            
+            //i think this was wrong... it never applied the value if the layer existed
+            // if (!weights.ContainsKey(value.Layer))
+            // {
+            //     var w = new NodeWeight();
+            //     w.Apply(value);
+            //     weights.Add(value.Layer, w);
+            // }
         }
         else weight.Apply(value);
     }
