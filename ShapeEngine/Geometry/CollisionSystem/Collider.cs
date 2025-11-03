@@ -342,7 +342,7 @@ public abstract class Collider : Shape
     /// <remarks>
     /// The result depends on the runtime type of both this collider and the provided shape.
     /// </remarks>
-    public ClosestPointResult GetClosestPoint(IShape shape)
+    public new  ClosestPointResult GetClosestPoint(IShape shape)
     {
         switch (shape.GetShapeType())
         {
@@ -651,7 +651,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(IShape shape)
+    public new bool ContainsShape(IShape shape)
     {
         switch (shape.GetShapeType())
         {
