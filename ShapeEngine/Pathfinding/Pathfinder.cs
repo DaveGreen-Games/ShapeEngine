@@ -709,7 +709,6 @@ public class Pathfinder
     }
     #endregion
     
-    //TODO: If a node value is changed all agents should be notified to re-evaluate their paths?
     #region Set Node Values
     
     #region Index
@@ -718,13 +717,13 @@ public class Pathfinder
     /// Applies a node value to the node at the given index.
     /// </summary>
     /// <param name="index">The index of the node.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>True if the node value was applied, false otherwise.</returns>
-    public bool ApplyNodeValue(int index, NodeValue value)
+    public bool ApplyNodeValue(int index, NodeCost cost)
     {
         var node = GetNode(index);
         if (node == null) return false;
-        node.ApplyNodeValue(value);
+        node.ApplyNodeValue(cost);
         return true;
     }
     /// <summary>
@@ -733,7 +732,7 @@ public class Pathfinder
     /// <param name="index">The index of the node.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>True if the node values were applied, false otherwise.</returns>
-    public bool ApplyNodeValues(int index, params NodeValue[] values)
+    public bool ApplyNodeValues(int index, params NodeCost[] values)
     {
         var node = GetNode(index);
         if (node == null) return false;
@@ -748,13 +747,13 @@ public class Pathfinder
     /// Applies a node value to the node at the given position.
     /// </summary>
     /// <param name="position">The position of the node.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>True if the node value was applied, false otherwise.</returns>
-    public bool ApplyNodeValue(Vector2 position, NodeValue value)
+    public bool ApplyNodeValue(Vector2 position, NodeCost cost)
     {
         var node = GetNode(position);
         if (node == null) return false;
-        node.ApplyNodeValue(value);
+        node.ApplyNodeValue(cost);
         return true;
     }
     /// <summary>
@@ -763,7 +762,7 @@ public class Pathfinder
     /// <param name="position">The position of the node.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>True if the node values were applied, false otherwise.</returns>
-    public bool ApplyNodeValues(Vector2 position, IEnumerable<NodeValue> values)
+    public bool ApplyNodeValues(Vector2 position, IEnumerable<NodeCost> values)
     {
         var node = GetNode(position);
         if (node == null) return false;
@@ -778,16 +777,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given segment.
     /// </summary>
     /// <param name="shape">The segment.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Segment shape, NodeValue value)
+    public int ApplyNodeValue(Segment shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -798,7 +797,7 @@ public class Pathfinder
     /// <param name="shape">The segment.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Segment shape, params NodeValue[] values)
+    public int ApplyNodeValues(Segment shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -818,16 +817,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given circle.
     /// </summary>
     /// <param name="shape">The circle.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Circle shape, NodeValue value)
+    public int ApplyNodeValue(Circle shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -838,7 +837,7 @@ public class Pathfinder
     /// <param name="shape">The circle.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Circle shape, params NodeValue[] values)
+    public int ApplyNodeValues(Circle shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -858,16 +857,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given triangle.
     /// </summary>
     /// <param name="shape">The triangle.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Triangle shape, NodeValue value)
+    public int ApplyNodeValue(Triangle shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -878,7 +877,7 @@ public class Pathfinder
     /// <param name="shape">The triangle.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Triangle shape, params NodeValue[] values)
+    public int ApplyNodeValues(Triangle shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -898,16 +897,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given rectangle.
     /// </summary>
     /// <param name="shape">The rectangle.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Rect shape, NodeValue value)
+    public int ApplyNodeValue(Rect shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -919,7 +918,7 @@ public class Pathfinder
     /// <param name="shape">The rectangle.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Rect shape, params NodeValue[] values)
+    public int ApplyNodeValues(Rect shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -939,16 +938,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given quad.
     /// </summary>
     /// <param name="shape">The quad.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Quad shape, NodeValue value)
+    public int ApplyNodeValue(Quad shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -960,7 +959,7 @@ public class Pathfinder
     /// <param name="shape">The quad.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Quad shape, params NodeValue[] values)
+    public int ApplyNodeValues(Quad shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -980,16 +979,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given polygon.
     /// </summary>
     /// <param name="shape">The polygon.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Polygon shape, NodeValue value)
+    public int ApplyNodeValue(Polygon shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -1001,7 +1000,7 @@ public class Pathfinder
     /// <param name="shape">The polygon.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Polygon shape, params NodeValue[] values)
+    public int ApplyNodeValues(Polygon shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -1021,16 +1020,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given polyline.
     /// </summary>
     /// <param name="shape">The polyline.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Polyline shape, NodeValue value)
+    public int ApplyNodeValue(Polyline shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -1042,7 +1041,7 @@ public class Pathfinder
     /// <param name="shape">The polyline.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Polyline shape, params NodeValue[] values)
+    public int ApplyNodeValues(Polyline shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);

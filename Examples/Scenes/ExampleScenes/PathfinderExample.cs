@@ -189,13 +189,13 @@ public class PathfinderExample : ExampleScene
             var r = new Rect(rectStartPos, mousePosGame);
             switch (currentTerrainType)
             {
-                case TerrainType.Default: pathfinder.ApplyNodeValue(r, new (NodeValueType.Reset));
+                case TerrainType.Default: pathfinder.ApplyNodeValue(r, new (NodeCostType.Reset));
                     break;
-                case TerrainType.Easy: pathfinder.ApplyNodeValue(r, new (5f, NodeValueType.ResetThenSet));
+                case TerrainType.Easy: pathfinder.ApplyNodeValue(r, new (-5f, NodeCostType.ResetThenSetBaseValue));
                     break;
-                case TerrainType.Hard: pathfinder.ApplyNodeValue(r, new (-5f, NodeValueType.ResetThenSet));
+                case TerrainType.Hard: pathfinder.ApplyNodeValue(r, new (5f, NodeCostType.ResetThenSetBaseValue));
                     break;
-                case TerrainType.Block: pathfinder.ApplyNodeValue(r, new (NodeValueType.ResetThenBlock));
+                case TerrainType.Block: pathfinder.ApplyNodeValue(r, new (NodeCostType.ResetThenBlock));
                     break;
             }
         }

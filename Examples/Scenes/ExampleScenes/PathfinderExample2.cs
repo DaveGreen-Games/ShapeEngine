@@ -205,11 +205,11 @@ public class PathfinderExample2 : ExampleScene
                 if(obstacles.Count >= MaxObstacles)
                 {
                     var oldObstacle = obstacles.Dequeue();
-                    var nodeValueReset = new NodeValue(NodeValueType.Reset);
+                    var nodeValueReset = new NodeCost(NodeCostType.Reset);
                     pathfinder.ApplyNodeValue(oldObstacle, nodeValueReset);
                 }
                 var obstacleRect = new Rect(chasePosition, new Size(shipSize, shipSize) * 12f, AnchorPoint.Center);
-                var nodeValue = new NodeValue(NodeValueType.Block);
+                var nodeValue = new NodeCost(NodeCostType.Block);
                 pathfinder.ApplyNodeValue(obstacleRect, nodeValue);
                 obstacles.Enqueue(obstacleRect);
             }
@@ -462,8 +462,8 @@ public class PathfinderExample2 : ExampleScene
 
     private class AsteroidObstacle
     {
-        public static readonly NodeValue NodeValue = new(NodeValueType.Block);
-        public static readonly NodeValue NodeValueReset = new(NodeValueType.Reset);
+        public static readonly NodeCost NodeCost = new(NodeCostType.Block);
+        public static readonly NodeCost NodeCostReset = new(NodeCostType.Reset);
         private Polygon shape;
         private Triangulation triangulation;
         private Rect bb;
@@ -705,7 +705,7 @@ public class PathfinderExample2 : ExampleScene
         {
             var asteroid = new AsteroidObstacle(shape);
             asteroids.Add(asteroid);
-            pathfinder.ApplyNodeValue(shape, AsteroidObstacle.NodeValue);
+            pathfinder.ApplyNodeValue(shape, AsteroidObstacle.NodeCost);
         }
     }
 
@@ -713,7 +713,7 @@ public class PathfinderExample2 : ExampleScene
     {
         var asteroidShape = AsteroidObstacle.GenerateShape(position);
         
-        pathfinder.ApplyNodeValue(asteroidShape, AsteroidObstacle.NodeValue);
+        pathfinder.ApplyNodeValue(asteroidShape, AsteroidObstacle.NodeCost);
         
         
         var cellDistance = pathfinder.CellSize.Min() * 4;
@@ -733,7 +733,7 @@ public class PathfinderExample2 : ExampleScene
                     {
                         if (pathD.IsHole())
                         {
-                            pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                            pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeCost);
                         }
                         else
                         {
@@ -764,7 +764,7 @@ public class PathfinderExample2 : ExampleScene
                             {
                                 if (pathD.IsHole())
                                 {
-                                    pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                                    pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeCost);
                                 }
                                 else
                                 {
@@ -776,7 +776,7 @@ public class PathfinderExample2 : ExampleScene
                                 }
                             }
                         }
-                        pathfinder.ApplyNodeValue(fillShape, AsteroidObstacle.NodeValue);
+                        pathfinder.ApplyNodeValue(fillShape, AsteroidObstacle.NodeCost);
                     
                         unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), otherShape.ToClipperPaths(), FillRule.NonZero);
                         if (unionResult.Count > 0)
@@ -785,7 +785,7 @@ public class PathfinderExample2 : ExampleScene
                             {
                                 if (pathD.IsHole())
                                 {
-                                    pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                                    pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeCost);
                                 }
                                 else
                                 {
@@ -899,14 +899,14 @@ public class PathfinderExample2 : ExampleScene
                 {
                     lastCutShapes.Add(cutRect);
                     lastCutShapeTimers.Add(LastCutShapeDuration);
-                    pathfinder.ApplyNodeValue(nodeValueRect, AsteroidObstacle.NodeValueReset);
+                    pathfinder.ApplyNodeValue(nodeValueRect, AsteroidObstacle.NodeCostReset);
                     asteroids.RemoveAt(i);
                 
                     foreach (var shape in result.newShapes)
                     {
                         if (shape.GetArea() <= CellSize * CellSize)
                         {
-                            pathfinder.ApplyNodeValue(shape, AsteroidObstacle.NodeValueReset);
+                            pathfinder.ApplyNodeValue(shape, AsteroidObstacle.NodeCostReset);
                             continue;
                         }
                         var newAsteroid = new AsteroidObstacle(shape);

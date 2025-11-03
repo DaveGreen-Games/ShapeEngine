@@ -8,9 +8,6 @@ namespace ShapeEngine.Pathfinding;
 /// </summary>
 internal abstract class Node : IComparable<Node>
 {
-    /// <summary>
-    /// Encapsulates the weight and block state of a node, supporting multiple value types and layers.
-    /// </summary>
     private class NodeWeight
     {
         private int blockCount;
@@ -19,71 +16,178 @@ internal abstract class Node : IComparable<Node>
         private float bonus;
         public bool Blocked => blockCount > 0;
 
-        public void Apply(NodeValue value)
+        public void Apply(NodeCost cost)
         {
-            if (!value.Valid) return;
-            switch (value.Type)
+            if (!cost.Valid) return;
+            switch (cost.Type)
             {
-                case NodeValueType.Reset:
+                case NodeCostType.Reset:
                     Reset();
                     break;
-                
-                case NodeValueType.SetValue:
-                    baseValue = value.Value;
+
+                case NodeCostType.SetBaseValue:
+                    baseValue = cost.Value;
                     break;
-                case NodeValueType.ResetThenSet:
+                case NodeCostType.ResetThenSetBaseValue:
                     Reset();
-                    baseValue = value.Value;
+                    baseValue = cost.Value;
                     break;
-                case NodeValueType.Block:
+                case NodeCostType.Block:
                     blockCount++;
                     break;
-                case NodeValueType.Unblock:
+                case NodeCostType.Unblock:
                     blockCount--;
+                    if (blockCount < 0) blockCount = 0;
                     break;
-                case NodeValueType.ResetThenBlock:
+                case NodeCostType.ResetThenBlock:
                     Reset();
                     blockCount++;
                     break;
-                case NodeValueType.AddFlat:
-                    flat += value.Value;
+                case NodeCostType.AddFlat:
+                    flat += cost.Value;
                     break;
-                case NodeValueType.RemoveFlat:
-                    flat -= value.Value;
+                case NodeCostType.RemoveFlat:
+                    flat -= cost.Value;
                     break;
-                case NodeValueType.ResetFlat:
+                case NodeCostType.ResetFlat:
                     flat = 0;
                     break;
-                case NodeValueType.AddBonus:
-                    bonus += value.Value;
+                case NodeCostType.AddBonus:
+                    bonus += cost.Value;
                     break;
-                case NodeValueType.RemoveBonus:
-                    bonus -= value.Value;
+                case NodeCostType.RemoveBonus:
+                    bonus -= cost.Value;
                     break;
-                case NodeValueType.ResetBonus:
+                case NodeCostType.ResetBonus:
                     bonus = 0;
                     break;
-                
-                
-                
+
+
+
             }
         }
-        
-        public float Cur => blockCount > 0 ? 0 : GetBaseValueFactor() * GetBonusFactor();
 
+        public float Cur => blockCount > 0 ? 0 : CalculateCostMultiplier();
+        
         private float GetBaseValueFactor()
         {
             var v = baseValue + flat;
-            if (v > 0) return 1f / v; //more favorable
-            if (v < 0) return MathF.Abs(v); //less favorable
+            if (v > 0) return v; //less favorable
+            if (v < 0) return 1f / (1f - v); //more favorable
             return 1f; //normal
-        } 
+        }
         private float GetBonusFactor()
         {
-            if (bonus > 0) return 1f / bonus; //more favorable
-            if (bonus < 0) return MathF.Abs(bonus); //less favorable
+            if (bonus > 0) return bonus; //more favorable
+            if (bonus < 0) return 1f / (1f - bonus); //less favorable
             return 1f; //normal
-        } 
+        }
+        private float CalculateCostMultiplier()
+        {
+            return GetBaseValueFactor() * GetBonusFactor();
+        }
+
+        // private float CalculateCostMultiplier()
+        // {
+        //     const float minThreshold = 0.0001f;
+        //     // Step 1: Start with base multiplier (1.0 = normal cost)
+        //     // baseValue shifts the starting point (e.g., terrain type differences)
+        //     float multiplier = 1f + baseValue;
+        //
+        //     // Step 2: Apply flat adjustment (additive modification)
+        //     // This is useful for fixed cost changes like "add 2 cost for climbing stairs"
+        //     // Multiple entities can stack their flat bonuses/penalties independently
+        //     multiplier += flat;
+        //     
+        //     if (bonus == 0f)//no bonus to apply
+        //     {
+        //         return multiplier > 0f ? MathF.Max(minThreshold, multiplier) : MathF.Max(minThreshold, 1f / (1f - multiplier));
+        //     }
+        //     
+        //     
+        //     if (multiplier >= 0f)
+        //     {
+        //         // Step 3: Apply bonus as percentage modifier (multiplicative modification)
+        //         // This is useful for percentage-based effects like "50% faster movement"
+        //         
+        //         if (bonus > 0)
+        //         {
+        //             // Positive bonus = less favorable = increase cost
+        //             // +1 bonus = 2x cost (twice as slow)
+        //             // +2 bonus = 3x cost (three times as slow)
+        //             // Formula: current_multiplier * (1 + bonus)
+        //             multiplier *= (1f + bonus);
+        //         }
+        //         else
+        //         {
+        //             // Negative bonus = more favorable = reduce cost
+        //             // -1 bonus = 0.5x cost (twice as fast)
+        //             // -2 bonus = 0.33x cost (three times as fast)
+        //             // Formula: current_multiplier / (1 - bonus)
+        //             // Since bonus is negative, (1 - bonus) becomes (1 + |bonus|)
+        //             multiplier /= (1f - bonus);
+        //         }
+        //         return Math.Max(minThreshold, multiplier); 
+        //     }
+        //     
+        //     
+        //     //when multiplier is negative before bonus application, bonus logic is inverted
+        //     if (bonus > 0)
+        //     {
+        //             
+        //         multiplier /= (1f + bonus);
+        //     }
+        //     else
+        //     {
+        //             
+        //         multiplier *= (1f - bonus);
+        //     }
+        //     
+        //     // multiplier is still negative here
+        //     // Return the inverse to represent "better than free" traversal
+        //     return MathF.Max(minThreshold, 1f / (1f - multiplier));
+        // }
+        //
+        
+        // private float CalculateCostMultiplier()
+        // {
+        //     // Step 1: Start with base multiplier (1.0 = normal cost)
+        //     // baseValue shifts the starting point (e.g., terrain type differences)
+        //     float multiplier = 1f + baseValue;
+        //
+        //     // Step 2: Apply flat adjustment (additive modification)
+        //     // This is useful for fixed cost changes like "add 2 cost for climbing stairs"
+        //     // Multiple entities can stack their flat bonuses/penalties independently
+        //     multiplier += flat;
+        //
+        //     // Step 3: Apply bonus as percentage modifier (multiplicative modification)
+        //     // This is useful for percentage-based effects like "50% faster movement"
+        //     if (bonus != 0)
+        //     {
+        //         if (bonus > 0)
+        //         {
+        //             // Positive bonus = less favorable = increase cost
+        //             // +1 bonus = 2x cost (twice as slow)
+        //             // +2 bonus = 3x cost (three times as slow)
+        //             // Formula: current_multiplier * (1 + bonus)
+        //             multiplier *= (1f + bonus);
+        //         }
+        //         else
+        //         {
+        //             // Negative bonus = more favorable = reduce cost
+        //             // -1 bonus = 0.5x cost (twice as fast)
+        //             // -2 bonus = 0.33x cost (three times as fast)
+        //             // Formula: current_multiplier / (1 - bonus)
+        //             // Since bonus is negative, (1 - bonus) becomes (1 + |bonus|)
+        //             multiplier /= (1f - bonus);
+        //         }
+        //     }
+        //
+        //     // Step 4: Clamp to minimum threshold to avoid division by zero or negative costs
+        //     // Ensures the node always has some traversal cost
+        //     return Math.Max(0.001f, multiplier);
+        // }
+        
         public void Reset()
         {
             baseValue = 0;
@@ -187,23 +291,23 @@ internal abstract class Node : IComparable<Node>
     #region CellValues
 
     /// <summary>
-    /// Applies a node value to this node, optionally for a specific layer.
+    /// Applies a node cost to this node, optionally for a specific layer.
     /// </summary>
-    public void ApplyNodeValue(NodeValue value)
+    public void ApplyNodeValue(NodeCost cost)
     {
-        if (value.Layer > 0)
+        if (cost.Layer > 0)
         {
             if (weights == null) weights = new();
 
-            if (weights.TryGetValue(value.Layer, out var nodeWeight))
+            if (weights.TryGetValue(cost.Layer, out var nodeWeight))
             {
-                nodeWeight.Apply(value);
+                nodeWeight.Apply(cost);
             }
             else
             {
                 var w = new NodeWeight();
-                w.Apply(value);
-                weights.Add(value.Layer, w);
+                w.Apply(cost);
+                weights.Add(cost.Layer, w);
             }
             
             //i think this was wrong... it never applied the value if the layer existed
@@ -214,12 +318,12 @@ internal abstract class Node : IComparable<Node>
             //     weights.Add(value.Layer, w);
             // }
         }
-        else weight.Apply(value);
+        else weight.Apply(cost);
     }
     /// <summary>
-    /// Applies multiple node values to this node.
+    /// Applies multiple node costs to this node.
     /// </summary>
-    public void ApplyNodeValues(IEnumerable<NodeValue> values)
+    public void ApplyNodeValues(IEnumerable<NodeCost> values)
     {
         foreach (var value in values)
         {
