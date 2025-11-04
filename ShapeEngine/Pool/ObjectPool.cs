@@ -10,6 +10,7 @@ namespace ShapeEngine.Pool;
 /// Uses a thread-safe <see cref="System.Collections.Concurrent.ConcurrentBag{T}"/> to store available instances.
 /// Provide a <see cref="System.Func{T}"/> to create new instances and an optional
 /// <see cref="System.Action{T}"/> to reset instances when they are returned to the pool.
+/// If extension is needed, prefer a wrapper that delegates to <c>ObjectPool</c> rather than deriving from it.
 /// </remarks>
 public sealed class ObjectPool<T> where T : class
 {
