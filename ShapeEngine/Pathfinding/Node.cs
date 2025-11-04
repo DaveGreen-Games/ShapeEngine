@@ -6,93 +6,8 @@ namespace ShapeEngine.Pathfinding;
 /// <summary>
 /// Represents an abstract node in a pathfinding graph, supporting weights, neighbors, and connections.
 /// </summary>
-internal abstract class Node : IComparable<Node>
+internal abstract partial class Node : IComparable<Node>
 {
-    /// <summary>
-    /// Encapsulates the weight and block state of a node, supporting multiple value types and layers.
-    /// </summary>
-    private class NodeWeight
-    {
-        private int blockCount;
-        private float baseValue;
-        private float flat;
-        private float bonus;
-        public bool Blocked => blockCount > 0;
-
-        public void Apply(NodeValue value)
-        {
-            if (!value.Valid) return;
-            switch (value.Type)
-            {
-                case NodeValueType.Reset:
-                    Reset();
-                    break;
-                
-                case NodeValueType.SetValue:
-                    baseValue = value.Value;
-                    break;
-                case NodeValueType.ResetThenSet:
-                    Reset();
-                    baseValue = value.Value;
-                    break;
-                case NodeValueType.Block:
-                    blockCount++;
-                    break;
-                case NodeValueType.Unblock:
-                    blockCount--;
-                    break;
-                case NodeValueType.ResetThenBlock:
-                    Reset();
-                    blockCount++;
-                    break;
-                case NodeValueType.AddFlat:
-                    flat += value.Value;
-                    break;
-                case NodeValueType.RemoveFlat:
-                    flat -= value.Value;
-                    break;
-                case NodeValueType.ResetFlat:
-                    flat = 0;
-                    break;
-                case NodeValueType.AddBonus:
-                    bonus += value.Value;
-                    break;
-                case NodeValueType.RemoveBonus:
-                    bonus -= value.Value;
-                    break;
-                case NodeValueType.ResetBonus:
-                    bonus = 0;
-                    break;
-                
-                
-                
-            }
-        }
-        
-        public float Cur => blockCount > 0 ? 0 : GetBaseValueFactor() * GetBonusFactor();
-
-        private float GetBaseValueFactor()
-        {
-            var v = baseValue + flat;
-            if (v > 0) return 1f / v; //more favorable
-            if (v < 0) return MathF.Abs(v); //less favorable
-            return 1f; //normal
-        } 
-        private float GetBonusFactor()
-        {
-            if (bonus > 0) return 1f / bonus; //more favorable
-            if (bonus < 0) return MathF.Abs(bonus); //less favorable
-            return 1f; //normal
-        } 
-        public void Reset()
-        {
-            baseValue = 0;
-            flat = 0;
-            bonus = 0;
-            blockCount = 0;
-        }
-    }
-
     #region Members
 
     #region Internal
@@ -187,26 +102,39 @@ internal abstract class Node : IComparable<Node>
     #region CellValues
 
     /// <summary>
-    /// Applies a node value to this node, optionally for a specific layer.
+    /// Applies a node cost to this node, optionally for a specific layer.
     /// </summary>
-    public void ApplyNodeValue(NodeValue value)
+    public void ApplyNodeValue(NodeCost cost)
     {
-        if (value.Layer > 0)
+        if (cost.Layer > 0)
         {
             if (weights == null) weights = new();
-            if (!weights.ContainsKey(value.Layer))
+
+            if (weights.TryGetValue(cost.Layer, out var nodeWeight))
+            {
+                nodeWeight.Apply(cost);
+            }
+            else
             {
                 var w = new NodeWeight();
-                w.Apply(value);
-                weights.Add(value.Layer, w);
+                w.Apply(cost);
+                weights.Add(cost.Layer, w);
             }
+            
+            //i think this was wrong... it never applied the value if the layer existed
+            // if (!weights.ContainsKey(value.Layer))
+            // {
+            //     var w = new NodeWeight();
+            //     w.Apply(value);
+            //     weights.Add(value.Layer, w);
+            // }
         }
-        else weight.Apply(value);
+        else weight.Apply(cost);
     }
     /// <summary>
-    /// Applies multiple node values to this node.
+    /// Applies multiple node costs to this node.
     /// </summary>
-    public void ApplyNodeValues(IEnumerable<NodeValue> values)
+    public void ApplyNodeValues(IEnumerable<NodeCost> values)
     {
         foreach (var value in values)
         {

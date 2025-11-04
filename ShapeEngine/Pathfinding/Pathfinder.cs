@@ -29,6 +29,19 @@ public class Pathfinder
 
     #region Public
     /// <summary>
+    /// How many agent requests are handled each frame.
+    /// If the value is smaller or equal to zero, all incoming requests are handled.
+    /// This also affects the maximum number of requests that are handled in parallel processing,
+    /// when <see cref="ParallelProcessing"/> is <c>true</c>.
+    /// </summary>
+    public int RequestsPerFrame;
+    /// <summary>
+    /// If true, path requests will be processed in parallel using the thread pool.
+    /// When enabled, a thread-local <c>AStar</c> instance is used for each worker.
+    /// Disable to process requests serially on the main thread (uses <c>localAstar</c>).
+    /// </summary>
+    public bool ParallelProcessing;
+    /// <summary>
     /// The size of each cell in the grid.
     /// </summary>
     public Size CellSize { get; private set; }
@@ -36,23 +49,45 @@ public class Pathfinder
     /// The grid used by the pathfinder.
     /// </summary>
     public readonly Grid Grid;
+    
+    /// <summary>
+    /// Default initial capacity for internal helper collections (e.g. HashSet, List)
+    /// used by the pathfinder for temporary operations and batching.
+    /// </summary>
+    public const int DefaultHelperCapacity = 1024;
+    /// <summary>
+    /// Default initial capacity for the internal agent collection.
+    /// Use this to size the agents dictionary to avoid re-allocations when many agents are added.
+    /// </summary>
+    public const int DefaultAgentCapacity = 1024;
+    /// <summary>
+    /// Default initial capacity for the collection storing pending path requests.
+    /// </summary>
+    public const int DefaultPathRequestCapacity = 256;
+    /// <summary>
+    /// Default initial capacity passed to the AStar allocator to reserve node structures.
+    /// </summary>
+    public const int DefaultAStarCapacity = 1024;
+    /// <summary>
+    /// Default number of path requests processed per frame.
+    /// If this value is less than or equal to zero, all incoming requests are handled in a frame.
+    /// </summary>
+    public const int DefaultRequestsPerFrame = 24;
     #endregion
 
     #region Private
+    
     private Rect bounds;
     private readonly List<GridNode> nodes;
-    private HashSet<GridNode> nodeHelper1 = new(1024);
-    private HashSet<GridNode> nodeHelper2 = new(1024);
-    private HashSet<GridNode> resultSet = new(1024);
+    private HashSet<GridNode> nodeHelper1;
+    private HashSet<GridNode> nodeHelper2;
+    private HashSet<GridNode> resultSet;
     
-    /// <summary>
-    /// How many agent requests are handled each frame.
-    /// If the value is smaller or equal to zero, all incoming requests are handled.
-    /// </summary>
-    public int RequestsPerFrame = 25;
-    private readonly List<PathRequest> pathRequests = new(256);
-    private readonly Dictionary<IPathfinderAgent, PathRequest?> agents = new(1024);
-    // private readonly Dictionary<IPathfinderObstacle, List<GridNode>> obstacles = new(256);
+    private readonly List<PathRequest> pathRequests;
+    private readonly Dictionary<IPathfinderAgent, PathRequest?> agents;
+    
+    private readonly AStar localAstar;
+    private static readonly ThreadLocal<AStar> threadLocalAStar = new(() => new AStar(DefaultAStarCapacity));
     
     #endregion
 
@@ -85,7 +120,20 @@ public class Pathfinder
     /// <param name="bounds">The bounds of the pathfinder.</param>
     /// <param name="cols">The amount of columns in the grid.</param>
     /// <param name="rows">The amount of rows in the grid.</param>
-    public Pathfinder(Rect bounds, int cols, int rows)
+    /// <param name="requestsPerFrame">The maximum number of path requests that are handled per frame.
+    /// Set to 0 or a negative number to handle all incoming path requests.</param>
+    /// <param name="parallelProcessing">If set to true all path request that are handled this frame will be processed in parallel.</param>
+    /// <param name="initialHelperCapacity"> Sets the initial capacity of all internal helper Collections.</param>
+    /// <param name="initialAgentCapacity"> Sets the initial capacity of all the agent collection.
+    /// Set this to a number representing the max number of agents that will be added to this pathfinder. </param>
+    /// <param name="initialPathRequestCapacity"> Sets the initial capacity of the collection storing path requests.</param>
+    /// <param name="initialAStarCapacity"> Sets the initial capacity for the used AStar class.</param>
+    public Pathfinder(Rect bounds, int cols, int rows, 
+        int requestsPerFrame = DefaultRequestsPerFrame,  bool parallelProcessing = false,
+        int initialHelperCapacity = DefaultHelperCapacity,
+        int initialAgentCapacity = DefaultAgentCapacity,
+        int initialPathRequestCapacity = DefaultPathRequestCapacity,
+        int initialAStarCapacity = DefaultAStarCapacity)
     {
         this.bounds = bounds;
         Grid = new(cols, rows);
@@ -96,8 +144,6 @@ public class Pathfinder
             var coordinates = Grid.IndexToCoordinates(i);
             var node = new GridNode(coordinates, this);
             nodes.Add(node);
-            // GScores.Add(0);
-            // FScores.Add(0);
         }
         
         for (var i = 0; i < Grid.Count; i++)
@@ -107,8 +153,17 @@ public class Pathfinder
             node.SetNeighbors(neighbors);
         }
         
+        nodeHelper1 = new(initialHelperCapacity);
+        nodeHelper2 = new(initialHelperCapacity);
+        resultSet = new(initialHelperCapacity);
+        pathRequests = new(initialPathRequestCapacity);
+        agents = new(initialAgentCapacity);
+        localAstar = new(initialAStarCapacity);
+        
+        RequestsPerFrame = requestsPerFrame;
+        ParallelProcessing = parallelProcessing;
+        
     }
-
     
     #region Public
 
@@ -127,8 +182,8 @@ public class Pathfinder
     /// <param name="dt">The delta time.</param>
     public void Update(float dt)
     {
-        // HandleObstacles();
-        HandlePathRequests();
+        if(ParallelProcessing) HandlePathRequestsParallel();
+        else HandlePathRequests();
     }
 
     /// <summary>
@@ -210,7 +265,6 @@ public class Pathfinder
         var pos = Bounds.TopLeft + CellSize * coordinates.ToVector2();
         return new Rect(pos, CellSize, new (0f));
     }
-
     
     /// <summary>
     /// Gets the weight of the cell at the given index.
@@ -297,49 +351,10 @@ public class Pathfinder
         pathRequests.Add(request);
     }
 
-    private void HandlePathRequests()
-    {
-        if (pathRequests.Count <= 0) return;
-        
-        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
-        {
-            //sorted from highest priority to lowest in ascending order (highest is at the end for easier removing)
-            pathRequests.Sort((a, b) => a.Priority - b.Priority); 
-        }
-
-        int requests = 0;
-        while (pathRequests.Count > 0 && (RequestsPerFrame <= 0 || requests <= RequestsPerFrame))
-        {
-            var lastIndex = pathRequests.Count - 1;
-            var request = pathRequests[lastIndex];
-            pathRequests.RemoveAt(lastIndex);
-            if (request.Agent == null) continue; //should not happen
-            agents[request.Agent] = null; //handled and therefore cleared
-            requests ++;
-            var path = GetPath(request.Start, request.End, request.Agent.GetLayer()); //GetPath(request.Start, request.End, request.Agent.GetLayer());
-            if(path == null) continue;
-            request.Agent.ReceiveRequestedPath(path, request);
-        }
-        pathRequests.Clear();
-        
-        // int endIndex = RequestsPerFrame > 0 ? ShapeMath.MaxInt(pathRequests.Count - RequestsPerFrame, 0) : 0;
-        //
-        // for (int i = pathRequests.Count - 1; i >= endIndex; i--)
-        // {
-        //     var request = pathRequests[i];
-        //     // pathRequests.RemoveAt(i);
-        //     if (request.Agent == null) continue; //should not happen
-        //     agents[request.Agent] = null; //handled and therefor cleared
-        //     var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
-        //     if(path == null) continue;
-        //     request.Agent.ReceiveRequestedPath(path, request);
-        // }
-        // pathRequests.Clear();
-        
-        
-        
-    }
-
+    #endregion
+    
+    #region GetPaths
+    
     /// <summary>
     /// Gets a path from the start to the end position for the given layer.
     /// </summary>
@@ -347,7 +362,28 @@ public class Pathfinder
     /// <param name="end">The end position.</param>
     /// <param name="layer">The layer to get the path for.</param>
     /// <returns>The path from start to end, or null if no path was found.</returns>
+    /// <remarks>
+    /// Path is a pooled classed.
+    /// Instances should be returned to the pool via <see cref="Path.ReturnPath(Path)"/> or <see cref="Path.ReturnInstance"/> when no longer needed.
+    /// Returned instances should not be accessed afterwards.
+    /// </remarks>
     public Path? GetPath(Vector2 start, Vector2 end, uint layer)
+    {
+        return GetPath(start, end, layer, localAstar);
+    }
+    /// <summary>
+    /// Finds a path between two world positions using the supplied A\* instance.
+    /// The start and end positions are clamped to the pathfinder bounds. If the clamped
+    /// start or end cell is not traversable, the nearest traversable cell will be used.
+    /// Returns <c>null</c> when no valid traversable start/end cell can be found or when
+    /// no path exists.
+    /// </summary>
+    /// <param name="start">World-space start position.</param>
+    /// <param name="end">World-space end position.</param>
+    /// <param name="layer">Traversal layer used for weight and traversability checks.</param>
+    /// <param name="astar">The A\* instance used to compute the path (can be a thread-local worker).</param>
+    /// <returns>A <see cref="Path"/> if a path was found; otherwise <c>null</c>.</returns>
+    private Path? GetPath(Vector2 start, Vector2 end, uint layer, AStar astar)
     {
         var startNode = GetNodeClamped(start);
         
@@ -366,8 +402,152 @@ public class Pathfinder
             else return null;
         }
 
-        return AStar.GetPath(startNode, endNode, layer);
+        return astar.GetPath(startNode, endNode, layer);
     }
+    
+    #region Async
+    /// <summary>
+    /// Asynchronously finds a path between two world positions using A\* on this pathfinder.
+    /// The start and end positions are clamped to the pathfinder bounds. If the clamped start or end
+    /// cell is not traversable, the nearest traversable cell will be used; if none is available the
+    /// method returns null.
+    /// Using the async version makes sense when pathfinding may take a long time, e.g. on large grids or very complex paths.
+    /// </summary>
+    /// <param name="start">Start world position.</param>
+    /// <param name="end">End world position.</param>
+    /// <param name="layer">Traversal layer used for weight and traversability checks.</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the pathfinding operation.</param>
+    /// <returns>
+    /// A task that completes with the found <see cref="Path"/> or null if no path exists
+    /// or valid traversable start/end cells could not be found.
+    /// </returns>
+    /// <remarks>
+    /// Path is a pooled classed.
+    /// Instances should be returned to the pool via <see cref="Path.ReturnPath(Path)"/> or <see cref="Path.ReturnInstance"/> when no longer needed.
+    /// Returned instances should not be accessed afterwards.
+    /// </remarks>
+    public async Task<Path?> GetPathAsync(Vector2 start, Vector2 end, uint layer, CancellationToken cancellationToken = default)
+    {
+        var startNode = GetNodeClamped(start);
+        
+        if (!startNode.IsTraversable())
+        {
+            var newStartNode = startNode.GetClosestTraversableCell();
+            if (newStartNode is GridNode rn) startNode = rn;
+            else return null;
+        }
+        
+        var endNode = GetNodeClamped(end);
+        if (!endNode.IsTraversable())
+        {
+            var newEndNode = endNode.GetClosestTraversableCell();
+            if (newEndNode is GridNode rn) endNode = rn;
+            else return null;
+        }
+        return await localAstar.GetPathAsync(startNode, endNode, layer, cancellationToken);
+    }
+    #endregion
+
+    #region Parallel
+    
+    /// <summary>
+    /// Static array holding batched path requests for parallel processing.
+    /// The static approach avoids capturing variables in the <c>Parallel.For</c> lambda.
+    /// Each element is a tuple of (start, end, layer).
+    /// </summary>
+    /// <remarks>
+    /// This field is nullable and is set to <c>null</c> when no batched parallel operation is active to
+    /// avoid stale state.
+    /// </remarks>
+    private static (Vector2 start, Vector2 end, uint layer)[]? staticRequestArray;
+    /// <summary>
+    /// Static array used to store computed path results for a batched parallel pathfinding run.
+    /// The static approach avoids capturing variables in the <c>Parallel.For</c> lambda.
+    /// Each element corresponds to a request in <see cref="staticRequestArray"/> and may be <c>null</c> if no path was found.
+    /// </summary>
+    /// <remarks>
+    /// This field is nullable and is set to <c>null</c> when no batched parallel operation is active to
+    /// avoid stale state.
+    /// </remarks>
+    private static Path?[]? staticPathResults;
+    /// <summary>
+    /// Shared reference to the active <see cref="Pathfinder"/> used by the static parallel helpers.
+    /// The static approach avoids capturing variables in the <c>Parallel.For</c> lambda.
+    /// </summary>
+    /// <remarks>
+    /// This field is nullable and is set to <c>null</c> when no batched parallel operation is active to
+    /// avoid stale state.
+    /// </remarks>
+    private static Pathfinder? staticPathfinderInstance;
+    /// <summary>
+    /// Worker helper invoked by the parallel loop to process a single request.
+    /// Retrieves the request tuple from <see cref="staticRequestArray"/>, obtains a thread-local
+    /// <see cref="AStar"/> instance and stores the computed <see cref="Path"/> (or null) into
+    /// <see cref="staticPathResults"/> at the same index.
+    /// </summary>
+    /// <param name="i">The index of the request to process in <see cref="staticRequestArray"/>.</param>
+    /// <remarks>
+    /// This method assumes <see cref="staticRequestArray"/>, <see cref="staticPathResults"/> and
+    /// <see cref="staticPathfinderInstance"/> have been initialized by the caller and are not null.
+    /// It is intended to be safe for concurrent execution: each invocation writes to a unique slot
+    /// in <see cref="staticPathResults"/> and uses a thread-local <see cref="AStar"/> instance.
+    /// </remarks>
+    private static void StaticProcessIndex(int i)
+    {
+        var req = staticRequestArray![i];
+        var astar = threadLocalAStar.Value!;
+        staticPathResults![i] = staticPathfinderInstance!.GetPath(req.start, req.end, req.layer, astar);
+    }
+    
+    /// <summary>
+    /// Executes multiple pathfinding requests in parallel and returns an array of results.
+    /// Each element in the returned array corresponds to the request at the same index in <paramref name="requests"/>.
+    /// Returns <c>null</c> if <paramref name="requests"/> is empty or if the operation was cancelled.
+    /// </summary>
+    /// <param name="requests">A list of tuples where each tuple contains the start position, end position and traversal layer.</param>
+    /// <param name="cancellationToken">Optional cancellation token to cancel the parallel operation.</param>
+    /// <returns>
+    /// An array of <see cref="Path"/>? results matching the request order, or <c>null</c> if no requests were provided or the operation was cancelled.
+    /// </returns>
+    /// <remarks>
+    /// Path is a pooled class.
+    /// Instances should be returned to the pool via <see cref="Path.ReturnPath(Path)"/> or <see cref="Path.ReturnInstance"/> when no longer needed.
+    /// Returned instances should not be accessed afterward.
+    /// </remarks>
+    public Path?[]? GetPathsParallel(List<(Vector2 start, Vector2 end, uint layer)> requests, CancellationToken cancellationToken = default)
+    {
+        if (requests.Count <= 0) return null;
+
+        int count = requests.Count;
+        staticRequestArray = requests.ToArray();
+        staticPathResults = new Path?[count];
+        staticPathfinderInstance = this;
+
+        var po = new ParallelOptions { CancellationToken = cancellationToken };
+
+        try
+        {
+            Parallel.For(0, count, po, StaticProcessIndex);
+        }
+        catch (OperationCanceledException)
+        {
+            // clear static state
+            staticRequestArray = null;
+            staticPathResults = null;
+            staticPathfinderInstance = null;
+            return null;
+        }
+
+        var resultCopy = staticPathResults;
+        
+        // clear static state
+        staticRequestArray = null;
+        staticPathResults = null;
+        staticPathfinderInstance = null;
+
+        return resultCopy;
+    }
+    #endregion
     
     #endregion
     
@@ -537,13 +717,13 @@ public class Pathfinder
     /// Applies a node value to the node at the given index.
     /// </summary>
     /// <param name="index">The index of the node.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>True if the node value was applied, false otherwise.</returns>
-    public bool ApplyNodeValue(int index, NodeValue value)
+    public bool ApplyNodeValue(int index, NodeCost cost)
     {
         var node = GetNode(index);
         if (node == null) return false;
-        node.ApplyNodeValue(value);
+        node.ApplyNodeValue(cost);
         return true;
     }
     /// <summary>
@@ -552,7 +732,7 @@ public class Pathfinder
     /// <param name="index">The index of the node.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>True if the node values were applied, false otherwise.</returns>
-    public bool ApplyNodeValues(int index, params NodeValue[] values)
+    public bool ApplyNodeValues(int index, params NodeCost[] values)
     {
         var node = GetNode(index);
         if (node == null) return false;
@@ -567,13 +747,13 @@ public class Pathfinder
     /// Applies a node value to the node at the given position.
     /// </summary>
     /// <param name="position">The position of the node.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>True if the node value was applied, false otherwise.</returns>
-    public bool ApplyNodeValue(Vector2 position, NodeValue value)
+    public bool ApplyNodeValue(Vector2 position, NodeCost cost)
     {
         var node = GetNode(position);
         if (node == null) return false;
-        node.ApplyNodeValue(value);
+        node.ApplyNodeValue(cost);
         return true;
     }
     /// <summary>
@@ -582,7 +762,7 @@ public class Pathfinder
     /// <param name="position">The position of the node.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>True if the node values were applied, false otherwise.</returns>
-    public bool ApplyNodeValues(Vector2 position, IEnumerable<NodeValue> values)
+    public bool ApplyNodeValues(Vector2 position, IEnumerable<NodeCost> values)
     {
         var node = GetNode(position);
         if (node == null) return false;
@@ -597,16 +777,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given segment.
     /// </summary>
     /// <param name="shape">The segment.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Segment shape, NodeValue value)
+    public int ApplyNodeValue(Segment shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -617,7 +797,7 @@ public class Pathfinder
     /// <param name="shape">The segment.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Segment shape, params NodeValue[] values)
+    public int ApplyNodeValues(Segment shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -637,16 +817,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given circle.
     /// </summary>
     /// <param name="shape">The circle.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Circle shape, NodeValue value)
+    public int ApplyNodeValue(Circle shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -657,7 +837,7 @@ public class Pathfinder
     /// <param name="shape">The circle.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Circle shape, params NodeValue[] values)
+    public int ApplyNodeValues(Circle shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -677,16 +857,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given triangle.
     /// </summary>
     /// <param name="shape">The triangle.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Triangle shape, NodeValue value)
+    public int ApplyNodeValue(Triangle shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -697,7 +877,7 @@ public class Pathfinder
     /// <param name="shape">The triangle.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Triangle shape, params NodeValue[] values)
+    public int ApplyNodeValues(Triangle shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -717,16 +897,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given rectangle.
     /// </summary>
     /// <param name="shape">The rectangle.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Rect shape, NodeValue value)
+    public int ApplyNodeValue(Rect shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -738,7 +918,7 @@ public class Pathfinder
     /// <param name="shape">The rectangle.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Rect shape, params NodeValue[] values)
+    public int ApplyNodeValues(Rect shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -758,16 +938,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given quad.
     /// </summary>
     /// <param name="shape">The quad.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Quad shape, NodeValue value)
+    public int ApplyNodeValue(Quad shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -779,7 +959,7 @@ public class Pathfinder
     /// <param name="shape">The quad.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Quad shape, params NodeValue[] values)
+    public int ApplyNodeValues(Quad shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -799,16 +979,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given polygon.
     /// </summary>
     /// <param name="shape">The polygon.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Polygon shape, NodeValue value)
+    public int ApplyNodeValue(Polygon shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -820,7 +1000,7 @@ public class Pathfinder
     /// <param name="shape">The polygon.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Polygon shape, params NodeValue[] values)
+    public int ApplyNodeValues(Polygon shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -840,16 +1020,16 @@ public class Pathfinder
     /// Applies a node value to all nodes that intersect the given polyline.
     /// </summary>
     /// <param name="shape">The polyline.</param>
-    /// <param name="value">The node value to apply.</param>
+    /// <param name="cost">The node value to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValue(Polyline shape, NodeValue value)
+    public int ApplyNodeValue(Polyline shape, NodeCost cost)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
         if (nodeCount <= 0) return 0;
         foreach (var node in resultSet)
         {
-            node.ApplyNodeValue(value);
+            node.ApplyNodeValue(cost);
         }
     
         return nodeCount;
@@ -861,7 +1041,7 @@ public class Pathfinder
     /// <param name="shape">The polyline.</param>
     /// <param name="values">The node values to apply.</param>
     /// <returns>The amount of nodes that were changed.</returns>
-    public int ApplyNodeValues(Polyline shape, params NodeValue[] values)
+    public int ApplyNodeValues(Polyline shape, params NodeCost[] values)
     {
         resultSet.Clear();
         var nodeCount = GetNodes(shape, ref resultSet);
@@ -889,7 +1069,6 @@ public class Pathfinder
     #endregion
 
     #region Private
-    
     
     #region GetCells
 
@@ -1129,6 +1308,95 @@ public class Pathfinder
         return true;
     }
     #endregion
+    
+    private void HandlePathRequests()
+    {
+        if (pathRequests.Count <= 0) return;
+        
+        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
+        {
+            //sorted from highest priority to lowest in ascending order (highest is at the end for easier removing)
+            pathRequests.Sort((a, b) => a.Priority - b.Priority); 
+        }
+
+        int requests = 0;
+        while (pathRequests.Count > 0 && (RequestsPerFrame <= 0 || requests < RequestsPerFrame))
+        {
+            var lastIndex = pathRequests.Count - 1;
+            var request = pathRequests[lastIndex];
+            pathRequests.RemoveAt(lastIndex);
+            if (request.Agent == null) continue; //should not happen
+            agents[request.Agent] = null; //handled and therefore cleared
+            requests ++;
+            
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
+            if(path == null) continue;
+            request.Agent.ReceiveRequestedPath(path, request);
+            
+        }
+        pathRequests.Clear();
+    }
+    private void HandlePathRequestsParallel()
+    {
+        if (pathRequests.Count <= 0) return;
+
+        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
+        {
+            pathRequests.Sort((a, b) => a.Priority - b.Priority);
+        }
+
+        int requestsToProcess = RequestsPerFrame > 0 
+            ? Math.Min(pathRequests.Count, RequestsPerFrame) 
+            : pathRequests.Count;
+
+        var batch = pathRequests.GetRange(pathRequests.Count - requestsToProcess, requestsToProcess);
+        pathRequests.RemoveRange(pathRequests.Count - requestsToProcess, requestsToProcess);
+
+        // Clear agent tracking for processed requests
+        foreach (var request in batch)
+        {
+            if (request.Agent != null) agents[request.Agent] = null;
+        }
+
+        //VARIANT 1
+        // // Process in parallel using thread pool
+        // Parallel.ForEach(batch, request =>
+        // {
+        //     if (request.Agent == null) return;
+        //
+        //     var astar = threadLocalAStar.Value!;
+        //     var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
+        //
+        //     if (path != null)
+        //     {
+        //         request.Agent.ReceiveRequestedPath(path, request);
+        //     }
+        // });
+        
+
+        //VARIANT 2
+        // Collect results from worker threads and invoke callbacks on the main thread
+        var results = new System.Collections.Concurrent.ConcurrentQueue<(IPathfinderAgent Agent, Path Path, PathRequest Request)>();
+
+        Parallel.ForEach(batch, request =>
+        {
+            if (request.Agent == null) return;
+
+            var astar = threadLocalAStar.Value!;
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer(), astar);
+
+            if (path != null)
+            {
+                results.Enqueue((request.Agent, path, request));
+            }
+        });
+
+        // Drain queue on the main thread to make callback invocation thread-safe
+        while (results.TryDequeue(out var item))
+        {
+            item.Agent.ReceiveRequestedPath(item.Path, item.Request);
+        }
+    }
     
     private void ResolveRegenerationRequested()
     {

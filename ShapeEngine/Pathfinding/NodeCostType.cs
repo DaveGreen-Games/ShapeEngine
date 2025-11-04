@@ -3,7 +3,7 @@ namespace ShapeEngine.Pathfinding;
 /// <summary>
 /// Enumerates the types of node value operations that can be applied to a node.
 /// </summary>
-public enum NodeValueType
+public enum NodeCostType
 {
     /// <summary>
     /// No operation; the node value remains unchanged.
@@ -18,12 +18,12 @@ public enum NodeValueType
     /// <summary>
     /// Sets the node to a specific value.
     /// </summary>
-    SetValue = 1,
+    SetBaseValue = 1,
 
     /// <summary>
     /// Resets the node and then sets it to a specific value.
     /// </summary>
-    ResetThenSet = 2,
+    ResetThenSetBaseValue = 2,
 
     /// <summary>
     /// Blocks the node, making it impassable.
@@ -41,12 +41,12 @@ public enum NodeValueType
     ResetThenBlock = 5,
 
     /// <summary>
-    /// Adds a bonus value to the node.
+    /// Adds a bonus value to the node. (multiplicative cost, -3 would be 1/4 of the cost, +3 would be 4x the cost)
     /// </summary>
     AddBonus = 6,
 
     /// <summary>
-    /// Removes a bonus value from the node.
+    /// Removes a bonus value from the node. (multiplicative cost, -3 would be 1/4 of the cost, +3 would be 4x the cost)
     /// </summary>
     RemoveBonus = 7,
 

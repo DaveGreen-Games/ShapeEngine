@@ -17,5 +17,5 @@ public interface IPathfinderObstacle : IShape
     /// If the cell values have to be changed the obstacle has to be removed with the orginial values, and can then be
     /// added again with the new values
     /// </summary>
-    public NodeValue[] GetNodeValues();
+    public NodeCost[] GetNodeValues();
 }
