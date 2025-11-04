@@ -8,10 +8,18 @@ namespace ShapeEngine.Pool;
 public sealed class PooledObjectHandle<T> : IDisposable where T : class
 {
     /// <summary>
-    /// The pooled instance held by this handle.
-    /// Disposing the handle returns this instance to the pool and clears this property.
+    /// Gets the pooled instance held by this handle.
+    /// Accessing this property after the handle has been disposed will throw <see cref="ObjectDisposedException"/>.
     /// </summary>
-    public T Value { get; private set; }
+    /// <value>The instance of <typeparamref name="T"/> provided by the pool.</value>
+    /// <exception cref="ObjectDisposedException">Thrown when the handle has already been disposed.</exception>
+    public T Value
+    {
+        get => pool == null ? throw new ObjectDisposedException(nameof(PooledObjectHandle<T>)) : value!;
+        private set => this.value = value;
+    }
+
+    private T? value;
 
     /// <summary>
     /// Reference to the pool that provided the instance.
@@ -26,30 +34,43 @@ public sealed class PooledObjectHandle<T> : IDisposable where T : class
     /// <param name="pool">The <see cref="ObjectPool{T}"/> that owns the instance. Must not be <c>null</c>.</param>
     internal PooledObjectHandle(T value, ObjectPool<T> pool)
     {
-        Value = value ?? throw new ArgumentNullException(nameof(value));
+        this.value = value ?? throw new ArgumentNullException(nameof(value));
         this.pool = pool ?? throw new ArgumentNullException(nameof(pool));
     }
+    
+    /// <summary>
+    /// Gets whether this handle has been disposed.
+    /// True when the internal pool reference has been cleared (the value was returned).
+    /// </summary>
+    public bool IsDisposed => pool == null;
+    
+    /// <summary>
+    /// Gets whether this handle is still valid (not disposed).
+    /// True when the internal pool reference is non-null and the value may be used.
+    /// </summary>
+    public bool IsValid => pool != null;
 
     /// <summary>
     /// Disposes the handle, returning the contained instance to its owning pool.
     /// </summary>
     /// <remarks>
-    /// This method is idempotent and thread-safe: it atomically clears the
-    /// internal pool reference so that only the first caller actually returns
-    /// the instance. After disposal, <see cref="Value"/> is set to <c>null</c>.
+    /// This method is idempotent and thread-safe:
+    /// it atomically clears the internal pool reference so that only the first caller actually returns the instance.
+    /// After disposal, accessing <see cref="Value"/> throws <see cref="ObjectDisposedException"/>.
     /// </remarks>
     public void Dispose()
     {
-        // Atomically set pool to null and get the previous value.
-        // Only the first caller receives the non-null pool and performs the return.
         var p = Interlocked.Exchange(ref pool, null);
         if (p != null)
         {
-            p.Return(Value);
-            Value = null!;
+            p.Return(value!);
+            value = null;
         }
     }
+    
 }
+
+
 
 // Disposable handle that returns the instance to the pool on Dispose.
 // public sealed class PooledObject<T> : IDisposable where T : class
@@ -80,8 +101,6 @@ public sealed class PooledObjectHandle<T> : IDisposable where T : class
 //         Value = null!;
 //     }
 // }
-
-
 // public ref struct PooledObjectHandle<T> where T : class
 // {
 //     public T Value { get; private set; }

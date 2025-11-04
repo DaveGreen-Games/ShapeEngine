@@ -54,11 +54,11 @@ public sealed class ObjectPool<T> where T : class
     /// A pooled instance of <typeparamref name="T"/>. The caller should return the instance
     /// to the pool by calling <see cref="Return(T)"/> when finished.
     /// </returns>
-    public T Get()
+    public T Rent()
     {
         return objects.TryTake(out var instance) ? instance : objectGenerator();
     }
-
+    
     /// <summary>
     /// Returns an instance to the pool. The instance will be reset using the optional
     /// reset delegate (if provided) and then added back to the internal storage for reuse.
@@ -73,19 +73,6 @@ public sealed class ObjectPool<T> where T : class
     }
 
     /// <summary>
-    /// Removes all objects currently stored in the pool's internal container.
-    /// </summary>
-    /// <remarks>
-    /// This clears only the available instances held by the pool; instances already checked out
-    /// via <see cref="Get"/> are not affected. The underlying operation uses the thread-safe
-    /// <see cref="System.Collections.Concurrent.ConcurrentBag{T}"/> implementation.
-    /// </remarks>
-    public void Clear()
-    {
-        objects.Clear();
-    }
-    
-    /// <summary>
     /// Creates a disposable handle that wraps a pooled instance.
     /// The handle will return the instance to this pool when the handle is disposed.
     /// </summary>
@@ -94,12 +81,25 @@ public sealed class ObjectPool<T> where T : class
     /// </returns>
     /// <remarks>
     /// Use the returned handle in a `using` statement (or dispose it manually) to ensure the instance
-    /// is returned to the pool promptly. This method obtains a single instance via <see cref="Get"/>.
+    /// is returned to the pool promptly. This method obtains a single instance via <see cref="Rent"/>.
     /// </remarks>
-    public PooledObjectHandle<T> GetHandle()
+    public PooledObjectHandle<T> GetDisposableHandle()
     {
-        var instance = Get();
+        var instance = Rent();
         return new PooledObjectHandle<T>(instance, this);
+    }
+    
+    /// <summary>
+    /// Removes all objects currently stored in the pool's internal container.
+    /// </summary>
+    /// <remarks>
+    /// This clears only the available instances held by the pool; instances already checked out
+    /// via <see cref="Rent"/> are not affected. The underlying operation uses the thread-safe
+    /// <see cref="System.Collections.Concurrent.ConcurrentBag{T}"/> implementation.
+    /// </remarks>
+    public void Clear()
+    {
+        objects.Clear();
     }
 }
 
