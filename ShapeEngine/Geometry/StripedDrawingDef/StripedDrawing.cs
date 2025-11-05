@@ -1,7 +1,12 @@
+using System.Drawing;
 using System.Numerics;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
+using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.StripedDrawingDef;
 
@@ -12,6 +17,7 @@ namespace ShapeEngine.Geometry.StripedDrawingDef;
 public static partial class StripedDrawing
 {
     private static IntersectionPoints intersectionPointsReference = new IntersectionPoints(6);
+    
     
     /// <summary>
     /// Draws every segment in <see cref="Segments"/> using the provided <see cref="LineDrawingInfo"/>.
@@ -64,6 +70,34 @@ public static partial class StripedDrawing
             i++;
         }
     }
+    /// <summary>
+    /// Generates striped segments for an outer shape while optionally excluding areas covered by an inner shape.
+    /// The method dispatches to specific overloads for supported shape types (Circle, Triangle, Rectangle, Quad, Polygon).
+    /// </summary>
+    /// <typeparam name="TO">Type of the outside shape.
+    /// Only allowed shapes are: <see cref="Circle"/>, <see cref="Triangle"/>, <see cref="Rectangle"/>, <see cref="Quad"/>, <see cref="Polygon"/>).
+    /// </typeparam>
+    /// <typeparam name="TI">Type of the inside (excluded) shape.
+    /// Only allowed shapes are: <see cref="Circle"/>, <see cref="Triangle"/>, <see cref="Rectangle"/>, <see cref="Quad"/>, <see cref="Polygon"/>).
+    /// </typeparam>
+    /// <param name="outsideShape">The outer shape to fill with stripe lines.</param>
+    /// <param name="insideShape">The inner shape to exclude from stripes (may be null or of a supported type).</param>
+    /// <param name="spacing">Distance between adjacent stripe lines in the same units as shape coordinates.</param>
+    /// <param name="angleDeg">Stripe angle in degrees, measured from the x-axis.</param>
+    /// <param name="spacingOffset">Optional offset to shift the stripe pattern along its perpendicular direction.</param>
+    /// <returns>A <see cref="Segments"/> collection containing the generated stripe segments; may be empty if no stripes are produced.</returns>
+    public static Segments GenerateStripedSegments<TO, TI>(TO outsideShape, TI insideShape, float spacing, float angleDeg, float spacingOffset = 0f)
+    {
+        if (outsideShape is Circle circle) GenerateStripedSegments(circle, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Triangle triangle) GenerateStripedSegments(triangle, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Rectangle rectangle) GenerateStripedSegments(rectangle, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Quad quad) GenerateStripedSegments(quad, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Polygon polygon) GenerateStripedSegments(polygon, insideShape, spacing, angleDeg, spacingOffset);
+
+        return [];
+    }
+    
+    
     
     /// <summary>
     /// Adds one or two segments to the given <see cref="Segments"/> collection based on the
@@ -156,5 +190,4 @@ public static partial class StripedDrawing
         }
     }
     
-
 }
