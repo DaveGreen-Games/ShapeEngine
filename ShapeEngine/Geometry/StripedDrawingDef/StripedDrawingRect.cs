@@ -105,17 +105,17 @@ public static partial class StripedDrawing
         return segments;
     }
     /// <summary>
-    /// Generates striped segments clipped to the given outside triangle while excluding the area of an inside shape.
-    /// The method casts parallel lines/rays across the outside triangle and subtracts intersections with the
+    /// Generates striped segments clipped to the given outside rect while excluding the area of an inside shape.
+    /// The method casts parallel lines/rays across the outside rect and subtracts intersections with the
     /// provided inside shape to produce the final visible stripe segments.
     /// </summary>
     /// <typeparam name="T">Type of the inside shape.
     /// Allowed types are handled inside the method.
     /// Supported inside shape types: <see cref="Triangle"/>, <see cref="Circle"/>,
     /// <see cref="Rect"/>, <see cref="Quad"/>, <see cref="Polygon"/>.</typeparam>
-    /// <param name="outsideShape">Triangle that defines the outer boundary for the stripes.</param>
+    /// <param name="outsideShape">Rect that defines the outer boundary for the stripes.</param>
     /// <param name="insideShape">Shape to be excluded from the stripes.</param>
-    /// <param name="spacing">Distance between adjacent stripes. Values &lt;= 0 will produce an empty result.</param>
+    /// <param name="spacing">Distance between adjacent stripes. Values = 0 will produce an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
     /// <param name="spacingOffset">Normalized offset in the range [0,1] used to shift the pattern (useful for animation).</param>
     /// <returns>
