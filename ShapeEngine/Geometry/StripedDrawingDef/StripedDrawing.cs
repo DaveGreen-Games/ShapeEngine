@@ -75,10 +75,10 @@ public static partial class StripedDrawing
     /// The method dispatches to specific overloads for supported shape types (Circle, Triangle, Rectangle, Quad, Polygon).
     /// </summary>
     /// <typeparam name="TO">Type of the outside shape.
-    /// Only allowed shapes are: <see cref="Circle"/>, <see cref="Triangle"/>, <see cref="Rectangle"/>, <see cref="Quad"/>, <see cref="Polygon"/>).
+    /// Only allowed shapes are: <see cref="Circle"/>, <see cref="Triangle"/>, <see cref="Rect"/>, <see cref="Quad"/>, <see cref="Polygon"/>).
     /// </typeparam>
     /// <typeparam name="TI">Type of the inside (excluded) shape.
-    /// Only allowed shapes are: <see cref="Circle"/>, <see cref="Triangle"/>, <see cref="Rectangle"/>, <see cref="Quad"/>, <see cref="Polygon"/>).
+    /// Only allowed shapes are: <see cref="Circle"/>, <see cref="Triangle"/>, <see cref="Rect"/>, <see cref="Quad"/>, <see cref="Polygon"/>).
     /// </typeparam>
     /// <param name="outsideShape">The outer shape to fill with stripe lines.</param>
     /// <param name="insideShape">The inner shape to exclude from stripes (may be null or of a supported type).</param>
