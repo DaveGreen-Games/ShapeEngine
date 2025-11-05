@@ -88,11 +88,11 @@ public static partial class StripedDrawing
     /// <returns>A <see cref="Segments"/> collection containing the generated stripe segments; may be empty if no stripes are produced.</returns>
     public static Segments GenerateStripedSegments<TO, TI>(TO outsideShape, TI insideShape, float spacing, float angleDeg, float spacingOffset = 0f)
     {
-        if (outsideShape is Circle circle) GenerateStripedSegments(circle, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Triangle triangle) GenerateStripedSegments(triangle, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Rectangle rectangle) GenerateStripedSegments(rectangle, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Quad quad) GenerateStripedSegments(quad, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Polygon polygon) GenerateStripedSegments(polygon, insideShape, spacing, angleDeg, spacingOffset);
+        if (outsideShape is Circle circle) return GenerateStripedSegments(circle, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Triangle triangle) return GenerateStripedSegments(triangle, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Rectangle rectangle) return GenerateStripedSegments(rectangle, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Quad quad) return GenerateStripedSegments(quad, insideShape, spacing, angleDeg, spacingOffset);
+        else if(outsideShape is Polygon polygon) return GenerateStripedSegments(polygon, insideShape, spacing, angleDeg, spacingOffset);
 
         return [];
     }
