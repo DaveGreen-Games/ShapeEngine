@@ -136,7 +136,7 @@ public static partial class StripedDrawing
     /// <see cref="Rect"/>, <see cref="Quad"/>, <see cref="Polygon"/>.</typeparam>
     /// <param name="outsideShape">Polygon that defines the outer boundary for the stripes.</param>
     /// <param name="insideShape">Shape to be excluded from the stripes.</param>
-    /// <param name="spacing">Distance between adjacent stripes. Values= 0 will produce an empty result.</param>
+    /// <param name="spacing">Distance between adjacent stripes. Values = 0 will produce an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
     /// <param name="spacingOffset">Normalized offset in the range [0,1] used to shift the pattern (useful for animation).</param>
     /// <returns>

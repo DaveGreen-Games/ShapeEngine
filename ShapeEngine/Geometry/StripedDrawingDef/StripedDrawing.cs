@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
@@ -89,10 +90,10 @@ public static partial class StripedDrawing
     public static Segments GenerateStripedSegments<TO, TI>(TO outsideShape, TI insideShape, float spacing, float angleDeg, float spacingOffset = 0f)
     {
         if (outsideShape is Circle circle) return GenerateStripedSegments(circle, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Triangle triangle) return GenerateStripedSegments(triangle, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Rectangle rectangle) return GenerateStripedSegments(rectangle, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Quad quad) return GenerateStripedSegments(quad, insideShape, spacing, angleDeg, spacingOffset);
-        else if(outsideShape is Polygon polygon) return GenerateStripedSegments(polygon, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Triangle triangle) return GenerateStripedSegments(triangle, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Rect rect) return GenerateStripedSegments(rect, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Quad quad) return GenerateStripedSegments(quad, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Polygon polygon) return GenerateStripedSegments(polygon, insideShape, spacing, angleDeg, spacingOffset);
 
         return [];
     }
