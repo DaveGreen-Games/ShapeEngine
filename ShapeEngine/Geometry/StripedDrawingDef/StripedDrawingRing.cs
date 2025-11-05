@@ -1,11 +1,115 @@
 using System.Numerics;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.StripedDrawingDef;
 
 public static partial class StripedDrawing
 {
+    /// <summary>
+    /// Generates a collection of radial segments that form a striped ring.
+    /// Each segment starts at the ring's inner radius and ends at the outer radius,
+    /// positioned at evenly spaced angles around the specified center.
+    /// </summary>
+    /// <param name="center">Center point of the ring.</param>
+    /// <param name="innerRadius">Inner radius of the ring. Negative values are clamped to zero; if greater than <paramref name="outerRadius"/> values are swapped.</param>
+    /// <param name="outerRadius">Outer radius of the ring. Negative values are clamped to zero.</param>
+    /// <param name="angleSpacingDeg">Angular spacing in degrees between consecutive lines. Must be greater than zero.</param>
+    /// <param name="angleOffset">Normalized offset in the range [0,1) applied to the starting angle as a fraction of <paramref name="angleSpacingDeg"/> (default 0).</param>
+    /// <returns>A <see cref="Segments"/> collection containing the generated radial segments.</returns>
+    public static Segments GenerateStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float angleOffset = 0f)
+    {
+        var segments = new Segments();
+        if (angleSpacingDeg <= 0) return segments;
+        if (outerRadius < 0f) outerRadius = 0f;
+        if (innerRadius < 0f) innerRadius = 0f;
+        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return segments;
+        if (outerRadius < innerRadius)
+        {
+            (innerRadius, outerRadius) = (outerRadius, innerRadius);
+        }
+
+        float angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
+        float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
+        while (curAngleRad <= 2f * ShapeMath.PI - angleSpacingRad)
+        {
+            var dir = new Vector2(1, 0).Rotate(curAngleRad);
+            var p1 = center + dir * innerRadius;
+            var p2 = center + dir * outerRadius;
+            var segment = new Segment(p1, p2);
+            segments.Add(segment);
+            curAngleRad += angleSpacingRad;
+        }
+
+        return segments;
+    }
+    
+    /// <summary>
+    /// Generates radial segments for a sector of a striped ring between two angles.
+    /// Each segment runs from <paramref name="innerRadius"/> to <paramref name="outerRadius"/>
+    /// at evenly spaced angles determined by <paramref name="angleSpacingDeg"/>.
+    /// </summary>
+    /// <param name="center">Center point of the ring.</param>
+    /// <param name="innerRadius">Inner radius of the ring. Negative values are clamped to zero; if greater than <paramref name="outerRadius"/> values are swapped.</param>
+    /// <param name="outerRadius">Outer radius of the ring. Negative values are clamped to zero.</param>
+    /// <param name="angleSpacingDeg">Angular spacing in degrees between consecutive lines. Must be greater than zero.</param>
+    /// <param name="minAngleDeg">Start angle of the sector in degrees.</param>
+    /// <param name="maxAngleDeg">End angle of the sector in degrees.</param>
+    /// <param name="angleOffset">Normalized offset in the range [0,1) applied to the starting angle as a fraction of <paramref name="angleSpacingDeg"/> (default 0).</param>
+    /// <returns>A <see cref="Segments"/> collection containing the generated radial segments.</returns>
+    public static Segments GenerateStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, 
+        float minAngleDeg, float maxAngleDeg, float angleOffset = 0f )
+    {
+        var segments = new Segments();
+        
+        if (angleSpacingDeg <= 0) return segments;
+        if (outerRadius < 0f) outerRadius = 0f;
+        if (innerRadius < 0f) innerRadius = 0f;
+        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return segments;
+        if (outerRadius < innerRadius)
+        {
+            (innerRadius, outerRadius) = (outerRadius, innerRadius);
+        }
+
+        if (Math.Abs(minAngleDeg - maxAngleDeg) < 0.00000001f) return segments;
+        var dif = maxAngleDeg - minAngleDeg;
+        int sign = MathF.Sign(dif);
+        if (sign == 0) return segments;
+
+        var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
+        var minAngleRad = minAngleDeg * ShapeMath.DEGTORAD;
+        var maxAngleRad = maxAngleDeg * ShapeMath.DEGTORAD;
+        float curAngleRad = minAngleRad + angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
+
+        if (sign < 0)
+        {
+            while (curAngleRad >= maxAngleRad - angleSpacingRad)
+            {
+                var dir = new Vector2(1, 0).Rotate(curAngleRad);
+                var p1 = center + dir * innerRadius;
+                var p2 = center + dir * outerRadius;
+                var segment = new Segment(p1, p2);
+                segments.Add(segment);
+                curAngleRad -= angleSpacingRad;
+            }
+        }
+        else
+        {
+            while (curAngleRad <= maxAngleRad + angleSpacingRad)
+            {
+                var dir = new Vector2(1, 0).Rotate(curAngleRad);
+                var p1 = center + dir * innerRadius;
+                var p2 = center + dir * outerRadius;
+                var segment = new Segment(p1, p2);
+                segments.Add(segment);
+                curAngleRad += angleSpacingRad;
+            }
+        }
+        
+        return segments;
+    }
+    
     /// <summary>
     /// Draw a striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
