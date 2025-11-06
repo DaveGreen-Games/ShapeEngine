@@ -1,7 +1,12 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentsDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.SegmentDef;
@@ -14,6 +19,224 @@ namespace ShapeEngine.Geometry.SegmentDef;
 /// </remarks>
 public static class SegmentDrawing
 {
+    private static void DrawMaskedHelper(Vector2 start, Vector2 end, Vector2 pointA, Vector2 pointB, LineDrawingInfo lineInfo,  bool reversedMask)
+    {
+        if (reversedMask)
+        {
+            var newSegment = new Segment(pointA, pointB);
+            newSegment.Draw(lineInfo);
+        }
+        else
+        {
+            var aDisToStartSquared = (start - pointA).LengthSquared();
+            var aDisToEndSquared = (end - pointA).LengthSquared();
+            if (aDisToStartSquared < aDisToEndSquared)
+            {
+                var seg1 = new Segment(start, pointA);
+                var seg2 = new Segment(pointB, end);
+                seg1.Draw(lineInfo);
+                seg2.Draw(lineInfo);
+            }
+            else
+            {
+                var seg1 = new Segment(start, pointB);
+                var seg2 = new Segment(pointA, end);
+                seg1.Draw(lineInfo);
+                seg2.Draw(lineInfo);
+            }
+        }
+    }
+    public static void DrawMasked(this Segment segment, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectTriangle(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+    public static void DrawMasked(this Segment segment, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectCircle(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+    public static void DrawMasked(this Segment segment, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectRect(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+    public static void DrawMasked(this Segment segment, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectQuad(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+    public static void DrawMasked(this Segment segment, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectPolygon(mask);
+        
+    }
+    
+    public static void DrawMasked<T>(this Segment segment, T mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (mask is Triangle triangle)
+        {
+            segment.DrawMasked(triangle, lineInfo, reversedMask);
+            return;
+        }
+
+        if (mask is Circle circle)
+        {
+            segment.DrawMasked(circle, lineInfo, reversedMask);
+            return;
+        }
+
+        if (mask is Rect rect)
+        {
+            segment.DrawMasked(rect, lineInfo, reversedMask);
+            return;
+        }
+
+        if (mask is Quad quad)
+        {
+            segment.DrawMasked(quad, lineInfo, reversedMask);
+            return;
+        }
+
+        if (mask is Polygon polygon)
+        {
+            segment.DrawMasked(polygon, lineInfo, reversedMask);
+            return;
+        }
+    }
+    
+    
+    
+    
     /// <summary>
     /// Draws a segment from <paramref name="start"/> to a point along the direction to <paramref name="end"/>, scaled by <paramref name="sideLengthFactor"/>.
     /// </summary>
