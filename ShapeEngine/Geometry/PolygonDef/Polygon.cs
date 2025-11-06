@@ -271,10 +271,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// <returns>The vertex at the specified index.</returns>
     public Vector2 GetVertex(int index) => this[ShapeMath.WrapIndex(Count, index)];
     /// <summary>
-    /// Removes colinear vertices from the polygon.
+    /// Removes collinear vertices from the polygon.
     /// </summary>
     /// <remarks>
-    /// Colinear vertices are those that lie on a straight line with their neighbors.
+    /// Collinear vertices are those that lie on a straight line with their neighbors.
     /// </remarks>
     public void RemoveColinearVertices()
     {
@@ -525,8 +525,9 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </returns>
     public Circle GetBoundingCircleSimple()
     {
+        if(Count <= 0) return new Circle();
         var maxD = 0f;
-        int num = this.Count;
+        int num = Count;
         Vector2 origin = new();
         for (int i = 0; i < num; i++) { origin += this[i]; }
         origin /= num;
@@ -603,12 +604,12 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// - If <c>boundary.Count == 0</c> returns an empty/default circle.
     /// - If <c>boundary.Count == 1</c> returns a circle centered at the single point with radius 0.
     /// - If <c>boundary.Count == 2</c> returns the circle with the two points as endpoints of a diameter.
-    /// - If <c>boundary.Count == 3</c> returns the circumcircle; if the three points are (nearly) colinear,
+    /// - If <c>boundary.Count == 3</c> returns the circumcircle; if the three points are (nearly) collinear,
     ///   the function falls back to a circle using the largest pair as diameter.
     /// </returns>
     /// <remarks>
     /// This helper is used by Welzl's algorithm to compute the minimal enclosing circle for a set of points.
-    /// Numerical stability is considered: when the determinant is very small the points are treated as colinear.
+    /// Numerical stability is considered: when the determinant is very small the points are treated as collinear.
     /// </remarks>
     private Circle GetCircleFromBoundary(List<Vector2> boundary)
     {
@@ -626,10 +627,11 @@ public partial class Polygon : Points, IEquatable<Polygon>
         var c = boundary[2];
         
         var d = 2f * (a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y));
-        if (MathF.Abs(d) < 0.0001f)
+        if (MathF.Abs(d) < 0.0001f)//check for collinearity
         {
             var center2 = (a + b) * 0.5f;
-            var radius2 = MathF.Max((b - a).Length(), (c - a).Length()) * 0.5f;
+            // var radius2 = MathF.Max((b - a).Length(), (c - a).Length()) * 0.5f;
+            var radius2 = MathF.Max(MathF.Max((b - a).Length(), (c - a).Length()), (c - b).Length()) * 0.5f;
             return new Circle(center2, radius2);
         }
         
