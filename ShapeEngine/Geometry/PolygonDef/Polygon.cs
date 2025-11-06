@@ -52,6 +52,15 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// Gets the centroid (center) of the polygon.
     /// </summary>
     public Vector2 Center => GetCentroid();
+
+    /// <summary>
+    /// Gets the circumcenter of the polygon.
+    /// </summary>
+    /// <remarks>
+    /// Returns the center of the minimal bounding circle computed by <see cref="GetBoundingCircle"/>.
+    /// For an empty polygon this will be the default <see cref="System.Numerics.Vector2"/> (0,0).
+    /// </remarks>
+    public Vector2 Circumcenter => GetBoundingCircle().Center;
     
     /// <summary>
     /// Gets the area of the polygon.
@@ -262,10 +271,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// <returns>The vertex at the specified index.</returns>
     public Vector2 GetVertex(int index) => this[ShapeMath.WrapIndex(Count, index)];
     /// <summary>
-    /// Removes colinear vertices from the polygon.
+    /// Removes collinear vertices from the polygon.
     /// </summary>
     /// <remarks>
-    /// Colinear vertices are those that lie on a straight line with their neighbors.
+    /// Collinear vertices are those that lie on a straight line with their neighbors.
     /// </remarks>
     public void RemoveColinearVertices()
     {
@@ -497,18 +506,31 @@ public partial class Polygon : Points, IEquatable<Polygon>
         }
         return segments;
     }
+    
     /// <summary>
-    /// Gets the minimal bounding circle of the polygon.
+    /// Returns a simple (non-minimal) enclosing circle for the polygon.
+    /// You should always use <see cref="GetBoundingCircle"/> unless performance is critical.
     /// </summary>
-    /// <returns>The bounding <see cref="Circle"/>.</returns>
-    public Circle GetBoundingCircle()
+    /// <remarks>
+    /// This method computes an approximate bounding circle using the polygon's centroid
+    /// and the maximum distance from that centroid to any vertex.
+    /// It is faster (by a very small amount) than
+    /// computing the minimal enclosing circle but may produce a larger-than-necessary radius.
+    /// Use <see cref="GetBoundingCircle"/> for the minimal enclosing circle. 
+    /// </remarks>
+    /// <returns>
+    /// A <see cref="Circle"/> centered at the polygon centroid with radius equal to the
+    /// maximum distance from the centroid to any vertex. For an empty polygon an empty
+    /// <see cref="Circle"/> is returned.
+    /// </returns>
+    public Circle GetBoundingCircleSimple()
     {
-        float maxD = 0f;
-        int num = this.Count;
+        if(Count <= 0) return new Circle();
+        var maxD = 0f;
+        int num = Count;
         Vector2 origin = new();
         for (int i = 0; i < num; i++) { origin += this[i]; }
-        origin = origin / num;
-        //origin *= (1f / (float)num);
+        origin /= num;
         for (int i = 0; i < num; i++)
         {
             float d = (origin - this[i]).LengthSquared();
@@ -518,21 +540,140 @@ public partial class Polygon : Points, IEquatable<Polygon>
         return new Circle(origin, MathF.Sqrt(maxD));
     }
     /// <summary>
+    /// Gets the minimal bounding circle of the polygon using Welzl's algorithm.
+    /// </summary>
+    /// <returns>The minimal bounding <see cref="Circle"/>.</returns>
+    public Circle GetBoundingCircle()
+    {
+        if (Count == 0) return new Circle();
+        if (Count == 1) return new Circle(this[0], 0f);
+        if (Count == 2)
+        {
+            var center = (this[0] + this[1]) * 0.5f;
+            var radius = (this[1] - this[0]).Length() * 0.5f;
+            return new Circle(center, radius);
+        }
+    
+        var points = new List<Vector2>(this);
+        var boundary = new List<Vector2>();
+        return WelzlHelper(points, boundary, points.Count);
+    }
+    /// <summary>
+    /// Recursively computes the minimal enclosing circle for a set of points using Welzl's algorithm.
+    /// </summary>
+    /// <param name="points">List of input points. Only the first <paramref name="n"/> elements are considered in this recursion.</param>
+    /// <param name="boundary">Auxiliary list of boundary (support) points that must lie on the circle. Its size will be 0..3.</param>
+    /// <param name="n">Number of points from <paramref name="points"/> to consider in this recursion.</param>
+    /// <returns>The minimal enclosing <see cref="Circle"/> for the considered points given the current boundary.</returns>
+    /// <remarks>
+    /// The algorithm randomly selects a point from the first <paramref name="n"/> points, computes the minimal circle
+    /// for the remaining points, and if the selected point lies outside that circle, it is added to the boundary
+    /// and the algorithm recurses. Termination occurs when <paramref name="n"/> is 0 or the boundary contains 3 points.
+    /// </remarks>
+    private Circle WelzlHelper(List<Vector2> points, List<Vector2> boundary, int n)
+    {
+        if (n == 0 || boundary.Count == 3)
+        {
+            return GetCircleFromBoundary(boundary);
+        }
+    
+        int idx = Rng.Instance.RandI(0, n);
+        var p = points[idx];
+        
+        (points[idx], points[n - 1]) = (points[n - 1], points[idx]);
+        
+        var circle = WelzlHelper(points, boundary, n - 1);
+        
+        if (circle.ContainsPoint(p))
+        {
+            return circle;
+        }
+        
+        boundary.Add(p);
+        circle = WelzlHelper(points, boundary, n - 1);
+        boundary.RemoveAt(boundary.Count - 1);
+        
+        return circle;
+    }
+    /// <summary>
+    /// Constructs the minimal circle determined by the given boundary (support) points.
+    /// </summary>
+    /// <param name="boundary">A list of support points (0..3) which must lie on the resulting circle.</param>
+    /// <returns>
+    /// A <see cref="Circle"/> that is the minimal circle passing through the provided boundary points:
+    /// - If <c>boundary.Count == 0</c> returns an empty/default circle.
+    /// - If <c>boundary.Count == 1</c> returns a circle centered at the single point with radius 0.
+    /// - If <c>boundary.Count == 2</c> returns the circle with the two points as endpoints of a diameter.
+    /// - If <c>boundary.Count == 3</c> returns the circumcircle; if the three points are (nearly) collinear,
+    ///   the function falls back to a circle using the largest pair as diameter.
+    /// </returns>
+    /// <remarks>
+    /// This helper is used by Welzl's algorithm to compute the minimal enclosing circle for a set of points.
+    /// Numerical stability is considered: when the determinant is very small the points are treated as collinear.
+    /// </remarks>
+    private Circle GetCircleFromBoundary(List<Vector2> boundary)
+    {
+        if (boundary.Count == 0) return new Circle();
+        if (boundary.Count == 1) return new Circle(boundary[0], 0f);
+        if (boundary.Count == 2)
+        {
+            var center1 = (boundary[0] + boundary[1]) * 0.5f;
+            var radius1 = (boundary[1] - boundary[0]).Length() * 0.5f;
+            return new Circle(center1, radius1);
+        }
+        
+        var a = boundary[0];
+        var b = boundary[1];
+        var c = boundary[2];
+        
+        var d = 2f * (a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y));
+        if (MathF.Abs(d) < 0.0001f)//check for collinearity
+        {
+            var center2 = (a + b) * 0.5f;
+            // var radius2 = MathF.Max((b - a).Length(), (c - a).Length()) * 0.5f;
+            var radius2 = MathF.Max(MathF.Max((b - a).Length(), (c - a).Length()), (c - b).Length()) * 0.5f;
+            return new Circle(center2, radius2);
+        }
+        
+        var aSq = a.LengthSquared();
+        var bSq = b.LengthSquared();
+        var cSq = c.LengthSquared();
+        
+        var ux = (aSq * (b.Y - c.Y) + bSq * (c.Y - a.Y) + cSq * (a.Y - b.Y)) / d;
+        var uy = (aSq * (c.X - b.X) + bSq * (a.X - c.X) + cSq * (b.X - a.X)) / d;
+        
+        var center3 = new Vector2(ux, uy);
+        var radius3 = (center3 - a).Length();
+        
+        return new Circle(center3, radius3);
+    }
+    /// <summary>
     /// Gets the axis-aligned bounding box of the polygon.
     /// </summary>
     /// <returns>The bounding <see cref="Rect"/>.</returns>
     public Rect GetBoundingBox()
     {
-        if (Count < 2) return new();
-        var start = this[0];
-        Rect r = new(start.X, start.Y, 0, 0);
-
-        foreach (var p in this)
+        if (Count == 0) return new Rect();
+        if (Count == 1) return new Rect(this[0].X, this[0].Y, 0, 0);
+    
+        float minX = this[0].X;
+        float maxX = this[0].X;
+        float minY = this[0].Y;
+        float maxY = this[0].Y;
+    
+        for (int i = 1; i < Count; i++)
         {
-            r = r.Enlarge(p);// ShapeRect.Enlarge(r, p);
+            var p = this[i];
+            if (p.X < minX) minX = p.X;
+            else if (p.X > maxX) maxX = p.X;
+            
+            if (p.Y < minY) minY = p.Y;
+            else if (p.Y > maxY) maxY = p.Y;
         }
-        return r;
+    
+        return new Rect(minX, minY, maxX - minX, maxY - minY);
     }
+    
     /// <summary>
     /// Returns the convex hull of the polygon as a new polygon.
     /// </summary>
