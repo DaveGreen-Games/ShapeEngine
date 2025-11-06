@@ -20,9 +20,10 @@ namespace ShapeEngine.Geometry.SegmentDef;
 /// </remarks>
 public static class SegmentDrawing
 {
+    
+    //TODO: Docs!
     public static readonly float MinSegmentDrawLength = 0.1f;
     private static readonly float MinSegmentDrawLengthSquared = MinSegmentDrawLength * MinSegmentDrawLength;
-    
     
     private static void DrawMaskedHelper(Vector2 start, Vector2 end, Vector2 pointA, Vector2 pointB, LineDrawingInfo lineInfo,  bool reversedMask)
     {
@@ -278,8 +279,49 @@ public static class SegmentDrawing
             return;
         }
     }
-    
-    
+
+    public static void DrawMasked(this Segment segment, ShapeHandle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        switch (mask.ShapeType)
+        {
+            case ShapeType.Circle: 
+                segment.DrawMasked(mask.Circle, lineInfo, reversedMask);
+                break;
+            case ShapeType.Triangle:
+                segment.DrawMasked(mask.Triangle, lineInfo, reversedMask);
+                break;
+            case ShapeType.Quad:
+                segment.DrawMasked(mask.Quad, lineInfo, reversedMask);
+                break;
+            case ShapeType.Rect:
+                segment.DrawMasked(mask.Rect, lineInfo, reversedMask);
+                break;
+            case ShapeType.Poly:
+                segment.DrawMasked(mask.Polygon, lineInfo, reversedMask);
+                break;
+        }
+    }
+    public static void DrawMasked(this Segment segment, ShapeHandle2 mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        switch (mask.ShapeType)
+        {
+            case ShapeType.Circle: 
+                if(mask.TryGet(out Circle circle)) segment.DrawMasked(circle, lineInfo, reversedMask);
+                break;
+            case ShapeType.Triangle:
+                if(mask.TryGet(out Triangle triangle)) segment.DrawMasked(triangle, lineInfo, reversedMask);
+                break;
+            case ShapeType.Quad:
+                if(mask.TryGet(out Quad quad)) segment.DrawMasked(quad, lineInfo, reversedMask);
+                break;
+            case ShapeType.Rect:
+                if(mask.TryGet(out Rect rect)) segment.DrawMasked(rect, lineInfo, reversedMask);
+                break;
+            case ShapeType.Poly:
+                if(mask.TryGet(out Polygon polygon)) segment.DrawMasked(polygon, lineInfo, reversedMask);
+                break;
+        }
+    }
     
     
     /// <summary>

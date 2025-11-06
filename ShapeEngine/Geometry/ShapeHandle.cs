@@ -10,6 +10,8 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry;
 
+//TODO: Decide for one or the other implementation!
+
 //TODO: DOCS!
 public sealed class ShapeHandle
 {
