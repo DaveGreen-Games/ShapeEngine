@@ -2,6 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
@@ -19,6 +20,10 @@ namespace ShapeEngine.Geometry.SegmentDef;
 /// </remarks>
 public static class SegmentDrawing
 {
+    public static readonly float MinSegmentDrawLength = 0.1f;
+    private static readonly float MinSegmentDrawLengthSquared = MinSegmentDrawLength * MinSegmentDrawLength;
+    
+    
     private static void DrawMaskedHelper(Vector2 start, Vector2 end, Vector2 pointA, Vector2 pointB, LineDrawingInfo lineInfo,  bool reversedMask)
     {
         if (reversedMask)
@@ -189,18 +194,58 @@ public static class SegmentDrawing
     public static void DrawMasked(this Segment segment, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         bool containsStart = mask.ContainsPoint(segment.Start);
-        bool containsEnd = mask.ContainsPoint(segment.End);
-            
-        if (containsStart && containsEnd)
+
+        var result = segment.IntersectPolygon(mask);
+        if(result == null || result.Count <= 0)
         {
-            if(reversedMask) segment.Draw(lineInfo);
+            // If reversedMask: draw when fully inside (containsStart == true)
+            // If not reversedMask: draw when fully outside (containsStart == false)
+            if ((reversedMask && containsStart) || (!reversedMask && !containsStart))
+                segment.Draw(lineInfo);
             return;
         }
-        
-        var result = segment.IntersectPolygon(mask);
-        
+        if (result.Count == 1)
+        {
+            var p = result[0].Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+
+            return;
+        }
+        result.Add(new IntersectionPoint(segment.Start, segment.Normal));
+        result.Add(new IntersectionPoint(segment.End, segment.Normal));
+        if (result.SortClosestFirst(segment.Start))
+        {
+            if (reversedMask)
+            {
+                for (int i = containsStart ? 0 : 1; i < result.Count - 1; i += 2)
+                {
+                    var p1 = result[i].Point;
+                    var p2 = result[i + 1].Point;
+                    var s = new Segment(p1, p2);
+                    s.Draw(lineInfo);
+                }
+            }
+            else
+            {
+                for (int i = containsStart ? 1 : 0; i < result.Count - 1; i += 2)
+                {
+                    var p1 = result[i].Point;
+                    var p2 = result[i + 1].Point;
+                    var s = new Segment(p1, p2);
+                    s.Draw(lineInfo);
+                }
+            }
+        }
     }
-    
     public static void DrawMasked<T>(this Segment segment, T mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         if (mask is Triangle triangle)
@@ -271,7 +316,7 @@ public static class SegmentDrawing
         if (thickness < LineDrawingInfo.LineMinThickness) thickness = LineDrawingInfo.LineMinThickness;
         var w = end - start;
         float ls = w.X * w.X + w.Y * w.Y; // w.LengthSquared();
-        if (ls <= 0f) return;
+        if (ls <= MinSegmentDrawLengthSquared) return;
         
         var dir = w / MathF.Sqrt(ls);
         var pR = new Vector2(-dir.Y, dir.X);//perpendicular right
