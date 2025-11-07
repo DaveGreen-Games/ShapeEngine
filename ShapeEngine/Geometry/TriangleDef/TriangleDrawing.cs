@@ -20,38 +20,98 @@ namespace ShapeEngine.Geometry.TriangleDef;
 /// </remarks>
 public static class TriangleDrawing
 {
-
+    #region Draw Masked
+    
+    /// <summary>
+    /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
+    /// clipped by a triangular mask.
+    /// </summary>
+    /// <param name="triangle">The source triangle whose edges will be drawn.</param>
+    /// <param name="mask">Triangle used as the clipping mask. Only portions inside (or outside when <paramref name="reversedMask"/> is true) will be drawn.</param>
+    /// <param name="lineInfo">Styling and thickness information for the lines.</param>
+    /// <param name="reversedMask">If true, the mask is inverted so drawing occurs inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Triangle triangle, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
+    /// clipped by a circular <see cref="Circle"/> mask.
+    /// </summary>
+    /// <param name="triangle">The source triangle whose edges will be drawn.</param>
+    /// <param name="mask">Circle used as the clipping mask. Only portions inside (or outside when <paramref name="reversedMask"/> is true) will be drawn.</param>
+    /// <param name="lineInfo">Styling and thickness information for the lines.</param>
+    /// <param name="reversedMask">If true, the mask is inverted so drawing occurs inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Triangle triangle, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
+    /// clipped by a rectangular <see cref="Rect"/> mask.
+    /// </summary>
+    /// <param name="triangle">The source triangle whose edges will be drawn.</param>
+    /// <param name="mask">Rect used as the clipping mask. Only portions inside (or outside when <paramref name="reversedMask"/> is true) will be drawn.</param>
+    /// <param name="lineInfo">Styling and thickness information for the lines.</param>
+    /// <param name="reversedMask">If true, the mask is inverted so drawing occurs inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Triangle triangle, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    
+    /// <summary>
+    /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
+    /// clipped by a quadrilateral <see cref="Quad"/> mask.
+    /// </summary>
+    /// <param name="triangle">The source triangle whose edges will be drawn.</param>
+    /// <param name="mask">Quad used as the clipping mask. Only portions inside (or outside when <paramref name="reversedMask"/> is true) will be drawn.</param>
+    /// <param name="lineInfo">Styling and thickness information for the lines.</param>
+    /// <param name="reversedMask">If true, the mask is inverted so drawing occurs inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Triangle triangle, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
+    /// clipped by a polygonal <see cref="Polygon"/> mask.
+    /// </summary>
+    /// <param name="triangle">The source triangle whose edges will be drawn.</param>
+    /// <param name="mask">Polygon used as the clipping mask. Only portions inside (or outside when <paramref name="reversedMask"/> is true) will be drawn.</param>
+    /// <param name="lineInfo">Styling and thickness information for the lines.</param>
+    /// <param name="reversedMask">If true, the mask is inverted so drawing occurs inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Triangle triangle, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
-    
+    /// <summary>
+    /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
+    /// clipped by a closed-shape mask of the generic type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The mask type. Must implement <see cref="IClosedShapeTypeProvider"/> (for example: Triangle, Circle, Rect, Polygon, Quad).</typeparam>
+    /// <param name="triangle">The source triangle whose edges will be drawn.</param>
+    /// <param name="mask">The clipping mask instance.</param>
+    /// <param name="lineInfo">Styling and thickness information for the lines.</param>
+    /// <param name="reversedMask">If true, inverts the mask so drawing occurs inside instead of outside the mask.</param>
+    /// <remarks>
+    /// This generic overload delegates to the segment-level DrawMasked extension for each triangle edge.
+    /// </remarks>
+    public static void DrawLinesMasked<T>(this Triangle triangle, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    {
+        triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    #endregion
     
     /// <summary>
     /// Draws a filled triangle using the specified vertices and color.
