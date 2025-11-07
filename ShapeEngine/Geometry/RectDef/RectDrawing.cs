@@ -20,7 +20,16 @@ namespace ShapeEngine.Geometry.RectDef;
 /// </remarks>
 public static class RectDrawing
 {
+    #region Draw Masked
     
+    /// <summary>
+    /// Draws the rectangle's four side segments, but only where they intersect the given triangular mask.
+    /// Each side is drawn by forwarding the call to the segment-level masked draw method.
+    /// </summary>
+    /// <param name="rect">The rectangle whose sides will be drawn.</param>
+    /// <param name="mask">The triangular mask used to clip each side.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap style, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Rect rect, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
@@ -28,6 +37,14 @@ public static class RectDrawing
         rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
         rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the rectangle's four side segments, but only where they intersect the given circular mask.
+    /// Each side is drawn by forwarding the call to the segment-level masked draw method.
+    /// </summary>
+    /// <param name="rect">The rectangle whose sides will be drawn.</param>
+    /// <param name="mask">The circular mask used to clip each side.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap style, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Rect rect, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
@@ -35,6 +52,15 @@ public static class RectDrawing
         rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
         rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the rectangle's four side segments, but only where they intersect the given rectangular mask.
+    /// Each side is drawn by forwarding the call to the segment-level masked draw method which performs
+    /// clipping against the provided <see cref="Rect"/> mask.
+    /// </summary>
+    /// <param name="rect">The rectangle whose sides will be drawn.</param>
+    /// <param name="mask">The rectangular mask used to clip each side.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap style, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Rect rect, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
@@ -42,6 +68,14 @@ public static class RectDrawing
         rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
         rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the rectangle's four side segments, but only where they intersect the given quadrilateral mask.
+    /// Each side is forwarded to the corresponding segment-level masked draw method which handles clipping against the provided <see cref="Quad"/> mask.
+    /// </summary>
+    /// <param name="rect">The rectangle whose sides will be drawn.</param>
+    /// <param name="mask">The quadrilateral mask used to clip each side.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap style, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Rect rect, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
@@ -49,6 +83,15 @@ public static class RectDrawing
         rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
         rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the rectangle's four side segments, but only where they intersect the given polygon mask.
+    /// Each side is drawn by forwarding the call to the segment-level masked draw method which performs
+    /// clipping against the provided <see cref="Polygon"/> mask.
+    /// </summary>
+    /// <param name="rect">The rectangle whose sides will be drawn.</param>
+    /// <param name="mask">The polygonal mask used to clip each side.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap style, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Rect rect, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
@@ -56,6 +99,25 @@ public static class RectDrawing
         rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
         rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the rectangle's four side segments clipped against a generic closed-shape mask.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The mask type implementing <see cref="IClosedShapeTypeProvider"/> (for example <see cref="Circle"/>, <see cref="Polygon"/>, <see cref="Quad"/>, etc.).
+    /// </typeparam>
+    /// <param name="rect">The rectangle whose sides will be drawn.</param>
+    /// <param name="mask">The mask used to clip each side.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap style, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked<T>(this Rect rect, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    {
+        rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.LeftSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    #endregion
+    
     
     /// <summary>
     /// Draws a <see cref="NinePatchRect"/> using a single color for all patches.
