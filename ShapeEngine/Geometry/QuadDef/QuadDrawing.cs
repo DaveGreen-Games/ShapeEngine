@@ -19,7 +19,18 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// </remarks>
 public static class QuadDrawing
 {
-    
+    #region Draw Masked
+    /// <summary>
+    ///— Draws the quad's outline segments constrained by a <see cref="Triangle"/> mask.
+    /// </summary>
+    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
+    /// <param name="mask">Triangle mask used to clip each segment's drawing.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    /// <remarks>
+    /// This extension method forwards the draw call to each segment's <c>DrawMasked</c> overload,
+    /// allowing per-segment clipping by the provided triangle mask.
+    /// </remarks>
     public static void DrawLinesMasked(this Quad quad, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
@@ -27,6 +38,17 @@ public static class QuadDrawing
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the quad's outline segments constrained by a <see cref="Circle"/> mask.
+    /// </summary>
+    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
+    /// <param name="mask">Circle mask used to clip each segment's drawing.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    /// <remarks>
+    /// This extension method forwards the draw call to each segment's <c>DrawMasked</c> overload,
+    /// allowing per-segment clipping by the provided circle mask.
+    /// </remarks>
     public static void DrawLinesMasked(this Quad quad, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
@@ -34,6 +56,17 @@ public static class QuadDrawing
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the quad's outline segments constrained by a <see cref="Rect"/> mask.
+    /// </summary>
+    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
+    /// <param name="mask">Rect mask used to clip each segment's drawing.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    /// <remarks>
+    /// This extension method forwards the draw call to each segment's <c>DrawMasked</c> overload,
+    /// allowing per-segment clipping by the provided rectangle mask.
+    /// </remarks>
     public static void DrawLinesMasked(this Quad quad, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
@@ -41,6 +74,17 @@ public static class QuadDrawing
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the quad's outline segments constrained by a <see cref="Quad"/> mask.
+    /// </summary>
+    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
+    /// <param name="mask">Quad mask used to clip each segment's drawing.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    /// <remarks>
+    /// Forwards the draw call to each segment's <c>DrawMasked</c> overload,
+    /// allowing per-segment clipping by the provided quad mask.
+    /// </remarks>
     public static void DrawLinesMasked(this Quad quad, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
@@ -48,6 +92,17 @@ public static class QuadDrawing
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the quad's outline segments constrained by a <see cref="Polygon"/> mask.
+    /// </summary>
+    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
+    /// <param name="mask">Polygon mask used to clip each segment's drawing.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    /// <remarks>
+    /// Forwards the draw call to each segment's <c>DrawMasked</c> overload,
+    /// allowing per-segment clipping by the provided polygon mask.
+    /// </remarks>
     public static void DrawLinesMasked(this Quad quad, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
@@ -55,6 +110,30 @@ public static class QuadDrawing
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    /// <summary>
+    /// Draws the quad's outline segments constrained by a generic closed-shape mask.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The mask type. Must implement <see cref="IClosedShapeTypeProvider"/> to provide closed-shape semantics
+    /// required for segment clipping.
+    /// </typeparam>
+    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
+    /// <param name="mask">Mask used to clip each segment's drawing.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    /// <remarks>
+    /// Forwards the draw call to each segment's <c>DrawMasked</c> overload, allowing per-segment clipping
+    /// by the provided mask. This generic overload enables using any closed-shape provider without
+    /// adding a separate overload for each concrete shape type.
+    /// </remarks>
+    public static void DrawLinesMasked<T>(this Quad quad, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    {
+        quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    #endregion
     
     /// <summary>
     /// Draws a filled quadrilateral using four vertices.
