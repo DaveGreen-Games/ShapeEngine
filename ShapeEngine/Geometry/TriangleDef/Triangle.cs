@@ -20,7 +20,7 @@ namespace ShapeEngine.Geometry.TriangleDef;
 /// shape conversions, containment tests, intersections, and various utility methods for working with triangular geometry.
 /// The triangle is immutable and all operations that modify the triangle return a new instance.
 /// </remarks>
-public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvider
+public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
     #region Members
     /// <summary>
@@ -507,6 +507,8 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     {
         return HashCode.Combine(A, B, C);
     }
+
+    public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Triangle;
 
     public ShapeType GetShapeType() => ShapeType.Triangle;
 

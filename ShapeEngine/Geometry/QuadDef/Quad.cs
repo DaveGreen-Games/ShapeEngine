@@ -16,7 +16,7 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// <summary>
 /// Points should be in CCW order (A -> B -> C -> D)
 /// </summary>
-public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider
+public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
     #region Members
     /// <summary>
@@ -591,6 +591,8 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider
     /// </summary>
     /// <returns>A 32-bit signed integer hash code.</returns>
     public override int GetHashCode() => HashCode.Combine(A, B, C, D);
+
+    public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Quad;
 
     public ShapeType GetShapeType() => ShapeType.Quad;
 

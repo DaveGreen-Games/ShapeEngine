@@ -39,7 +39,7 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </item>
 /// </list>
 /// </remarks>
-public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider
+public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
     private static IntersectionPoints intersectionPointsReference = new(4);
     /// <summary>
@@ -141,6 +141,8 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider
     /// </summary>
     /// <returns>A hash code for the current polygon.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
+
+    public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Poly;
 
     public ShapeType GetShapeType() => ShapeType.Poly;
 
