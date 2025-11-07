@@ -247,82 +247,43 @@ public static class SegmentDrawing
             }
         }
     }
-    public static void DrawMasked<T>(this Segment segment, T mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public static void DrawMasked<T>(this Segment segment, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
     {
-        if (mask is Triangle triangle)
+        switch (mask.GetClosedShapeType())
         {
-            segment.DrawMasked(triangle, lineInfo, reversedMask);
-            return;
-        }
-
-        if (mask is Circle circle)
-        {
-            segment.DrawMasked(circle, lineInfo, reversedMask);
-            return;
-        }
-
-        if (mask is Rect rect)
-        {
-            segment.DrawMasked(rect, lineInfo, reversedMask);
-            return;
-        }
-
-        if (mask is Quad quad)
-        {
-            segment.DrawMasked(quad, lineInfo, reversedMask);
-            return;
-        }
-
-        if (mask is Polygon polygon)
-        {
-            segment.DrawMasked(polygon, lineInfo, reversedMask);
-            return;
+            case ClosedShapeType.Circle:
+                if (mask is Circle circle)
+                {
+                    segment.DrawMasked(circle, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Triangle:
+                if (mask is Triangle triangle)
+                {
+                    segment.DrawMasked(triangle, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Quad:
+                if (mask is Quad quad)
+                {
+                    segment.DrawMasked(quad, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Rect:
+                if (mask is Rect rect)
+                {
+                    segment.DrawMasked(rect, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Poly:
+                if (mask is Polygon poly)
+                {
+                    segment.DrawMasked(poly, lineInfo, reversedMask);
+                }
+                break;
         }
     }
 
-    public static void DrawMasked(this Segment segment, ShapeHandle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
-    {
-        switch (mask.ShapeType)
-        {
-            case ShapeType.Circle: 
-                segment.DrawMasked(mask.Circle, lineInfo, reversedMask);
-                break;
-            case ShapeType.Triangle:
-                segment.DrawMasked(mask.Triangle, lineInfo, reversedMask);
-                break;
-            case ShapeType.Quad:
-                segment.DrawMasked(mask.Quad, lineInfo, reversedMask);
-                break;
-            case ShapeType.Rect:
-                segment.DrawMasked(mask.Rect, lineInfo, reversedMask);
-                break;
-            case ShapeType.Poly:
-                segment.DrawMasked(mask.Polygon, lineInfo, reversedMask);
-                break;
-        }
-    }
-    public static void DrawMasked(this Segment segment, ShapeHandle2 mask, LineDrawingInfo lineInfo, bool reversedMask = false)
-    {
-        switch (mask.ShapeType)
-        {
-            case ShapeType.Circle: 
-                if(mask.TryGet(out Circle circle)) segment.DrawMasked(circle, lineInfo, reversedMask);
-                break;
-            case ShapeType.Triangle:
-                if(mask.TryGet(out Triangle triangle)) segment.DrawMasked(triangle, lineInfo, reversedMask);
-                break;
-            case ShapeType.Quad:
-                if(mask.TryGet(out Quad quad)) segment.DrawMasked(quad, lineInfo, reversedMask);
-                break;
-            case ShapeType.Rect:
-                if(mask.TryGet(out Rect rect)) segment.DrawMasked(rect, lineInfo, reversedMask);
-                break;
-            case ShapeType.Poly:
-                if(mask.TryGet(out Polygon polygon)) segment.DrawMasked(polygon, lineInfo, reversedMask);
-                break;
-        }
-    }
-    
     
     /// <summary>
     /// Draws a segment from <paramref name="start"/> to a point along the direction to <paramref name="end"/>, scaled by <paramref name="sideLengthFactor"/>.
