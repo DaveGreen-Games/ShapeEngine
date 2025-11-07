@@ -16,7 +16,7 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// <summary>
 /// Points should be in CCW order (A -> B -> C -> D)
 /// </summary>
-public readonly partial struct Quad : IEquatable<Quad>
+public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider
 {
     #region Members
     /// <summary>
@@ -591,6 +591,9 @@ public readonly partial struct Quad : IEquatable<Quad>
     /// </summary>
     /// <returns>A 32-bit signed integer hash code.</returns>
     public override int GetHashCode() => HashCode.Combine(A, B, C, D);
+
+    public ShapeType GetShapeType() => ShapeType.Quad;
+
     #endregion
 
     #region Interpolated Edge Points

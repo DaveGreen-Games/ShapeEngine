@@ -10,7 +10,7 @@ namespace ShapeEngine.Geometry.RayDef;
 /// <summary>
 /// Represents a 2D ray with a point of origin, direction, and normal.
 /// </summary>
-public readonly partial struct Ray
+public readonly partial struct Ray : IShapeTypeProvider, IEquatable<Ray>
 {
     /// <summary>
     /// The maximum length used for bounding box and segment calculations.
@@ -268,4 +268,44 @@ public readonly partial struct Ray
         return new Ray(Point, newDir, normalFlipped);
     }
     #endregion
+
+    /// <summary>
+    /// Gets the <see cref="ShapeType"/> identifying this shape as a ray.
+    /// </summary>
+    /// <returns><see cref="ShapeType.Ray"/>.</returns>
+    public ShapeType GetShapeType() => ShapeType.Ray;
+
+    /// <summary>
+    /// Determines whether the current <see cref="Ray"/> is equal to another <see cref="Ray"/>.
+    /// Comparison is performed on the <see cref="Point"/> and <see cref="Direction"/> fields.
+    /// </summary>
+    /// <param name="other">The other <see cref="Ray"/> to compare with the current instance.</param>
+    /// <returns><c>true</c> if both the point and direction are equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(Ray other)
+    {
+        return Point.Equals(other.Point) && Direction.Equals(other.Direction);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="Ray"/>.
+    /// Comparison is performed on the <see cref="Point"/> and <see cref="Direction"/> fields.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current <see cref="Ray"/>.</param>
+    /// <returns>
+    /// <c>true</c> if <paramref name="obj"/> is a <see cref="Ray"/> and has the same point and direction; otherwise, <c>false</c>.
+    /// </returns>
+    public override bool Equals(object? obj)
+    {
+        return obj is Ray other && Equals(other);
+    }
+
+    /// <summary>
+    /// Returns a hash code for the current <see cref="Ray"/> instance.
+    /// Combines the <see cref="Point"/> and <see cref="Direction"/> fields to produce the hash.
+    /// </summary>
+    /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Point, Direction);
+    }
 }

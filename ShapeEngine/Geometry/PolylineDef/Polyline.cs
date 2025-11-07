@@ -21,7 +21,7 @@ namespace ShapeEngine.Geometry.PolylineDef;
 /// Points should be provided in counter-clockwise (CCW) order for correct geometric behavior.
 /// Use the <see cref="ReverseOrder"/> method if your points are in clockwise (CW) order.
 /// </remarks>
-public partial class Polyline : Points, IEquatable<Polyline>
+public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
 {
     #region Constructors
     /// <summary>
@@ -99,6 +99,8 @@ public partial class Polyline : Points, IEquatable<Polyline>
     /// </summary>
     /// <returns>A hash code for the current polyline.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
+
+    public ShapeType GetShapeType() => ShapeType.PolyLine;
 
     #endregion
 

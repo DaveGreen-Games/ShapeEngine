@@ -39,7 +39,7 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </item>
 /// </list>
 /// </remarks>
-public partial class Polygon : Points, IEquatable<Polygon>
+public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider
 {
     private static IntersectionPoints intersectionPointsReference = new(4);
     /// <summary>
@@ -141,7 +141,9 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <returns>A hash code for the current polygon.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
-    
+
+    public ShapeType GetShapeType() => ShapeType.Poly;
+
     /// <summary>
     /// Determines whether the specified object is equal to the current polygon.
     /// </summary>
