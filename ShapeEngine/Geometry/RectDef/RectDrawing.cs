@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RectDef;
@@ -19,6 +20,43 @@ namespace ShapeEngine.Geometry.RectDef;
 /// </remarks>
 public static class RectDrawing
 {
+    
+    public static void DrawLinesMasked(this Rect rect, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.LeftSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Rect rect, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.LeftSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Rect rect, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.LeftSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Rect rect, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.LeftSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Rect rect, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        rect.TopSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.LeftSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.BottomSegment.DrawMasked(mask, lineInfo, reversedMask);
+        rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    
     /// <summary>
     /// Draws a <see cref="NinePatchRect"/> using a single color for all patches.
     /// </summary>

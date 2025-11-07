@@ -2,8 +2,11 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
@@ -19,6 +22,88 @@ namespace ShapeEngine.Geometry.CircleDef;
 /// </remarks>
 public static class CircleDrawing
 {
+    
+    public static void DrawLinesMasked(this Circle circle, Triangle mask, LineDrawingInfo lineInfo, float rotDeg, int sides, bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Circle circle, Circle mask, LineDrawingInfo lineInfo, float rotDeg, int sides,bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Circle circle, Rect mask, LineDrawingInfo lineInfo, float rotDeg, int sides,bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Circle circle, Quad mask, LineDrawingInfo lineInfo, float rotDeg, int sides,bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Circle circle, Polygon mask, LineDrawingInfo lineInfo, float rotDeg, int sides,bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    
     /// <summary>
     /// Draws a filled circle at the specified center with the given radius and color.
     /// </summary>

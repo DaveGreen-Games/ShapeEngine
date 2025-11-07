@@ -3,7 +3,10 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.QuadDef;
@@ -16,6 +19,43 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// </remarks>
 public static class QuadDrawing
 {
+    
+    public static void DrawLinesMasked(this Quad quad, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Quad quad, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Quad quad, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Quad quad, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Quad quad, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
+        quad.SegmentDToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    
     /// <summary>
     /// Draws a filled quadrilateral using four vertices.
     /// </summary>

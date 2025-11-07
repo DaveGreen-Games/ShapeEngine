@@ -2,6 +2,9 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
@@ -17,6 +20,39 @@ namespace ShapeEngine.Geometry.TriangleDef;
 /// </remarks>
 public static class TriangleDrawing
 {
+
+    public static void DrawLinesMasked(this Triangle triangle, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Triangle triangle, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Triangle triangle, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Triangle triangle, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    public static void DrawLinesMasked(this Triangle triangle, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        triangle.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
+        triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    
+    
     /// <summary>
     /// Draws a filled triangle using the specified vertices and color.
     /// </summary>

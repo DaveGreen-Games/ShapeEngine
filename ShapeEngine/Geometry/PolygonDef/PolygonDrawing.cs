@@ -3,6 +3,8 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
@@ -19,6 +21,68 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public static class PolygonDrawing
 {
+    public static void DrawLinesMasked(this Polygon poly, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Polygon poly, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Polygon poly, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Polygon poly, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    public static void DrawLinesMasked(this Polygon poly, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    
+    
     /// <summary>
     /// Draws a convex polygon filled with the specified color, using the polygon's centroid as the center.
     /// </summary>
