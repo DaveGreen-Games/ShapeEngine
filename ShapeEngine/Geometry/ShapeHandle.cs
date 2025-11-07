@@ -21,7 +21,7 @@ namespace ShapeEngine.Geometry;
 /// Exposes the wrapped value via <see cref="Value"/> and a cached <see cref="ShapeType"/>.
 /// Provides fast type-aware accessors (TryGet) for the underlying shape.
 /// </remarks>
-public readonly struct ShapeHandle<T>(T value) where T : notnull
+public readonly struct ShapeHandle<T>(T value) where T : IShapeTypeProvider
 {
     /// <summary>
     /// The wrapped shape instance. Guaranteed to be non-null.
@@ -34,14 +34,19 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
     public readonly T Value = value ?? throw new ArgumentNullException(nameof(value));
     
     /// <summary>
-    /// Cached shape type for the wrapped value.
+    /// The cached <see cref="ShapeType"/> corresponding to the wrapped shape instance.
     /// </summary>
     /// <remarks>
-    /// Determined once from the generic type parameter via <see cref="ShapeTypeMapper{T}"/>
-    /// and stored in a readonly field for fast, allocation-free access.
+    /// Computed at construction from <c>value.GetShapeType()</c> and stored to enable fast,
+    /// allocation-free type checks used by the TryGet\* accessors.
     /// </remarks>
-    public readonly ShapeType ShapeType = ShapeTypeMapper<T>.Type; // simple, fast, correct
+    public readonly ShapeType ShapeType = value.GetShapeType();
 
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Segment"/> when the cached <see cref="ShapeType"/> is <see cref="ShapeType.Segment"/>.
+    /// </summary>
+    /// <param name="shape">On success contains the unwrapped <see cref="Segment"/>; otherwise the default value.</param>
+    /// <returns>True if the wrapped value is a <see cref="Segment"/> and was assigned to <paramref name="shape"/>; otherwise false.</returns>
     public bool TryGetSegment(out Segment shape)
     {
         if (ShapeType != ShapeType.Segment)
@@ -60,7 +65,13 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         return false;
     }
     
-    public bool TryGetSegment(out Line shape)
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Line"/> when the cached <see cref="ShapeType"/>
+    /// is <see cref="ShapeType.Line"/>.
+    /// </summary>
+    /// <param name="shape">On success contains the unwrapped <see cref="Line"/>; otherwise the default value.</param>
+    /// <returns>True if the wrapped value is a <see cref="Line"/> and was assigned to <paramref name="shape"/>; otherwise false.</returns>
+    public bool TryGetLine(out Line shape)
     {
         if (ShapeType != ShapeType.Line)
         {
@@ -78,7 +89,13 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         return false;
     }
     
-    public bool TryGetSegment(out Ray shape)
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Ray"/> when the cached <see cref="ShapeType"/>
+    /// is <see cref="ShapeType.Ray"/>.
+    /// </summary>
+    /// <param name="shape">On success contains the unwrapped <see cref="Ray"/>; otherwise the default value.</param>
+    /// <returns>True if the wrapped value is a <see cref="Ray"/> and was assigned to <paramref name="shape"/>; otherwise false.</returns>
+    public bool TryGetRay(out Ray shape)
     {
         if (ShapeType != ShapeType.Ray)
         {
@@ -96,7 +113,12 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         return false;
     }
     
-    public bool TryGetSegment(out Circle shape)
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Circle"/> when the cached <see cref="ShapeType"/> is <see cref="ShapeType.Circle"/>.
+    /// </summary>
+    /// <param name="shape">On success contains the unwrapped <see cref="Circle"/>; otherwise the default value.</param>
+    /// <returns>True if the wrapped value is a <see cref="Circle"/> and was assigned to <paramref name="shape"/>; otherwise false.</returns>
+    public bool TryGetCircle(out Circle shape)
     {
         if (ShapeType != ShapeType.Circle)
         {
@@ -114,7 +136,13 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         return false;
     }
     
-    public bool TryGetSegment(out Triangle shape)
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Triangle"/> when the cached <see cref="ShapeType"/>
+    /// is <see cref="ShapeType.Triangle"/>.
+    /// </summary>
+    /// <param name="shape">On success contains the unwrapped <see cref="Triangle"/>; otherwise the default value.</param>
+    /// <returns>True if the wrapped value is a <see cref="Triangle"/> and was assigned to <paramref name="shape"/>; otherwise false.</returns>
+    public bool TryGetTriangle(out Triangle shape)
     {
         if (ShapeType != ShapeType.Triangle)
         {
@@ -132,7 +160,13 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         return false;
     }
     
-    public bool TryGetSegment(out Rect shape)
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Rect"/> when the cached <see cref="ShapeType"/>
+    /// is <see cref="ShapeType.Rect"/>.
+    /// </summary>
+    /// <param name="shape">On success contains the unwrapped <see cref="Rect"/>; otherwise the default value.</param>
+    /// <returns>True if the wrapped value is a <see cref="Rect"/> and was assigned to <paramref name="shape"/>; otherwise false.</returns>
+    public bool TryGetRect(out Rect shape)
     {
         if (ShapeType != ShapeType.Rect)
         {
@@ -150,7 +184,13 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         return false;
     }
     
-    public bool TryGetSegment(out Quad shape)
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Quad"/> when the cached <see cref="ShapeType"/>
+    /// is <see cref="ShapeType.Quad"/>.
+    /// </summary>
+    /// <param name="shape">On success contains the unwrapped <see cref="Quad"/>; otherwise the default value.</param>
+    /// <returns>True if the wrapped value is a <see cref="Quad"/> and was assigned to <paramref name="shape"/>; otherwise false.</returns>
+    public bool TryGetQuad(out Quad shape)
     {
         if (ShapeType != ShapeType.Quad)
         {
@@ -168,7 +208,17 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         return false;
     }
     
-    public bool TryGetSegment(out Polygon shape)
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Polygon"/> when the cached <see cref="ShapeType"/>
+    /// is <see cref="ShapeType.Poly"/>.
+    /// </summary>
+    /// <param name="shape">
+    /// On success contains the unwrapped <see cref="Polygon"/>; otherwise <c>null</c>.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if the wrapped value is a <see cref="Polygon"/> and was assigned to <paramref name="shape"/>; otherwise <c>false</c>.
+    /// </returns>
+    public bool TryGetPolygon(out Polygon shape)
     {
         if (ShapeType != ShapeType.Poly)
         {
@@ -185,8 +235,18 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         shape = null!;
         return false;
     }
-   
-    public bool TryGetSegment(out Polyline shape)
+  
+    /// <summary>
+    /// Attempts to retrieve the wrapped value as a <see cref="Polyline"/> when the cached <see cref="ShapeType"/>
+    /// is <see cref="ShapeType.PolyLine"/>.
+    /// </summary>
+    /// <param name="shape">
+    /// On success contains the unwrapped <see cref="Polyline"/>; otherwise <c>null</c>.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if the wrapped value is a <see cref="Polyline"/> and was assigned to <paramref name="shape"/>; otherwise <c>false</c>.
+    /// </returns>
+    public bool TryGetPolyline(out Polyline shape)
     {
         if (ShapeType != ShapeType.PolyLine)
         {
@@ -203,13 +263,20 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
         shape = null!;
         return false;
     }
+ 
     /// <summary>
-    /// Attempts to retrieve the wrapped value as the specified target type <typeparamref name="TU"/>.
+    /// Attempts to retrieve the wrapped value as the specified shape type <typeparamref name="TU"/>.
     /// </summary>
-    /// <typeparam name="TU">The target type to try casting the underlying value to. Must be non-nullable.</typeparam>
-    /// <param name="shape">When this method returns, contains the cast value if successful; otherwise the default for <typeparamref name="TU"/>.</param>
-    /// <returns>True if the wrapped value can be cast to <typeparamref name="TU"/>; otherwise false.</returns>
-    public bool TryGet<TU>(out TU shape) where TU : notnull
+    /// <typeparam name="TU">The target concrete shape type implementing <see cref="IShapeTypeProvider"/>.</typeparam>
+    /// <param name="shape">On success contains the unwrapped instance of <typeparamref name="TU"/>; otherwise the default value.</param>
+    /// <returns>
+    /// True if the wrapped value is an instance of <typeparamref name="TU"/> and was assigned to <paramref name="shape"/>; otherwise false.
+    /// </returns>
+    /// <remarks>
+    /// Performs a runtime type-check and assignment. Prefer the specific TryGet\* helpers when the cached <see cref="ShapeType"/>
+    /// can be used for faster, allocation-free checks.
+    /// </remarks>
+    public bool TryGet<TU>(out TU shape) where TU : IShapeTypeProvider
     {
         if (Value is TU u) { shape = u; return true; }
         shape = default!;
@@ -231,47 +298,4 @@ public readonly struct ShapeHandle<T>(T value) where T : notnull
     /// <param name="value">The non-null shape instance to wrap in a handle.</param>
     /// <returns>A new <see cref="ShapeHandle{T}"/> that wraps <paramref name="value"/>.</returns>
     public static implicit operator ShapeHandle<T>(T value) => new(value);
-    
-    
-    /// <summary>
-    /// Maps a concrete shape type <typeparamref name="TT"/> to its corresponding <see cref="ShapeType"/> value.
-    /// </summary>
-    /// <typeparam name="TT">The concrete shape type for which to produce a <see cref="ShapeType"/> mapping.</typeparam>
-    /// <remarks>
-    /// The mapping is evaluated once per generic instantiation and cached in the readonly <c>Type</c> field.
-    /// An <see cref="InvalidOperationException"/> is thrown if <typeparamref name="TT"/> is not a supported shape type.
-    /// </remarks>
-    private static class ShapeTypeMapper<TT>
-    {
-        /// <summary>
-        /// Cached mapping from the generic type parameter <c>TT</c> to its corresponding <see cref="ShapeType"/>.
-        /// </summary>
-        /// <remarks>
-        /// The mapping is computed once by <see cref="Init"/> when the generic type is first instantiated
-        /// and stored here to avoid repeated type checks or allocations. <see cref="Init"/> will throw
-        /// <see cref="InvalidOperationException"/> if <c>TT</c> is not a supported shape type.
-        /// </remarks>
-        public static readonly ShapeType Type = Init();
-
-        /// <summary>
-        /// Initialize the cached <see cref="ShapeType"/> for the generic type parameter <c>TT</c>.
-        /// Determines which concrete <see cref="ShapeType"/> corresponds to <c>TT</c>.
-        /// </summary>
-        /// <returns>The mapped <see cref="ShapeType"/> for <c>TT</c>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when <c>TT</c> is not a supported shape type.</exception>
-        private static ShapeType Init()
-        {
-            var t = typeof(TT);
-            if (t == typeof(Segment)) return ShapeType.Segment;
-            if (t == typeof(Line)) return ShapeType.Line;
-            if (t == typeof(Ray)) return ShapeType.Ray;
-            if (t == typeof(Circle)) return ShapeType.Circle;
-            if (t == typeof(Triangle)) return ShapeType.Triangle;
-            if (t == typeof(Rect)) return ShapeType.Rect;
-            if (t == typeof(Quad)) return ShapeType.Quad;
-            if (t == typeof(Polygon)) return ShapeType.Poly;
-            if (t == typeof(Polyline)) return ShapeType.PolyLine;
-            throw new InvalidOperationException($"No ShapeType mapping for {t.FullName}");
-        }
-    }
 }
