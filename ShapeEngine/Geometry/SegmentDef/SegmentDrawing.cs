@@ -59,8 +59,8 @@ public static class SegmentDrawing
         else
         {
             var aDisToStartSquared = (start - pointA).LengthSquared();
-            var aDisToEndSquared = (end - pointA).LengthSquared();
-            if (aDisToStartSquared < aDisToEndSquared)
+            var bDisToStartSquared = (start - pointB).LengthSquared();
+            if (aDisToStartSquared < bDisToStartSquared)
             {
                 var seg1 = new Segment(start, pointA);
                 var seg2 = new Segment(pointB, end);
