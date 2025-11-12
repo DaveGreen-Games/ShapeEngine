@@ -2,8 +2,11 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
@@ -19,6 +22,160 @@ namespace ShapeEngine.Geometry.CircleDef;
 /// </remarks>
 public static class CircleDrawing
 {
+    #region Draw Masked
+    /// <summary>
+    /// Draws the circle outline as individual line segments clipped by a <see cref="Triangle"/> mask.
+    /// </summary>
+    /// <param name="circle">The source <see cref="Circle"/> whose circumference will be approximated by segments.</param>
+    /// <param name="mask">The <see cref="Triangle"/> used to mask (clip) each generated segment.</param>
+    /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
+    /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
+    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Circle circle, Triangle mask, LineDrawingInfo lineInfo, float rotDeg, int sides, bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the circle outline as individual line segments clipped by a <see cref="Circle"/> mask.
+    /// </summary>
+    /// <param name="circle">The source <see cref="Circle"/> whose circumference will be approximated by segments.</param>
+    /// <param name="mask">The <see cref="Circle"/> used to mask (clip) each generated segment.</param>
+    /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
+    /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
+    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Circle circle, Circle mask, LineDrawingInfo lineInfo, float rotDeg, int sides, bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the circle outline as individual line segments clipped by a <see cref="Rect"/> mask.
+    /// </summary>
+    /// <param name="circle">The source <see cref="Circle"/> whose circumference will be approximated by segments.</param>
+    /// <param name="mask">The <see cref="Rect"/> used to mask (clip) each generated segment.</param>
+    /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
+    /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
+    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Circle circle, Rect mask, LineDrawingInfo lineInfo, float rotDeg, int sides, bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the circle outline as individual line segments clipped by a <see cref="Quad"/> mask.
+    /// </summary>
+    /// <param name="circle">The source <see cref="Circle"/> whose circumference will be approximated by segments.</param>
+    /// <param name="mask">The <see cref="Quad"/> used to mask (clip) each generated segment.</param>
+    /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
+    /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
+    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Circle circle, Quad mask, LineDrawingInfo lineInfo, float rotDeg, int sides, bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the circle outline as individual line segments clipped by a <see cref="Polygon"/> mask.
+    /// </summary>
+    /// <param name="circle">The source <see cref="Circle"/> whose circumference will be approximated by segments.</param>
+    /// <param name="mask">The <see cref="Polygon"/> used to mask (clip) each generated segment.</param>
+    /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
+    /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
+    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Circle circle, Polygon mask, LineDrawingInfo lineInfo, float rotDeg, int sides, bool reversedMask = false)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the circle outline as individual line segments clipped by a mask of any closed shape type.
+    /// </summary>
+    /// <typeparam name="T">The mask type implementing <see cref="IClosedShapeTypeProvider"/> (for example: <see cref="Triangle"/>, <see cref="Circle"/>, <see cref="Rect"/>, <see cref="Quad"/>, <see cref="Polygon"/>).</typeparam>
+    /// <param name="circle">The source <see cref="Circle"/> whose circumference will be approximated by segments.</param>
+    /// <param name="mask">The mask used to clip each generated segment.</param>
+    /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
+    /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
+    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked<T>(this Circle circle, T mask, LineDrawingInfo lineInfo, float rotDeg, int sides, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var radius = circle.Radius;
+        var center = circle.Center;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var segment = new Segment(curP, nextP);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    #endregion
+    
     /// <summary>
     /// Draws a filled circle at the specified center with the given radius and color.
     /// </summary>

@@ -10,8 +10,6 @@ public interface IPathfinderAgent
     /// </summary>
     public event Action<PathRequest> OnRequestPath;
     
-    //TODO: Event for when nodes have changed and new paths may be needed?
-    
     /// <summary>
     /// Called when the agent receives a requested path.
     /// </summary>

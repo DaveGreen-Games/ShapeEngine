@@ -1,7 +1,13 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentsDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.SegmentDef;
@@ -14,6 +20,396 @@ namespace ShapeEngine.Geometry.SegmentDef;
 /// </remarks>
 public static class SegmentDrawing
 {
+    
+    /// <summary>
+    /// Minimum length (in world units) that a segment must have to be drawn.
+    /// Segments with a squared length less than <see cref="MinSegmentDrawLengthSquared"/> are skipped to avoid rendering
+    /// extremely short or degenerate geometry that can cause visual artifacts or unnecessary draw calls.
+    /// </summary>
+    public static readonly float MinSegmentDrawLength = 0.1f;
+    
+    /// <summary>
+    /// Squared minimum segment draw length used to avoid computing square roots when
+    /// checking whether a segment is long enough to be drawn. This value is precomputed
+    /// from <see cref="MinSegmentDrawLength"/> to allow length comparisons using
+    /// squared distances.
+    /// </summary>
+    private static readonly float MinSegmentDrawLengthSquared = MinSegmentDrawLength * MinSegmentDrawLength;
+    
+    #region Draw Masked
+    /// <summary>
+    /// Helper that draws the appropriate subsegments when a segment intersects a closed mask.
+    /// When <paramref name="reversedMask"/> is true the portion between <paramref name="pointA"/> and <paramref name="pointB"/>
+    /// is drawn (i.e. the inside of the mask). When false the portions outside the intersection interval are drawn
+    /// (two subsegments determined by which intersection is closer to the segment start).
+    /// </summary>
+    /// <param name="start">Original segment start point.</param>
+    /// <param name="end">Original segment end point.</param>
+    /// <param name="pointA">First intersection point on the segment (may be one of the two intersection points).</param>
+    /// <param name="pointB">Second intersection point on the segment.</param>
+    /// <param name="lineInfo">Drawing parameters used for the subsegments.</param>
+    /// <param name="reversedMask">If true draw the inner piece between the two intersections; otherwise draw the outer pieces.</param>
+    private static void DrawMaskedHelper(Vector2 start, Vector2 end, Vector2 pointA, Vector2 pointB, LineDrawingInfo lineInfo,  bool reversedMask)
+    {
+        if (reversedMask)
+        {
+            var newSegment = new Segment(pointA, pointB);
+            newSegment.Draw(lineInfo);
+        }
+        else
+        {
+            var aDisToStartSquared = (start - pointA).LengthSquared();
+            var bDisToStartSquared = (start - pointB).LengthSquared();
+            if (aDisToStartSquared < bDisToStartSquared)
+            {
+                var seg1 = new Segment(start, pointA);
+                var seg2 = new Segment(pointB, end);
+                seg1.Draw(lineInfo);
+                seg2.Draw(lineInfo);
+            }
+            else
+            {
+                var seg1 = new Segment(start, pointB);
+                var seg2 = new Segment(pointA, end);
+                seg1.Draw(lineInfo);
+                seg2.Draw(lineInfo);
+            }
+        }
+    }
+    /// <summary>
+    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> triangle.
+    /// </summary>
+    /// <param name="segment">The segment to be drawn or clipped against the triangle.</param>
+    /// <param name="mask">Triangle used as a closed mask for clipping the segment.</param>
+    /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
+    /// <param name="reversedMask">
+    /// If <c>false</c> draw the parts of the segment outside the triangle (default).
+    /// If <c>true</c> draw the parts of the segment inside the triangle.
+    /// </param>
+    /// <remarks>
+    /// This method handles the following cases:
+    /// - Both endpoints inside the triangle (draws whole segment when <paramref name="reversedMask"/> is true).
+    /// - Both endpoints outside with two intersection points (draws subsegments determined by intersections).
+    /// - Single intersection point (draws the appropriate subsegment depending on which endpoint is inside).
+    /// - No intersections (draws whole segment when outside and <paramref name="reversedMask"/> is false).
+    /// Intersection computations are delegated to <see cref="Segment.IntersectTriangle(Triangle)"/>.
+    /// </remarks>
+    public static void DrawMasked(this Segment segment, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectTriangle(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+    
+    /// <summary>
+    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> circle.
+    /// </summary>
+    /// <param name="segment">The segment to be drawn or clipped against the circle.</param>
+    /// <param name="mask">Circle used as a closed mask for clipping the segment.</param>
+    /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
+    /// <param name="reversedMask">
+    /// If <c>false</c> draw the parts of the segment outside the circle (default).
+    /// If <c>true</c> draw the parts of the segment inside the circle.
+    /// </param>
+    /// <remarks>
+    /// Intersection computations are delegated to <see cref="Segment.IntersectCircle(Circle)"/>.
+    /// Handles cases where both endpoints are inside, both outside with two intersections,
+    /// a single intersection, or no intersections.
+    /// </remarks>
+    public static void DrawMasked(this Segment segment, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectCircle(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+    
+    /// <summary>
+    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> rectangle.
+    /// </summary>
+    /// <param name="segment">The segment to be drawn or clipped against the rectangle.</param>
+    /// <param name="mask">Rectangle used as a closed mask for clipping the segment.</param>
+    /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
+    /// <param name="reversedMask">
+    /// If <c>false</c> draw the parts of the segment outside the rectangle (default).
+    /// If <c>true</c> draw the parts of the segment inside the rectangle.
+    /// </param>
+    /// <remarks>
+    /// Intersection computations are delegated to <see cref="Segment.IntersectRect(Rect)"/>.
+    /// This method handles cases where both endpoints are inside, both outside with two intersections,
+    /// a single intersection, or no intersections.
+    /// </remarks>
+    public static void DrawMasked(this Segment segment, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectRect(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+    
+    /// <summary>
+    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> quad.
+    /// </summary>
+    /// <param name="segment">The segment to be drawn or clipped against the quad.</param>
+    /// <param name="mask">Quad used as a closed mask for clipping the segment.</param>
+    /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
+    /// <param name="reversedMask">
+    /// If <c>false</c> draw the parts of the segment outside the quad (default).
+    /// If <c>true</c> draw the parts of the segment inside the quad.
+    /// </param>
+    /// <remarks>
+    /// Intersection computations are delegated to <see cref="Segment.IntersectQuad(Quad)"/>.
+    /// Handles cases where both endpoints are inside, both outside with two intersections,
+    /// a single intersection, or no intersections.
+    /// </remarks>
+    public static void DrawMasked(this Segment segment, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsEnd = mask.ContainsPoint(segment.End);
+            
+        if (containsStart && containsEnd)
+        {
+            if(reversedMask) segment.Draw(lineInfo);
+            return;
+        }
+        
+        var result = segment.IntersectQuad(mask);
+        if (result.a.Valid && result.b.Valid)
+        {
+            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+        }
+        else if (result.a.Valid || result.b.Valid)
+        {
+            var p = result.a.Valid ? result.a.Point : result.b.Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+        }
+        else
+        {
+            if(!reversedMask) segment.Draw(lineInfo);
+        }
+    }
+   
+    /// <summary>
+    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> polygon.
+    /// </summary>
+    /// <param name="segment">The segment to be drawn or clipped against the polygon.</param>
+    /// <param name="mask">Polygon used as a closed mask for clipping the segment.</param>
+    /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
+    /// <param name="reversedMask">
+    /// If <c>false</c> draw the parts of the segment outside the polygon (default).
+    /// If <c>true</c> draw the parts of the segment inside the polygon.
+    /// </param>
+    /// <remarks>
+    /// Intersection computations are delegated to <see cref="Segment.IntersectPolygon(Polygon, int)"/>.
+    /// Handles cases where there are zero, one, or multiple intersection points. When multiple intersections are returned,
+    /// the method augments the intersection list with the segment endpoints and sorts them to determine alternating
+    /// inside/outside intervals before drawing the appropriate subsegments.
+    /// </remarks>
+    public static void DrawMasked(this Segment segment, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        bool containsStart = mask.ContainsPoint(segment.Start);
+
+        var result = segment.IntersectPolygon(mask);
+        if(result == null || result.Count <= 0)
+        {
+            // If reversedMask: draw when fully inside (containsStart == true)
+            // If not reversedMask: draw when fully outside (containsStart == false)
+            if ((reversedMask && containsStart) || (!reversedMask && !containsStart))
+                segment.Draw(lineInfo);
+            return;
+        }
+        if (result.Count == 1)
+        {
+            var p = result[0].Point;
+            if (reversedMask)
+            {
+                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                newSegment.Draw(lineInfo);
+            }
+            else
+            {
+                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                newSegment.Draw(lineInfo);
+            }
+
+            return;
+        }
+        result.Add(new IntersectionPoint(segment.Start, segment.Normal));
+        result.Add(new IntersectionPoint(segment.End, segment.Normal));
+        if (result.SortClosestFirst(segment.Start))
+        {
+            if (reversedMask)
+            {
+                for (int i = containsStart ? 0 : 1; i < result.Count - 1; i += 2)
+                {
+                    var p1 = result[i].Point;
+                    var p2 = result[i + 1].Point;
+                    var s = new Segment(p1, p2);
+                    s.Draw(lineInfo);
+                }
+            }
+            else
+            {
+                for (int i = containsStart ? 1 : 0; i < result.Count - 1; i += 2)
+                {
+                    var p1 = result[i].Point;
+                    var p2 = result[i + 1].Point;
+                    var s = new Segment(p1, p2);
+                    s.Draw(lineInfo);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Draws the portion(s) of <paramref name="segment"/> that are masked by a generic closed-shape <paramref name="mask"/>.
+    /// This generic overload dispatches to the concrete shape-specific overload (Circle, Triangle, Quad, Rect, or Polygon)
+    /// based on <c>mask.GetClosedShapeType()</c>.
+    /// </summary>
+    /// <typeparam name="T">A type that implements <see cref="IClosedShapeTypeProvider"/> and represents the mask shape.</typeparam>
+    /// <param name="segment">The segment to be drawn or clipped against the mask.</param>
+    /// <param name="mask">The mask shape that provides its closed-shape type. The method will attempt to cast to the concrete shape type.</param>
+    /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
+    /// <param name="reversedMask">
+    /// If <c>false</c> draw the parts of the segment outside the mask (default).
+    /// If <c>true</c> draw the parts of the segment inside the mask.
+    /// </param>
+    /// <remarks>
+    /// If the concrete mask type is not one of the supported closed shapes, no drawing occurs.
+    /// Use the concrete overloads when the exact mask type is known to avoid the runtime dispatch and cast.
+    /// </remarks>
+    public static void DrawMasked<T>(this Segment segment, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    {
+        switch (mask.GetClosedShapeType())
+        {
+            case ClosedShapeType.Circle:
+                if (mask is Circle circle)
+                {
+                    segment.DrawMasked(circle, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Triangle:
+                if (mask is Triangle triangle)
+                {
+                    segment.DrawMasked(triangle, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Quad:
+                if (mask is Quad quad)
+                {
+                    segment.DrawMasked(quad, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Rect:
+                if (mask is Rect rect)
+                {
+                    segment.DrawMasked(rect, lineInfo, reversedMask);
+                }
+                break;
+            case ClosedShapeType.Poly:
+                if (mask is Polygon poly)
+                {
+                    segment.DrawMasked(poly, lineInfo, reversedMask);
+                }
+                break;
+        }
+    }
+    #endregion
+    
     /// <summary>
     /// Draws a segment from <paramref name="start"/> to a point along the direction to <paramref name="end"/>, scaled by <paramref name="sideLengthFactor"/>.
     /// </summary>
@@ -48,7 +444,7 @@ public static class SegmentDrawing
         if (thickness < LineDrawingInfo.LineMinThickness) thickness = LineDrawingInfo.LineMinThickness;
         var w = end - start;
         float ls = w.X * w.X + w.Y * w.Y; // w.LengthSquared();
-        if (ls <= 0f) return;
+        if (ls <= MinSegmentDrawLengthSquared) return;
         
         var dir = w / MathF.Sqrt(ls);
         var pR = new Vector2(-dir.Y, dir.X);//perpendicular right

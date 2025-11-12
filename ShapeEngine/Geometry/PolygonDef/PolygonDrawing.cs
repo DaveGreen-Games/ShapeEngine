@@ -3,6 +3,8 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
@@ -19,6 +21,125 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public static class PolygonDrawing
 {
+    #region Draw Masked
+    /// <summary>
+    /// Draws the polygon's edges while applying a triangular mask to each segment.
+    /// </summary>
+    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
+    /// <param name="mask">The triangular mask used to clip each segment.</param>
+    /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Polygon poly, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the polygon's edges while applying a circular mask to each segment.
+    /// </summary>
+    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
+    /// <param name="mask">The circular mask used to clip each segment.</param>
+    /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Polygon poly, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the polygon's edges while applying a rectangular mask to each segment.
+    /// </summary>
+    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
+    /// <param name="mask">The rectangular mask used to clip each segment.</param>
+    /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Polygon poly, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the polygon's edges while applying a quadrilateral mask to each segment.
+    /// </summary>
+    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
+    /// <param name="mask">The quadrilateral mask used to clip each segment.</param>
+    /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Polygon poly, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the polygon's edges while applying a polygonal mask to each segment.
+    /// </summary>
+    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
+    /// <param name="mask">The polygonal mask used to clip each segment.</param>
+    /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked(this Polygon poly, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    /// <summary>
+    /// Draws the polygon's edges while applying a generic closed-shape mask to each segment.
+    /// </summary>
+    /// <typeparam name="T">Type of the mask implementing <see cref="IClosedShapeTypeProvider"/>.</typeparam>
+    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
+    /// <param name="mask">The mask used to clip each segment.</param>
+    /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawLinesMasked<T>(this Polygon poly, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+            segment.DrawMasked(mask, lineInfo, reversedMask);
+        }
+    }
+    #endregion
+    
+    
     /// <summary>
     /// Draws a convex polygon filled with the specified color, using the polygon's centroid as the center.
     /// </summary>

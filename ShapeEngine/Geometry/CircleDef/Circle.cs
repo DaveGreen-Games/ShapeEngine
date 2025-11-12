@@ -17,7 +17,7 @@ namespace ShapeEngine.Geometry.CircleDef;
 /// <remarks>
 /// Provides geometric, collision, and transformation operations for circles in 2D space.
 /// </remarks>
-public readonly partial struct Circle : IEquatable<Circle>
+public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
     #region Members
     /// <summary>
@@ -194,7 +194,11 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// </summary>
     /// <returns>A hash code for the current circle.</returns>
     public readonly override int GetHashCode() => HashCode.Combine(Center, Radius);
-    
+
+    public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Circle;
+
+    public ShapeType GetShapeType() => ShapeType.Circle;
+
     /// <summary>
     /// Determines whether two circles are equal.
     /// </summary>

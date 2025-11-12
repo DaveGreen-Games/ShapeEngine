@@ -17,7 +17,7 @@ namespace ShapeEngine.Geometry.RectDef;
 /// <summary>
 /// Represents a rectangle defined by its top-left corner, width, and height, with various geometric and utility operations.
 /// </summary>
-public readonly partial struct Rect : IEquatable<Rect>
+public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
     #region Members
 
@@ -42,7 +42,11 @@ public readonly partial struct Rect : IEquatable<Rect>
     {
         return $"Rect[X: {X}, Y: {Y}, Width: {Width}, Height: {Height}]";
     }
-    
+
+    public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Rect;
+
+    public ShapeType GetShapeType() => ShapeType.Rect;
+
     #endregion
 
     #region Getter Setter

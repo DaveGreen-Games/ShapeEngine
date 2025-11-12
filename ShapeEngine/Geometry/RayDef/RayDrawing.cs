@@ -1,6 +1,11 @@
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.RayDef;
 
@@ -9,6 +14,100 @@ namespace ShapeEngine.Geometry.RayDef;
 /// </summary>
 public static class RayDrawing
 {
+    #region Draw Masked
+    /// <summary>
+    /// Draws a masked ray by creating a segment from the ray origin in its direction for the specified length,
+    /// then drawing that segment clipped by the provided <see cref="Triangle"/> mask.
+    /// </summary>
+    /// <param name="ray">The source <see cref="Ray"/>. If invalid, the method returns without drawing.</param>
+    /// <param name="length">The length of the ray to draw. If less than or equal to zero, the method returns immediately.</param>
+    /// <param name="mask">The <see cref="Triangle"/> used as a clipping mask.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawMasked(this Ray ray, float length, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if(!ray.IsValid || length <= 0f || lineInfo.Thickness <= 0f) return;
+        var segment = new Segment(ray.Point, ray.Point + ray.Direction * length);
+        segment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    /// <summary>
+    /// Draws a masked ray by creating a segment from the ray origin in its direction for the specified length,
+    /// then drawing that segment clipped by the provided <see cref="Circle"/> mask.
+    /// </summary>
+    /// <param name="ray">The source <see cref="Ray"/>. If invalid, the method returns without drawing.</param>
+    /// <param name="length">The length of the ray to draw. If less than or equal to zero, the method returns immediately.</param>
+    /// <param name="mask">The <see cref="Circle"/> used as a clipping mask.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawMasked(this Ray ray, float length, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if(!ray.IsValid || length <= 0f || lineInfo.Thickness <= 0f) return;
+        var segment = new Segment(ray.Point, ray.Point + ray.Direction * length);
+        segment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    /// <summary>
+    /// Draws a masked ray by creating a segment from the ray origin in its direction for the specified length,
+    /// then drawing that segment clipped by the provided <see cref="Rect"/> mask.
+    /// </summary>
+    /// <param name="ray">The source <see cref="Ray"/>. If invalid, the method returns without drawing.</param>
+    /// <param name="length">The length of the ray to draw. If less than or equal to zero, the method returns immediately.</param>
+    /// <param name="mask">The <see cref="Rect"/> used as a clipping mask.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawMasked(this Ray ray, float length, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if(!ray.IsValid || length <= 0f || lineInfo.Thickness <= 0f) return;
+        var segment = new Segment(ray.Point, ray.Point + ray.Direction * length);
+        segment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    /// <summary>
+    /// Draws a masked ray by creating a segment from the ray origin in its direction for the specified length,
+    /// then drawing that segment clipped by the provided <see cref="Quad"/> mask.
+    /// </summary>
+    /// <param name="ray">The source <see cref="Ray"/>. If invalid, the method returns without drawing.</param>
+    /// <param name="length">The length of the ray to draw. If less than or equal to zero, the method returns immediately.</param>
+    /// <param name="mask">The <see cref="Quad"/> used as a clipping mask.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawMasked(this Ray ray, float length, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if(!ray.IsValid || length <= 0f || lineInfo.Thickness <= 0f) return;
+        var segment = new Segment(ray.Point, ray.Point + ray.Direction * length);
+        segment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    /// <summary>
+    /// Draws a masked ray by creating a segment from the ray origin in its direction for the specified length,
+    /// then drawing that segment clipped by the provided <see cref="Polygon"/> mask.
+    /// </summary>
+    /// <param name="ray">The source <see cref="Ray"/>. If invalid, the method returns without drawing.</param>
+    /// <param name="length">The length of the ray to draw. If less than or equal to zero, the method returns immediately.</param>
+    /// <param name="mask">The <see cref="Polygon"/> used as a clipping mask.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawMasked(this Ray ray, float length, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    {
+        if(!ray.IsValid || length <= 0f || lineInfo.Thickness <= 0f) return;
+        var segment = new Segment(ray.Point, ray.Point + ray.Direction * length);
+        segment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    /// <summary>
+    /// Draws a masked ray by creating a segment from the ray origin in its direction for the specified length,
+    /// then drawing that segment clipped by the provided mask of a generic closed-shape type.
+    /// </summary>
+    /// <typeparam name="T">Type of the mask that implements <see cref="IClosedShapeTypeProvider"/>.</typeparam>
+    /// <param name="ray">The source <see cref="Ray"/>. If invalid, the method returns without drawing.</param>
+    /// <param name="length">The length of the ray to draw. If less than or equal to zero, the method returns immediately.</param>
+    /// <param name="mask">The mask shape used for clipping.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, etc.).</param>
+    /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
+    public static void DrawMasked<T>(this Ray ray, float length, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    {
+        if(!ray.IsValid || length <= 0f || lineInfo.Thickness <= 0f) return;
+        var segment = new Segment(ray.Point, ray.Point + ray.Direction * length);
+        segment.DrawMasked(mask, lineInfo, reversedMask);
+    }
+    #endregion
+    
     /// <summary>
     /// Draws a ray starting from a given point in a specified direction, with a given length, thickness, and color.
     /// </summary>

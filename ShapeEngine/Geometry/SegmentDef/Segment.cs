@@ -13,7 +13,7 @@ namespace ShapeEngine.Geometry.SegmentDef;
 /// <summary>
 /// Represents a 2D line segment defined by a start and end point, with a calculated normal.
 /// </summary>
-public readonly partial struct Segment : IEquatable<Segment>
+public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
 {
     #region Members
     /// <summary>
@@ -412,6 +412,9 @@ public readonly partial struct Segment : IEquatable<Segment>
     {
         return HashCode.Combine(Start, End);
     }
+
+    public ShapeType GetShapeType() => ShapeType.Segment;
+
     /// <summary>
     /// Determines whether two segments are equal.
     /// </summary>

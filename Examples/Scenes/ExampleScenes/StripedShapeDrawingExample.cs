@@ -1,7 +1,6 @@
-using System.Drawing;
+
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -14,7 +13,6 @@ using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
-using ShapeEngine.Random;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
@@ -119,7 +117,7 @@ public class StripedShapeDrawingExample : ExampleScene
     private Quad insideQuad;
     private Polygon insidePoly;
     
-    private LineDrawingInfo lineStripedInfo;
+    private LineDrawingInfo lineInfoStriped;
     private LineDrawingInfo lineInfoOutline;
 
     private int curCircleSides = 64;
@@ -184,7 +182,7 @@ public class StripedShapeDrawingExample : ExampleScene
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Light;
 
-        lineStripedInfo = new(4f, stripedColor.ColorRgba, LineCapType.Capped, 4);
+        lineInfoStriped = new(4f, stripedColor.ColorRgba, LineCapType.Capped, 4);
         lineInfoOutline = new(4f, outlineColor.ColorRgba, LineCapType.CappedExtended, 4);
 
         float size = outsideShapeSize;
@@ -243,7 +241,7 @@ public class StripedShapeDrawingExample : ExampleScene
         curRotationDeg = rotationDegSlider.CurValue;
     
         float t = lineThicknessSlider.CurValue;
-        lineStripedInfo = lineStripedInfo.ChangeThickness(t);
+        lineInfoStriped = lineInfoStriped.ChangeThickness(t);
         lineInfoOutline = lineInfoOutline.ChangeThickness(t * 1.25f);
         
         curInsideShapeRotDeg = insideShapeRotDegSlider.CurValue;
@@ -428,8 +426,11 @@ public class StripedShapeDrawingExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        lineStripedInfo = lineStripedInfo.ChangeColor(stripedColor.ColorRgba);
+        lineInfoStriped = lineInfoStriped.ChangeColor(stripedColor.ColorRgba);
         lineInfoOutline = lineInfoOutline.ChangeColor(outlineColor.ColorRgba);
+        var lineInfoOutlineMasked = new LineDrawingInfo(lineInfoOutline.Thickness / 3, outlineColor.ColorRgba.ChangeBrightness(-0.5f), LineCapType.CappedExtended, 4);
+        const bool reverseMask = false;
+        const bool doubleMask = false; //if true draws the outsideShape outline different inside and outside the insideShape
         
         if (outsideShapeIndex == 0) // Circle
         {
@@ -437,54 +438,85 @@ public class StripedShapeDrawingExample : ExampleScene
             {
                 if (insideShapeIndex == 0) // Circle
                 {
-                    outsideCircle.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideCircle.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideCircle.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideCircle.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideCircle.DrawLinesMasked(insideCircle, lineInfoOutline, 0f, curCircleSides, reverseMask);
+                    else
+                    {
+                        outsideCircle.DrawLinesMasked(insideCircle, lineInfoOutlineMasked, 0f, curCircleSides, true);
+                        outsideCircle.DrawLinesMasked(insideCircle, lineInfoOutline, 0f, curCircleSides, false);
                     }
                 }
                 else if (insideShapeIndex == 1) // Triangle
                 {
-                    outsideCircle.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideCircle.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideCircle.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideCircle.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideCircle.DrawLinesMasked(insideTriangle, lineInfoOutline, 0f, curCircleSides, reverseMask);
+                    else
+                    {
+                        outsideCircle.DrawLinesMasked(insideTriangle, lineInfoOutlineMasked, 0f, curCircleSides, true);
+                        outsideCircle.DrawLinesMasked(insideTriangle, lineInfoOutline, 0f, curCircleSides, false);
                     }
                 }
                 else if (insideShapeIndex == 2) // Rect
                 {
-                    outsideCircle.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideCircle.DrawStriped(insideRect, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideCircle.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideCircle.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideCircle.DrawLinesMasked(insideRect, lineInfoOutline, 0f, curCircleSides, reverseMask);
+                    else
+                    {
+                        outsideCircle.DrawLinesMasked(insideRect, lineInfoOutlineMasked, 0f, curCircleSides, true);
+                        outsideCircle.DrawLinesMasked(insideRect, lineInfoOutline, 0f, curCircleSides, false);
                     }
                 }
                 else if (insideShapeIndex == 3) // Quad
                 {
-                    outsideCircle.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideCircle.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideCircle.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideCircle.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideCircle.DrawLinesMasked(insideQuad, lineInfoOutline, 0f, curCircleSides, reverseMask);
+                    else
+                    {
+                        outsideCircle.DrawLinesMasked(insideQuad, lineInfoOutlineMasked, 0f, curCircleSides, true);
+                        outsideCircle.DrawLinesMasked(insideQuad, lineInfoOutline, 0f, curCircleSides, false);
                     }
                 }
                 else if (insideShapeIndex == 4) // Polygon
                 {
-                    outsideCircle.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideCircle.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideCircle.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideCircle.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideCircle.DrawLinesMasked(insidePoly, lineInfoOutline, 0f, curCircleSides, reverseMask);
+                    else
+                    {
+                        outsideCircle.DrawLinesMasked(insidePoly, lineInfoOutlineMasked, 0f, curCircleSides, true);
+                        outsideCircle.DrawLinesMasked(insidePoly, lineInfoOutline, 0f, curCircleSides, false);
                     }
                 }
             }
             else
             {
-                outsideCircle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                outsideCircle.DrawStriped(curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                 if (crissCrossPatternActive)
                 {
-                    outsideCircle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    outsideCircle.DrawStriped(curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                 }
+                outsideCircle.DrawLines(lineInfoOutline, curCircleSides);
             }
-            outsideCircle.DrawLines(lineInfoOutline, curCircleSides);
+            
         }
         else if (outsideShapeIndex == 1) // Triangle
         {
@@ -492,54 +524,84 @@ public class StripedShapeDrawingExample : ExampleScene
             {
                 if (insideShapeIndex == 0) // Circle
                 {
-                    outsideTriangle.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideTriangle.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideTriangle.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideTriangle.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideTriangle.DrawLinesMasked(insideCircle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideTriangle.DrawLinesMasked(insideCircle, lineInfoOutlineMasked, true);
+                        outsideTriangle.DrawLinesMasked(insideCircle, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 1) // Triangle
                 {
-                    outsideTriangle.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideTriangle.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideTriangle.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideTriangle.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideTriangle.DrawLinesMasked(insideTriangle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideTriangle.DrawLinesMasked(insideTriangle, lineInfoOutlineMasked, true);
+                        outsideTriangle.DrawLinesMasked(insideTriangle, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 2) // Rect
                 {
-                    outsideTriangle.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideTriangle.DrawStriped(insideRect, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideTriangle.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideTriangle.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideTriangle.DrawLinesMasked(insideRect, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideTriangle.DrawLinesMasked(insideRect, lineInfoOutlineMasked, true);
+                        outsideTriangle.DrawLinesMasked(insideRect, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 3) // Quad
                 {
-                    outsideTriangle.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideTriangle.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideTriangle.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideTriangle.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideTriangle.DrawLinesMasked(insideQuad, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideTriangle.DrawLinesMasked(insideQuad, lineInfoOutlineMasked, true);
+                        outsideTriangle.DrawLinesMasked(insideQuad, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 4) // Polygon
                 {
-                    outsideTriangle.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideTriangle.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideTriangle.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideTriangle.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutlineMasked, true);
+                        outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutline, false);
                     }
                 }
             }
             else
             {
-                outsideTriangle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                outsideTriangle.DrawStriped(curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                 if (crissCrossPatternActive)
                 {
-                    outsideTriangle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    outsideTriangle.DrawStriped(curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                 }
+                outsideTriangle.DrawLines(lineInfoOutline);
             }
-            outsideTriangle.DrawLines(lineInfoOutline);
         }
         else if (outsideShapeIndex == 2) // Rect
         {
@@ -547,54 +609,84 @@ public class StripedShapeDrawingExample : ExampleScene
             {
                 if (insideShapeIndex == 0) // Circle
                 {
-                    outsideRect.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideRect.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideRect.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideRect.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideRect.DrawLinesMasked(insideCircle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideRect.DrawLinesMasked(insideCircle, lineInfoOutlineMasked, true);
+                        outsideRect.DrawLinesMasked(insideCircle, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 1) // Triangle
                 {
-                    outsideRect.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideRect.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideRect.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideRect.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideRect.DrawLinesMasked(insideTriangle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideRect.DrawLinesMasked(insideTriangle, lineInfoOutlineMasked, true);
+                        outsideRect.DrawLinesMasked(insideTriangle, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 2) // Rect
                 {
-                    outsideRect.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideRect.DrawStriped(insideRect, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideRect.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideRect.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideRect.DrawLinesMasked(insideRect, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideRect.DrawLinesMasked(insideRect, lineInfoOutlineMasked, true);
+                        outsideRect.DrawLinesMasked(insideRect, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 3) // Quad
                 {
-                    outsideRect.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideRect.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideRect.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideRect.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideRect.DrawLinesMasked(insideQuad, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideRect.DrawLinesMasked(insideQuad, lineInfoOutlineMasked, true);
+                        outsideRect.DrawLinesMasked(insideQuad, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 4) // Polygon
                 {
-                    outsideRect.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideRect.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideRect.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideRect.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideRect.DrawLinesMasked(insidePoly, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideRect.DrawLinesMasked(insidePoly, lineInfoOutlineMasked, true);
+                        outsideRect.DrawLinesMasked(insidePoly, lineInfoOutline, false);
                     }
                 }
             }
             else
             {
-                outsideRect.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                outsideRect.DrawStriped(curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                 if (crissCrossPatternActive)
                 {
-                    outsideRect.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    outsideRect.DrawStriped(curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                 }
+                outsideRect.DrawLines(lineInfoOutline);
             }
-            outsideRect.DrawLines(lineInfoOutline);
         }
         else if (outsideShapeIndex == 3) // Quad
         {
@@ -602,54 +694,84 @@ public class StripedShapeDrawingExample : ExampleScene
             {
                 if (insideShapeIndex == 0) // Circle
                 {
-                    outsideQuad.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideQuad.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideQuad.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideQuad.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideQuad.DrawLinesMasked(insideCircle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideQuad.DrawLinesMasked(insideCircle, lineInfoOutlineMasked, true);
+                        outsideQuad.DrawLinesMasked(insideCircle, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 1) // Triangle
                 {
-                    outsideQuad.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideQuad.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideQuad.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideQuad.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideQuad.DrawLinesMasked(insideTriangle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideQuad.DrawLinesMasked(insideTriangle, lineInfoOutlineMasked, true);
+                        outsideQuad.DrawLinesMasked(insideTriangle, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 2) // Rect
                 {
-                    outsideQuad.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideQuad.DrawStriped(insideRect, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideQuad.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideQuad.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideQuad.DrawLinesMasked(insideRect, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideQuad.DrawLinesMasked(insideRect, lineInfoOutlineMasked, true);
+                        outsideQuad.DrawLinesMasked(insideRect, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 3) // Quad
                 {
-                    outsideQuad.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideQuad.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideQuad.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideQuad.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideQuad.DrawLinesMasked(insideQuad, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideQuad.DrawLinesMasked(insideQuad, lineInfoOutlineMasked, true);
+                        outsideQuad.DrawLinesMasked(insideQuad, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 4) // Polygon
                 {
-                    outsideQuad.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsideQuad.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsideQuad.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsideQuad.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsideQuad.DrawLinesMasked(insidePoly, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsideQuad.DrawLinesMasked(insidePoly, lineInfoOutlineMasked, true);
+                        outsideQuad.DrawLinesMasked(insidePoly, lineInfoOutline, false);
                     }
                 }
             }
             else
             {
-                outsideQuad.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                outsideQuad.DrawStriped(curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                 if (crissCrossPatternActive)
                 {
-                    outsideQuad.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    outsideQuad.DrawStriped(curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                 }
+                outsideQuad.DrawLines(lineInfoOutline);
             }
-            outsideQuad.DrawLines(lineInfoOutline);
         }
         else if (outsideShapeIndex == 4) // Polygon
         {
@@ -657,54 +779,85 @@ public class StripedShapeDrawingExample : ExampleScene
             {
                 if (insideShapeIndex == 0) // Circle
                 {
-                    outsidePoly.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsidePoly.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsidePoly.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsidePoly.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsidePoly.DrawLinesMasked(insideCircle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsidePoly.DrawLinesMasked(insideCircle, lineInfoOutlineMasked, true);
+                        outsidePoly.DrawLinesMasked(insideCircle, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 1) // Triangle
                 {
-                    outsidePoly.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsidePoly.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsidePoly.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsidePoly.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                     }
+                    if(!doubleMask) outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutlineMasked, true);
+                        outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutline, false); 
+                    }
+                    
                 }
                 else if (insideShapeIndex == 2) // Rect
                 {
-                    outsidePoly.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsidePoly.DrawStriped(insideRect, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsidePoly.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsidePoly.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsidePoly.DrawLinesMasked(insideRect, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsidePoly.DrawLinesMasked(insideRect, lineInfoOutlineMasked, true);
+                        outsidePoly.DrawLinesMasked(insideRect, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 3) // Quad
                 {
-                    outsidePoly.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsidePoly.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsidePoly.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsidePoly.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsidePoly.DrawLinesMasked(insideQuad, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsidePoly.DrawLinesMasked(insideQuad, lineInfoOutlineMasked, true);
+                        outsidePoly.DrawLinesMasked(insideQuad, lineInfoOutline, false);
                     }
                 }
                 else if (insideShapeIndex == 4) // Polygon
                 {
-                    outsidePoly.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    outsidePoly.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                     if (crissCrossPatternActive)
                     {
-                        outsidePoly.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                        outsidePoly.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
+                    }
+                    if(!doubleMask) outsidePoly.DrawLinesMasked(insidePoly, lineInfoOutline, reverseMask);
+                    else
+                    {
+                        outsidePoly.DrawLinesMasked(insidePoly, lineInfoOutlineMasked, true);
+                        outsidePoly.DrawLinesMasked(insidePoly, lineInfoOutline, false);
                     }
                 }
             }
             else
             {
-                outsidePoly.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                outsidePoly.DrawStriped(curSpacing, curRotationDeg, lineInfoStriped, curSpacingOffset);
                 if (crissCrossPatternActive)
                 {
-                    outsidePoly.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    outsidePoly.DrawStriped(curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                 }
+                outsidePoly.DrawLines(lineInfoOutline);
             }
-            outsidePoly.DrawLines(lineInfoOutline);
         }
 
         if (insideShapeMode)
