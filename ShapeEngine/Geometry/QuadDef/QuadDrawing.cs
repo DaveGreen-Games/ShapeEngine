@@ -21,7 +21,7 @@ public static class QuadDrawing
 {
     #region Draw Masked
     /// <summary>
-    ///— Draws the quad's outline segments constrained by a <see cref="Triangle"/> mask.
+    /// Draws the quad's outline segments constrained by a <see cref="Triangle"/> mask.
     /// </summary>
     /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
     /// <param name="mask">Triangle mask used to clip each segment's drawing.</param>
