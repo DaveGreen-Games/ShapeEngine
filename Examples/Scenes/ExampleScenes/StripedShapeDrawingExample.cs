@@ -588,8 +588,8 @@ public class StripedShapeDrawingExample : ExampleScene
                     if(!doubleMask) outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutline, reverseMask);
                     else
                     {
-                        outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutline, reverseMask);
-                        outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutline, reverseMask);
+                        outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutlineMasked, true);
+                        outsideTriangle.DrawLinesMasked(insidePoly, lineInfoOutline, false);
                     }
                 }
             }
@@ -799,8 +799,12 @@ public class StripedShapeDrawingExample : ExampleScene
                         outsidePoly.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                     }
                     if(!doubleMask) outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutline, reverseMask);
-                    outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutlineMasked, true);
-                    outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutline, false);
+                    else
+                    {
+                        outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutlineMasked, true);
+                        outsidePoly.DrawLinesMasked(insideTriangle, lineInfoOutline, false); 
+                    }
+                    
                 }
                 else if (insideShapeIndex == 2) // Rect
                 {
@@ -824,6 +828,7 @@ public class StripedShapeDrawingExample : ExampleScene
                         outsidePoly.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineInfoStriped, curSpacingOffset);
                     }
                     if(!doubleMask) outsidePoly.DrawLinesMasked(insideQuad, lineInfoOutline, reverseMask);
+                    else
                     {
                         outsidePoly.DrawLinesMasked(insideQuad, lineInfoOutlineMasked, true);
                         outsidePoly.DrawLinesMasked(insideQuad, lineInfoOutline, false);
