@@ -586,7 +586,31 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <returns>A <see cref="Points"/> object containing the random points on the rectangle's edge.</returns>
     public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
+    /// <summary>
+    /// Gets a random triangle contained inside this rectangle.
+    /// Attempts up to 100 random samples of three points inside the rectangle and returns the first triangle
+    /// whose area is greater than <paramref name="minArea"/>. If <paramref name="minArea"/> is greater than or
+    /// equal to half the rectangle area or sampling fails, a fallback triangle formed by the rect's left edge
+    /// (TopLeft, BottomLeft, BottomRight) is returned.
+    /// </summary>
+    /// <param name="minArea">Minimum required triangle area. Defaults to 1e-6f.</param>
+    /// <returns>A <see cref="Triangle"/> that lies inside the rectangle.</returns>
+    public Triangle GetRandomTriangleInside(float minArea = 1e-6f)
+    {
+        const int maxAttempts = 100;
+        if(minArea >= GetArea() * 0.5f) return new Triangle(TopLeft, BottomLeft, BottomRight);
+        for (int i = 0; i < maxAttempts; i++)
+        {
+            var a = GetRandomPointInside();
+            var b = GetRandomPointInside();
+            var c = GetRandomPointInside();
 
+            float area = MathF.Abs((b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y)) * 0.5f;
+            if (area > minArea) return new Triangle(a, b, c);
+        }
+
+        return new Triangle(TopLeft, BottomLeft, BottomRight);
+    }
     #endregion
     
     #region Corners
