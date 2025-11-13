@@ -337,15 +337,13 @@ public static class RectDrawing
     /// <param name="rotDeg">The rotation in degrees.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color)
     {
         var a = pivot + (topLeft - pivot).RotateDeg(rotDeg);
         var b = pivot + (new Vector2(topLeft.X, bottomRight.Y) - pivot).RotateDeg(rotDeg);
         var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
-        QuadDrawing.DrawQuadLines(a, b, c, d, lineThickness, color, capType, capPoints);
+        QuadDrawing.DrawQuadLines(a, b, c, d, lineThickness, color);
     }
 
     /// <summary>
@@ -355,9 +353,10 @@ public static class RectDrawing
     /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
     /// <param name="pivot">The pivot point for rotation.</param>
     /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
+    /// <param name="lineInfo">The line drawing information used for drawing the outline.
+    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
-        => DrawRectLines(topLeft, bottomRight, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        => DrawRectLines(topLeft, bottomRight, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color);
 
     /// <summary>
     /// Draws a filled rectangle using the specified color.
@@ -407,11 +406,9 @@ public static class RectDrawing
     /// <param name="rotDeg">The rotation in degrees.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color)
     {
-        DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineThickness, color, capType, capPoints);
+        DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineThickness, color);
     }
 
     /// <summary>

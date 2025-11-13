@@ -159,15 +159,14 @@ public static class QuadDrawing
     /// <param name="d">The fourth vertex of the quad.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
     /// <remarks>Draws each side of the quad as a separate segment.</remarks>
-    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
     {
-        SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(c, d, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(d, a, lineThickness, color, capType, capPoints);
+        DrawQuadLinesInternal(a, b, c, d, lineThickness, color);
+        // SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
+        // SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
+        // SegmentDrawing.DrawSegment(c, d, lineThickness, color, capType, capPoints);
+        // SegmentDrawing.DrawSegment(d, a, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -302,10 +301,11 @@ public static class QuadDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo)
     {
-        SegmentDrawing.DrawSegment(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        SegmentDrawing.DrawSegment(b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        SegmentDrawing.DrawSegment(c, d, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        SegmentDrawing.DrawSegment(d, a, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        DrawQuadLinesInternal(a, b, c, d, lineInfo.Thickness, lineInfo.Color);
+        // SegmentDrawing.DrawSegment(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // SegmentDrawing.DrawSegment(b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // SegmentDrawing.DrawSegment(c, d, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // SegmentDrawing.DrawSegment(d, a, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
 
     /// <summary>
@@ -321,11 +321,9 @@ public static class QuadDrawing
     /// <param name="q">The quad to outline.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawLines(this Quad q, float lineThickness, ColorRgba color)
     {
-        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, capType, capPoints);
+        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color);
     }
 
     /// <summary>
@@ -523,5 +521,65 @@ public static class QuadDrawing
         }
         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
-   
+
+
+
+    private static void DrawQuadLinesInternal(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
+    {
+        var offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
+        
+        // corner at b, adjacent vertices a and c
+        var bA = Vector2.Normalize(a - b); // direction from corner toward A
+        var bC = Vector2.Normalize(c - b); // direction from corner toward C
+
+        var internalBisectorB = bA + bC;
+        if (internalBisectorB.LengthSquared() < 1e-8f)
+        {
+            // edges are colinear; pick a perpendicular as fallback
+            internalBisectorB = new Vector2(-bA.Y, bA.X);
+        }
+        else
+        {
+            internalBisectorB = Vector2.Normalize(internalBisectorB);
+        }
+        
+        var aB = Vector2.Normalize(b - a);
+        var aD = Vector2.Normalize(d - a);
+
+        var internalBisectorA = aB + aD;
+        if (internalBisectorA.LengthSquared() < 1e-8f)
+        {
+            // edges are colinear; pick a perpendicular as fallback
+            internalBisectorA = new Vector2(-aB.Y, aB.X);
+        }
+        else
+        {
+            internalBisectorA = Vector2.Normalize(internalBisectorA);
+        }
+        
+        var outsideA = a - internalBisectorA * offsetDistance;
+        var insideA = a + internalBisectorA * offsetDistance;
+        
+        var outsideB = b - internalBisectorB * offsetDistance;
+        var insideB = b + internalBisectorB * offsetDistance;
+        
+        var outsideC = c + internalBisectorA * offsetDistance;
+        var insideC = c - internalBisectorA * offsetDistance;
+        
+        var outsideD = d + internalBisectorB * offsetDistance;
+        var insideD = d - internalBisectorB * offsetDistance;
+        
+        TriangleDrawing.DrawTriangle(outsideA, outsideB, insideA, color);
+        TriangleDrawing.DrawTriangle(insideA, outsideB, insideB, color);
+        
+        TriangleDrawing.DrawTriangle(outsideB, outsideC, insideB, color);
+        TriangleDrawing.DrawTriangle(insideB, outsideC, insideC, color);
+        
+        TriangleDrawing.DrawTriangle(outsideC, outsideD, insideC, color);
+        TriangleDrawing.DrawTriangle(insideC, outsideD, insideD, color);
+        
+        TriangleDrawing.DrawTriangle(outsideD, outsideA, insideD, color);
+        TriangleDrawing.DrawTriangle(insideD, outsideA, insideA, color);
+    }
+    
 }
