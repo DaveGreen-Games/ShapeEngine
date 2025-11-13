@@ -310,18 +310,21 @@ public static class RectDrawing
     /// </summary>
     /// <param name="topLeft">The top-left corner of the rectangle.</param>
     /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
+    /// <param name="lineInfo">The line drawing information used for drawing the outline.
+    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, LineDrawingInfo lineInfo)
     {
-        var a = topLeft;
-        var b = new Vector2(topLeft.X, bottomRight.Y);
-        var c = bottomRight;
-        var d = new Vector2(bottomRight.X, topLeft.Y);
-
-        SegmentDrawing.DrawSegment(a, b, lineInfo);
-        SegmentDrawing.DrawSegment(b, c, lineInfo);
-        SegmentDrawing.DrawSegment(c, d, lineInfo);
-        SegmentDrawing.DrawSegment(d, a, lineInfo);
+        var r = new Rect(topLeft, bottomRight).Rectangle;
+        Raylib.DrawRectangleLinesEx(r, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
+        // var a = topLeft;
+        // var b = new Vector2(topLeft.X, bottomRight.Y);
+        // var c = bottomRight;
+        // var d = new Vector2(bottomRight.X, topLeft.Y);
+        //
+        // SegmentDrawing.DrawSegment(a, b, lineInfo);
+        // SegmentDrawing.DrawSegment(b, c, lineInfo);
+        // SegmentDrawing.DrawSegment(c, d, lineInfo);
+        // SegmentDrawing.DrawSegment(d, a, lineInfo);
     }
 
     /// <summary>
@@ -384,13 +387,15 @@ public static class RectDrawing
     /// Draws the outline of a rectangle using the specified line drawing information.
     /// </summary>
     /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
+    /// <param name="lineInfo">The line drawing information used for drawing the outline.
+    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     public static void DrawLines(this Rect rect, LineDrawingInfo lineInfo)
     {
-        SegmentDrawing.DrawSegment(rect.TopLeft, rect.BottomLeft, lineInfo);
-        SegmentDrawing.DrawSegment(rect.BottomLeft, rect.BottomRight, lineInfo);
-        SegmentDrawing.DrawSegment(rect.BottomRight, rect.TopRight, lineInfo);
-        SegmentDrawing.DrawSegment(rect.TopRight, rect.TopLeft, lineInfo);
+        Raylib.DrawRectangleLinesEx(rect.Rectangle, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
+        // SegmentDrawing.DrawSegment(rect.TopLeft, rect.BottomLeft, lineInfo);
+        // SegmentDrawing.DrawSegment(rect.BottomLeft, rect.BottomRight, lineInfo);
+        // SegmentDrawing.DrawSegment(rect.BottomRight, rect.TopRight, lineInfo);
+        // SegmentDrawing.DrawSegment(rect.TopRight, rect.TopLeft, lineInfo);
     }
 
     /// <summary>
