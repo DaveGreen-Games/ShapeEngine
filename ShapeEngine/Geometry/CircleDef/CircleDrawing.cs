@@ -252,22 +252,24 @@ public static class CircleDrawing
     /// Draws the outline of a circle using the specified line drawing info, rotation, and number of sides.
     /// </summary>
     /// <param name="c">The circle to draw.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
+    /// <param name="lineInfo">The line drawing parameters for the drawing the circle outline.
+    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     /// <param name="rotDeg">The rotation of the circle in degrees.</param>
     /// <param name="sides">The number of sides used to approximate the circle.</param>
     public static void DrawLines(this Circle c, LineDrawingInfo lineInfo, float rotDeg, int sides)
     {
-        if (sides < 3) sides = 3;
-        var angleStep = (2f * ShapeMath.PI) / sides;
-        var rotRad = rotDeg * ShapeMath.DEGTORAD;
-        for (int i = 0; i < sides; i++)
-        {
-            var nextIndex = (i + 1) % sides;
-            var curP = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * i);
-            var nextP = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * nextIndex);
-
-            SegmentDrawing.DrawSegment(curP, nextP, lineInfo);
-        }
+        DrawCircleLinesInternal(c.Center, c.Radius, lineInfo.Thickness, rotDeg, sides, lineInfo.Color);
+        // if (sides < 3) sides = 3;
+        // var angleStep = (2f * ShapeMath.PI) / sides;
+        // var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        // for (int i = 0; i < sides; i++)
+        // {
+        //     var nextIndex = (i + 1) % sides;
+        //     var curP = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * i);
+        //     var nextP = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+        //
+        //     SegmentDrawing.DrawSegment(curP, nextP, lineInfo);
+        // }
     }
 
     /// <summary>
@@ -555,23 +557,13 @@ public static class CircleDrawing
     /// </summary>
     /// <param name="center">The center of the circle.</param>
     /// <param name="radius">The radius of the circle.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
+    /// <param name="lineInfo">The line drawing parameters for the drawing the circle outline.
+    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     /// <param name="rotDeg">The rotation of the circle in degrees.</param>
     /// <param name="sides">The number of sides used to approximate the circle.</param>
     public static void DrawCircleLines(Vector2 center, float radius, LineDrawingInfo lineInfo, float rotDeg, int sides)
     {
-        if (sides < 3) return;
-        var angleStep = (2f * ShapeMath.PI) / sides;
-        var rotRad = rotDeg * ShapeMath.DEGTORAD;
-
-        for (int i = 0; i < sides; i++)
-        {
-            var nextIndex = (i + 1) % sides;
-            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
-            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
-
-            SegmentDrawing.DrawSegment(curP, nextP, lineInfo);
-        }
+        DrawCircleLinesInternal(center, radius, lineInfo.Thickness, rotDeg, sides, lineInfo.Color);
     }
 
     /// <summary>
@@ -808,7 +800,7 @@ public static class CircleDrawing
     {
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        float anglePiece = endAngleDeg - startAngleRad;
+        float anglePiece = endAngleRad - startAngleRad;
         float angleStep = MathF.Abs(anglePiece) / sides;
         if (closed)
         {
@@ -908,7 +900,7 @@ public static class CircleDrawing
     {
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        float anglePiece = endAngleDeg - startAngleRad;
+        float anglePiece = endAngleRad - startAngleRad;
         float angleStep = MathF.Abs(anglePiece) / sides;
         if (closed)
         {
@@ -999,7 +991,7 @@ public static class CircleDrawing
             var start = p + up.Rotate(rotRad);
             var end = p + down.Rotate(rotRad);
             SegmentDrawing.DrawSegment(start, end, lineThickness, lineColorRgba);
-            cur.X += spacing;
+            cur.X += spacing; 
         }
     }
 
@@ -1026,5 +1018,46 @@ public static class CircleDrawing
     {
         float circumference = 2.0f * ShapeMath.PI * radius * (angleDeg / 360f);
         return (int)MathF.Max(circumference / maxLength, 1);
+    }
+
+    private static void DrawCircleLinesInternal(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba color)
+    {
+        if (sides < 3) sides = 3;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(rotRad + angleStep * i);
+            var nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(rotRad + angleStep * nextIndex);
+            var curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(rotRad + angleStep * i); 
+            var nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(rotRad + angleStep * nextIndex);
+            TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
+            TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
+        }
+    }
+
+    public static void DrawCircleSectorLinesInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, float lineThickness, ColorRgba color,  bool closed = true)
+    {
+        //TODO: implement internal version
+        
+        float startAngleRad = (startAngleDeg + rotOffsetDeg) * ShapeMath.DEGTORAD;
+        float endAngleRad = (endAngleDeg + rotOffsetDeg) * ShapeMath.DEGTORAD;
+        float anglePiece = endAngleRad - startAngleRad;
+        float angleStep = MathF.Abs(anglePiece) / sides;
+        if (closed)
+        {
+            var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
+            SegmentDrawing.DrawSegment(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2); //TODO: Replace with internal version
+
+            var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
+            SegmentDrawing.DrawSegment(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2); //TODO: Replace with internal version
+        }
+        for (var i = 0; i < sides; i++)
+        {
+            var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
+            var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, LineCapType.CappedExtended, 2); //TODO: Replace with internal version
+        }
     }
 }
