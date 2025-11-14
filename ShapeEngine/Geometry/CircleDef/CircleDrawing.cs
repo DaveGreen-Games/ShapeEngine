@@ -1039,25 +1039,176 @@ public static class CircleDrawing
 
     public static void DrawCircleSectorLinesInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, float lineThickness, ColorRgba color,  bool closed = true)
     {
-        //TODO: implement internal version
-        
         float startAngleRad = (startAngleDeg + rotOffsetDeg) * ShapeMath.DEGTORAD;
         float endAngleRad = (endAngleDeg + rotOffsetDeg) * ShapeMath.DEGTORAD;
-        float anglePiece = endAngleRad - startAngleRad;
-        float angleStep = MathF.Abs(anglePiece) / sides;
+        
+        var startDir = Vector2.UnitX.Rotate(startAngleRad);
+        var endDir = Vector2.UnitX.Rotate(endAngleRad);
+        
+        var start = center + startDir * radius;
+        var end = center + endDir * radius;
+        
+        var gapDistanceSquared = (start - end).LengthSquared();
+        if (gapDistanceSquared < lineThickness * lineThickness)
+        {
+            DrawCircleLines(center, radius, lineThickness, startAngleDeg + rotOffsetDeg, sides, color);
+            return;
+        }
+        
+        if(sides < 3) sides = 3;
+        float anglePieceRad = endAngleRad - startAngleRad;
+        float midAngle = startAngleRad + (endAngleRad - startAngleRad) * 0.5f;
+        var midDir = Vector2.UnitX.Rotate(midAngle);
+
+        float angleStepRad = anglePieceRad / sides;
+        
+        var startOuter = center + startDir * (radius + lineThickness);;
+        var startInner = center + startDir * (radius - lineThickness);
+        var endOuter = center + endDir * (radius + lineThickness);
+        var endInner = center + endDir * (radius - lineThickness);
+        
+        center.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.Red));
+        startOuter.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.IndianRed));
+        startInner.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.CornflowerBlue));
+        endOuter.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.Yellow));
+        endInner.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.MediumPurple));
+        
         if (closed)
         {
-            var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-            SegmentDrawing.DrawSegment(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2); //TODO: Replace with internal version
-
-            var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-            SegmentDrawing.DrawSegment(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2); //TODO: Replace with internal version
+            var startNextDir = Vector2.UnitX.Rotate(startAngleRad + angleStepRad);
+            var startNext = center + startNextDir * radius;
+            var startOffsetDir = (start - startNext).Normalize();
+            
+            var startOuterOffset = startOuter + startOffsetDir * lineThickness;
+            var startInnerOffset = startInner + startOffsetDir * lineThickness;
+            
+            var endPrevDir = Vector2.UnitX.Rotate(startAngleRad + angleStepRad * (sides - 1));
+            var endPrev = center + endPrevDir * radius;
+            var endOffsetDir = (end - endPrev).Normalize();
+            
+            var endOuterOffset = endOuter + endOffsetDir * lineThickness;
+            var endInnerOffset = endInner + endOffsetDir * lineThickness;
+            
+            startNext.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.Green));
+            endPrev.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.Orange));
+            startOuterOffset.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.IndianRed));
+            startInnerOffset.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.CornflowerBlue));
+            endOuterOffset.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.Yellow));
+            endInnerOffset.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.MediumPurple));
+            
+            TriangleDrawing.DrawTriangle(startOuter, startOuterOffset, startInner, color);
+            TriangleDrawing.DrawTriangle(startOuterOffset, startInnerOffset, startInner, color);
+            
+            TriangleDrawing.DrawTriangle(endInner, endInnerOffset, endOuter, color);
+            TriangleDrawing.DrawTriangle(endInnerOffset, endOuterOffset, endOuter, color);
+        
+            //TODO: Fix startNextInner / endPrevInner calculation -> need to find a point on the inner arc....
+            var startNextInner = center + startNextDir * (radius - lineThickness);
+            var endPrevInner = center + endPrevDir * (radius - lineThickness);
+            
+            float anglePieceRadAbs = MathF.Abs(anglePieceRad);
+            if (anglePieceRadAbs < float.Pi) // less than 180 degrees
+            {
+                var startLegDir = (start - center).Normalize();
+                var endLegDir = (end - center).Normalize();
+                var startLegNormalOutward = OutwardFacingNormalBasedOnMidDir(startLegDir);
+                var endLegNormalOutward = OutwardFacingNormalBasedOnMidDir(endLegDir);
+                var startLegOuter = center + startLegNormalOutward * lineThickness;
+                var endLegOuter = center + endLegNormalOutward * lineThickness;
+                var midOuter = center - midDir * lineThickness;
+                var midInner = center + midDir * lineThickness;
+                
+                startLegOuter.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.White));
+                endLegOuter.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.DarkGray));
+                midOuter.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.Pink));
+                midInner.Draw(lineThickness / 4f, new ColorRgba(System.Drawing.Color.DeepPink));
+                TriangleDrawing.DrawTriangle(startInnerOffset, center, startInner, color);
+                TriangleDrawing.DrawTriangle(startInnerOffset, startLegOuter, center, color);
+                
+                TriangleDrawing.DrawTriangle(center, endInnerOffset, endInner, color);
+                TriangleDrawing.DrawTriangle(center, endLegOuter, endInnerOffset, color);
+                
+                TriangleDrawing.DrawTriangle(center, midOuter, endLegOuter, color);
+                TriangleDrawing.DrawTriangle(startLegOuter, midOuter, center, color);
+                
+                TriangleDrawing.DrawTriangle(startInner, center, midInner, color);
+                TriangleDrawing.DrawTriangle(midInner, center, endInner, color);
+                
+                //!!!  startNextInner / endPrevInner are currently incorrect
+                
+                // TriangleDrawing.DrawTriangle(startInner, midInner, startNextInner, color);
+                // TriangleDrawing.DrawTriangle(midInner, endInner, endPrevInner, color);
+            }
+            else if (anglePieceRadAbs > float.Pi) // greater than 180 degrees
+            {
+                //TODO: fix these triangles
+                
+                // var startLegDir = (start - center).Normalize();
+                // var endLegDir = (end - center).Normalize();
+                // var startLegNormalInward = InwardFacingNormalBasedOnMidDir(startLegDir);
+                // var endLegNormalInward = InwardFacingNormalBasedOnMidDir(endLegDir);
+                // var startLegInner = center + startLegNormalInward * lineThickness;
+                // var endLegInner = center + endLegNormalInward * lineThickness;
+                // var midInner = center + midDir * lineThickness;
+                // var midOuter = center - midDir * lineThickness;
+                // TriangleDrawing.DrawTriangle(startInner, center, startNextInner, color);
+                // TriangleDrawing.DrawTriangle(startNextInner, center, startLegInner, color);
+                // TriangleDrawing.DrawTriangle(startLegInner, center, midInner, color);
+                // TriangleDrawing.DrawTriangle(midInner, center, endLegInner, color);
+                // TriangleDrawing.DrawTriangle(center, endInner, endLegInner, color);
+                // TriangleDrawing.DrawTriangle(endLegInner, endInner, endPrevInner, color);
+                // TriangleDrawing.DrawTriangle(startInner, startInnerOffset, midOuter, color);
+                // TriangleDrawing.DrawTriangle(startInner, midOuter, center, color);
+                // TriangleDrawing.DrawTriangle(midOuter, endInnerOffset, endInner, color);
+                // TriangleDrawing.DrawTriangle(midOuter, endInner, center, color);
+            }
+            else // 180 degrees
+            {
+                //TODO: Test if correct
+                //!!!  startNextInner / endPrevInner are currently incorrect
+                TriangleDrawing.DrawTriangle(startInnerOffset, startNextInner, endInnerOffset, color);
+                TriangleDrawing.DrawTriangle(endInnerOffset, startNextInner, endPrevInner, color);
+            }
         }
         for (var i = 0; i < sides; i++)
         {
-            var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
-            var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, LineCapType.CappedExtended, 2); //TODO: Replace with internal version
+            if (i == 0)
+            {
+                var nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad);//index 1
+                var nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad  + angleStepRad);//index 1
+                TriangleDrawing.DrawTriangle(startOuter, startInner, nextOuter, color);
+                TriangleDrawing.DrawTriangle(startInner, nextInner, nextOuter, color);
+            }
+            else if (i == sides - 1)
+            {
+                var curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i);
+                var curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i);
+                TriangleDrawing.DrawTriangle(curOuter, curInner, endOuter, color);
+                TriangleDrawing.DrawTriangle(curInner, endInner, endOuter, color);
+            }
+            else
+            {
+                int nextIndex = i + 1;
+                var curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i);
+                var curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i); 
+                var nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad * nextIndex);
+                var nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad  + angleStepRad * nextIndex);
+                TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
+                TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
+            }
+        }
+
+        return;
+        
+        Vector2 OutwardFacingNormalBasedOnMidDir(Vector2 v)
+        {
+            var n = new Vector2(-v.Y, v.X);
+            return Vector2.Dot(n, midDir) < 0f ? n : -n;
+        }
+        Vector2 InwardFacingNormalBasedOnMidDir(Vector2 v)
+        {
+            var n = new Vector2(-v.Y, v.X);
+            return Vector2.Dot(n, midDir) < 0f ? -n : n;
         }
     }
 }
