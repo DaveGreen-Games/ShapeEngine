@@ -649,7 +649,76 @@ public static class ShapeMath
 
 
     #endregion
-    
+
+    #region Trigonometry
+
+    private static float result, sign, numerator, deminator;
+
+    ///<summary>
+    /// Calculates the cosine of an angle in radians using a Taylor series expansion.
+    /// </summary>
+    /// <param name="angleRad">The angle in radians.</param>
+    /// 
+
+    public static float Cos(float angleRad)
+    {
+        result = 0;
+        sign = 1;
+        numerator = 1;
+        deminator = 1;
+
+        
+
+
+        for (int i = 0; i < 10; i++)
+        {
+            result += sign * (numerator / deminator);
+
+            numerator *= angleRad * angleRad;
+            deminator *= (2 * i + 1) * (2 * i + 2);
+            sign *= -1;
+            
+
+        }
+
+        return result;
+    }
+
+    ///<summary>
+    /// Calculates the Sinus of an angle in radians using a Taylor series expansion.
+    /// </summary>
+    /// <param name="angleRad">The angle in radians.</param>
+
+    public static float Sin(float angleRad)
+    {
+        result = 0;
+        sign = 1;
+        numerator = angleRad;
+        deminator = 1;
+        for (int i = 0; i < 10; i++)
+        {
+            result += sign * (numerator / deminator);
+            numerator *= angleRad * angleRad;
+            deminator *= (2 * i + 2) * (2 * i + 3);
+            sign *= -1;
+        }
+        return result;
+    }
+    /// <summary>
+    /// Calculates the tangent of the specified angle.
+    /// </summary>
+    /// <param name="angleRad">The angle, in radians, for which to calculate the tangent.</param>
+    /// <returns>The tangent of the specified angle.</returns>
+    public static float Tan(float angleRad)
+    {
+        return Sin(angleRad) / Cos(angleRad);
+    }
+
+    //TODO: Other Trigonometric functions should also be added
+
+
+
+    #endregion
     /// <summary>
     /// Determines whether a blinking effect should be active at the current timer value and interval.
     /// </summary>
