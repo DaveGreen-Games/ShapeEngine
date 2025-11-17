@@ -14,6 +14,43 @@ namespace ShapeEngine.Geometry.CircleDef;
 /// </remarks>
 public static class RingDrawing
 {
+    //TODO: Look at all line drawing functions and how to optimize without using cap types that are expensive.
+    
+    #region Draw Ring
+    /// <summary>
+    /// Draws a filled ring shape.
+    /// </summary>
+    /// <param name="center">The center position of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle.</param>
+    /// <param name="outerRadius">The radius of the outer circle.</param>
+    /// <param name="color">The color of the ring.</param>
+    /// <param name="sideLength">The length of each side segment. Default is 8.</param>
+    /// <remarks>
+    /// This draws a complete ring (360 degrees).
+    /// </remarks>
+    public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, ColorRgba color, float sideLength = 8f)
+    {
+        DrawSectorRing(center, innerRadius, outerRadius, 0, 360, color, sideLength);
+    }
+
+    /// <summary>
+    /// Draws a filled ring shape with a specified number of sides.
+    /// </summary>
+    /// <param name="center">The center position of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle.</param>
+    /// <param name="outerRadius">The radius of the outer circle.</param>
+    /// <param name="sides">Number of sides for the ring.</param>
+    /// <param name="color">The color of the ring.</param>
+    /// <remarks>
+    /// This draws a complete ring (360 degrees).
+    /// </remarks>
+    public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, int sides, ColorRgba color)
+    {
+        DrawSectorRing(center, innerRadius, outerRadius, 0, 360, sides, color);
+    }
+    #endregion
+    
+    #region Draw Ring Lines
     /// <summary>
     /// Draws the outlines of a ring by drawing the inner and outer circles as lines.
     /// </summary>
@@ -61,24 +98,7 @@ public static class RingDrawing
         CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, sideLength);
         CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, sideLength);
     }
-
-    /// <summary>
-    /// Draws a percentage of the outlines of a ring with separate rotation for inner and outer circles.
-    /// </summary>
-    /// <param name="center">The center position of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner circle.</param>
-    /// <param name="outerRadius">The radius of the outer circle.</param>
-    /// <param name="f">The percentage of the ring to draw (0 to 1).</param>
-    /// <param name="innerRotDeg">Rotation of the inner circle in degrees.</param>
-    /// <param name="outerRotDeg">Rotation of the outer circle in degrees.</param>
-    /// <param name="lineInfo">The line drawing style information.</param>
-    /// <param name="sideLength">The length of each side segment. Default is 8.</param>
-    public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, LineDrawingInfo lineInfo, float sideLength = 8f)
-    {
-        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, sideLength);
-        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, sideLength);
-    }
-
+   
     /// <summary>
     /// Draws the outlines of a ring with separate rotation and side length for inner and outer circles.
     /// </summary>
@@ -113,25 +133,6 @@ public static class RingDrawing
         CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSideLength);
         CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSideLength);
     }
-
-    /// <summary>
-    /// Draws a percentage of the outlines of a ring with separate rotation and side length for inner and outer circles.
-    /// </summary>
-    /// <param name="center">The center position of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner circle.</param>
-    /// <param name="outerRadius">The radius of the outer circle.</param>
-    /// <param name="f">The percentage of the ring to draw (0 to 1).</param>
-    /// <param name="innerRotDeg">Rotation of the inner circle in degrees.</param>
-    /// <param name="outerRotDeg">Rotation of the outer circle in degrees.</param>
-    /// <param name="innerSideLength">Side length for the inner circle.</param>
-    /// <param name="outerSideLength">Side length for the outer circle.</param>
-    /// <param name="lineInfo">The line drawing style information.</param>
-    public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, float innerSideLength, float outerSideLength, LineDrawingInfo lineInfo)
-    {
-        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, innerSideLength);
-        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, outerSideLength);
-    }
-
     /// <summary>
     /// Draws a percentage of the outlines of a ring with separate rotation, side length, and line info for inner and outer circles.
     /// </summary>
@@ -201,7 +202,88 @@ public static class RingDrawing
         CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSides);
         CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSides);
     }
+    /// <summary>
+    /// Draws the outlines of a ring with a specified number of sides for both circles.
+    /// </summary>
+    /// <param name="center">The center position of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle.</param>
+    /// <param name="outerRadius">The radius of the outer circle.</param>
+    /// <param name="sides">Number of sides for both circles.</param>
+    /// <param name="lineInfo">The line drawing style information.</param>
+    public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int sides, LineDrawingInfo lineInfo)
+    {
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, sides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, sides);
+    }
 
+    /// <summary>
+    /// Draws the outlines of a ring with separate side counts for inner and outer circles.
+    /// </summary>
+    /// <param name="center">The center position of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle.</param>
+    /// <param name="outerRadius">The radius of the outer circle.</param>
+    /// <param name="innerSides">Number of sides for the inner circle.</param>
+    /// <param name="outerSides">Number of sides for the outer circle.</param>
+    /// <param name="lineInfo">The line drawing style information.</param>
+    public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int innerSides, int outerSides, LineDrawingInfo lineInfo)
+    {
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerSides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerSides);
+    }
+
+    /// <summary>
+    /// Draws the outlines of a ring with separate side counts and line info for inner and outer circles.
+    /// </summary>
+    /// <param name="center">The center position of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle.</param>
+    /// <param name="outerRadius">The radius of the outer circle.</param>
+    /// <param name="innerSides">Number of sides for the inner circle.</param>
+    /// <param name="outerSides">Number of sides for the outer circle.</param>
+    /// <param name="innerLineInfo">Line drawing info for the inner circle.</param>
+    /// <param name="outerLineInfo">Line drawing info for the outer circle.</param>
+    public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int innerSides, int outerSides, LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo)
+    {
+        CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerSides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerSides);
+    }
+    #endregion
+    
+    #region Draw Ring Lines Percentage
+    /// <summary>
+    /// Draws a percentage of the outlines of a ring with separate rotation for inner and outer circles.
+    /// </summary>
+    /// <param name="center">The center position of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle.</param>
+    /// <param name="outerRadius">The radius of the outer circle.</param>
+    /// <param name="f">The percentage of the ring to draw (0 to 1).</param>
+    /// <param name="innerRotDeg">Rotation of the inner circle in degrees.</param>
+    /// <param name="outerRotDeg">Rotation of the outer circle in degrees.</param>
+    /// <param name="lineInfo">The line drawing style information.</param>
+    /// <param name="sideLength">The length of each side segment. Default is 8.</param>
+    public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, LineDrawingInfo lineInfo, float sideLength = 8f)
+    {
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, sideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, sideLength);
+    }
+    
+    /// <summary>
+    /// Draws a percentage of the outlines of a ring with separate rotation and side length for inner and outer circles.
+    /// </summary>
+    /// <param name="center">The center position of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle.</param>
+    /// <param name="outerRadius">The radius of the outer circle.</param>
+    /// <param name="f">The percentage of the ring to draw (0 to 1).</param>
+    /// <param name="innerRotDeg">Rotation of the inner circle in degrees.</param>
+    /// <param name="outerRotDeg">Rotation of the outer circle in degrees.</param>
+    /// <param name="innerSideLength">Side length for the inner circle.</param>
+    /// <param name="outerSideLength">Side length for the outer circle.</param>
+    /// <param name="lineInfo">The line drawing style information.</param>
+    public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, float innerSideLength, float outerSideLength, LineDrawingInfo lineInfo)
+    {
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, innerSideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, outerSideLength);
+    }
+    
     /// <summary>
     /// Draws a percentage of the outlines of a ring with separate side counts and rotation for inner and outer circles.
     /// </summary>
@@ -238,36 +320,7 @@ public static class RingDrawing
         CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, innerLineInfo, innerRotDeg, innerSides);
         CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, outerLineInfo, outerRotDeg, outerSides);
     }
-
-    /// <summary>
-    /// Draws the outlines of a ring with a specified number of sides for both circles.
-    /// </summary>
-    /// <param name="center">The center position of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner circle.</param>
-    /// <param name="outerRadius">The radius of the outer circle.</param>
-    /// <param name="sides">Number of sides for both circles.</param>
-    /// <param name="lineInfo">The line drawing style information.</param>
-    public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int sides, LineDrawingInfo lineInfo)
-    {
-        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, sides);
-        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, sides);
-    }
-
-    /// <summary>
-    /// Draws the outlines of a ring with separate side counts for inner and outer circles.
-    /// </summary>
-    /// <param name="center">The center position of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner circle.</param>
-    /// <param name="outerRadius">The radius of the outer circle.</param>
-    /// <param name="innerSides">Number of sides for the inner circle.</param>
-    /// <param name="outerSides">Number of sides for the outer circle.</param>
-    /// <param name="lineInfo">The line drawing style information.</param>
-    public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int innerSides, int outerSides, LineDrawingInfo lineInfo)
-    {
-        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerSides);
-        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerSides);
-    }
-
+    
     /// <summary>
     /// Draws a percentage of the outlines of a ring with separate side counts for inner and outer circles.
     /// </summary>
@@ -283,55 +336,9 @@ public static class RingDrawing
         CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerSides);
         CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerSides);
     }
+    #endregion 
 
-    /// <summary>
-    /// Draws the outlines of a ring with separate side counts and line info for inner and outer circles.
-    /// </summary>
-    /// <param name="center">The center position of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner circle.</param>
-    /// <param name="outerRadius">The radius of the outer circle.</param>
-    /// <param name="innerSides">Number of sides for the inner circle.</param>
-    /// <param name="outerSides">Number of sides for the outer circle.</param>
-    /// <param name="innerLineInfo">Line drawing info for the inner circle.</param>
-    /// <param name="outerLineInfo">Line drawing info for the outer circle.</param>
-    public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int innerSides, int outerSides, LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo)
-    {
-        CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerSides);
-        CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerSides);
-    }
-
-    /// <summary>
-    /// Draws a filled ring shape.
-    /// </summary>
-    /// <param name="center">The center position of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner circle.</param>
-    /// <param name="outerRadius">The radius of the outer circle.</param>
-    /// <param name="color">The color of the ring.</param>
-    /// <param name="sideLength">The length of each side segment. Default is 8.</param>
-    /// <remarks>
-    /// This draws a complete ring (360 degrees).
-    /// </remarks>
-    public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, ColorRgba color, float sideLength = 8f)
-    {
-        DrawSectorRing(center, innerRadius, outerRadius, 0, 360, color, sideLength);
-    }
-
-    /// <summary>
-    /// Draws a filled ring shape with a specified number of sides.
-    /// </summary>
-    /// <param name="center">The center position of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner circle.</param>
-    /// <param name="outerRadius">The radius of the outer circle.</param>
-    /// <param name="sides">Number of sides for the ring.</param>
-    /// <param name="color">The color of the ring.</param>
-    /// <remarks>
-    /// This draws a complete ring (360 degrees).
-    /// </remarks>
-    public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, int sides, ColorRgba color)
-    {
-        DrawSectorRing(center, innerRadius, outerRadius, 0, 360, sides, color);
-    }
-    
+    #region Draw Ring Lines Scaled
     /// <summary>
     /// Draws a ring where each side can be scaled towards the origin of the side.
     /// </summary>
@@ -624,7 +631,9 @@ public static class RingDrawing
             
         }
     }
-
+    #endregion
+    
+    #region Draw Sector Ring Lines
     /// <summary>
     /// Draws the outlines of a sector ring (arc-shaped ring) with specified line thickness and color.
     /// </summary>
@@ -644,6 +653,7 @@ public static class RingDrawing
         CircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
         CircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
 
+        //TODO: Fix
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
         var innerStart = center + (ShapeVec.Right() * innerRadius).Rotate(startAngleRad);
@@ -687,6 +697,7 @@ public static class RingDrawing
         CircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
         CircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
 
+        //TODO: Fix
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
         var innerStart = center + (ShapeVec.Right() * innerRadius - new Vector2(lineInfo.Thickness / 2, 0)).Rotate(startAngleRad);
@@ -713,7 +724,9 @@ public static class RingDrawing
     {
         DrawSectorRingLines(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineInfo, sideLength);
     }
-
+    #endregion
+    
+    #region Draw Sector Ring
     /// <summary>
     /// Draws a filled sector ring (arc-shaped ring) with a specified color.
     /// </summary>
@@ -777,5 +790,5 @@ public static class RingDrawing
     {
         DrawSectorRing(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, color);
     }
-
+    #endregion
 }
