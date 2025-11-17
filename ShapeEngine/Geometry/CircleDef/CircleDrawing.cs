@@ -614,43 +614,44 @@ public static class CircleDrawing
     /// </remarks>
     public static void DrawCircleLinesPercentage(Vector2 center, float radius, float f, float lineThickness, float rotDeg, int sides, ColorRgba color, LineCapType lineCapType, int capPoints)
     {
-        if (sides < 3 || f == 0 || radius <= 0) return;
-
-        float angleStep; // = (2f * ShapeMath.PI) / sides;
-        float percentage; // = ShapeMath.Clamp(negative ? f * -1 : f, 0f, 1f);
-        if (f < 0)
-        {
-            angleStep = (-2f * ShapeMath.PI) / sides;
-            percentage = ShapeMath.Clamp(-f, 0f, 1f);
-        }
-        else
-        {
-            angleStep = (2f * ShapeMath.PI) / sides;
-            percentage = ShapeMath.Clamp(f, 0f, 1f);
-        }
-
-        var rotRad = rotDeg * ShapeMath.DEGTORAD;
-        var perimeter = Circle.GetCircumference(radius);
-        var sideLength = perimeter / sides;
-        var perimeterToDraw = perimeter * percentage;
-        for (int i = 0; i < sides; i++)
-        {
-            var nextIndex = (i + 1) % sides;
-            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
-            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
-
-            if (sideLength > perimeterToDraw)
-            {
-                nextP = curP.Lerp(nextP, perimeterToDraw / sideLength);
-                SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
-                return;
-            }
-            else
-            {
-                SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
-                perimeterToDraw -= sideLength;
-            }
-        }
+        DrawCircleLinesPercentageInternal(center, radius, f, lineThickness, rotDeg, sides, color, lineCapType, capPoints);
+        // if (sides < 3 || f == 0 || radius <= 0) return;
+        //
+        // float angleStep;
+        // float percentage;
+        // if (f < 0)
+        // {
+        //     angleStep = (-2f * ShapeMath.PI) / sides;
+        //     percentage = ShapeMath.Clamp(-f, 0f, 1f);
+        // }
+        // else
+        // {
+        //     angleStep = (2f * ShapeMath.PI) / sides;
+        //     percentage = ShapeMath.Clamp(f, 0f, 1f);
+        // }
+        //
+        // var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        // var perimeter = Circle.GetCircumference(radius);
+        // var sideLength = perimeter / sides;
+        // var perimeterToDraw = perimeter * percentage;
+        // for (int i = 0; i < sides; i++)
+        // {
+        //     var nextIndex = (i + 1) % sides;
+        //     var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+        //     var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+        //
+        //     if (sideLength > perimeterToDraw)
+        //     {
+        //         nextP = curP.Lerp(nextP, perimeterToDraw / sideLength);
+        //         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
+        //         return;
+        //     }
+        //     else
+        //     {
+        //         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
+        //         perimeterToDraw -= sideLength;
+        //     }
+        // }
     }
     /// <summary>
     /// Draws a partial outline of a circle at the specified center and radius based on the given percentage and line drawing info.
@@ -1182,7 +1183,149 @@ public static class CircleDrawing
     private static void DrawCircleSectorLinesClosedInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, 
         int sides, float lineThickness, ColorRgba color)
     {
+        //TODO: Implement using polygon version of outline drawing
+    }
+
+    private static void DrawCircleLinesPercentageInternal(Vector2 center, float radius, float f, float lineThickness, float rotDeg, int sides, ColorRgba color,
+        LineCapType lineCapType, int capPoints)
+    {
+        if (sides < 3 || f == 0 || radius <= 0) return;
+
+        float absF = MathF.Abs(f);
+        if (absF >= 1f)
+        {
+            DrawCircleLinesInternal(center, radius, lineThickness, rotDeg, sides, color);
+            return;
+        }
         
+        if (absF > 0.5f && (lineCapType == LineCapType.Extended || (lineCapType == LineCapType.CappedExtended && capPoints > 0)))
+        {
+            float angleSegmentRad = float.Pi * 2f * absF;
+            float angleSegmentRadDif = float.Pi * 2f - angleSegmentRad;
+            float arcLength = Circle.ArcLengthFromAngle(angleSegmentRadDif, radius);
+            if (arcLength < lineThickness * 2)
+            {
+                DrawCircleLinesInternal(center, radius, lineThickness, rotDeg, sides, color);
+                return;
+            }
+        }
+        
+        float angleStep = (2f * ShapeMath.PI * f) / sides;
+        float percentage = f < 0 ? ShapeMath.Clamp(-f, 0f, 1f) : ShapeMath.Clamp(f, 0f, 1f);
+
+        float rotRad = rotDeg * ShapeMath.DEGTORAD;
+        float perimeter = Circle.GetCircumference(radius);
+        float perimeterToDraw = perimeter * percentage;
+        float sideLength = perimeterToDraw / sides;
+        
+        for (var i = 0; i < sides; i++)
+        {
+            int nextIndex = i + 1;
+            float curAngleStep = angleStep;
+            if (sideLength > perimeterToDraw)//last segment
+            {
+                curAngleStep = angleStep * (perimeterToDraw / sideLength);
+                // Console.WriteLine($"SideLength {sideLength}, Perimeter Left {perimeterToDraw}, Angle Step {angleStep} * Factor {perimeterToDraw / sideLength} = {curAngleStep}");
+                perimeterToDraw = 0;
+            }
+            else perimeterToDraw -= sideLength;
+
+            float curAngleRad = rotRad + angleStep * i;
+            float nextAngleRad = rotRad + curAngleStep * nextIndex;
+            
+            //Draw Caps
+            if ((i == 0 || i == sides - 1) && lineCapType != LineCapType.None && (capPoints > 0 || lineCapType == LineCapType.Extended))
+            {
+                Vector2 capStart, capStartInside, capStartOutside;
+                Vector2 capEnd, capEndInside, capEndOutside;
+                
+                if (i == 0) //first segment -> draw start cap
+                {
+                    capStart = center + new Vector2(radius, 0f).Rotate(curAngleRad);
+                    capStartInside = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad);
+                    capStartOutside = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
+                    var arcAngle = Circle.ArcLengthToAngle(lineThickness, radius, true);
+                    capEnd = center + new Vector2(radius, 0f).Rotate(curAngleRad - arcAngle);
+                    capEndInside = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad - arcAngle);
+                    capEndOutside = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad - arcAngle);
+                    
+                }
+                else //last segment -> draw end cap
+                {
+                    capStart = center + new Vector2(radius, 0f).Rotate(nextAngleRad);
+                    capStartInside = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
+                    capStartOutside = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
+                    var arcAngle = Circle.ArcLengthToAngle(lineThickness, radius, true);
+                    capEnd = center + new Vector2(radius, 0f).Rotate(nextAngleRad + arcAngle);
+                    capEndInside = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad + arcAngle);
+                    capEndOutside = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad + arcAngle);
+                }
+                
+                // var capDir = (capEnd - capStart).Normalize();
+                // var pR = new Vector2(-capDir.Y, capDir.X);//perpendicular right
+                // var pL = new Vector2(capDir.Y, -capDir.X);//perpendicular left
+                
+                // var capStartLeft = capStart + pL * lineThickness;
+                // var capStartRight = capStart + pR * lineThickness;
+            
+                if (lineCapType == LineCapType.Extended)
+                {
+                    Raylib.DrawTriangle(capStartInside, capStartOutside,capEndInside, color.ToRayColor());
+                    Raylib.DrawTriangle(capStartInside, capEndInside, capEndOutside, color.ToRayColor());
+                }
+                else
+                {
+                    //TODO: Add again
+                    
+                    // if (lineCapType == LineCapType.Capped)//shrink inwards so that the line with cap is the same length
+                    // {
+                    //     capEnd = capStart;
+                    //     capStart -= capDir * lineThickness;
+                    //     capStartLeft -= capDir * lineThickness;
+                    //     capStartRight -= capDir * lineThickness;
+                    //
+                    // }
+                
+                    //Draw Cap
+                    if (capPoints == 1)
+                    {
+                        //TODO: Fix triangle winding when f is negative
+                        if(f > 0) Raylib.DrawTriangle(capStartInside, capStartOutside, capEnd, color.ToRayColor());
+                        else Raylib.DrawTriangle(capStartOutside,capEnd, capStartInside, color.ToRayColor());
+                        // Raylib.DrawTriangle(capEnd, capStart, f < 0 ? capStartOutside : capStartInside, color.ToRayColor());
+                    }
+                    else
+                    {
+                        var curStart = f < 0 ? capStartInside : capStartOutside;
+                        float capAngleStep = (180f / (capPoints + 1)) * ShapeMath.DEGTORAD;
+                        var dir = (curStart - capStart).Normalize();
+                        for (var j = 1; j <= capPoints; j++)
+                        {
+                            var pStart = capStart + dir.Rotate(-capAngleStep * j) * lineThickness;
+                            Raylib.DrawTriangle(pStart, capStart, curStart, color.ToRayColor());
+                            curStart = pStart;
+                        }
+                        Raylib.DrawTriangle(curStart, f < 0 ? capStartOutside : capStartInside, capStart, color.ToRayColor());
+                    }
+                }
+            }
+
+            //TODO: Clean up
+            var curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
+            var nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
+            var curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad); 
+            var nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
+            if (f < 0)
+            {
+                (curOuter, curInner) = (curInner, curOuter);
+                (nextOuter, nextInner) = (nextInner, nextOuter);
+            }
+            TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
+            TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
+            
+            
+            
+        }
     }
     #endregion
     
