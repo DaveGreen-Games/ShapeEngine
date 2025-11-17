@@ -32,7 +32,22 @@ public readonly struct ScreenInfo
             return pos / size;
         }
     }
-
+    /// <summary>
+    /// Returns the mouse position normalized and centered around the area's midpoint.
+    /// Values are in range approximately -1..1 where (0,0) is the center of <see cref="Area"/>.
+    /// </summary>
+    /// <remarks>
+    /// This divides the mouse coordinates by half the area's size. If the area's width or
+    /// height is zero this will produce Infinity/NaN values; ensure <see cref="Area"/> has a valid size.
+    /// </remarks>
+    public Vector2 RelativeMousePositionCentered
+    {
+        get
+        {
+            var size = Area.Size.ToVector2() / 2;
+            return MousePos / size;
+        }
+    }
     /// <summary>
     /// Initializes a new instance of the <see cref="ScreenInfo"/> struct.
     /// </summary>
