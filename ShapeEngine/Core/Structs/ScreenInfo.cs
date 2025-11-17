@@ -23,7 +23,15 @@ public readonly struct ScreenInfo
     /// 0,0 is the top-left corner of the area
     /// 1, 1 is the bottom right corner of the area
     /// </summary>
-    public Vector2 RelativeMousePosition => MousePos / Area.Size.ToVector2();
+    public Vector2 RelativeMousePosition
+    {
+        get
+        {
+            var size = Area.Size.ToVector2();
+            var pos = MousePos + size / 2;
+            return pos / size;
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScreenInfo"/> struct.
