@@ -2,6 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
@@ -14,8 +15,6 @@ namespace ShapeEngine.Geometry.CircleDef;
 /// </remarks>
 public static class RingDrawing
 {
-    //TODO: Look at all line drawing functions and how to optimize without using cap types that are expensive.
-    
     #region Draw Ring
     /// <summary>
     /// Draws a filled ring shape.
@@ -650,19 +649,79 @@ public static class RingDrawing
     /// </remarks>
     public static void DrawSectorRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
+        if (innerRadius <= 0 && outerRadius <= 0) return;
+        if (innerRadius <= 0)
+        {
+            CircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
+            return;
+        }
+
+        if (outerRadius <= 0)
+        {
+            CircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
+            return;
+        }
+        float angleDifDeg = endAngleDeg - startAngleDeg;
+        float angleDifDegAbs = MathF.Abs(angleDifDeg);
+        if (angleDifDegAbs < 0.0001f) return;
+        
+        if (angleDifDegAbs >= 360f)
+        {
+            CircleDrawing.DrawCircleLines(center, innerRadius, lineThickness, color, startAngleDeg, sideLength);
+            CircleDrawing.DrawCircleLines(center, outerRadius, lineThickness, color, startAngleDeg, sideLength);
+            return;
+        }
+        
+        float arcLength = Circle.ArcLengthFromAngle((360 - angleDifDegAbs) * ShapeMath.DEGTORAD, innerRadius - lineThickness);
+        if (arcLength < lineThickness * 3)
+        {
+            CircleDrawing.DrawCircleLines(center, innerRadius, lineThickness, color, startAngleDeg, sideLength);
+            CircleDrawing.DrawCircleLines(center, outerRadius, lineThickness, color, startAngleDeg, sideLength);
+            return;
+        }
+        
+        
         CircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
         CircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
 
-        //TODO: Fix
+        
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        var innerStart = center + (ShapeVec.Right() * innerRadius).Rotate(startAngleRad);
-        var outerStart = center + (ShapeVec.Right() * outerRadius).Rotate(startAngleRad);
-        SegmentDrawing.DrawSegment(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 4);
+        var startDir = ShapeVec.Right().Rotate(startAngleRad);
+        var startPerp = angleDifDeg < 0 ? startDir.GetPerpendicularRight() : startDir.GetPerpendicularLeft();
+        var innerStart = center + startDir * (innerRadius - lineThickness);
+        var outerStart = center + startDir * (outerRadius + lineThickness);
+        var innerStartExtended = innerStart + startPerp * lineThickness * 2;
+        var outerStartExtended = outerStart + startPerp * lineThickness * 2;
+        if (angleDifDeg < 0)
+        {
+            TriangleDrawing.DrawTriangle(outerStart, innerStart, innerStartExtended, color);
+            TriangleDrawing.DrawTriangle(outerStart, innerStartExtended, outerStartExtended, color);
+        }
+        else
+        {
+            TriangleDrawing.DrawTriangle(innerStart, outerStart, innerStartExtended, color);
+            TriangleDrawing.DrawTriangle(innerStartExtended, outerStart, outerStartExtended, color);
+        }
+        
 
-        var innerEnd = center + (ShapeVec.Right() * innerRadius).Rotate(endAngleRad);
-        var outerEnd = center + (ShapeVec.Right() * outerRadius).Rotate(endAngleRad);
-        SegmentDrawing.DrawSegment(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 4);
+        var endDir = ShapeVec.Right().Rotate(endAngleRad);
+        var endPerp = angleDifDeg < 0 ? endDir.GetPerpendicularLeft() : endDir.GetPerpendicularRight();
+        var innerEnd = center + endDir * (innerRadius - lineThickness);
+        var outerEnd = center + endDir * (outerRadius + lineThickness);
+        var innerEndExtended = innerEnd + endPerp * lineThickness * 2;
+        var outerEndExtended = outerEnd + endPerp * lineThickness * 2;
+        if (angleDifDeg < 0)
+        {
+            TriangleDrawing.DrawTriangle(outerEndExtended, innerEnd, outerEnd, color);
+            TriangleDrawing.DrawTriangle(outerEndExtended, innerEndExtended, innerEnd, color);
+        }
+        else
+        {
+            TriangleDrawing.DrawTriangle(innerEnd, outerEndExtended, outerEnd, color);
+            TriangleDrawing.DrawTriangle(innerEndExtended, outerEndExtended, innerEnd, color);
+        }
+        
     }
 
     /// <summary>
@@ -694,19 +753,7 @@ public static class RingDrawing
     /// <param name="sideLength">The length of each side segment. Default is 8.</param>
     public static void DrawSectorRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, LineDrawingInfo lineInfo, float sideLength = 8f)
     {
-        CircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
-        CircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
-
-        //TODO: Fix
-        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
-        float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        var innerStart = center + (ShapeVec.Right() * innerRadius - new Vector2(lineInfo.Thickness / 2, 0)).Rotate(startAngleRad);
-        var outerStart = center + (ShapeVec.Right() * outerRadius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(startAngleRad);
-        SegmentDrawing.DrawSegment(innerStart, outerStart, lineInfo);
-
-        var innerEnd = center + (ShapeVec.Right() * innerRadius - new Vector2(lineInfo.Thickness / 2, 0)).Rotate(endAngleRad);
-        var outerEnd = center + (ShapeVec.Right() * outerRadius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(endAngleRad);
-        SegmentDrawing.DrawSegment(innerEnd, outerEnd, lineInfo);
+        DrawSectorRingLines(center, innerRadius, outerRadius, startAngleDeg, endAngleDeg, lineInfo.Thickness, lineInfo.Color, sideLength);
     }
 
     /// <summary>
