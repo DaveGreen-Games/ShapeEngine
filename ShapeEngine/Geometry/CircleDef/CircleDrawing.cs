@@ -256,7 +256,7 @@ public static class CircleDrawing
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="sides">The number of sides used to approximate the circle.</param>
     /// <param name="color">The color of the outline.</param>
-    public static void DrawLines(this Circle c, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness * 2, color.ToRayColor());
+    public static void DrawLines(this Circle c, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, color.ToRayColor());
 
     /// <summary>
     /// Draws the outline of a circle using the specified line drawing info and number of sides.
@@ -298,7 +298,7 @@ public static class CircleDrawing
     /// <param name="rotDeg">The rotation of the circle in degrees.</param>
     /// <param name="sides">The number of sides used to approximate the circle.</param>
     /// <param name="color">The color of the outline.</param>
-    public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, rotDeg, lineThickness * 2, color.ToRayColor());
+    public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, rotDeg, lineThickness * 2, color.ToRayColor());
 
     /// <summary>
     /// Draws the outline of a circle using the specified line thickness and color, automatically determining the number of sides based on side length.
@@ -310,7 +310,7 @@ public static class CircleDrawing
     public static void DrawLines(this Circle c, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
         int sides = GetCircleSideCount(c.Radius, sideLength);
-        Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness * 2, color.ToRayColor());
+        Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, color.ToRayColor());
     }
 
     /// <summary>
@@ -335,7 +335,7 @@ public static class CircleDrawing
     /// <param name="sides">The number of sides used to approximate the circle.</param>
     /// <param name="color">The color of the outline.</param>
     public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, ColorRgba color)
-        => Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness * 2, color.ToRayColor());
+        => Raylib.DrawPolyLinesEx(center, sides, radius + lineThickness, 0f, lineThickness * 2, color.ToRayColor());
 
     /// <summary>
     /// Draws the outline of a circle at the specified center and radius using the given line drawing info and number of sides.
@@ -357,7 +357,7 @@ public static class CircleDrawing
     /// <param name="sides">The number of sides used to approximate the circle.</param>
     /// <param name="color">The color of the outline.</param>
     public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba color)
-        => Raylib.DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness * 2, color.ToRayColor());
+        => Raylib.DrawPolyLinesEx(center, sides, radius + lineThickness, rotDeg, lineThickness * 2, color.ToRayColor());
 
     /// <summary>
     /// Draws the outline of a circle at the specified center and radius using the given line drawing info, rotation, and number of sides.
@@ -372,20 +372,7 @@ public static class CircleDrawing
     {
         DrawCircleLinesInternal(center, radius, lineInfo.Thickness, rotDeg, sides, lineInfo.Color);
     }
-
-    /// <summary>
-    /// Draws the outline of a circle at the specified center and radius using the given line thickness and color, automatically determining the number of sides.
-    /// </summary>
-    /// <param name="center">The center of the circle.</param>
-    /// <param name="radius">The radius of the circle.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="sideLength">The maximum length of each side. Default is 8.</param>
-    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, ColorRgba color, float sideLength = 8f)
-    {
-        int sides = GetCircleSideCount(radius, sideLength);
-        Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness * 2, color.ToRayColor());
-    }
+    
     /// <summary>
     /// Draws the outline of a circle at the specified center and radius using the given line thickness, rotation, and color.
     /// The polygon used to approximate the circle will have its side count computed from <paramref name="sideLength"/>.
@@ -396,10 +383,10 @@ public static class CircleDrawing
     /// <param name="color">Color of the outline.</param>
     /// <param name="rotDeg">Rotation of the circle in degrees.</param>
     /// <param name="sideLength">Maximum length of each side used to approximate the circle. Default is 8.</param>
-    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, ColorRgba color, float rotDeg, float sideLength = 8f)
+    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, ColorRgba color, float rotDeg = 0f, float sideLength = 8f)
     {
         int sides = GetCircleSideCount(radius, sideLength);
-        Raylib.DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness * 2, color.ToRayColor());
+        Raylib.DrawPolyLinesEx(center, sides, radius + lineThickness, rotDeg, lineThickness * 2, color.ToRayColor());
     }
     /// <summary>
     /// Draws the outline of a circle at the specified center and radius using the given line drawing info and rotation, automatically determining the number of sides.
@@ -409,7 +396,7 @@ public static class CircleDrawing
     /// <param name="lineInfo">The line drawing parameters.</param>
     /// <param name="rotDeg">The rotation of the circle in degrees.</param>
     /// <param name="sideLength">The maximum length of each side. Default is 8.</param>
-    public static void DrawCircleLines(Vector2 center, float radius, LineDrawingInfo lineInfo, float rotDeg, float sideLength = 8f)
+    public static void DrawCircleLines(Vector2 center, float radius, LineDrawingInfo lineInfo, float rotDeg = 0f, float sideLength = 8f)
     {
         int sides = GetCircleSideCount(radius, sideLength);
         DrawCircleLines(center, radius, lineInfo, rotDeg, sides);
