@@ -572,6 +572,27 @@ public static class SegmentDrawing
 
         }
     }
+
+    public static void DrawRoundCap(Vector2 center, Vector2 dir, float radius, int capPoints, ColorRgba color)
+    {
+        if(capPoints <= 0) return;
+        var pR = new Vector2(-dir.Y, dir.X);//perpendicular right
+        var pL = new Vector2(dir.Y, -dir.X);//perpendicular left
+        
+        var capStartLeft = center + pL * radius;
+        var capStartRight = center + pR * radius;
+        
+        var curStart = capStartLeft;
+        float angleStep = (180f / (capPoints + 1)) * ShapeMath.DEGTORAD;
+                
+        for (var i = 1; i <= capPoints; i++)
+        {
+            var pStart = center + pL.Rotate(- angleStep * i) * radius;
+            Raylib.DrawTriangle(pStart, center, curStart, color.ToRayColor());
+            curStart = pStart;
+        }
+        Raylib.DrawTriangle(curStart, capStartRight, center, color.ToRayColor());
+    }
     
     /// <summary>
     /// Draws part of a line from start to end depending on f.
