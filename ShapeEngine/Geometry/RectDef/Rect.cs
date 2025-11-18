@@ -146,13 +146,21 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <param name="y">The Y-coordinate of the top-left corner.</param>
     /// <param name="width">The width of the rectangle.</param>
     /// <param name="height">The height of the rectangle.</param>
-    /// <remarks>Use this constructor to create a rectangle by specifying its position and size directly.</remarks>
+    /// <remarks>Use this constructor to create a rectangle by specifying its position and size directly.
+    /// Negative width/height mirrors the rect.</remarks>
     public Rect(float x, float y, float width, float height)
     {
-        this.X = x;
-        this.Y = y;
-        this.Width = width;
-        this.Height = height;
+        // X = x;
+        // Y = y;
+        // Width = width;
+        // Height = height;
+        float right = x + width;
+        float bottom = y + height;
+
+        X = MathF.Min(x, right);
+        Y = MathF.Min(y, bottom);
+        Width = MathF.Abs(width);
+        Height = MathF.Abs(height);
     }
 
     /// <summary>
@@ -164,10 +172,10 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     public Rect(Vector2 topLeft, Vector2 bottomRight)
     {
         var final = Fix(topLeft, bottomRight);
-        this.X = final.topLeft.X;
-        this.Y = final.topLeft.Y;
-        this.Width = final.bottomRight.X - this.X;
-        this.Height = final.bottomRight.Y - this.Y;
+        X = final.topLeft.X;
+        Y = final.topLeft.Y;
+        Width = final.bottomRight.X - this.X;
+        Height = final.bottomRight.Y - this.Y;
     }
 
     /// <summary>
@@ -175,13 +183,21 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </summary>
     /// <param name="topLeft">The top-left corner of the rectangle.</param>
     /// <param name="size">The size of the rectangle.</param>
-    /// <remarks>Use this constructor to create a rectangle by specifying its top-left corner and size.</remarks>
+    /// <remarks>Use this constructor to create a rectangle by specifying its top-left corner and size.
+    /// Negative width/height mirrors the rect.</remarks>
     public Rect(Vector2 topLeft, Size size)
     {
-        this.X = topLeft.X;
-        this.Y = topLeft.Y;
-        this.Width = size.Width;
-        this.Height = size.Height;
+        // X = topLeft.X;
+        // Y = topLeft.Y;
+        // Width = size.Width;
+        // Height = size.Height;
+        float right = topLeft.X + size.Width;
+        float bottom = topLeft.Y + size.Height;
+
+        X = MathF.Min(topLeft.X, right);
+        Y = MathF.Min(topLeft.Y, bottom);
+        Width = MathF.Abs(size.Width);
+        Height = MathF.Abs(size.Height);
     }
     /// <summary>
     /// Initializes a new instance of the <see cref="Rect"/> struct from a position, size, and alignment anchor.
@@ -189,15 +205,20 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <param name="position">The reference position for the rectangle.</param>
     /// <param name="size">The size of the rectangle.</param>
     /// <param name="alignment">The anchor point used to align the rectangle relative to the position.</param>
-    /// <remarks>The anchor point determines how the rectangle is positioned relative to the given position.</remarks>
+    /// <remarks>The anchor point determines how the rectangle is positioned relative to the given position.
+    /// Negative width/height mirrors the rect.</remarks>
     public Rect(Vector2 position, Size size, AnchorPoint alignment)
     {
         var offset = size * alignment.ToVector2();
         var topLeft = position - offset;
-        this.X = topLeft.X;
-        this.Y = topLeft.Y;
-        this.Width = size.Width;
-        this.Height = size.Height;
+
+        float right = topLeft.X + size.Width;
+        float bottom = topLeft.Y + size.Height;
+
+        X = MathF.Min(topLeft.X, right);
+        Y = MathF.Min(topLeft.Y, bottom);
+        Width = MathF.Abs(size.Width);
+        Height = MathF.Abs(size.Height);
     }
 
     /// <summary>
@@ -206,10 +227,10 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <param name="rect">The rectangle structure.</param>
     public Rect(Rectangle rect)
     {
-        this.X = rect.X;
-        this.Y = rect.Y;
-        this.Width = rect.Width;
-        this.Height = rect.Height;
+        X = rect.X;
+        Y = rect.Y;
+        Width = rect.Width;
+        Height = rect.Height;
     }
     #endregion
 
