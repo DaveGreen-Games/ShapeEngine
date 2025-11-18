@@ -576,6 +576,7 @@ public static class SegmentDrawing
     public static void DrawRoundCap(Vector2 center, Vector2 dir, float radius, int capPoints, ColorRgba color)
     {
         if(capPoints <= 0) return;
+        dir = -dir;
         var pR = new Vector2(-dir.Y, dir.X);//perpendicular right
         var pL = new Vector2(dir.Y, -dir.X);//perpendicular left
         
