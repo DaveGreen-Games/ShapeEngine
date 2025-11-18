@@ -386,7 +386,21 @@ public static class CircleDrawing
         int sides = GetCircleSideCount(radius, sideLength);
         Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness * 2, color.ToRayColor());
     }
-
+    /// <summary>
+    /// Draws the outline of a circle at the specified center and radius using the given line thickness, rotation, and color.
+    /// The polygon used to approximate the circle will have its side count computed from <paramref name="sideLength"/>.
+    /// </summary>
+    /// <param name="center">Center position of the circle.</param>
+    /// <param name="radius">Radius of the circle.</param>
+    /// <param name="lineThickness">Thickness of the outline.</param>
+    /// <param name="color">Color of the outline.</param>
+    /// <param name="rotDeg">Rotation of the circle in degrees.</param>
+    /// <param name="sideLength">Maximum length of each side used to approximate the circle. Default is 8.</param>
+    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, ColorRgba color, float rotDeg, float sideLength = 8f)
+    {
+        int sides = GetCircleSideCount(radius, sideLength);
+        Raylib.DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness * 2, color.ToRayColor());
+    }
     /// <summary>
     /// Draws the outline of a circle at the specified center and radius using the given line drawing info and rotation, automatically determining the number of sides.
     /// </summary>
@@ -1048,7 +1062,6 @@ public static class CircleDrawing
     }
     #endregion
     
-    
     #region Internal
     private static void DrawCircleLinesInternal(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba color)
     {
@@ -1153,6 +1166,17 @@ public static class CircleDrawing
     private static void DrawCircleSectorLinesClosedInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, 
         int sides, float lineThickness, ColorRgba color)
     {
+        if (sides < 3 ||  radius <= 0) return;
+        float angleDifDeg = endAngleDeg - startAngleDeg;
+        float angleDifDegAbs = MathF.Abs(angleDifDeg);
+        if (angleDifDegAbs < 0.0001f) return;
+        
+        if (angleDifDegAbs >= 360f)
+        {
+            DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
+            return;
+        }
+        
         //TODO: Implement using polygon version of outline drawing
     }
 
@@ -1179,10 +1203,11 @@ public static class CircleDrawing
         LineCapType lineCapType, int capPoints)
     {
         if (sides < 3 ||  radius <= 0) return;
-        var angleDifDeg = endAngleDeg - startAngleDeg;
-        if (MathF.Abs(angleDifDeg) < 0.0001f) return;
+        float angleDifDeg = endAngleDeg - startAngleDeg;
+        float angleDifDegAbs = MathF.Abs(angleDifDeg);
+        if (angleDifDegAbs < 0.0001f) return;
         
-        if (MathF.Abs(angleDifDeg) >= 360f)
+        if (angleDifDegAbs >= 360f)
         {
             DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
             return;
@@ -1196,7 +1221,7 @@ public static class CircleDrawing
         
         if(lineCapType == LineCapType.Extended || (lineCapType == LineCapType.CappedExtended && capPoints > 0))
         {
-            float arcLength = Circle.ArcLengthFromAngle((360 - MathF.Abs(angleDifDeg)) * ShapeMath.DEGTORAD, radius);
+            float arcLength = Circle.ArcLengthFromAngle((360 - angleDifDegAbs) * ShapeMath.DEGTORAD, radius);
             if (arcLength < lineThickness * 2)
             {
                 DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
@@ -1286,8 +1311,6 @@ public static class CircleDrawing
         }
     }
     #endregion
-    
-   
     
     #region Helper
     /// <summary>
