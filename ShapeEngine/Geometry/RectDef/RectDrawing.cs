@@ -312,11 +312,10 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        //TODO: Fix with new system
         if (f == 0) return;
         var r = new Rect(topLeft, bottomRight);
         if (r.Width <= 0 || r.Height <= 0) return;
-        if (f >= 1f)
+        if (MathF.Abs(f) >= 1f)
         {
             DrawRectLines(topLeft, bottomRight, lineThickness, color);
             return;
@@ -915,6 +914,8 @@ public static class RectDrawing
     #region Helper
     private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        //TODO: Fix with new system
+        
         // Draw first segment
         var curP = p1;
         var nextP = p2;

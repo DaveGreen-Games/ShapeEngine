@@ -173,10 +173,6 @@ public static class QuadDrawing
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
     {
         DrawQuadLinesInternal(a, b, c, d, lineThickness, color);
-        // SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
-        // SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
-        // SegmentDrawing.DrawSegment(c, d, lineThickness, color, capType, capPoints);
-        // SegmentDrawing.DrawSegment(d, a, lineThickness, color, capType, capPoints);
     }
     /// <summary>
     /// Draws the outline of a quadrilateral, scaling each side by a specified factor.
@@ -270,9 +266,12 @@ public static class QuadDrawing
     /// </remarks>
     public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        //TODO: Fix with new system
         if (f == 0) return;
-
+        if (MathF.Abs(f) >= 1f)
+        {
+            DrawQuadLines(a, b, c, d, lineThickness, color);
+            return;
+        }
         bool negative = false;
         if (f < 0)
         {
