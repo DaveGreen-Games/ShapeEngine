@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -310,12 +311,11 @@ public static class TriangleDrawing
     /// </param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
     /// <param name="capPoints">The number of points used for the cap style.</param>
     /// <remarks>
     /// Useful for animating or highlighting portions of a triangle's outline.
     /// </remarks>
-    public static void DrawTriangleLinesPercentage(Vector2 a, Vector2 b, Vector2 c, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawTriangleLinesPercentage(Vector2 a, Vector2 b, Vector2 c, float f, float lineThickness, ColorRgba color, int capPoints = 2)
     {
         if (f == 0) return;
         if (f is <= -1 or >= 1)
@@ -341,33 +341,33 @@ public static class TriangleDrawing
         {
             if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(a, c, b, percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(a, c, b, percentage, lineThickness, color, capPoints);
             }
             else //CCW
             {
-                DrawTriangleLinesPercentageHelper(a, b, c, percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(a, b, c, percentage, lineThickness, color, capPoints);
             }
         }
         else if (startCorner == 1)
         {
             if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(c, b, a,  percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(c, b, a,  percentage, lineThickness, color, capPoints);
             }
             else //CCW
             {
-                DrawTriangleLinesPercentageHelper(b, c, a,  percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(b, c, a,  percentage, lineThickness, color, capPoints);
             }
         }
         else if (startCorner == 2)
         {
             if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(b, a, c, percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(b, a, c, percentage, lineThickness, color, capPoints);
             }
             else //CCW
             {
-                DrawTriangleLinesPercentageHelper(c, a, b, percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(c, a, b, percentage, lineThickness, color, capPoints);
             }
         }
     }
@@ -402,7 +402,7 @@ public static class TriangleDrawing
     /// </remarks>
     public static void DrawTriangleLinesPercentage(Vector2 a, Vector2 b, Vector2 c, float f, LineDrawingInfo lineInfo)
     {
-        DrawTriangleLinesPercentage(a, b, c, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        DrawTriangleLinesPercentage(a, b, c, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints);
     }
 
     /// <summary>
@@ -429,14 +429,13 @@ public static class TriangleDrawing
     /// </param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
     /// <param name="capPoints">The number of points used for the cap style.</param>
     /// <remarks>
     /// Useful for animating or highlighting portions of a triangle's outline.
     /// </remarks>
-    public static void DrawLinesPercentage(this Triangle t, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawLinesPercentage(this Triangle t, float f, float lineThickness, ColorRgba color, int capPoints = 2)
     {
-        DrawTriangleLinesPercentage(t.A, t.B, t.C, f, lineThickness, color, capType, capPoints);
+        DrawTriangleLinesPercentage(t.A, t.B, t.C, f, lineThickness, color, capPoints);
     }
 
     /// <summary>
@@ -499,9 +498,78 @@ public static class TriangleDrawing
     #endregion
     
     #region Helper
-    private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+
+    private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int capPoints)
     {
-        //TODO: Fix
+        if (lineThickness <= 0 || percentage <= 0 || percentage >= 1) return;
+
+        float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
+        float thickness = MathF.Min(lineThickness, maxThickness);
+
+        if (capPoints <= 0)
+        {
+            DrawTriangleLinesPercentageHelperAlpha(p1, p2, p3, percentage, thickness, color);
+        }
+        else
+        {
+            if (color.A < 255)
+            {
+                DrawTriangleLinesPercentageHelperAlphaCapped(p1, p2, p3, percentage, lineThickness, color, capPoints);
+            }
+            else
+            {
+                DrawTriangleLinesPercentageHelperNoAlpha(p1, p2, p3, percentage, thickness, color, LineCapType.CappedExtended, capPoints);
+            }
+        }
+    }
+    private static void DrawTriangleLinesPercentageHelperAlpha(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color)
+    {
+        if (lineThickness <= 0 || percentage <= 0 || percentage >= 1) return;
+
+        float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
+        float thickness = MathF.Min(lineThickness, maxThickness);
+
+        var edge1 = p2 - p1;
+        var edge2 = p3 - p2;
+        var edge3 = p1 - p3;
+
+        var normal1 = new Vector2(-edge1.Y, edge1.X);
+        if (normal1.LengthSquared() > 0) normal1 = Vector2.Normalize(normal1);
+
+        var normal2 = new Vector2(-edge2.Y, edge2.X);
+        if (normal2.LengthSquared() > 0) normal2 = Vector2.Normalize(normal2);
+
+        var normal3 = new Vector2(-edge3.Y, edge3.X);
+        if (normal3.LengthSquared() > 0) normal3 = Vector2.Normalize(normal3);
+
+        float l1 = edge1.Length();
+        float l2 = edge2.Length();
+        float l3 = edge3.Length();
+        float totalPerimeter = l1 + l2 + l3;
+        float perimeterToDraw = totalPerimeter * percentage;
+
+        var miter1Inner = CalculateMiterPoint(p1, normal3, normal1, thickness, false);
+        var miter1Outer = CalculateMiterPoint(p1, normal3, normal1, thickness, true);
+        
+        var miter2Inner = CalculateMiterPoint(p2, normal1, normal2, thickness, false);
+        var miter2Outer = CalculateMiterPoint(p2, normal1, normal2, thickness, true);
+        
+        var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, thickness, false);
+        var miter3Outer = CalculateMiterPoint(p3, normal2, normal3, thickness, true);
+
+        //NOTE: None Cap / 0 Cap point variation
+        // - Basically there is always 2 start points and 2 end points depending if it is a full segment or partial segment
+        // - full segments use miters and are just drawn with 2 triangles
+        // - partial segments start at previous 2 end points and interpolate to the next two points which function as new end points
+        // - start uses the miter edge
+        
+    }
+    private static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int capPoints)
+    {
+
+    }
+    private static void DrawTriangleLinesPercentageHelperNoAlpha(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
         var l1 = (p2 - p1).Length();
         var l2 = (p3 - p2).Length();
         var l3 = (p1 - p3).Length();
@@ -514,7 +582,7 @@ public static class TriangleDrawing
         {
             float p = perimeterToDraw / l1;
             nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
 
@@ -546,7 +614,8 @@ public static class TriangleDrawing
 
         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
-
+    
+    
     private static void DrawTriangleLinesHelper(Vector2 p1, Vector2 p2, Vector2 p3, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
         if (lineThickness <= 0) return;
@@ -672,3 +741,105 @@ public static class TriangleDrawing
     }
     #endregion
 }
+
+
+    // private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    // {
+    //     //TODO: Fix
+    //     if (lineThickness <= 0) return;
+    //
+    //     // Calculate maximum safe thickness based on inradius
+    //     float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
+    //     float thickness = MathF.Min(lineThickness, maxThickness);
+    //     
+    //     var edge1 = p2 - p1;
+    //     var edge2 = p3 - p2;
+    //     var edge3 = p1 - p3;
+    //     
+    //     float l1 = edge1.Length();
+    //     float l2 = edge2.Length();
+    //     float l3 = edge3.Length();
+    //     float perimeterToDraw = (l1 + l2 + l3) * percentage;
+    //
+    //     // Draw first segment
+    //     var curP = p1;
+    //     var nextP = p2;
+    //     if (perimeterToDraw < l1)
+    //     {
+    //         float p = perimeterToDraw / l1;
+    //         nextP = curP.Lerp(nextP, p);
+    //         SegmentDrawing.DrawSegment(curP, nextP, thickness, color, capType, capPoints);
+    //         return;
+    //     }
+    //
+    //     // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    //     var normal1 = new Vector2(-edge1.Y, edge1.X);
+    //     if (normal1.LengthSquared() > 0) normal1 = Vector2.Normalize(normal1);
+    //
+    //     var normal2 = new Vector2(-edge2.Y, edge2.X);
+    //     if (normal2.LengthSquared() > 0) normal2 = Vector2.Normalize(normal2);
+    //     
+    //     var miter2Inner = CalculateMiterPoint(p2, normal1, normal2, thickness, false);
+    //     var miter2Outer = CalculateMiterPoint(p2, normal1, normal2, thickness, true);
+    //     
+    //     
+    //     Vector2 quadA, quadB, quadC, quadD;
+    //     quadA = curP - normal1 * lineThickness;
+    //     quadB = miter2Outer;
+    //     quadC = miter2Inner;
+    //     quadD = curP + normal1 * lineThickness;
+    //     DrawTriangle(quadC, quadA, quadD, color);
+    //     DrawTriangle(quadD, quadB, quadC, color);
+    //     perimeterToDraw -= l1;
+    //     
+    //     //TODO: Draw end cap of first segment here 
+    //     
+    //     // Draw second segment
+    //     curP = nextP;
+    //     nextP = p3;
+    //     if (perimeterToDraw < l2)
+    //     {
+    //         float p = perimeterToDraw / l2;
+    //         nextP = curP.Lerp(nextP, p);
+    //         
+    //         quadA = miter2Inner;
+    //         quadB = miter2Outer;
+    //         quadC = nextP + normal2 * lineThickness;
+    //         quadD = nextP - normal2 * lineThickness;
+    //         DrawTriangle(quadA, quadB, quadD, color);
+    //         DrawTriangle(quadD, quadB, quadC, color);
+    //         //TODO: Draw end cap of last segment here
+    //         
+    //         return;
+    //     }
+    //     var normal3 = new Vector2(-edge3.Y, edge3.X);
+    //     if (normal3.LengthSquared() > 0) normal3 = Vector2.Normalize(normal3);
+    //     
+    //     var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, thickness, false);
+    //     var miter3Outer = CalculateMiterPoint(p3, normal2, normal3, thickness, true);
+    //     quadA = miter2Inner;
+    //     quadB = miter2Outer;
+    //     quadC = miter3Outer;
+    //     quadD = miter3Inner;
+    //     DrawTriangle(quadA, quadB, quadD, color);
+    //     DrawTriangle(quadD, quadB, quadC, color);
+    //     
+    //     perimeterToDraw -= l2;
+    //
+    //     // Draw third segment
+    //     curP = nextP;
+    //     nextP = p1;
+    //     if (perimeterToDraw < l3)
+    //     {
+    //         float p = perimeterToDraw / l3;
+    //         nextP = curP.Lerp(nextP, p);
+    //         quadA = miter3Inner;
+    //         quadB = miter3Outer;
+    //         quadC = nextP + normal3 * lineThickness;
+    //         quadD = nextP - normal3 * lineThickness;
+    //         DrawTriangle(quadA, quadB, quadD, color);
+    //         DrawTriangle(quadD, quadB, quadC, color);
+    //         
+    //         //TODO: Draw end cap of last segment here
+    //     }
+    // }
