@@ -320,7 +320,7 @@ public static class TriangleDrawing
         if (f == 0) return;
         if (f is <= -1 or >= 1)
         {
-            DrawTriangleLines(a, b, c, lineThickness, color);
+            DrawTriangleLines(a, b, c, lineThickness, color, capPoints);
             return;
         }
         
