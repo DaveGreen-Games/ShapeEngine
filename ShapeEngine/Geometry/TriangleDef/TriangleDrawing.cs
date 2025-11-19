@@ -156,9 +156,6 @@ public static class TriangleDrawing
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, int edgePoints = 0)
     {
         DrawTriangleLinesHelper(a, b, c, lineThickness, color, edgePoints);
-        // SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
-        // SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
-        // SegmentDrawing.DrawSegment(c, a, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -207,9 +204,6 @@ public static class TriangleDrawing
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, LineDrawingInfo lineInfo)
     {
         DrawTriangleLinesHelper(a, b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints);
-        // SegmentDrawing.DrawSegment(a, b, lineInfo);
-        // SegmentDrawing.DrawSegment(b, c, lineInfo);
-        // SegmentDrawing.DrawSegment(c, a, lineInfo);
     }
 
     /// <summary>
@@ -323,7 +317,6 @@ public static class TriangleDrawing
     /// </remarks>
     public static void DrawTriangleLinesPercentage(Vector2 a, Vector2 b, Vector2 c, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        //TODO: Fix
         if (f == 0) return;
         if (f is <= -1 or >= 1)
         {
@@ -508,6 +501,7 @@ public static class TriangleDrawing
     #region Helper
     private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        //TODO: Fix
         var l1 = (p2 - p1).Length();
         var l2 = (p3 - p2).Length();
         var l3 = (p1 - p3).Length();
@@ -557,7 +551,7 @@ public static class TriangleDrawing
     {
         if (lineThickness <= 0) return;
 
-        float halfThickness = lineThickness;
+        float thickness = lineThickness;
 
         // Calculate edge vectors and perpendicular normals
         var edge1 = p2 - p1;
@@ -573,23 +567,44 @@ public static class TriangleDrawing
         var normal3 = new Vector2(-edge3.Y, edge3.X);
         if (normal3.LengthSquared() > 0) normal3 = Vector2.Normalize(normal3);
 
-        // Calculate miter points at corners
-        var miter1Outer = CalculateMiterPoint(p1, normal3, normal1, halfThickness, true);
-        var miter1Inner = CalculateMiterPoint(p1, normal3, normal1, halfThickness, false);
-    
-        var miter2Outer = CalculateMiterPoint(p2, normal1, normal2, halfThickness, true);
-        var miter2Inner = CalculateMiterPoint(p2, normal1, normal2, halfThickness, false);
-    
-        var miter3Outer = CalculateMiterPoint(p3, normal2, normal3, halfThickness, true);
-        var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, halfThickness, false);
+        // Calculate inner miter points (always sharp)
+        var miter1Inner = CalculateMiterPoint(p1, normal3, normal1, thickness, false);
+        var miter2Inner = CalculateMiterPoint(p2, normal1, normal2, thickness, false);
+        var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, thickness, false);
 
-        // Draw edge quads with non-overlapping corners
-        DrawEdgeQuad(miter1Inner, miter2Inner, miter1Outer, miter2Outer, color, edgePoints);
-        DrawEdgeQuad(miter2Inner, miter3Inner, miter2Outer, miter3Outer, color, edgePoints);
-        DrawEdgeQuad(miter3Inner, miter1Inner, miter3Outer, miter1Outer, color, edgePoints);
+        if (edgePoints > 0)
+        {
+            // Rounded corners: use simple outer edge points, not miters
+            var p1Outer = p1 + normal1 * thickness;
+            var p2Outer1 = p2 + normal1 * thickness;
+            var p2Outer2 = p2 + normal2 * thickness;
+            var p3Outer2 = p3 + normal2 * thickness;
+            var p3Outer3 = p3 + normal3 * thickness;
+            var p1Outer3 = p1 + normal3 * thickness;
+
+            // Draw straight edge segments (no miter)
+            DrawEdgeQuad(miter1Inner, miter2Inner, p1Outer, p2Outer1, color);
+            DrawEdgeQuad(miter2Inner, miter3Inner, p2Outer2, p3Outer2, color);
+            DrawEdgeQuad(miter3Inner, miter1Inner, p3Outer3, p1Outer3, color);
+
+            // Draw rounded corners to fill the gaps
+            DrawOuterCorner(p1, normal3, normal1, miter1Inner, thickness, color, edgePoints);
+            DrawOuterCorner(p2, normal1, normal2, miter2Inner, thickness, color, edgePoints);
+            DrawOuterCorner(p3, normal2, normal3, miter3Inner, thickness, color, edgePoints);
+        }
+        else
+        {
+            // Sharp corners: use miter points
+            var miter1Outer = CalculateMiterPoint(p1, normal3, normal1, thickness, true);
+            var miter2Outer = CalculateMiterPoint(p2, normal1, normal2, thickness, true);
+            var miter3Outer = CalculateMiterPoint(p3, normal2, normal3, thickness, true);
+
+            DrawEdgeQuad(miter1Inner, miter2Inner, miter1Outer, miter2Outer, color);
+            DrawEdgeQuad(miter2Inner, miter3Inner, miter2Outer, miter3Outer, color);
+            DrawEdgeQuad(miter3Inner, miter1Inner, miter3Outer, miter1Outer, color);
+        }
     }
-
-
+    
     private static Vector2 CalculateMiterPoint(Vector2 corner, Vector2 normalPrev, Vector2 normalNext, float halfThickness, bool outer)
     {
         // Calculate miter direction (average of normals)
@@ -602,32 +617,35 @@ public static class TriangleDrawing
         return corner + miterDir * (outer ? miterLength : -miterLength);
     }
 
-    private static void DrawEdgeQuad(Vector2 innerStart, Vector2 innerEnd, Vector2 outerStart, Vector2 outerEnd, ColorRgba color, int edgePoints)
+    private static void DrawEdgeQuad(Vector2 innerStart, Vector2 innerEnd, Vector2 outerStart, Vector2 outerEnd, ColorRgba color)
     {
-        if (edgePoints <= 0)
+        DrawTriangle(innerStart, outerStart, innerEnd, color);
+        DrawTriangle(outerStart, outerEnd, innerEnd, color);
+    }
+    
+    private static void DrawOuterCorner(Vector2 corner, Vector2 normalPrev, Vector2 normalNext, Vector2 innerCorner, float halfThickness, ColorRgba color, int edgePoints)
+    {
+        // Calculate angle between normals
+        float anglePrev = MathF.Atan2(normalPrev.Y, normalPrev.X);
+        float angleNext = MathF.Atan2(normalNext.Y, normalNext.X);
+        
+        // Ensure we sweep in the correct direction
+        float angleDiff = angleNext - anglePrev;
+        if (angleDiff > MathF.PI) angleDiff -= 2 * MathF.PI;
+        if (angleDiff < -MathF.PI) angleDiff += 2 * MathF.PI;
+
+        var prevOuter = corner + normalPrev * halfThickness;
+
+        for (int i = 1; i <= edgePoints + 1; i++)
         {
-            // Simple quad with 2 triangles
-            DrawTriangle(innerStart, outerStart, innerEnd, color);
-            DrawTriangle(outerStart, outerEnd, innerEnd, color);
-        }
-        else
-        {
-            // Subdivided outer edge
-            var prevInner = innerStart;
-            var prevOuter = outerStart;
-            
-            for (int i = 1; i <= edgePoints + 1; i++)
-            {
-                float t = i / (float)(edgePoints + 1);
-                var curInner = Vector2.Lerp(innerStart, innerEnd, t);
-                var curOuter = Vector2.Lerp(outerStart, outerEnd, t);
-                
-                DrawTriangle(prevInner, prevOuter, curInner, color);
-                DrawTriangle(prevOuter, curOuter, curInner, color);
-                
-                prevInner = curInner;
-                prevOuter = curOuter;
-            }
+            float t = i / (float)(edgePoints + 1);
+            float angle = anglePrev + angleDiff * t;
+            var normal = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            var curOuter = corner + normal * halfThickness;
+
+            DrawTriangle(innerCorner, prevOuter, curOuter, color);
+
+            prevOuter = curOuter;
         }
     }
 
