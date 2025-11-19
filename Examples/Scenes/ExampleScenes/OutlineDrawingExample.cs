@@ -332,7 +332,7 @@ public class OutlineDrawingExample : ExampleScene
             }
             else
             {
-                triangle.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
+                triangle.DrawLinesScaled(lineInfo, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 3) // Rect
