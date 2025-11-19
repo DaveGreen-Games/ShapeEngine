@@ -152,10 +152,10 @@ public static class TriangleDrawing
     /// <param name="c">The third vertex of the triangle.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="edgePoints"> How many extra points should be used for the outside edges of the outline.</param>
-    public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, int edgePoints = 0)
+    /// <param name="cornerPoints"> How many extra points should be used for the outside edges of the outline.</param>
+    public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
-        DrawTriangleLinesHelper(a, b, c, lineThickness, color, edgePoints);
+        DrawTriangleLinesHelper(a, b, c, lineThickness, color, cornerPoints);
     }
 
     /// <summary>
@@ -212,10 +212,10 @@ public static class TriangleDrawing
     /// <param name="t">The triangle to draw.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    /// <param name="edgePoints"> How many extra points should be used for the outside edges of the outline.</param>
-    public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, int edgePoints = 0)
+    /// <param name="cornerPoints"> How many extra points should be used for the outside edges of the outline.</param>
+    public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
-        DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, edgePoints);
+        DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, cornerPoints);
     }
 
     /// <summary>
@@ -249,10 +249,10 @@ public static class TriangleDrawing
     /// <param name="triangles">The collection of triangles to draw.</param>
     /// <param name="lineThickness">The thickness of the outlines.</param>
     /// <param name="color">The color of the outlines.</param>
-    /// <param name="edgePoints"> How many extra points should be used for the outside edges of the outline.</param>
-    public static void DrawLines(this Triangulation triangles, float lineThickness, ColorRgba color, int edgePoints = 0)
+    /// <param name="cornerPoints"> How many extra points should be used for the outside edges of the outline.</param>
+    public static void DrawLines(this Triangulation triangles, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
-        foreach (var t in triangles) t.DrawLines(lineThickness, color, edgePoints);
+        foreach (var t in triangles) t.DrawLines(lineThickness, color, cornerPoints);
     }
 
     /// <summary>
@@ -547,7 +547,7 @@ public static class TriangleDrawing
         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
 
-    private static void DrawTriangleLinesHelper(Vector2 p1, Vector2 p2, Vector2 p3, float lineThickness, ColorRgba color, int edgePoints = 0)
+    private static void DrawTriangleLinesHelper(Vector2 p1, Vector2 p2, Vector2 p3, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
         if (lineThickness <= 0) return;
 
@@ -572,7 +572,7 @@ public static class TriangleDrawing
         var miter2Inner = CalculateMiterPoint(p2, normal1, normal2, thickness, false);
         var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, thickness, false);
 
-        if (edgePoints > 0)
+        if (cornerPoints > 0)
         {
             // Rounded corners: use simple outer edge points, not miters
             var p1Outer = p1 + normal1 * thickness;
@@ -588,9 +588,9 @@ public static class TriangleDrawing
             DrawEdgeQuad(miter3Inner, miter1Inner, p3Outer3, p1Outer3, color);
 
             // Draw rounded corners to fill the gaps
-            DrawOuterCorner(p1, normal3, normal1, miter1Inner, thickness, color, edgePoints);
-            DrawOuterCorner(p2, normal1, normal2, miter2Inner, thickness, color, edgePoints);
-            DrawOuterCorner(p3, normal2, normal3, miter3Inner, thickness, color, edgePoints);
+            DrawOuterCorner(p1, normal3, normal1, miter1Inner, thickness, color, cornerPoints);
+            DrawOuterCorner(p2, normal1, normal2, miter2Inner, thickness, color, cornerPoints);
+            DrawOuterCorner(p3, normal2, normal3, miter3Inner, thickness, color, cornerPoints);
         }
         else
         {
@@ -623,7 +623,7 @@ public static class TriangleDrawing
         DrawTriangle(outerStart, outerEnd, innerEnd, color);
     }
     
-    private static void DrawOuterCorner(Vector2 corner, Vector2 normalPrev, Vector2 normalNext, Vector2 innerCorner, float halfThickness, ColorRgba color, int edgePoints)
+    private static void DrawOuterCorner(Vector2 corner, Vector2 normalPrev, Vector2 normalNext, Vector2 innerCorner, float halfThickness, ColorRgba color, int cornerPoints)
     {
         // Calculate angle between normals
         float anglePrev = MathF.Atan2(normalPrev.Y, normalPrev.X);
@@ -636,9 +636,9 @@ public static class TriangleDrawing
 
         var prevOuter = corner + normalPrev * halfThickness;
 
-        for (int i = 1; i <= edgePoints + 1; i++)
+        for (int i = 1; i <= cornerPoints + 1; i++)
         {
-            float t = i / (float)(edgePoints + 1);
+            float t = i / (float)(cornerPoints + 1);
             float angle = anglePrev + angleDiff * t;
             var normal = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
             var curOuter = corner + normal * halfThickness;
