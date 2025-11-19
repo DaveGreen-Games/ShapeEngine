@@ -118,116 +118,8 @@ public static class RectDrawing
     }
     #endregion
     
+    #region Draw
     
-    /// <summary>
-    /// Draws a <see cref="NinePatchRect"/> using a single color for all patches.
-    /// </summary>
-    /// <param name="npr">The nine-patch rectangle to draw.</param>
-    /// <param name="color">The color to use for all patches.</param>
-    public static void Draw(this NinePatchRect npr, ColorRgba color)
-    {
-        var rects = npr.Rects;
-        foreach (var r in rects)
-        {
-            r.Draw(color);
-        }
-    }
-
-    /// <summary>
-    /// Draws a <see cref="NinePatchRect"/> using separate colors for the source and patch rectangles.
-    /// </summary>
-    /// <param name="npr">The nine-patch rectangle to draw.</param>
-    /// <param name="sourceColorRgba">The color for the source rectangle.</param>
-    /// <param name="patchColorRgba">The color for the patch rectangles.</param>
-    public static void Draw(this NinePatchRect npr, ColorRgba sourceColorRgba, ColorRgba patchColorRgba)
-    {
-        npr.Source.Draw(sourceColorRgba);
-        var rects = npr.Rects;
-        foreach (var r in rects)
-        {
-            r.Draw(patchColorRgba);
-        }
-    }
-
-    /// <summary>
-    /// Draws the outlines of a <see cref="NinePatchRect"/> using the specified line thickness and color.
-    /// </summary>
-    /// <param name="npr">The nine-patch rectangle to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline lines.</param>
-    /// <param name="color">The color of the outline lines.</param>
-    public static void DrawLines(this NinePatchRect npr, float lineThickness, ColorRgba color)
-    {
-        var rects = npr.Rects;
-        foreach (var r in rects)
-        {
-            r.DrawLines(lineThickness, color);
-        }
-    }
-
-    /// <summary>
-    /// Draws the outlines of a <see cref="NinePatchRect"/> using separate line thickness and color for the source and patch rectangles.
-    /// </summary>
-    /// <param name="npr">The nine-patch rectangle to draw.</param>
-    /// <param name="sourceLineThickness">The line thickness for the source rectangle.</param>
-    /// <param name="patchLineThickness">The line thickness for the patch rectangles.</param>
-    /// <param name="sourceColorRgba">The color for the source rectangle outline.</param>
-    /// <param name="patchColorRgba">The color for the patch rectangles outlines.</param>
-    public static void DrawLines(this NinePatchRect npr, float sourceLineThickness, float patchLineThickness, ColorRgba sourceColorRgba, ColorRgba patchColorRgba)
-    {
-        npr.Source.DrawLines(sourceLineThickness, sourceColorRgba);
-        var rects = npr.Rects;
-        foreach (var r in rects)
-        {
-            r.DrawLines(patchLineThickness, patchColorRgba);
-        }
-    }
-
-    /// <summary>
-    /// Draws a grid within the specified bounds using the given line thickness and color.
-    /// </summary>
-    /// <param name="grid">The grid definition specifying the number of rows and columns.</param>
-    /// <param name="bounds">The rectangle bounds in which to draw the grid.</param>
-    /// <param name="lineThickness">The thickness of the grid lines.</param>
-    /// <param name="color">The color of the grid lines.</param>
-    /// <remarks>
-    /// The grid is drawn using horizontal and vertical lines spaced according to the number of rows and columns.
-    /// </remarks>
-    public static void Draw(this Grid grid, Rect bounds, float lineThickness, ColorRgba color)
-    {
-        Vector2 rowSpacing = new(0f, bounds.Height / grid.Rows);
-        for (int row = 0; row < grid.Rows + 1; row++)
-        {
-            SegmentDrawing.DrawSegment(bounds.TopLeft + rowSpacing * row, bounds.TopRight + rowSpacing * row, lineThickness, color);
-        }
-        Vector2 colSpacing = new(bounds.Width / grid.Cols, 0f);
-        for (int col = 0; col < grid.Cols + 1; col++)
-        {
-            SegmentDrawing.DrawSegment(bounds.TopLeft + colSpacing * col, bounds.BottomLeft + colSpacing * col, lineThickness, color);
-        }
-    }
-
-    /// <summary>
-    /// Draws a grid inside a rectangle, with the specified number of lines and line drawing information.
-    /// </summary>
-    /// <param name="r">The rectangle in which to draw the grid.</param>
-    /// <param name="lines">The number of grid lines (both horizontal and vertical).</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    public static void DrawGrid(this Rect r, int lines, LineDrawingInfo lineInfo)
-    {
-        var xOffset = new Vector2(r.Width / lines, 0f);// * i;
-        var yOffset = new Vector2(0f, r.Height / lines);// * i;
-
-        var tl = r.TopLeft;
-        var tr = tl + new Vector2(r.Width, 0);
-        var bl = tl + new Vector2(0, r.Height);
-
-        for (var i = 0; i < lines; i++)
-        {
-            SegmentDrawing.DrawSegment(tl + xOffset * i, bl + xOffset * i, lineInfo);
-            SegmentDrawing.DrawSegment(tl + yOffset * i, tr + yOffset * i, lineInfo);
-        }
-    }
-
     /// <summary>
     /// Draws a filled rectangle using the specified top-left and bottom-right coordinates and color.
     /// </summary>
@@ -255,6 +147,26 @@ public static class RectDrawing
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
         QuadDrawing.DrawQuad(a, b, c, d, color);
     }
+   
+    /// <summary>
+    /// Draws a filled rectangle using the specified color.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    public static void Draw(this Rect rect, ColorRgba color) => Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
+
+    /// <summary>
+    /// Draws a filled, rotated rectangle using the specified pivot, rotation, and color.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="pivot">The pivot point for rotation.</param>
+    /// <param name="rotDeg">The rotation in degrees.</param>
+    /// <param name="color">The fill color.</param>
+    public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color) => DrawRect(rect.TopLeft, rect.BottomRight, pivot, rotDeg, color);
+
+    #endregion
+    
+    #region Draw Lines
 
     /// <summary>
     /// Draws the outline of a rectangle using the specified corners, line thickness, and color.
@@ -264,47 +176,7 @@ public static class RectDrawing
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color) => DrawLines(new Rect(topLeft, bottomRight), lineThickness, color);
-
-    /// <summary>
-    /// Draws the outline of a rectangle with each side scaled by a factor,
-    /// using the specified line thickness, color, and cap style.
-    /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="sideLengthFactor">The factor by which to scale each side (0 to 1).</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    /// <remarks>
-    /// Useful for drawing partial outlines or stylized rectangles.
-    /// </remarks>
-    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color, float sideLengthFactor,
-        LineCapType capType = LineCapType.Extended, int capPoints = 0)
-    {
-        var a = topLeft;
-        var b = new Vector2(topLeft.X, bottomRight.Y);
-        var c = bottomRight;
-        var d = new Vector2(bottomRight.X, topLeft.Y);
-
-        var side1 = b - a;
-        var end1 = a + side1 * sideLengthFactor;
-
-        var side2 = c - b;
-        var end2 = b + side2 * sideLengthFactor;
-
-        var side3 = d - c;
-        var end3 = c + side3 * sideLengthFactor;
-
-        var side4 = a - d;
-        var end4 = d + side4 * sideLengthFactor;
-
-        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
-    }
-
+    
     /// <summary>
     /// Draws the outline of a rectangle using the specified line drawing information.
     /// </summary>
@@ -357,23 +229,6 @@ public static class RectDrawing
     /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
         => DrawRectLines(topLeft, bottomRight, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color);
-
-    /// <summary>
-    /// Draws a filled rectangle using the specified color.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="color">The fill color.</param>
-    public static void Draw(this Rect rect, ColorRgba color) => Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
-
-    /// <summary>
-    /// Draws a filled, rotated rectangle using the specified pivot, rotation, and color.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="color">The fill color.</param>
-    public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color) => DrawRect(rect.TopLeft, rect.BottomRight, pivot, rotDeg, color);
-
     /// <summary>
     /// Draws the outline of a rectangle using the specified line thickness and color.
     /// </summary>
@@ -410,22 +265,6 @@ public static class RectDrawing
     {
         DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineThickness, color);
     }
-
-    /// <summary>
-    /// Draws the outline of a rectangle with each side scaled by a factor,
-    /// using the specified line thickness, color, and cap style.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="sideLengthFactor">The factor by which to scale each side (0 to 1).</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.Extended, int capPoints = 0)
-    {
-        DrawRectLines(rect.TopLeft, rect.BottomRight, lineThickness, color, sideLengthFactor, capType, capPoints);
-    }
-
     /// <summary>
     /// Draws the outline of a rotated rectangle using the specified line drawing information.
     /// </summary>
@@ -438,6 +277,9 @@ public static class RectDrawing
         DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineInfo);
     }
 
+    #endregion
+    
+    #region Draw Lines Percentage
     /// <summary>
     /// Draws a certain percentage of a rectangle's outline, starting at a specified corner and direction.
     /// </summary>
@@ -470,9 +312,15 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        //TODO: Fix with new system
         if (f == 0) return;
         var r = new Rect(topLeft, bottomRight);
         if (r.Width <= 0 || r.Height <= 0) return;
+        if (f >= 1f)
+        {
+            DrawRectLines(topLeft, bottomRight, lineThickness, color);
+            return;
+        }
 
         bool negative = false;
         if (f < 0)
@@ -599,7 +447,69 @@ public static class RectDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
     public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
         => DrawRectLinesPercentage(topLeft, bottomRight, f, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    #endregion
+    
+    #region Draw Lines Scaled
+    /// <summary>
+    /// Draws the outline of a rectangle with each side scaled by a factor,
+    /// using the specified line thickness, color, and cap style.
+    /// </summary>
+    /// <param name="topLeft">The top-left corner of the rectangle.</param>
+    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="sideLengthFactor">The factor by which to scale each side (0 to 1).</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <remarks>
+    /// Useful for drawing partial outlines or stylized rectangles.
+    /// </remarks>
+    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color, float sideLengthFactor,
+        LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    {
+        if(sideLengthFactor <= 0) return;
+        if (sideLengthFactor >= 1)
+        {
+            DrawRectLines(topLeft, bottomRight, lineThickness, color);
+            return;
+        }
+        
+        var a = topLeft;
+        var b = new Vector2(topLeft.X, bottomRight.Y);
+        var c = bottomRight;
+        var d = new Vector2(bottomRight.X, topLeft.Y);
 
+        var side1 = b - a;
+        var end1 = a + side1 * sideLengthFactor;
+
+        var side2 = c - b;
+        var end2 = b + side2 * sideLengthFactor;
+
+        var side3 = d - c;
+        var end3 = c + side3 * sideLengthFactor;
+
+        var side4 = a - d;
+        var end4 = d + side4 * sideLengthFactor;
+
+        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
+    }
+    /// <summary>
+    /// Draws the outline of a rectangle with each side scaled by a factor,
+    /// using the specified line thickness, color, and cap style.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="sideLengthFactor">The factor by which to scale each side (0 to 1).</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    {
+        DrawRectLines(rect.TopLeft, rect.BottomRight, lineThickness, color, sideLengthFactor, capType, capPoints);
+    }
     /// <summary>
     /// Draws a rectangle outline where each side can be scaled towards the origin of the side.
     /// </summary>
@@ -651,41 +561,125 @@ public static class RectDrawing
         }
     }
 
-    /// <summary>
-    /// Draws circles at each vertex of the rectangle.
+    #endregion
+
+    #region Draw Grid
+
+        /// <summary>
+    /// Draws a grid within the specified bounds using the given line thickness and color.
     /// </summary>
-    /// <param name="rect">The rectangle whose vertices to draw.</param>
-    /// <param name="vertexRadius">The radius of each vertex circle.</param>
-    /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="circleSegments">The number of segments for each circle (default: 8).</param>
-    public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba color, int circleSegments = 8)
+    /// <param name="grid">The grid definition specifying the number of rows and columns.</param>
+    /// <param name="bounds">The rectangle bounds in which to draw the grid.</param>
+    /// <param name="lineThickness">The thickness of the grid lines.</param>
+    /// <param name="color">The color of the grid lines.</param>
+    /// <remarks>
+    /// The grid is drawn using horizontal and vertical lines spaced according to the number of rows and columns.
+    /// </remarks>
+    public static void Draw(this Grid grid, Rect bounds, float lineThickness, ColorRgba color)
     {
-        CircleDrawing.DrawCircle(rect.TopLeft, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(rect.TopRight, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(rect.BottomLeft, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
+        Vector2 rowSpacing = new(0f, bounds.Height / grid.Rows);
+        for (int row = 0; row < grid.Rows + 1; row++)
+        {
+            SegmentDrawing.DrawSegment(bounds.TopLeft + rowSpacing * row, bounds.TopRight + rowSpacing * row, lineThickness, color);
+        }
+        Vector2 colSpacing = new(bounds.Width / grid.Cols, 0f);
+        for (int col = 0; col < grid.Cols + 1; col++)
+        {
+            SegmentDrawing.DrawSegment(bounds.TopLeft + colSpacing * col, bounds.BottomLeft + colSpacing * col, lineThickness, color);
+        }
     }
 
     /// <summary>
-    /// Draws a filled rectangle with rounded corners.
+    /// Draws a grid inside a rectangle, with the specified number of lines and line drawing information.
     /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
-    /// <param name="segments">The number of segments to approximate the roundness.</param>
-    /// <param name="color">The fill color.</param>
-    public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
+    /// <param name="r">The rectangle in which to draw the grid.</param>
+    /// <param name="lines">The number of grid lines (both horizontal and vertical).</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
+    public static void DrawGrid(this Rect r, int lines, LineDrawingInfo lineInfo)
+    {
+        var xOffset = new Vector2(r.Width / lines, 0f);// * i;
+        var yOffset = new Vector2(0f, r.Height / lines);// * i;
+
+        var tl = r.TopLeft;
+        var tr = tl + new Vector2(r.Width, 0);
+        var bl = tl + new Vector2(0, r.Height);
+
+        for (var i = 0; i < lines; i++)
+        {
+            SegmentDrawing.DrawSegment(tl + xOffset * i, bl + xOffset * i, lineInfo);
+            SegmentDrawing.DrawSegment(tl + yOffset * i, tr + yOffset * i, lineInfo);
+        }
+    }
+
+    #endregion
+
+    #region Draw Nine Patch Rect
+    /// <summary>
+    /// Draws a <see cref="NinePatchRect"/> using a single color for all patches.
+    /// </summary>
+    /// <param name="npr">The nine-patch rectangle to draw.</param>
+    /// <param name="color">The color to use for all patches.</param>
+    public static void Draw(this NinePatchRect npr, ColorRgba color)
+    {
+        var rects = npr.Rects;
+        foreach (var r in rects)
+        {
+            r.Draw(color);
+        }
+    }
 
     /// <summary>
-    /// Draws the outline of a rectangle with rounded corners.
+    /// Draws a <see cref="NinePatchRect"/> using separate colors for the source and patch rectangles.
     /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="segments">The number of segments to approximate the roundness.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color)
-        => Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
+    /// <param name="npr">The nine-patch rectangle to draw.</param>
+    /// <param name="sourceColorRgba">The color for the source rectangle.</param>
+    /// <param name="patchColorRgba">The color for the patch rectangles.</param>
+    public static void Draw(this NinePatchRect npr, ColorRgba sourceColorRgba, ColorRgba patchColorRgba)
+    {
+        npr.Source.Draw(sourceColorRgba);
+        var rects = npr.Rects;
+        foreach (var r in rects)
+        {
+            r.Draw(patchColorRgba);
+        }
+    }
+    /// <summary>
+    /// Draws the outlines of a <see cref="NinePatchRect"/> using the specified line thickness and color.
+    /// </summary>
+    /// <param name="npr">The nine-patch rectangle to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline lines.</param>
+    public static void DrawLines(this NinePatchRect npr, float lineThickness, ColorRgba color)
+    {
+        var rects = npr.Rects;
+        foreach (var r in rects)
+        {
+            r.DrawLines(lineThickness, color);
+        }
+    }
 
+    /// <summary>
+    /// Draws the outlines of a <see cref="NinePatchRect"/> using separate line thickness and color for the source and patch rectangles.
+    /// </summary>
+    /// <param name="npr">The nine-patch rectangle to draw.</param>
+    /// <param name="sourceLineThickness">The line thickness for the source rectangle.</param>
+    /// <param name="patchLineThickness">The line thickness for the patch rectangles.</param>
+    /// <param name="sourceColorRgba">The color for the source rectangle outline.</param>
+    /// <param name="patchColorRgba">The color for the patch rectangles outlines.</param>
+    public static void DrawLines(this NinePatchRect npr, float sourceLineThickness, float patchLineThickness, ColorRgba sourceColorRgba, ColorRgba patchColorRgba)
+    {
+        npr.Source.DrawLines(sourceLineThickness, sourceColorRgba);
+        var rects = npr.Rects;
+        foreach (var r in rects)
+        {
+            r.DrawLines(patchLineThickness, patchColorRgba);
+        }
+    }
+
+    #endregion
+
+    #region Draw Slanted Corners
+    
     /// <summary>
     /// Draws a filled rectangle with slanted corners.
     /// </summary>
@@ -767,7 +761,12 @@ public static class RectDrawing
         poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
         poly.DrawLines(lineInfo);
     }
-
+    
+    #endregion
+    
+    #region Draw Corners
+    
+    
     /// <summary>
     /// Draws corner lines for a rectangle, with each corner having a specified length.
     /// </summary>
@@ -783,6 +782,7 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
+        //TODO: Fix with new system
         var tl = rect.TopLeft;
         var tr = rect.TopRight;
         var br = rect.BottomRight;
@@ -834,6 +834,7 @@ public static class RectDrawing
     /// <param name="blCorner">The relative length of the bottom-left corner lines (0-1).</param>
     public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
+        //TODO: Fix with new system
         var tl = rect.TopLeft;
         var tr = rect.TopRight;
         var br = rect.BottomRight;
@@ -869,7 +870,49 @@ public static class RectDrawing
     /// <param name="cornerLengthFactor">The relative length of the corner lines for all corners (0 to 1).</param>
     public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float cornerLengthFactor)
         => DrawCornersRelative(rect, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
+    #endregion
 
+    #region Draw Rounded
+    /// <summary>
+    /// Draws a filled rectangle with rounded corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
+    /// <param name="segments">The number of segments to approximate the roundness.</param>
+    /// <param name="color">The fill color.</param>
+    public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
+
+    /// <summary>
+    /// Draws the outline of a rectangle with rounded corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="segments">The number of segments to approximate the roundness.</param>
+    /// <param name="color">The color of the outline.</param>
+    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color)
+        => Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
+
+    #endregion
+    
+    #region Draw Vertices
+    /// <summary>
+    /// Draws circles at each vertex of the rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle whose vertices to draw.</param>
+    /// <param name="vertexRadius">The radius of each vertex circle.</param>
+    /// <param name="color">The color of the vertex circles.</param>
+    /// <param name="circleSegments">The number of segments for each circle (default: 8).</param>
+    public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba color, int circleSegments = 8)
+    {
+        CircleDrawing.DrawCircle(rect.TopLeft, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(rect.TopRight, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(rect.BottomLeft, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
+    }
+    #endregion
+    
+    #region Helper
     private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         // Draw first segment
@@ -924,6 +967,6 @@ public static class RectDrawing
         }
         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
-
+    #endregion
 }
 
