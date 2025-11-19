@@ -551,7 +551,9 @@ public static class TriangleDrawing
     {
         if (lineThickness <= 0) return;
 
-        float thickness = lineThickness;
+        // Calculate maximum safe thickness based on inradius
+        float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
+        float thickness = MathF.Min(lineThickness, maxThickness);
 
         // Calculate edge vectors and perpendicular normals
         var edge1 = p2 - p1;
@@ -649,5 +651,24 @@ public static class TriangleDrawing
         }
     }
 
+    private static float CalculateMaxLineThickness(Vector2 p1, Vector2 p2, Vector2 p3)
+    {
+        // Calculate side lengths
+        float a = (p2 - p3).Length();
+        float b = (p3 - p1).Length();
+        float c = (p1 - p2).Length();
+    
+        // Calculate semi-perimeter
+        float s = (a + b + c) * 0.5f;
+    
+        // Calculate area using Heron's formula
+        float area = MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
+    
+        // Inradius formula: r = area / s
+        float inradius = area / s;
+    
+        // Return inradius as max thickness (or slightly less to be safe)
+        return inradius * 0.95f; // 0.95 leaves a small margin
+    }
     #endregion
 }
