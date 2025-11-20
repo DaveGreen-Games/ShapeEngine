@@ -569,7 +569,7 @@ public static class TriangleDrawing
         DrawTriangle(a,c,d,color);
         
         if(f < 1f) return;
-        
+        f = 1f;
         perimeterToDraw -= l1;
         
         var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, thickness, false);
@@ -588,6 +588,7 @@ public static class TriangleDrawing
         DrawTriangle(a,c,d,color);
         
         if(f < 1f) return;
+        f = 1f;
         perimeterToDraw -= l2;
         
         if (l3 > perimeterToDraw)
@@ -602,6 +603,7 @@ public static class TriangleDrawing
         DrawTriangle(a,b,c,color);
         DrawTriangle(a,c,d,color);
     }
+
     private static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int capPoints)
     {
 
