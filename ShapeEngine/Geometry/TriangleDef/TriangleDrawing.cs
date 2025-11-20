@@ -553,16 +553,54 @@ public static class TriangleDrawing
         
         var miter2Inner = CalculateMiterPoint(p2, normal1, normal2, thickness, false);
         var miter2Outer = CalculateMiterPoint(p2, normal1, normal2, thickness, true);
+
+        Vector2 a, b, c, d;
+        float f = 1f;
+        if (l1 > perimeterToDraw)
+        {
+            f = perimeterToDraw / l1;
+        }
+        
+        a = miter1Inner;
+        b = miter1Outer;
+        c = f >= 1f ? miter2Outer : b.Lerp(miter2Outer, f);
+        d = f >= 1f ? miter2Inner : a.Lerp(miter2Inner, f);
+        DrawTriangle(a,b,c,color);
+        DrawTriangle(a,c,d,color);
+        
+        if(f < 1f) return;
+        
+        perimeterToDraw -= l1;
         
         var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, thickness, false);
         var miter3Outer = CalculateMiterPoint(p3, normal2, normal3, thickness, true);
-
-        //NOTE: None Cap / 0 Cap point variation
-        // - Basically there is always 2 start points and 2 end points depending if it is a full segment or partial segment
-        // - full segments use miters and are just drawn with 2 triangles
-        // - partial segments start at previous 2 end points and interpolate to the next two points which function as new end points
-        // - start uses the miter edge
         
+        if (l2 > perimeterToDraw)
+        {
+            f = perimeterToDraw / l2;
+        }
+        
+        a = miter2Inner;
+        b = miter2Outer;
+        c = f >= 1f ? miter3Outer : b.Lerp(miter3Outer, f);
+        d = f >= 1f ? miter3Inner : a.Lerp(miter3Inner, f);
+        DrawTriangle(a,b,c,color);
+        DrawTriangle(a,c,d,color);
+        
+        if(f < 1f) return;
+        perimeterToDraw -= l2;
+        
+        if (l3 > perimeterToDraw)
+        {
+            f = perimeterToDraw / l3;
+        }
+        
+        a = miter3Inner;
+        b = miter3Outer;
+        c = f >= 1f ? miter1Outer : b.Lerp(miter1Outer, f);
+        d = f >= 1f ? miter1Inner : a.Lerp(miter1Inner, f);
+        DrawTriangle(a,b,c,color);
+        DrawTriangle(a,c,d,color);
     }
     private static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int capPoints)
     {
