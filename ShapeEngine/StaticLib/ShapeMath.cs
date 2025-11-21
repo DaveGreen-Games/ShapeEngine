@@ -597,7 +597,22 @@ public static class ShapeMath
         else if (dir == 0) dir = 0;
         return dir * amount;
     }
-
+    
+    /// <summary>
+    /// Computes the signed smallest angular difference from angle <paramref name="a0"/> to <paramref name="a1"/> in radians.
+    /// The returned value is the shortest rotation to reach <paramref name="a1"/> from <paramref name="a0"/> (positive = counter-clockwise),
+    /// wrapped to the range [-π, π].
+    /// </summary>
+    /// <param name="a0">Start angle in radians.</param>
+    /// <param name="a1">End angle in radians.</param>
+    /// <returns>Signed angle difference in radians.</returns>
+    public static float AngleDelta(float a0, float a1)
+    {
+        float d = a1 - a0;
+        if (d > MathF.PI) d -= 2f * MathF.PI;
+        if (d < -MathF.PI) d += 2f * MathF.PI;
+        return d;
+    }
     #endregion
 
     #region Coordinates
