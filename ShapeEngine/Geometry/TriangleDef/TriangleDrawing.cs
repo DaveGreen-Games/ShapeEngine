@@ -1,10 +1,8 @@
-using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
-using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -499,7 +497,6 @@ public static class TriangleDrawing
     #endregion
     
     #region Helper
-
     private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int capPoints)
     {
         if (lineThickness <= 0 || percentage <= 0 || percentage >= 1) return;
@@ -604,12 +601,12 @@ public static class TriangleDrawing
         DrawTriangle(a,b,c,color);
         DrawTriangle(a,c,d,color);
     }
-    
 
-    public static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int cornerPoints = 2)
+
+    private static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int cornerPoints = 2)
     {
-        if (MathF.Abs(percentage) < 0.001f || lineThickness <= 0f) return;
-        
+        if (MathF.Abs(percentage) < 0.001f || lineThickness <= 0f || cornerPoints <= 0) return;
+    
         if (MathF.Abs(percentage) >= 1f)
         {
             DrawTriangleLinesHelper(p1, p2, p3, lineThickness, color, cornerPoints);
@@ -618,30 +615,27 @@ public static class TriangleDrawing
     
         float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
         float thickness = MathF.Min(lineThickness, maxThickness);
-
-        bool ccw = percentage > 0f;
-        float absPerc = MathF.Abs(percentage);
+        float absPercentage = MathF.Abs(percentage);
+        bool ccw = percentage > 0;
+       
+        // Reorder vertices for CW drawing so the main logic can be the same
+        Vector2 v1 = p1;
+        Vector2 v2 = ccw ? p2 : p3;
+        Vector2 v3 = ccw ? p3 : p2;
     
-        // Calculate edges and normals
-        Vector2 e1 = p2 - p1;
-        Vector2 e2 = p3 - p2;
-        Vector2 e3 = p1 - p3;
+        var e1 = v2 - v1;
+        var e2 = v3 - v2;
+        var e3 = v1 - v3;
     
-        Vector2 n1 = new Vector2(-e1.Y, e1.X);
-        if (n1.LengthSquared() > 0) n1 = Vector2.Normalize(n1);
+        var n1 = Vector2.Normalize(new(-e1.Y, e1.X));
+        var n2 = Vector2.Normalize(new(-e2.Y, e2.X));
+        var n3 = Vector2.Normalize(new(-e3.Y, e3.X));
     
-        Vector2 n2 = new Vector2(-e2.Y, e2.X);
-        if (n2.LengthSquared() > 0) n2 = Vector2.Normalize(n2);
+        // Inner miter points are calculated based on the potentially reordered vertices
+        var m1Inner = CalculateMiterPoint(v1, n3, n1, thickness, false);
+        var m2Inner = CalculateMiterPoint(v2, n1, n2, thickness, false);
+        var m3Inner = CalculateMiterPoint(v3, n2, n3, thickness, false);
     
-        Vector2 n3 = new Vector2(-e3.Y, e3.X);
-        if (n3.LengthSquared() > 0) n3 = Vector2.Normalize(n3);
-    
-        // Inner miter points
-        Vector2 m1Inner = CalculateMiterPoint(p1, n3, n1, thickness, false);
-        Vector2 m2Inner = CalculateMiterPoint(p2, n1, n2, thickness, false);
-        Vector2 m3Inner = CalculateMiterPoint(p3, n2, n3, thickness, false);
-    
-        // Calculate arc angles
         float aN1 = MathF.Atan2(n1.Y, n1.X);
         float aN2 = MathF.Atan2(n2.Y, n2.X);
         float aN3 = MathF.Atan2(n3.Y, n3.X);
@@ -658,135 +652,94 @@ public static class TriangleDrawing
         float arcLen2 = MathF.Abs(arcAngle2) * thickness;
         float arcLen3 = MathF.Abs(arcAngle3) * thickness;
     
-        float outerPerimeter = arcLen1 + l1 + arcLen2 + l2 + arcLen3 + l3;
-        float targetLen = outerPerimeter * absPerc;
+        float totalPerimeter = l1 + l2 + l3 + arcLen1 + arcLen2 + arcLen3;
+        float targetLen = totalPerimeter * absPercentage;
         float remaining = targetLen;
     
-        var outerPoints = new List<Vector2>();
+        // Unified drawing logic starts here
+        Vector2 prevOuter = v1 + ShapeVec.VecFromAngleRad(aN3 + arcAngle1 * 0.5f) * thickness;
+        remaining = EmitArc(v1, aN3 + arcAngle1 * 0.5f, arcAngle1 * 0.5f, m1Inner, prevOuter, remaining, arcAngle1);
+        if (remaining <= 0) return;
     
-        if (ccw)
+        remaining = EmitEdge(v1 + n1 * thickness, v2 + n1 * thickness, m1Inner, m2Inner, remaining);
+        if (remaining <= 0) return;
+    
+        remaining = EmitArc(v2, aN1, arcAngle2, m2Inner, v2 + n1 * thickness, remaining, arcAngle2);
+        if (remaining <= 0) return;
+    
+        remaining = EmitEdge(v2 + n2 * thickness, v3 + n2 * thickness, m2Inner, m3Inner, remaining);
+        if (remaining <= 0) return;
+    
+        remaining = EmitArc(v3, aN2, arcAngle3, m3Inner, v3 + n2 * thickness, remaining, arcAngle3);
+        if (remaining <= 0) return;
+    
+        remaining = EmitEdge(v3 + n3 * thickness, v1 + n3 * thickness, m3Inner, m1Inner, remaining);
+        if (remaining <= 0) return;
+    
+        EmitArc(v1, aN3, arcAngle1 * 0.5f, m1Inner, v1 + n3 * thickness, remaining, arcAngle1);
+    
+    
+        float EmitArc(Vector2 corner, float startAngle, float angle, Vector2 inner, Vector2 currentOuter, float rem, float baseArcAngle)
         {
-            EmitArc(p1, aN3, arcAngle1);
-            if (remaining > 0f) EmitEdge(p1 + n1 * thickness, p2 + n1 * thickness);
-            if (remaining > 0f) EmitArc(p2, aN1, arcAngle2);
-            if (remaining > 0f) EmitEdge(p2 + n2 * thickness, p3 + n2 * thickness);
-            if (remaining > 0f) EmitArc(p3, aN2, arcAngle3);
-            if (remaining > 0f) EmitEdge(p3 + n3 * thickness, p1 + n3 * thickness);
-        }
-        else
-        {
-            EmitArc(p1, aN1, -arcAngle1);
-            if (remaining > 0f) EmitEdge(p1 + n3 * thickness, p3 + n3 * thickness);
-            if (remaining > 0f) EmitArc(p3, aN3, -arcAngle3);
-            if (remaining > 0f) EmitEdge(p3 + n2 * thickness, p2 + n2 * thickness);
-            if (remaining > 0f) EmitArc(p2, aN2, -arcAngle2);
-            if (remaining > 0f) EmitEdge(p2 + n1 * thickness, p1 + n1 * thickness);
-        }
+            if (rem <= 0f || angle == 0) return rem;
+            int steps = (int)MathF.Ceiling(cornerPoints * (MathF.Abs(angle) / MathF.Abs(baseArcAngle)));
+            if (steps <= 0) steps = 1;
     
-        // Draw triangles connecting outer points to inner edge
-        DrawOuterStrip(outerPoints, m1Inner, m2Inner, m3Inner, color);
-    
-        void EmitArc(Vector2 corner, float startAngle, float deltaAngle)
-        {
-            if (remaining <= 0f) return;
-    
-            int steps = Math.Max(1, cornerPoints);
-            float stepAngle = deltaAngle / steps;
+            float stepAngle = angle / steps;
             float stepLen = MathF.Abs(stepAngle) * thickness;
     
-            AddPoint(corner + new Vector2(MathF.Cos(startAngle), MathF.Sin(startAngle)) * thickness);
-    
-            for (int i = 1; i <= steps && remaining > 0f; i++)
+            for (int i = 1; i <= steps; i++)
             {
-                if (remaining >= stepLen)
+                if (rem <= 0) break;
+                var nextOuter = corner + ShapeVec.VecFromAngleRad(startAngle + stepAngle * i) * thickness;
+                if (rem >= stepLen)
                 {
-                    float angle = startAngle + stepAngle * i;
-                    AddPoint(corner + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * thickness);
-                    remaining -= stepLen;
+                    DrawTriangle(inner, currentOuter, nextOuter, color);
+                    rem -= stepLen;
                 }
                 else
                 {
-                    float frac = remaining / stepLen;
-                    float angle = startAngle + stepAngle * (i - 1 + frac);
-                    AddPoint(corner + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * thickness);
-                    remaining = 0f;
+                    float f = rem / stepLen;
+                    var partialOuter = currentOuter.Lerp(nextOuter, f);
+                    DrawTriangle(inner, currentOuter, partialOuter, color);
+                    rem = 0;
                 }
+                currentOuter = nextOuter;
             }
+            return rem;
         }
     
-        void EmitEdge(Vector2 start, Vector2 end)
+        float EmitEdge(Vector2 start, Vector2 end, Vector2 innerStart, Vector2 innerEnd, float rem)
         {
-            if (remaining <= 0f) return;
+            if (rem <= 0f) return rem;
+            float len = (end - start).Length();
+            if (len <= 0) return rem;
     
-            float segLen = (end - start).Length();
-            if (segLen <= 0f) return;
-    
-            AddPoint(start);
-    
-            if (remaining >= segLen)
+            if (rem >= len)
             {
-                AddPoint(end);
-                remaining -= segLen;
+                DrawTriangle(innerStart, start, end, color);
+                DrawTriangle(innerStart, end, innerEnd, color);
+                rem -= len;
             }
             else
             {
-                AddPoint(start + (end - start) * (remaining / segLen));
-                remaining = 0f;
+                float f = rem / len;
+                var pOuter = start.Lerp(end, f);
+                var pInner = innerStart.Lerp(innerEnd, f);
+                DrawTriangle(innerStart, start, pOuter, color);
+                DrawTriangle(innerStart, pOuter, pInner, color);
+                rem = 0;
             }
+            return rem;
         }
     
-        void AddPoint(Vector2 v)
+        float AngleDelta(float a0, float a1)
         {
-            const float eps = 1e-6f;
-            if (outerPoints.Count == 0 || (outerPoints[^1] - v).LengthSquared() > eps * eps)
-                outerPoints.Add(v);
+            float d = a1 - a0;
+            while (d > MathF.PI) d -= 2f * MathF.PI;
+            while (d < -MathF.PI) d += 2f * MathF.PI;
+            return d;
         }
-    }
-    private static void DrawOuterStrip(List<Vector2> outerPoints, Vector2 m1, Vector2 m2, Vector2 m3, ColorRgba color)
-    {
-        if (outerPoints.Count < 2) return;
-    
-        // Determine which inner segment each outer point belongs to
-        for (int i = 0; i < outerPoints.Count - 1; i++)
-        {
-            var p1 = outerPoints[i];
-            var p2 = outerPoints[i + 1];
-            
-            // Project onto inner triangle to find matching inner points
-            var innerStart = FindClosestPointOnInnerEdge(p1, m1, m2, m3);
-            var innerEnd = FindClosestPointOnInnerEdge(p2, m1, m2, m3);
-            
-            DrawTriangle(innerStart, p1, p2, color);
-            DrawTriangle(innerStart, p2, innerEnd, color);
-        }
-    }
-    private static Vector2 FindClosestPointOnInnerEdge(Vector2 point, Vector2 m1, Vector2 m2, Vector2 m3)
-    {
-        var c1 = ClosestPointOnSegment(point, m1, m2);
-        var c2 = ClosestPointOnSegment(point, m2, m3);
-        var c3 = ClosestPointOnSegment(point, m3, m1);
-        
-        float d1 = (c1 - point).LengthSquared();
-        float d2 = (c2 - point).LengthSquared();
-        float d3 = (c3 - point).LengthSquared();
-        
-        if (d1 <= d2 && d1 <= d3) return c1;
-        if (d2 <= d3) return c2;
-        return c3;
-    }
-    private static Vector2 ClosestPointOnSegment(Vector2 point, Vector2 a, Vector2 b)
-    {
-        var ab = b - a;
-        float t = Vector2.Dot(point - a, ab) / ab.LengthSquared();
-        t = ShapeMath.Clamp(t, 0f, 1f);
-        return a + ab * t;
-    }
-    private static float AngleDelta(float a0, float a1)
-    {
-        float d = a1 - a0;
-        if (d > MathF.PI) d -= 2f * MathF.PI;
-        if (d < -MathF.PI) d += 2f * MathF.PI;
-        return d;
     }
     
     
@@ -960,3 +913,6 @@ public static class TriangleDrawing
     }
     #endregion
 }
+
+    
+    
