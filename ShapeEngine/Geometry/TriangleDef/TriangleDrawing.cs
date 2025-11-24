@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -317,12 +318,14 @@ public static class TriangleDrawing
     public static void DrawTriangleLinesPercentage(Vector2 a, Vector2 b, Vector2 c, float f, float lineThickness, ColorRgba color, int capPoints = 2)
     {
         if (f == 0) return;
-        if (f is <= -1 or >= 1)
-        {
-            DrawTriangleLines(a, b, c, lineThickness, color, capPoints);
-            return;
-        }
+        // if (f is <= -1 or >= 1)
+        // {
+        //     DrawTriangleLines(a, b, c, lineThickness, color, capPoints);
+        //     return;
+        // }
         
+        // DrawTriangleLinesPercentageHelper(a, b, c, f, lineThickness, color, capPoints);
+        // return;
         bool negative = false;
         if (f < 0)
         {
@@ -332,7 +335,11 @@ public static class TriangleDrawing
 
         int startCorner = (int)f;
         float percentage = f - startCorner;
-        if (percentage <= 0) return;
+        if (percentage <= 0)//percentage = 0 means draw 100%
+        {
+            DrawTriangleLines(a, b, c, lineThickness, color, capPoints);
+            return;
+        }
 
         startCorner = ShapeMath.Clamp(startCorner, 0, 2);
 
@@ -340,33 +347,33 @@ public static class TriangleDrawing
         {
             if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(a, c, b, percentage, lineThickness, color, capPoints);
+                DrawTriangleLinesPercentageHelper(a, c, b, percentage, !negative, lineThickness, color, capPoints);
             }
             else //CCW
             {
-                DrawTriangleLinesPercentageHelper(a, b, c, percentage, lineThickness, color, capPoints);
+                DrawTriangleLinesPercentageHelper(a, b, c, percentage, !negative,lineThickness, color, capPoints);
             }
         }
         else if (startCorner == 1)
         {
             if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(c, b, a,  percentage, lineThickness, color, capPoints);
+                DrawTriangleLinesPercentageHelper(c, b, a,  percentage, !negative,lineThickness, color, capPoints);
             }
             else //CCW
             {
-                DrawTriangleLinesPercentageHelper(b, c, a,  percentage, lineThickness, color, capPoints);
+                DrawTriangleLinesPercentageHelper(b, c, a,  percentage, !negative,lineThickness, color, capPoints);
             }
         }
         else if (startCorner == 2)
         {
             if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(b, a, c, percentage, lineThickness, color, capPoints);
+                DrawTriangleLinesPercentageHelper(b, a, c, percentage, !negative,lineThickness, color, capPoints);
             }
             else //CCW
             {
-                DrawTriangleLinesPercentageHelper(c, a, b, percentage, lineThickness, color, capPoints);
+                DrawTriangleLinesPercentageHelper(c, a, b, percentage, !negative,lineThickness, color, capPoints);
             }
         }
     }
@@ -497,26 +504,23 @@ public static class TriangleDrawing
     #endregion
     
     #region Helper
-    private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int capPoints)
+    private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, bool ccw, float lineThickness, ColorRgba color, int capPoints)
     {
         if (lineThickness <= 0 || percentage <= 0 || percentage >= 1) return;
-
-        float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
-        float thickness = MathF.Min(lineThickness, maxThickness);
-
+        
         if (capPoints <= 0)
         {
-            DrawTriangleLinesPercentageHelperAlpha(p1, p2, p3, percentage, thickness, color);
+            DrawTriangleLinesPercentageHelperAlpha(p1, p2, p3, percentage, lineThickness, color);
         }
         else
         {
             if (color.A < 255)
             {
-                DrawTriangleLinesPercentageHelperAlphaCapped(p1, p2, p3, percentage, lineThickness, color, capPoints);
+                DrawTriangleLinesPercentageHelperAlphaCapped(p1, p2, p3, percentage, ccw, lineThickness, color, capPoints);
             }
             else
             {
-                DrawTriangleLinesPercentageHelperNoAlpha(p1, p2, p3, percentage, thickness, color, LineCapType.CappedExtended, capPoints);
+                DrawTriangleLinesPercentageHelperNoAlpha(p1, p2, p3, percentage, lineThickness, color, LineCapType.CappedExtended, capPoints);
             }
         }
     }
@@ -602,8 +606,8 @@ public static class TriangleDrawing
         DrawTriangle(a,c,d,color);
     }
 
-
-    private static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, int cornerPoints = 2)
+    
+    private static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, bool ccw, float lineThickness, ColorRgba color, int cornerPoints = 2)
     {
         if (MathF.Abs(percentage) < 0.001f || lineThickness <= 0f || cornerPoints <= 0) return;
     
@@ -615,27 +619,26 @@ public static class TriangleDrawing
     
         float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
         float thickness = MathF.Min(lineThickness, maxThickness);
-        float absPercentage = MathF.Abs(percentage);
-        bool ccw = percentage > 0;
-       
-        // Reorder vertices for CW drawing so the main logic can be the same
-        Vector2 v1 = p1;
-        Vector2 v2 = ccw ? p2 : p3;
-        Vector2 v3 = ccw ? p3 : p2;
-    
-        var e1 = v2 - v1;
-        var e2 = v3 - v2;
-        var e3 = v1 - v3;
+        
+        var e1 = p2 - p1;
+        var e2 = p3 - p2;
+        var e3 = p1 - p3;
     
         var n1 = Vector2.Normalize(new(-e1.Y, e1.X));
         var n2 = Vector2.Normalize(new(-e2.Y, e2.X));
         var n3 = Vector2.Normalize(new(-e3.Y, e3.X));
-    
-        // Inner miter points are calculated based on the potentially reordered vertices
-        var m1Inner = CalculateMiterPoint(v1, n3, n1, thickness, false);
-        var m2Inner = CalculateMiterPoint(v2, n1, n2, thickness, false);
-        var m3Inner = CalculateMiterPoint(v3, n2, n3, thickness, false);
-    
+        
+        if (!ccw)
+        {
+            n1 = -n1;
+            n2 = -n2;
+            n3 = -n3;
+        }
+        
+        var m1Inner = CalculateMiterPoint(p1, n3, n1, thickness, false);
+        var m2Inner = CalculateMiterPoint(p2, n1, n2, thickness, false);
+        var m3Inner = CalculateMiterPoint(p3, n2, n3, thickness, false);
+        
         float aN1 = MathF.Atan2(n1.Y, n1.X);
         float aN2 = MathF.Atan2(n2.Y, n2.X);
         float aN3 = MathF.Atan2(n3.Y, n3.X);
@@ -643,7 +646,7 @@ public static class TriangleDrawing
         float arcAngle1 = AngleDelta(aN3, aN1);
         float arcAngle2 = AngleDelta(aN1, aN2);
         float arcAngle3 = AngleDelta(aN2, aN3);
-    
+
         float l1 = e1.Length();
         float l2 = e2.Length();
         float l3 = e3.Length();
@@ -653,55 +656,60 @@ public static class TriangleDrawing
         float arcLen3 = MathF.Abs(arcAngle3) * thickness;
     
         float totalPerimeter = l1 + l2 + l3 + arcLen1 + arcLen2 + arcLen3;
-        float targetLen = totalPerimeter * absPercentage;
+        float targetLen = totalPerimeter * percentage;
         float remaining = targetLen;
     
         // Unified drawing logic starts here
-        Vector2 prevOuter = v1 + ShapeVec.VecFromAngleRad(aN3 + arcAngle1 * 0.5f) * thickness;
-        remaining = EmitArc(v1, aN3 + arcAngle1 * 0.5f, arcAngle1 * 0.5f, m1Inner, prevOuter, remaining, arcAngle1);
+        var prevOuter = p1 + ShapeVec.VecFromAngleRad(aN3 + arcAngle1 * 0.5f) * thickness;
+        remaining = EmitArc(p1, aN3 + arcAngle1 * 0.5f, arcAngle1 * 0.5f, m1Inner, prevOuter, remaining, arcAngle1);
         if (remaining <= 0) return;
     
-        remaining = EmitEdge(v1 + n1 * thickness, v2 + n1 * thickness, m1Inner, m2Inner, remaining);
+        remaining = EmitEdge(p1 + n1 * thickness, p2 + n1 * thickness, m1Inner, m2Inner, remaining);
         if (remaining <= 0) return;
     
-        remaining = EmitArc(v2, aN1, arcAngle2, m2Inner, v2 + n1 * thickness, remaining, arcAngle2);
+        remaining = EmitArc(p2, aN1, arcAngle2, m2Inner, p2 + n1 * thickness, remaining, arcAngle2);
         if (remaining <= 0) return;
     
-        remaining = EmitEdge(v2 + n2 * thickness, v3 + n2 * thickness, m2Inner, m3Inner, remaining);
+        remaining = EmitEdge(p2 + n2 * thickness, p3 + n2 * thickness, m2Inner, m3Inner, remaining);
         if (remaining <= 0) return;
     
-        remaining = EmitArc(v3, aN2, arcAngle3, m3Inner, v3 + n2 * thickness, remaining, arcAngle3);
+        remaining = EmitArc(p3, aN2, arcAngle3, m3Inner, p3 + n2 * thickness, remaining, arcAngle3);
         if (remaining <= 0) return;
     
-        remaining = EmitEdge(v3 + n3 * thickness, v1 + n3 * thickness, m3Inner, m1Inner, remaining);
+        remaining = EmitEdge(p3 + n3 * thickness, p1 + n3 * thickness, m3Inner, m1Inner, remaining);
         if (remaining <= 0) return;
     
-        EmitArc(v1, aN3, arcAngle1 * 0.5f, m1Inner, v1 + n3 * thickness, remaining, arcAngle1);
+        EmitArc(p1, aN3, arcAngle1 * 0.5f, m1Inner, p1 + n3 * thickness, remaining, arcAngle1);
     
     
         float EmitArc(Vector2 corner, float startAngle, float angle, Vector2 inner, Vector2 currentOuter, float rem, float baseArcAngle)
         {
             if (rem <= 0f || angle == 0) return rem;
-            int steps = (int)MathF.Ceiling(cornerPoints * (MathF.Abs(angle) / MathF.Abs(baseArcAngle)));
+            // int steps = (int)MathF.Ceiling(cornerPoints * (MathF.Abs(angle) / MathF.Abs(baseArcAngle)));
+            float divisor = MathF.Abs(baseArcAngle) > 0.0001f ? MathF.Abs(baseArcAngle) : 1f;
+            int steps = (int)MathF.Ceiling(cornerPoints * (MathF.Abs(angle) / divisor));
+            
             if (steps <= 0) steps = 1;
     
             float stepAngle = angle / steps;
             float stepLen = MathF.Abs(stepAngle) * thickness;
-    
+            
             for (int i = 1; i <= steps; i++)
             {
                 if (rem <= 0) break;
                 var nextOuter = corner + ShapeVec.VecFromAngleRad(startAngle + stepAngle * i) * thickness;
                 if (rem >= stepLen)
                 {
-                    DrawTriangle(inner, currentOuter, nextOuter, color);
+                    if(ccw) DrawTriangle(inner, currentOuter, nextOuter, color);
+                    else DrawTriangle(inner, nextOuter, currentOuter, color);
                     rem -= stepLen;
                 }
                 else
                 {
                     float f = rem / stepLen;
                     var partialOuter = currentOuter.Lerp(nextOuter, f);
-                    DrawTriangle(inner, currentOuter, partialOuter, color);
+                    if(ccw) DrawTriangle(inner, currentOuter, partialOuter, color);
+                    else DrawTriangle(inner, partialOuter, currentOuter, color);
                     rem = 0;
                 }
                 currentOuter = nextOuter;
@@ -717,8 +725,17 @@ public static class TriangleDrawing
     
             if (rem >= len)
             {
-                DrawTriangle(innerStart, start, end, color);
-                DrawTriangle(innerStart, end, innerEnd, color);
+                if (ccw)
+                {
+                    DrawTriangle(innerStart, start, end, color);
+                    DrawTriangle(innerStart, end, innerEnd, color);
+                }
+                else
+                {
+                    DrawTriangle(innerStart, end, start, color);
+                    DrawTriangle(innerStart, innerEnd, end, color);
+                }
+                
                 rem -= len;
             }
             else
@@ -726,8 +743,16 @@ public static class TriangleDrawing
                 float f = rem / len;
                 var pOuter = start.Lerp(end, f);
                 var pInner = innerStart.Lerp(innerEnd, f);
-                DrawTriangle(innerStart, start, pOuter, color);
-                DrawTriangle(innerStart, pOuter, pInner, color);
+                if (ccw)
+                {
+                    DrawTriangle(innerStart, start, pOuter, color);
+                    DrawTriangle(innerStart, pOuter, pInner, color);
+                }
+                else
+                {
+                    DrawTriangle(innerStart, pOuter, start, color);
+                    DrawTriangle(innerStart, pInner, pOuter, color);
+                }
                 rem = 0;
             }
             return rem;
@@ -745,6 +770,9 @@ public static class TriangleDrawing
     
     private static void DrawTriangleLinesPercentageHelperNoAlpha(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
+        lineThickness = MathF.Min(lineThickness, maxThickness);
+        
         var l1 = (p2 - p1).Length();
         var l2 = (p3 - p2).Length();
         var l3 = (p1 - p3).Length();
