@@ -37,7 +37,7 @@ public static class SegmentDrawing
     private static readonly float MinSegmentDrawLengthSquared = MinSegmentDrawLength * MinSegmentDrawLength;
     
     #region Draw Segment
-        /// <summary>
+    /// <summary>
     /// Draws a segment from <paramref name="start"/> to a point along the direction to <paramref name="end"/>, scaled by <paramref name="sideLengthFactor"/>.
     /// </summary>
     /// <param name="start">The starting point of the segment.</param>
@@ -129,6 +129,7 @@ public static class SegmentDrawing
 
         }
     }
+  
     /// <summary>
     /// Draws a segment using float coordinates for start and end points.
     /// </summary>
@@ -180,7 +181,111 @@ public static class SegmentDrawing
     /// <param name="info">The line drawing information (thickness, color, cap type, cap points).</param>
     public static void DrawSegment(float startX, float startY, float endX, float endY, LineDrawingInfo info) 
         => DrawSegment(new(startX, startY), new(endX, endY), info.Thickness, info.Color, info.CapType, info.CapPoints);
+    
+    /// <summary>
+    /// Draws a segment from <paramref name="start"/> to <paramref name="end"/> with the specified thickness, color, and different cap styles for start and end.
+    /// </summary>
+    /// <param name="start">The starting point of the segment.</param>
+    /// <param name="end">The ending point of the segment.</param>
+    /// <param name="thickness">The thickness of the segment.</param>
+    /// <param name="color">The color of the segment.</param>
+    /// <param name="startCapType">The type of line cap to use at the start of the segment.</param>
+    /// <param name="startCapPoints">The number of points used to draw the start cap (for rounded or custom caps).</param>
+    /// <param name="endCapType">The type of line cap to use at the end of the segment.</param>
+    /// <param name="endCapPoints">The number of points used to draw the end cap (for rounded or custom caps).</param>
+    /// <remarks>
+    /// If <paramref name="thickness"/> is less than <see cref="LineDrawingInfo.LineMinThickness"/>, it will be clamped.
+    /// </remarks>
+    public static void DrawSegmentSeparateCaps(Vector2 start, Vector2 end, float thickness, ColorRgba color, LineCapType startCapType = LineCapType.None, int startCapPoints = 0, LineCapType endCapType = LineCapType.None, int endCapPoints = 0)
+    {
+        if (thickness < LineDrawingInfo.LineMinThickness) thickness = LineDrawingInfo.LineMinThickness;
+        var w = end - start;
+        float ls = w.X * w.X + w.Y * w.Y; // w.LengthSquared();
+        if (ls <= MinSegmentDrawLengthSquared) return;
+        
+        var dir = w / MathF.Sqrt(ls);
+        var pR = new Vector2(-dir.Y, dir.X);//perpendicular right
+        var pL = new Vector2(dir.Y, -dir.X);//perpendicular left
+        
+        if (startCapType == LineCapType.Extended) //expand outwards
+        {
+            start -= dir * thickness;
+        }
+        else if (startCapType == LineCapType.Capped) //shrink inwards so that the line with cap is the same length
+        {
+            start += dir * thickness;
+        }
+        
+        if (endCapType == LineCapType.Extended) //expand outwards
+        {
+            end += dir * thickness;
+        }
+        else if (endCapType == LineCapType.Capped) //shrink inwards so that the line with cap is the same length
+        {
+            end -= dir * thickness;
+        }
+        
+        var tl = start + pL * thickness;
+        var bl = start + pR * thickness;
+        var br = end + pR * thickness;
+        var tr = end + pL * thickness;
+        
+        Raylib.DrawTriangle(tl, bl, br, color.ToRayColor());
+        Raylib.DrawTriangle(tl, br, tr, color.ToRayColor());
 
+        if ((startCapType is LineCapType.None or LineCapType.Extended && endCapType is LineCapType.None or LineCapType.Extended) || 
+            (startCapPoints <= 0 && endCapPoints <= 0)) return;
+
+        //Draw Start Cap
+        if (startCapType is LineCapType.Capped or LineCapType.CappedExtended && startCapPoints > 0)
+        {
+            if (startCapPoints == 1)
+            {
+                var capStart = start - dir * thickness;
+                Raylib.DrawTriangle(tl, capStart, bl, color.ToRayColor());
+            }
+            else
+            {
+                var curStart = tl;
+                float angleStep = (180f / (startCapPoints + 1)) * ShapeMath.DEGTORAD;
+                
+                for (var i = 1; i <= startCapPoints; i++)
+                {
+                    var pStart = start + pL.Rotate(- angleStep * i) * thickness;
+                    Raylib.DrawTriangle(pStart, start, curStart, color.ToRayColor());
+                    curStart = pStart;
+                }
+                Raylib.DrawTriangle(curStart, bl, start, color.ToRayColor());
+
+            }
+        }
+        
+        
+        //Draw End Cap
+        if (endCapType is LineCapType.Capped or LineCapType.CappedExtended && endCapPoints > 0)
+        {
+            if (endCapPoints == 1)
+            {
+                var capEnd = end + dir * thickness;
+                Raylib.DrawTriangle(tr, br, capEnd, color.ToRayColor());
+            }
+            else
+            {
+                var curEnd = br;
+                float angleStep = (180f / (endCapPoints + 1)) * ShapeMath.DEGTORAD;
+                
+                for (var i = 1; i <= endCapPoints; i++)
+                {
+                    var pEnd = end + pR.Rotate(- angleStep * i) * thickness;
+                    Raylib.DrawTriangle(pEnd, end, curEnd, color.ToRayColor());
+                    curEnd = pEnd;
+                }
+                Raylib.DrawTriangle(curEnd, tr, end, color.ToRayColor());
+            }
+        }
+        
+    }
+  
     #endregion
     
     #region Draw Masked
@@ -569,6 +674,20 @@ public static class SegmentDrawing
     /// <param name="capPoints">The number of points used to draw the cap (for rounded or custom caps).</param>
     public static void Draw(this Segment segment, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
         => DrawSegment(segment.Start, segment.End, thickness, color, capType, capPoints);
+    
+    /// <summary>
+    /// Draws the specified <see cref="Segment"/> using separate cap styles for the start and end.
+    /// </summary>
+    /// <param name="segment">The segment to draw.</param>
+    /// <param name="thickness">The thickness of the segment. Values below <see cref="LineDrawingInfo.LineMinThickness"/> are clamped.</param>
+    /// <param name="color">Color used to draw the segment.</param>
+    /// <param name="startCapType">Cap type to apply at the segment start.</param>
+    /// <param name="startCapPoints">Number of points for the start cap (rounded/custom). If &lt;= 0 a simple cap is used.</param>
+    /// <param name="endCapType">Cap type to apply at the segment end.</param>
+    /// <param name="endCapPoints">Number of points for the end cap (rounded/custom). If &lt;= 0 a simple cap is used.</param>
+    public static void DrawSeparateCaps(this Segment segment, float thickness, ColorRgba color, LineCapType startCapType = LineCapType.None, int startCapPoints = 0, LineCapType endCapType = LineCapType.None, int endCapPoints = 0) 
+        => DrawSegmentSeparateCaps(segment.Start, segment.End, thickness, color, startCapType, startCapPoints, endCapType, endCapPoints);
+    
     /// <summary>
     /// Draws the specified <see cref="Segment"/> using the provided <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -594,7 +713,10 @@ public static class SegmentDrawing
         
         DrawSegment(segment.Start, segment.End, lineInfo);
     }
+    
+    #endregion
 
+    #region Draw Segments
     /// <summary>
     /// Draws all segments in the specified <see cref="Segments"/> collection using the provided <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -630,7 +752,7 @@ public static class SegmentDrawing
     }
 
     #endregion
-
+    
     #region Draw Percentage
         /// <summary>
     /// Draws part of a line from start to end depending on f.
