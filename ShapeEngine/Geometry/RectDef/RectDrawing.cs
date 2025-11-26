@@ -131,7 +131,20 @@ public static class RectDrawing
     {
         Raylib.DrawRectangleV(topLeft, bottomRight - topLeft, color.ToRayColor());
     }
+   
+    /// <summary>
+    /// Draws a filled rectangle using the specified color.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    public static void Draw(this Rect rect, ColorRgba color)
+    {
+        Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
+    }
 
+    #endregion
+    
+    #region Draw Rotation
     /// <summary>
     /// Draws a filled, rotated rectangle using the specified corners, pivot, rotation, and color.
     /// </summary>
@@ -148,14 +161,6 @@ public static class RectDrawing
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
         QuadDrawing.DrawQuad(a, b, c, d, color);
     }
-   
-    /// <summary>
-    /// Draws a filled rectangle using the specified color.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="color">The fill color.</param>
-    public static void Draw(this Rect rect, ColorRgba color) => Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
-
     /// <summary>
     /// Draws a filled, rotated rectangle using the specified pivot, rotation, and color.
     /// </summary>
@@ -163,8 +168,10 @@ public static class RectDrawing
     /// <param name="pivot">The pivot point for rotation.</param>
     /// <param name="rotDeg">The rotation in degrees.</param>
     /// <param name="color">The fill color.</param>
-    public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color) => DrawRect(rect.TopLeft, rect.BottomRight, pivot, rotDeg, color);
-
+    public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color)
+    {
+        DrawRect(rect.TopLeft, rect.BottomRight, pivot, rotDeg, color);
+    }
     #endregion
     
     #region Draw Rounded
@@ -175,24 +182,15 @@ public static class RectDrawing
     /// <param name="roundness">The roundness of the corners (0 to 1).</param>
     /// <param name="segments">The number of segments to approximate the roundness.</param>
     /// <param name="color">The fill color.</param>
-    public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
-
-    //TODO: Remove when overhauling DrawLines methods to use Raylib.DrawRectangleRoundedLinesEx()
-    /// <summary>
-    /// Draws the outline of a rectangle with rounded corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="segments">The number of segments to approximate the roundness.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color)
-        => Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
+    public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color)
+    {
+        Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
+    }
 
     #endregion
     
     #region Draw Lines
-    //TODO: Use Raylib.DrawRectangleRoundedLinesEx(); if cappoints > 0
+    
     /// <summary>
     /// Draws the outline of a rectangle using the specified corners, line thickness, and color.
     /// </summary>
@@ -200,30 +198,51 @@ public static class RectDrawing
     /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color of the outline.</param>
-    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color) => DrawLines(new Rect(topLeft, bottomRight), lineThickness, color);
-    
+    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color)
+    {
+        DrawRectLinesHelper(new Rect(topLeft, bottomRight), lineThickness, color);
+    }
+
     /// <summary>
     /// Draws the outline of a rectangle using the specified line drawing information.
     /// </summary>
     /// <param name="topLeft">The top-left corner of the rectangle.</param>
     /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="lineInfo">The line drawing information used for drawing the outline.
-    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
-    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, LineDrawingInfo lineInfo)
+    /// <param name="lineInfo">The line drawing information used for drawing the outline. <see cref="LineDrawingInfo.CapType"/> is not used! </param>
+    /// <param name="roundness">Can only be used when <see cref="LineDrawingInfo.CapPoints"/> is bigger than 0. Determines roundness of the corners. </param>
+    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, LineDrawingInfo lineInfo, float roundness = 0f)
     {
-        var r = new Rect(topLeft, bottomRight).Rectangle;
-        Raylib.DrawRectangleLinesEx(r, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
-        // var a = topLeft;
-        // var b = new Vector2(topLeft.X, bottomRight.Y);
-        // var c = bottomRight;
-        // var d = new Vector2(bottomRight.X, topLeft.Y);
-        //
-        // SegmentDrawing.DrawSegment(a, b, lineInfo);
-        // SegmentDrawing.DrawSegment(b, c, lineInfo);
-        // SegmentDrawing.DrawSegment(c, d, lineInfo);
-        // SegmentDrawing.DrawSegment(d, a, lineInfo);
+        DrawRectLinesHelper(new Rect(topLeft, bottomRight), lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints, roundness);
+        // var r = new Rect(topLeft, bottomRight).Rectangle;
+        // Raylib.DrawRectangleLinesEx(r, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
+    }
+    
+    /// <summary>
+    /// Draws the outline of a rectangle using the specified line thickness and color.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color)
+    {
+        DrawRectLinesHelper(rect, lineThickness, color);
+        // Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness * 2, color.ToRayColor());
     }
 
+    /// <summary>
+    /// Draws the outline of a rectangle using the specified line drawing information.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="lineInfo">The line drawing information used for drawing the outline. <see cref="LineDrawingInfo.CapType"/> is not used! </param>
+    /// <param name="roundness">Can only be used when <see cref="LineDrawingInfo.CapPoints"/> is bigger than 0. Determines roundness of the corners. </param>
+    public static void DrawLines(this Rect rect, LineDrawingInfo lineInfo, float roundness = 0f)
+    {
+        DrawRectLinesHelper(rect, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints, roundness);
+        // Raylib.DrawRectangleLinesEx(rect.Rectangle, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
+    }
+    #endregion
+    
+    #region Draw Lines Rotation
     /// <summary>
     /// Draws the outline of a rotated rectangle using the specified corners,
     /// pivot, rotation, line thickness, color, and cap style.
@@ -242,7 +261,6 @@ public static class RectDrawing
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
         QuadDrawing.DrawQuadLines(a, b, c, d, lineThickness, color);
     }
-
     /// <summary>
     /// Draws the outline of a rotated rectangle using the specified line drawing information.
     /// </summary>
@@ -253,30 +271,9 @@ public static class RectDrawing
     /// <param name="lineInfo">The line drawing information used for drawing the outline.
     /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
-        => DrawRectLines(topLeft, bottomRight, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color);
-    /// <summary>
-    /// Draws the outline of a rectangle using the specified line thickness and color.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness * 2, color.ToRayColor());
-
-    /// <summary>
-    /// Draws the outline of a rectangle using the specified line drawing information.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information used for drawing the outline.
-    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
-    public static void DrawLines(this Rect rect, LineDrawingInfo lineInfo)
     {
-        Raylib.DrawRectangleLinesEx(rect.Rectangle, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
-        // SegmentDrawing.DrawSegment(rect.TopLeft, rect.BottomLeft, lineInfo);
-        // SegmentDrawing.DrawSegment(rect.BottomLeft, rect.BottomRight, lineInfo);
-        // SegmentDrawing.DrawSegment(rect.BottomRight, rect.TopRight, lineInfo);
-        // SegmentDrawing.DrawSegment(rect.TopRight, rect.TopLeft, lineInfo);
+        DrawRectLines(topLeft, bottomRight, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color);
     }
-
     /// <summary>
     /// Draws the outline of a rotated rectangle using the specified pivot,
     /// rotation, line thickness, color, and cap style.
@@ -301,7 +298,6 @@ public static class RectDrawing
     {
         DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineInfo);
     }
-
     #endregion
     
     #region Draw Lines Percentage
@@ -789,6 +785,7 @@ public static class RectDrawing
     
     #region Draw Corners
     //TODO: update docs for using LineDrawingInfo.CapPoints for corner roundness
+    //TODO: best way would be to use raylibs draw rounded solution for drawing rounded corners!
     /// <summary>
     /// Draws corner lines for a rectangle, with each corner having a specified length.
     /// </summary>
@@ -847,7 +844,9 @@ public static class RectDrawing
     /// Therefore, the corner value should be positive and not exceed the smallest dimension of the rect.
     /// </param>
     public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float cornerLength)
-        => DrawCorners(rect, lineInfo, cornerLength, cornerLength, cornerLength, cornerLength);
+    {
+        DrawCorners(rect, lineInfo, cornerLength, cornerLength, cornerLength, cornerLength);
+    }
 
     /// <summary>
     /// Draws corner lines for a rectangle, with each corner having a specified relative length (0 to 1).
@@ -862,32 +861,6 @@ public static class RectDrawing
     {
         var minSize = MathF.Min(rect.Width, rect.Height);
         DrawCorners(rect, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
-        
-        // var tl = rect.TopLeft;
-        // var tr = rect.TopRight;
-        // var br = rect.BottomRight;
-        // var bl = rect.BottomLeft;
-        //
-        // if (tlCorner > 0f && tlCorner < 1f)
-        // {
-        //     SegmentDrawing.DrawSegment(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-        //     SegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        // }
-        // if (trCorner > 0f && trCorner < 1f)
-        // {
-        //     SegmentDrawing.DrawSegment(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-        //     SegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        // }
-        // if (brCorner > 0f && brCorner < 1f)
-        // {
-        //     SegmentDrawing.DrawSegment(br, br - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-        //     SegmentDrawing.DrawSegment(br, br - new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        // }
-        // if (blCorner > 0f && blCorner < 1f)
-        // {
-        //     SegmentDrawing.DrawSegment(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-        //     SegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        // }
     }
 
     /// <summary>
@@ -897,7 +870,10 @@ public static class RectDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
     /// <param name="cornerLengthFactor">The relative length of the corner lines for all corners (0 to 1).</param>
     public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float cornerLengthFactor)
-        => DrawCornersRelative(rect, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
+    {
+        DrawCornersRelative(rect, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
+    }
+
     #endregion
     
     #region Draw Vertices
@@ -920,6 +896,8 @@ public static class RectDrawing
     #region Helper
     private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        //NOTE: Should handled rounded corners as well (with corner points and roundness like DrawLines/Draw functions)
+        
         //TODO: Fix with new system
         // - Remove cap type for percentage drawing - its either sharp (cap points <= 0 or round (cap points > 0)
         
@@ -976,8 +954,21 @@ public static class RectDrawing
         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
     
+    private static void DrawRectLinesHelper(Rect rect, float thickness, ColorRgba color, int cornerPoints = 0, float roundness = 0f)
+    {
+        if (cornerPoints <= 0 || roundness <= 0f)
+        {
+            rect = rect.ChangeSize(thickness * 2, AnchorPoint.Center);
+            Raylib.DrawRectangleLinesEx(rect.Rectangle, thickness * 2, color.ToRayColor());
+        }
+        else
+        {
+            rect = rect.ChangeSize(-thickness * 2, AnchorPoint.Center);
+            Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, cornerPoints, thickness * 2, color.ToRayColor());
+        }
+    }
 
-    private static void DrawRectCornerSharp(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, bool insideOnly = true)
+    private static void DrawRectCornerSharp(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, bool insideOnly = false)
     {
         var miterDir = (n1 + n2).Normalize();
         var maxMiterLength = MathF.Sqrt(cornerLength1 * cornerLength1 + cornerLength2 * cornerLength2);
