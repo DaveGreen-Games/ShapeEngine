@@ -127,24 +127,98 @@ public static class TriangleDrawing
     /// <param name="b">The second vertex of the triangle.</param>
     /// <param name="c">The third vertex of the triangle.</param>
     /// <param name="color">The color to fill the triangle with.</param>
-    public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color) => Raylib.DrawTriangle(a, b, c, color.ToRayColor());
-    
+    public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color)
+    {
+        Raylib.DrawTriangle(a, b, c, color.ToRayColor());
+    }
+
     /// <summary>
     /// Draws a filled triangle using the specified <see cref="Triangle"/> and color.
     /// </summary>
     /// <param name="t">The triangle to draw.</param>
     /// <param name="color">The color to fill the triangle with.</param>
-    public static void Draw(this Triangle t, ColorRgba color) => Raylib.DrawTriangle(t.A, t.B, t.C, color.ToRayColor());
-    
+    public static void Draw(this Triangle t, ColorRgba color)
+    {
+        Raylib.DrawTriangle(t.A, t.B, t.C, color.ToRayColor());
+    }
+
     /// <summary>
     /// Draws a collection of triangles filled with the specified color.
     /// </summary>
     /// <param name="triangles">The collection of triangles to draw.</param>
     /// <param name="color">The color to fill each triangle with.</param>
-    public static void Draw(this Triangulation triangles, ColorRgba color) { foreach (var t in triangles) t.Draw(color); }
+    public static void Draw(this Triangulation triangles, ColorRgba color)
+    {
+        foreach (var t in triangles) t.Draw(color);
+    }
+    
+   
+    #endregion
+
+    #region Draw Rounded
+    
+    /// <summary>
+    /// Draws a filled triangle with rounded outer corners.
+    /// </summary>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <param name="color">The color used to fill the triangle.</param>
+    /// <param name="cornerPoints">
+    /// Number of extra points used to approximate rounded corners.
+    /// 0 = sharp corners (no rounding). Higher values increase smoothness. Default: 5.
+    /// </param>
+    /// <param name="cornerStrength">
+    /// Controls how rounded the corners are: 0 = maximum roundness, 1 = no roundness (sharp).
+    /// Values between 0 and 1 interpolate between fully rounded and sharp corners. Default: 0.5.
+    /// </param>
+    public static void DrawTriangleRounded(Vector2 a, Vector2 b, Vector2 c, ColorRgba color, int cornerPoints = 5, float cornerStrength = 0.5f)
+    {
+        DrawTriangleRoundedHelper(a, b, c, color, cornerPoints, cornerStrength); 
+    }
+    /// <summary>
+    /// Draws the triangle with rounded outer corners using the provided color and rounding parameters.
+    /// </summary>
+    /// <param name="t">The triangle instance to draw.</param>
+    /// <param name="color">The fill color used to render the rounded triangle.</param>
+    /// <param name="cornerPoints">
+    /// Number of extra points used to approximate each rounded corner.
+    /// 0 = sharp corners (no rounding). Higher values produce smoother rounded corners. Default: 5.
+    /// </param>
+    /// <param name="cornerStrength">
+    /// Controls the strength (radius) of the corner rounding:
+    /// 0 = maximum roundness, 1 = no roundness (sharp corners).
+    /// Values between 0 and 1 interpolate between fully rounded and sharp corners. Default: 0.5.
+    /// </param>
+    public static void DrawRounded(this Triangle t, ColorRgba color, int cornerPoints = 5, float cornerStrength = 0.5f)
+    {
+        DrawTriangleRoundedHelper(t.A, t.B, t.C, color, cornerPoints, cornerStrength);
+    }
+    /// <summary>
+    /// Draws all triangles in the given <see cref="Triangulation"/> using rounded outer corners.
+    /// This is a convenience extension that iterates the collection and draws each triangle
+    /// using the same rounding parameters.
+    /// </summary>
+    /// <param name="triangles">The collection of triangles to draw.</param>
+    /// <param name="color">The fill color applied to each rounded triangle.</param>
+    /// <param name="cornerPoints">
+    /// Number of extra points used to approximate each rounded corner.
+    /// 0 = sharp corners (no rounding). Higher values produce smoother rounded corners. Default: 5.
+    /// </param>
+    /// <param name="cornerStrength">
+    /// Controls the strength (radius) of the corner rounding:
+    /// 0 = maximum roundness, 1 = no roundness (sharp corners).
+    /// Values between 0 and 1 interpolate between fully rounded and sharp corners. Default: 0.5.
+    /// </param>
+    public static void DrawRounded(this Triangulation triangles, ColorRgba color, int cornerPoints = 5, float cornerStrength = 0.5f)
+    {
+        foreach (var t in triangles) t.DrawRounded(color, cornerPoints, cornerStrength);
+    }
+    
     #endregion
     
     #region Draw Lines
+    
     /// <summary>
     /// Draws the outline of a triangle with specified line thickness and style.
     /// </summary>
@@ -158,7 +232,41 @@ public static class TriangleDrawing
     {
         DrawTriangleLinesHelper(a, b, c, lineThickness, color, cornerPoints);
     }
+    
+    /// <summary>
+    /// Draws the outline of a triangle using a <see cref="LineDrawingInfo"/> object for style.
+    /// </summary>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, LineDrawingInfo lineInfo)
+    {
+        DrawTriangleLinesHelper(a, b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints);
+    }
 
+    /// <summary>
+    /// Draws the outline of a triangle with specified line thickness and style.
+    /// </summary>
+    /// <param name="t">The triangle to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="cornerPoints"> How many extra points should be used for the outside edges of the outline.</param>
+    public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, int cornerPoints = 0)
+    {
+        DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, cornerPoints);
+    }
+    
+    /// <summary>
+    /// Draws the outline of a triangle using a <see cref="LineDrawingInfo"/> object for style.
+    /// </summary>
+    /// <param name="t">The triangle to draw.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo) => DrawTriangleLines(t.A, t.B, t.C, lineInfo);
+
+    #endregion
+    
+    #region Draw Lines Side Length Factor
     /// <summary>
     /// Draws the outline of a triangle with each side scaled by a factor.
     /// </summary>
@@ -194,31 +302,7 @@ public static class TriangleDrawing
         SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
         SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
     }
-
-    /// <summary>
-    /// Draws the outline of a triangle using a <see cref="LineDrawingInfo"/> object for style.
-    /// </summary>
-    /// <param name="a">The first vertex of the triangle.</param>
-    /// <param name="b">The second vertex of the triangle.</param>
-    /// <param name="c">The third vertex of the triangle.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, LineDrawingInfo lineInfo)
-    {
-        DrawTriangleLinesHelper(a, b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints);
-    }
-
-    /// <summary>
-    /// Draws the outline of a triangle with specified line thickness and style.
-    /// </summary>
-    /// <param name="t">The triangle to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="cornerPoints"> How many extra points should be used for the outside edges of the outline.</param>
-    public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, int cornerPoints = 0)
-    {
-        DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, cornerPoints);
-    }
-
+    
     /// <summary>
     /// Draws the outline of a triangle with each side scaled by a factor.
     /// </summary>
@@ -235,15 +319,10 @@ public static class TriangleDrawing
     {
         DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, sideLengthFactor, capType, capPoints);
     }
+    #endregion
 
-    /// <summary>
-    /// Draws the outline of a triangle using a <see cref="LineDrawingInfo"/> object for style.
-    /// </summary>
-    /// <param name="t">The triangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo) => DrawTriangleLines(t.A, t.B, t.C, lineInfo);
-    
-    
+    #region Draw Triangles
+
     /// <summary>
     /// Draws the outlines of a collection of triangles with specified line thickness and style.
     /// </summary>
@@ -265,7 +344,7 @@ public static class TriangleDrawing
     {
         foreach (var t in triangles) t.DrawLines(lineInfo);
     }
-
+    
     #endregion
     
     #region Draw Vertices
@@ -283,7 +362,7 @@ public static class TriangleDrawing
         CircleDrawing.DrawCircle(t.C, vertexRadius, color, circleSegments);
     }
     #endregion
-    
+
     #region Draw Lines Percentage
     /// <summary>
     /// Draws a certain percentage of a triangle's outline.
@@ -402,7 +481,7 @@ public static class TriangleDrawing
     /// <item><c>-2.7</c> - Start at b, draw 70% of the outline clockwise.</item>
     /// </list>
     /// </param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="lineInfo">The line drawing information. This function does not use <see cref="LineDrawingInfo.CapType"/>!</param>
     /// <remarks>
     /// Useful for animating or highlighting portions of a triangle's outline.
     /// </remarks>
@@ -466,7 +545,7 @@ public static class TriangleDrawing
     /// <item><c>-2.7</c> - Start at b, draw 70% of the outline clockwise.</item>
     /// </list>
     /// </param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="lineInfo">The line drawing information. This function does not use <see cref="LineDrawingInfo.CapType"/>!</param>
     /// <remarks>
     /// Useful for animating or highlighting portions of a triangle's outline.
     /// </remarks>
@@ -504,27 +583,77 @@ public static class TriangleDrawing
     #endregion
     
     #region Helper
+
+    private static void DrawTriangleRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, ColorRgba color, int cornerPoints, float cornerStrength)
+    {
+        if (cornerPoints <= 0 || cornerStrength >= 1f)
+        {
+            DrawTriangle(p1, p2, p3, color);
+            return;
+        }
+
+        // Calculate maximum safe thickness based on inradius
+        float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
+        float thickness = maxThickness * cornerStrength; // MathF.Min(lineThickness, maxThickness);
+
+        // Calculate edge vectors and perpendicular normals
+        var edge1 = p2 - p1;
+        var edge2 = p3 - p2;
+        var edge3 = p1 - p3;
+
+        var normal1 = new Vector2(-edge1.Y, edge1.X);
+        if (normal1.LengthSquared() > 0) normal1 = Vector2.Normalize(normal1);
+
+        var normal2 = new Vector2(-edge2.Y, edge2.X);
+        if (normal2.LengthSquared() > 0) normal2 = Vector2.Normalize(normal2);
+
+        var normal3 = new Vector2(-edge3.Y, edge3.X);
+        if (normal3.LengthSquared() > 0) normal3 = Vector2.Normalize(normal3);
+
+        // Calculate inner miter points (always sharp)
+        var miter1Inner = CalculateMiterPoint(p1, normal3, normal1, thickness, false);
+        var miter2Inner = CalculateMiterPoint(p2, normal1, normal2, thickness, false);
+        var miter3Inner = CalculateMiterPoint(p3, normal2, normal3, thickness, false);
+
+        // Rounded corners: use simple outer edge points, not miters
+        var p1Outer = miter1Inner + normal1 * thickness;
+        var p2Outer1 = miter2Inner + normal1 * thickness;
+        var p2Outer2 = miter2Inner + normal2 * thickness;
+        var p3Outer2 = miter3Inner + normal2 * thickness;
+        var p3Outer3 = miter3Inner + normal3 * thickness;
+        var p1Outer3 = miter1Inner + normal3 * thickness;
+
+        // Draw straight edge segments (no miter)
+        DrawEdgeQuad(miter1Inner, miter2Inner, p1Outer, p2Outer1, color);
+        DrawEdgeQuad(miter2Inner, miter3Inner, p2Outer2, p3Outer2, color);
+        DrawEdgeQuad(miter3Inner, miter1Inner, p3Outer3, p1Outer3, color);
+
+        // Draw rounded corners to fill the gaps
+        DrawOuterCorner(miter1Inner, normal3, normal1, miter1Inner, thickness, color, cornerPoints);
+        DrawOuterCorner(miter2Inner, normal1, normal2, miter2Inner, thickness, color, cornerPoints);
+        DrawOuterCorner(miter3Inner, normal2, normal3, miter3Inner, thickness, color, cornerPoints);
+
+        //Fill center for full triangle
+        DrawTriangle(miter1Inner, miter2Inner, miter3Inner, color);
+        
+    }
+    
+
     private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, bool ccw, float lineThickness, ColorRgba color, int capPoints)
     {
         if (lineThickness <= 0 || percentage <= 0 || percentage >= 1) return;
         
         if (capPoints <= 0)
         {
-            DrawTriangleLinesPercentageHelperAlpha(p1, p2, p3, percentage, lineThickness, color);
+            DrawTriangleLinesPercentageHelperMitered(p1, p2, p3, percentage, lineThickness, color);
         }
         else
         {
-            if (color.A < 255)
-            {
-                DrawTriangleLinesPercentageHelperAlphaCapped(p1, p2, p3, percentage, ccw, lineThickness, color, capPoints);
-            }
-            else
-            {
-                DrawTriangleLinesPercentageHelperNoAlpha(p1, p2, p3, percentage, lineThickness, color, LineCapType.CappedExtended, capPoints);
-            }
+            DrawTriangleLinesPercentageHelperCapped(p1, p2, p3, percentage, ccw, lineThickness, color, capPoints);
         }
     }
-    private static void DrawTriangleLinesPercentageHelperAlpha(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color)
+    
+    private static void DrawTriangleLinesPercentageHelperMitered(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color)
     {
         if (lineThickness <= 0 || percentage <= 0 || percentage >= 1) return;
 
@@ -605,9 +734,7 @@ public static class TriangleDrawing
         DrawTriangle(a,b,c,color);
         DrawTriangle(a,c,d,color);
     }
-
-    
-    private static void DrawTriangleLinesPercentageHelperAlphaCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, bool ccw, float lineThickness, ColorRgba color, int cornerPoints = 2)
+    private static void DrawTriangleLinesPercentageHelperCapped(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, bool ccw, float lineThickness, ColorRgba color, int cornerPoints = 2)
     {
         if (MathF.Abs(percentage) < 0.001f || lineThickness <= 0f || cornerPoints <= 0) return;
     
@@ -767,58 +894,6 @@ public static class TriangleDrawing
         }
     }
     
-    
-    private static void DrawTriangleLinesPercentageHelperNoAlpha(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        float maxThickness = CalculateMaxLineThickness(p1, p2, p3);
-        lineThickness = MathF.Min(lineThickness, maxThickness);
-        
-        var l1 = (p2 - p1).Length();
-        var l2 = (p3 - p2).Length();
-        var l3 = (p1 - p3).Length();
-        var perimeterToDraw = (l1 + l2 + l3) * percentage;
-
-        // Draw first segment
-        var curP = p1;
-        var nextP = p2;
-        if (perimeterToDraw < l1)
-        {
-            float p = perimeterToDraw / l1;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l1;
-
-        // Draw second segment
-        curP = nextP;
-        nextP = p3;
-        if (perimeterToDraw < l2)
-        {
-            float p = perimeterToDraw / l2;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l2;
-
-        // Draw third segment
-        curP = nextP;
-        nextP = p1;
-        if (perimeterToDraw < l3)
-        {
-            float p = perimeterToDraw / l3;
-            nextP = curP.Lerp(nextP, p);
-        }
-
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-    }
-    
-    
     private static void DrawTriangleLinesHelper(Vector2 p1, Vector2 p2, Vector2 p3, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
         if (lineThickness <= 0) return;
@@ -941,6 +1016,7 @@ public static class TriangleDrawing
     }
     #endregion
 }
+
 
     
     
