@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -166,8 +167,32 @@ public static class RectDrawing
 
     #endregion
     
-    #region Draw Lines
+    #region Draw Rounded
+    /// <summary>
+    /// Draws a filled rectangle with rounded corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
+    /// <param name="segments">The number of segments to approximate the roundness.</param>
+    /// <param name="color">The fill color.</param>
+    public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
 
+    //TODO: Remove when overhauling DrawLines methods to use Raylib.DrawRectangleRoundedLinesEx()
+    /// <summary>
+    /// Draws the outline of a rectangle with rounded corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="segments">The number of segments to approximate the roundness.</param>
+    /// <param name="color">The color of the outline.</param>
+    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color)
+        => Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
+
+    #endregion
+    
+    #region Draw Lines
+    //TODO: Use Raylib.DrawRectangleRoundedLinesEx(); if cappoints > 0
     /// <summary>
     /// Draws the outline of a rectangle using the specified corners, line thickness, and color.
     /// </summary>
@@ -678,7 +703,7 @@ public static class RectDrawing
     #endregion
 
     #region Draw Slanted Corners
-    
+    //TODO: Overhaul/Optimize to not use GetSlantedCornerPoints and DrawPolygonConvex -> draw triangles directly
     /// <summary>
     /// Draws a filled rectangle with slanted corners.
     /// </summary>
@@ -760,12 +785,10 @@ public static class RectDrawing
         poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
         poly.DrawLines(lineInfo);
     }
-    
     #endregion
     
     #region Draw Corners
-    
-    
+    //TODO: update docs for using LineDrawingInfo.CapPoints for corner roundness
     /// <summary>
     /// Draws corner lines for a rectangle, with each corner having a specified length.
     /// </summary>
@@ -781,34 +804,38 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        //TODO: Fix with new system
+        if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || rect.Width <= 0 || rect.Height <= 0) return;
+        //TODO: Needs a path for rounded corners and one for mitered corners
+        
         var tl = rect.TopLeft;
         var tr = rect.TopRight;
         var br = rect.BottomRight;
         var bl = rect.BottomLeft;
 
+        var nL = new Vector2(-1, 0f);
+        var nR = new Vector2(1, 0f);
+        var nU = new Vector2(0f, -1);
+        var nD = new Vector2(0f, 1);
+        var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
+        
         if (tlCorner > 0f)
         {
-            SegmentDrawing.DrawSegment(tl, tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f), lineInfo);
-            SegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)), lineInfo);
+            DrawRectCornerSharp(tl, nU, nL, MathF.Min(tlCorner, rect.Height / 2f), MathF.Min(tlCorner, rect.Width / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
         }
         if (trCorner > 0f)
         {
-            SegmentDrawing.DrawSegment(tr, tr - new Vector2(MathF.Min(trCorner, rect.Width), 0f), lineInfo);
-            SegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, MathF.Min(trCorner, rect.Height)), lineInfo);
+            DrawRectCornerSharp(tr, nR, nU, MathF.Min(trCorner, rect.Width / 2f), MathF.Min(trCorner, rect.Height / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
         }
         if (brCorner > 0f)
         {
-            SegmentDrawing.DrawSegment(br, br - new Vector2(MathF.Min(brCorner, rect.Width), 0f), lineInfo);
-            SegmentDrawing.DrawSegment(br, br - new Vector2(0f, MathF.Min(brCorner, rect.Height)), lineInfo);
+            DrawRectCornerSharp(br, nD, nR, MathF.Min(brCorner, rect.Height / 2f), MathF.Min(brCorner, rect.Width / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
         }
         if (blCorner > 0f)
         {
-            SegmentDrawing.DrawSegment(bl, bl + new Vector2(MathF.Min(blCorner, rect.Width), 0f), lineInfo);
-            SegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, MathF.Min(blCorner, rect.Height)), lineInfo);
+            DrawRectCornerSharp(bl, nL, nD, MathF.Min(blCorner, rect.Width / 2f), MathF.Min(blCorner, rect.Height / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
         }
     }
-
+    
     /// <summary>
     /// Draws corner lines for a rectangle, with all corners having the same length.
     /// </summary>
@@ -827,38 +854,40 @@ public static class RectDrawing
     /// </summary>
     /// <param name="rect">The rectangle to draw.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="tlCorner">The relative length of the top-left corner lines (0-1).</param>
-    /// <param name="trCorner">The relative length of the top-right corner lines (0-1).</param>
-    /// <param name="brCorner">The relative length of the bottom-right corner lines (0-1).</param>
-    /// <param name="blCorner">The relative length of the bottom-left corner lines (0-1).</param>
-    public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    /// <param name="tlCornerFactor">The relative length of the top-left corner lines (0-1).</param>
+    /// <param name="trCornerFactor">The relative length of the top-right corner lines (0-1).</param>
+    /// <param name="brCornerFactor">The relative length of the bottom-right corner lines (0-1).</param>
+    /// <param name="blCornerFactor">The relative length of the bottom-left corner lines (0-1).</param>
+    public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
     {
-        //TODO: Fix with new system
-        var tl = rect.TopLeft;
-        var tr = rect.TopRight;
-        var br = rect.BottomRight;
-        var bl = rect.BottomLeft;
-
-        if (tlCorner > 0f && tlCorner < 1f)
-        {
-            SegmentDrawing.DrawSegment(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            SegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        }
-        if (trCorner > 0f && trCorner < 1f)
-        {
-            SegmentDrawing.DrawSegment(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            SegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        }
-        if (brCorner > 0f && brCorner < 1f)
-        {
-            SegmentDrawing.DrawSegment(br, br - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            SegmentDrawing.DrawSegment(br, br - new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        }
-        if (blCorner > 0f && blCorner < 1f)
-        {
-            SegmentDrawing.DrawSegment(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            SegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineInfo);
-        }
+        var minSize = MathF.Min(rect.Width, rect.Height);
+        DrawCorners(rect, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
+        
+        // var tl = rect.TopLeft;
+        // var tr = rect.TopRight;
+        // var br = rect.BottomRight;
+        // var bl = rect.BottomLeft;
+        //
+        // if (tlCorner > 0f && tlCorner < 1f)
+        // {
+        //     SegmentDrawing.DrawSegment(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+        //     SegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineInfo);
+        // }
+        // if (trCorner > 0f && trCorner < 1f)
+        // {
+        //     SegmentDrawing.DrawSegment(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+        //     SegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineInfo);
+        // }
+        // if (brCorner > 0f && brCorner < 1f)
+        // {
+        //     SegmentDrawing.DrawSegment(br, br - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+        //     SegmentDrawing.DrawSegment(br, br - new Vector2(0f, tlCorner * rect.Height), lineInfo);
+        // }
+        // if (blCorner > 0f && blCorner < 1f)
+        // {
+        //     SegmentDrawing.DrawSegment(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+        //     SegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineInfo);
+        // }
     }
 
     /// <summary>
@@ -869,29 +898,6 @@ public static class RectDrawing
     /// <param name="cornerLengthFactor">The relative length of the corner lines for all corners (0 to 1).</param>
     public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float cornerLengthFactor)
         => DrawCornersRelative(rect, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
-    #endregion
-
-    #region Draw Rounded
-    /// <summary>
-    /// Draws a filled rectangle with rounded corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
-    /// <param name="segments">The number of segments to approximate the roundness.</param>
-    /// <param name="color">The fill color.</param>
-    public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
-
-    /// <summary>
-    /// Draws the outline of a rectangle with rounded corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="segments">The number of segments to approximate the roundness.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color)
-        => Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
-
     #endregion
     
     #region Draw Vertices
@@ -915,6 +921,7 @@ public static class RectDrawing
     private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         //TODO: Fix with new system
+        // - Remove cap type for percentage drawing - its either sharp (cap points <= 0 or round (cap points > 0)
         
         // Draw first segment
         var curP = p1;
@@ -967,6 +974,39 @@ public static class RectDrawing
             nextP = curP.Lerp(nextP, p);
         }
         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    }
+    
+
+    private static void DrawRectCornerSharp(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, bool insideOnly = true)
+    {
+        var miterDir = (n1 + n2).Normalize();
+        var maxMiterLength = MathF.Sqrt(cornerLength1 * cornerLength1 + cornerLength2 * cornerLength2);
+        miterLength = MathF.Min(miterLength, maxMiterLength);
+        
+        var innerMiter = p - miterDir * miterLength;
+        var end1 = p - n1 * cornerLength1;
+        var end2 = p - n2 * cornerLength2;
+        var end1Inner = end1 - n2 * thickness;
+        var end2Inner = end2 - n1 * thickness;
+        
+        if (insideOnly)
+        {
+            TriangleDrawing.DrawTriangle(p, end1, innerMiter, color);
+            TriangleDrawing.DrawTriangle(end1, end1Inner, innerMiter, color);
+            TriangleDrawing.DrawTriangle(p, innerMiter, end2, color); 
+            TriangleDrawing.DrawTriangle(innerMiter, end2Inner, end2, color); 
+        }
+        else
+        {
+            var outerMiter = p + miterDir * miterLength;
+            var end1Outer = end1 + n2 * thickness;
+            var end2Outer = end2 + n1 * thickness;
+            TriangleDrawing.DrawTriangle(outerMiter, end1Outer, innerMiter, color);
+            TriangleDrawing.DrawTriangle(end1Outer, end1Inner, innerMiter, color);
+            TriangleDrawing.DrawTriangle(outerMiter, innerMiter, end2Outer, color); 
+            TriangleDrawing.DrawTriangle(innerMiter, end2Inner, end2Outer, color); 
+        }
+        
     }
     #endregion
 }
