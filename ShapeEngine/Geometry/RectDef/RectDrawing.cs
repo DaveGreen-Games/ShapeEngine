@@ -4,6 +4,7 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -1386,12 +1387,12 @@ public static class RectDrawing
     {
         if (cornerPoints <= 0 || roundness <= 0f)
         {
-            rect = rect.ChangeSize(thickness * 2, AnchorPoint.Center);
+            rect = rect.ChangeSize(thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
             Raylib.DrawRectangleLinesEx(rect.Rectangle, thickness * 2, color.ToRayColor());
         }
         else
         {
-            rect = rect.ChangeSize(-thickness * 2, AnchorPoint.Center);
+            rect = rect.ChangeSize(-thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
             Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, cornerPoints, thickness * 2, color.ToRayColor());
         }
     }
