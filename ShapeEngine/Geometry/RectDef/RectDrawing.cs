@@ -4,7 +4,6 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
-using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -22,6 +21,8 @@ namespace ShapeEngine.Geometry.RectDef;
 /// </remarks>
 public static class RectDrawing
 {
+    //TODO: Use custom function for rounded rect & rounded rect lines
+    
     private static Polygon polygonHelper = new(12);
     
     #region Draw Masked
@@ -1232,33 +1233,71 @@ public static class RectDrawing
     {
         if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || rect.Width <= 0 || rect.Height <= 0) return;
         //TODO: Needs a path for rounded corners and one for mitered corners
-        
-        var tl = rect.TopLeft;
-        var tr = rect.TopRight;
-        var br = rect.BottomRight;
-        var bl = rect.BottomLeft;
 
-        var nL = new Vector2(-1, 0f);
-        var nR = new Vector2(1, 0f);
-        var nU = new Vector2(0f, -1);
-        var nD = new Vector2(0f, 1);
-        var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
-        
-        if (tlCorner > 0f)
+        if (lineInfo.CapPoints <= 0)
         {
-            DrawRectCornerSharp(tl, nU, nL, MathF.Min(tlCorner, rect.Height / 2f), MathF.Min(tlCorner, rect.Width / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
+            var tl = rect.TopLeft;
+            var tr = rect.TopRight;
+            var br = rect.BottomRight;
+            var bl = rect.BottomLeft;
+
+            var nL = new Vector2(-1, 0f);
+            var nR = new Vector2(1, 0f);
+            var nU = new Vector2(0f, -1);
+            var nD = new Vector2(0f, 1);
+            var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
+            var halfWidth = rect.Width / 2f;
+            var halfHeight = rect.Height / 2f;
+
+            if (tlCorner > 0f)
+            {
+                DrawRectCornerSharp(tl, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
+                    lineInfo.Color);
+            }
+
+            if (trCorner > 0f)
+            {
+                DrawRectCornerSharp(tr, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
+                    lineInfo.Color);
+            }
+
+            if (brCorner > 0f)
+            {
+                DrawRectCornerSharp(br, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
+                    lineInfo.Color);
+            }
+
+            if (blCorner > 0f)
+            {
+                DrawRectCornerSharp(bl, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
+                    lineInfo.Color);
+            }
         }
-        if (trCorner > 0f)
+        else
         {
-            DrawRectCornerSharp(tr, nR, nU, MathF.Min(trCorner, rect.Width / 2f), MathF.Min(trCorner, rect.Height / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
-        }
-        if (brCorner > 0f)
-        {
-            DrawRectCornerSharp(br, nD, nR, MathF.Min(brCorner, rect.Height / 2f), MathF.Min(brCorner, rect.Width / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
-        }
-        if (blCorner > 0f)
-        {
-            DrawRectCornerSharp(bl, nL, nD, MathF.Min(blCorner, rect.Width / 2f), MathF.Min(blCorner, rect.Height / 2f), lineInfo.Thickness, miterLength, lineInfo.Color);
+            const float roundness = 0.53f;
+            float radius = (rect.Width > rect.Height) ? (rect.Height * roundness) / 2f : (rect.Width * roundness) / 2f;
+            if (radius <= 0f) return;
+
+            if (tlCorner > 0f)
+            {
+                DrawRectCornerRounded(rect.TopLeft, new Vector2(0, -1), new Vector2(-1, 0), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
+            }
+
+            if (blCorner > 0f)
+            {
+                DrawRectCornerRounded(rect.BottomLeft, new Vector2(-1, 0), new Vector2(0, 1), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
+            }
+
+            if (brCorner > 0f)
+            {
+                DrawRectCornerRounded(rect.BottomRight, new Vector2(0, 1), new Vector2(1, 0), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
+            }
+
+            if (trCorner > 0f)
+            {
+                DrawRectCornerRounded(rect.TopRight, new Vector2(1, 0), new Vector2(0, -1), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
+            }
         }
     }
     
@@ -1428,6 +1467,180 @@ public static class RectDrawing
         }
         
     }
+
+    public static void DrawRectCornerRounded(Vector2 p, Vector2 n1, Vector2 n2, float cornerRadius, int segments, float lineThick, ColorRgba color)
+    {
+        if (lineThick <= 0 || segments < 0) return;
+    
+        float stepLength = 90.0f / (float)segments; // degrees per segment on each corner
+        float outerRadius = cornerRadius + lineThick;
+        float innerRadius = cornerRadius - lineThick;
+    
+        // Corner centers (clockwise from top-left)
+        var n = (n1 + n2).Normalize();
+        var dis = MathF.Sqrt(cornerRadius * cornerRadius * 2f);
+        var center = p - n * dis;
+        
+        center.Draw(8f, ColorRgba.White);
+        p.Draw(8f, ColorRgba.White);
+        var s1 = new Segment(center, center + n1 * 50f);
+        var s2 = new Segment(center, center + n2 * 50f);
+        s1.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.LimeGreen));
+        s2.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.DarkRed));
+        
+        //TODO: Make static
+        //Build points for outer and inner arcs (include endpoints so we can seamlessly stitch corners)
+        List<Vector2> outerPoints = [];
+        List<Vector2> innerPoints = [];
+    
+        const float deg2Rad = MathF.PI / 180f;
+    
+        float startAng = n1.AngleDeg();
+        float endAng = n2.AngleDeg();
+        float angSign = ShapeMath.GetShortestAngleDegSign(startAng, endAng);
+        
+        for (var i = 0; i <= segments; i++) // inclusive to include corner endpoints
+        {
+            float angRad = (startAng + i * stepLength * angSign) * deg2Rad;
+            var dir = ShapeVec.Right().Rotate(angRad);
+    
+            var outerP = center + dir * outerRadius;
+            var innerP = center + dir * innerRadius;
+    
+            outerPoints.Add(outerP);
+            innerPoints.Add(innerP);
+        }
+    
+        int count = innerPoints.Count;
+        if (count < 2) return;
+    
+        // Thick outline: draw quads between outer and inner loops using two triangles per segment
+        for (var i = 0; i < count; i++)
+        {
+            int next = (i + 1) % count;
+    
+            var o1 = outerPoints[i];
+            var o2 = outerPoints[next];
+            var i1 = innerPoints[i];
+            var i2 = innerPoints[next];
+    
+            // Draw two triangles that form the quad between o1-o2-i2-i1
+            Raylib.DrawTriangle(o1, i2, i1, color.ToRayColor());
+            Raylib.DrawTriangle(o2, i2, o1, color.ToRayColor());
+        }
+    }
+    
+    
+    //TODO: Make usable for draw rect rounded and draw rect rounded lines
+    //Translate of DrawRectangleRoundedLinesEx from raylib (C) to C#
+    //Draw rectangle with rounded edges outline
+    public static void DrawRectangleRoundedLinesEx(Rect rec, float roundness, int segments, float lineThick, ColorRgba color)
+    {
+        if (lineThick < 0f) lineThick = 0f;
+    
+        // Not a rounded rectangle -> fallback to rectangle lines (expand by thickness)
+        if (roundness <= 0f)
+        {
+            // Expand the rect by line thickness so it matches C behaviour
+            var exp = new Rect(rec.X - lineThick, rec.Y - lineThick, rec.Width + 2f * lineThick, rec.Height + 2f * lineThick);
+            Raylib.DrawRectangleLinesEx(exp.Rectangle, lineThick, color.ToRayColor());
+            return;
+        }
+    
+        if (roundness >= 1.0f) roundness = 1.0f;
+    
+        // Calculate corner radius
+        float radius = (rec.Width > rec.Height) ? (rec.Height * roundness) / 2f : (rec.Width * roundness) / 2f;
+        if (radius <= 0f) return;
+    
+        // If segments not provided or too small, compute a reasonable default
+        if (segments < 4)
+        {
+            const float SMOOTH_CIRCLE_ERROR_RATE = 0.5f;
+            float th = MathF.Acos(2f * MathF.Pow(1f - SMOOTH_CIRCLE_ERROR_RATE / radius, 2f) - 1f);
+            // Follow original logic: segments = (int)(ceilf(2*PI/th)/2.0f);
+            float raw = MathF.Ceiling((2f * MathF.PI) / th);
+            segments = (int)(raw / 2f);
+            if (segments <= 0) segments = 4;
+        }
+    
+        float stepLength = 90.0f / (float)segments; // degrees per segment on each corner
+        float outerRadius = radius + lineThick;
+        float innerRadius = radius;
+    
+        // Corner centers (clockwise from top-left)
+        var topLeftCenter = new Vector2(rec.X + radius, rec.Y + radius);
+        var topRightCenter = new Vector2(rec.X + rec.Width - radius, rec.Y + radius);
+        var bottomRightCenter = new Vector2(rec.X + rec.Width - radius, rec.Y + rec.Height - radius);
+        var bottomLeftCenter = new Vector2(rec.X + radius, rec.Y + rec.Height - radius);
+    
+        // Angles for corners in degrees (clockwise around rect)
+        // top-left: 180 -> 270
+        // top-right: 270 -> 360
+        // bottom-right: 0 -> 90
+        // bottom-left: 90 -> 180
+        var cornerStarts = new float[] { 180f, 270f, 0f, 90f };
+        var centers = new Vector2[] { topLeftCenter, topRightCenter, bottomRightCenter, bottomLeftCenter };
+    
+        // Build points for outer and inner arcs (include endpoints so we can seamlessly stitch corners)
+        List<Vector2> outerPoints = [];
+        List<Vector2> innerPoints = [];
+    
+        const float deg2Rad = MathF.PI / 180f;
+    
+        for (int c = 0; c < 4; c++)
+        {
+            float startAng = cornerStarts[c];
+            Vector2 center = centers[c];
+    
+            for (int i = 0; i <= segments; i++) // inclusive to include corner endpoints
+            {
+                float ang = startAng + i * stepLength;
+                float rad = ang * deg2Rad;
+    
+                float cos = MathF.Cos(rad);
+                float sin = MathF.Sin(rad);
+    
+                Vector2 outerP = new Vector2(center.X + cos * outerRadius, center.Y + sin * outerRadius);
+                Vector2 innerP = new Vector2(center.X + cos * innerRadius, center.Y + sin * innerRadius);
+    
+                outerPoints.Add(outerP);
+                innerPoints.Add(innerP);
+            }
+        }
+    
+        int count = innerPoints.Count;
+        if (count < 2) return;
+    
+        // // If thin lines, just draw lines following the inner polyline
+        // if (lineThick <= 1.0f)
+        // {
+        //     for (int i = 0; i < count; i++)
+        //     {
+        //         Vector2 a = innerPoints[i];
+        //         Vector2 b = innerPoints[(i + 1) % count];
+        //         // Use DrawLineEx to allow anti-aliased thicker lines where supported
+        //         Raylib.DrawLineEx(a, b, MathF.Max(1f, lineThick), color);
+        //     }
+        //     return;
+        // }
+    
+        // Thick outline: draw quads between outer and inner loops using two triangles per segment
+        for (var i = 0; i < count; i++)
+        {
+            int next = (i + 1) % count;
+    
+            var o1 = outerPoints[i];
+            var o2 = outerPoints[next];
+            var i1 = innerPoints[i];
+            var i2 = innerPoints[next];
+    
+            // Draw two triangles that form the quad between o1-o2-i2-i1
+            Raylib.DrawTriangle(o1, i1, i2, color.ToRayColor());
+            Raylib.DrawTriangle(o1, i2, o2, color.ToRayColor());
+        }
+    }
+    
     #endregion
 }
 
