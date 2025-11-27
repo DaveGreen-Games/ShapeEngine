@@ -844,7 +844,7 @@ public static class RectDrawing
             var trH = tr - cornerHorizontal;
 
             //left triangles
-            TriangleDrawing.DrawTriangle(tlV, blV, blH, color);
+            TriangleDrawing.DrawTriangle(tlV, blV, tlH, color);
             TriangleDrawing.DrawTriangle(tlH, blV, blH, color);
         
             //center triangles
