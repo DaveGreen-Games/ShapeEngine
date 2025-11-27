@@ -21,6 +21,8 @@ namespace ShapeEngine.Geometry.RectDef;
 /// </remarks>
 public static class RectDrawing
 {
+    private static Polygon polygonHelper = new(12);
+    
     #region Draw Masked
     
     /// <summary>
@@ -699,7 +701,368 @@ public static class RectDrawing
     #endregion
 
     #region Draw Slanted Corners
-    //TODO: Overhaul/Optimize to not use GetSlantedCornerPoints and DrawPolygonConvex -> draw triangles directly
+    
+    /// <summary>
+    /// Draws a filled rectangle with identical slanted corners on all four corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color used for the slanted corners and remaining area.</param>
+    /// <param name="cornerLength">
+    /// The slant length applied to both horizontal and vertical directions.
+    /// If smaller or equal to 0 the underlying implementation will draw the full rectangle.
+    /// Values larger than half the rect dimension are handled by the called overload.
+    /// </param>
+    public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float cornerLength)
+    {
+        DrawSlantedCorners(rect, color, cornerLength, cornerLength);
+    }
+    /// <summary>
+    /// Draws a filled rectangle with identical slanted corners on all four corners,
+    /// where the slant size is specified relative to the rectangle's half-size.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color used for the slanted corners and remaining area.</param>
+    /// <param name="cornerLengthFactor">
+    /// A relative factor (0..1) that controls the slant length.
+    /// 0 = no slant (draw full rectangle), 1 = maximum symmetric slant (half the rect dimension).
+    /// Values outside this range are handled by the implementation (clamped or treated appropriately).
+    /// </param>
+    public static void DrawSlantedCornersRelative(this Rect rect, ColorRgba color, float cornerLengthFactor)
+    {
+        if(rect.Width <= 0 || rect.Height <= 0) return;
+        if (cornerLengthFactor <= 0)
+        {
+            rect.Draw(color);
+            return;
+        }
+        
+        float halfWidth = rect.Width / 2f;
+        float halfHeight = rect.Height / 2f;
+
+        if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
+        DrawSlantedCorners(rect, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
+    }
+    /// <summary>
+    /// Draws a filled rectangle with independent slanted corners for horizontal and vertical directions.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color used for the slanted corners and remaining area.</param>
+    /// <param name="cornerLengthHorizontal">
+    /// The slant length applied along the horizontal axis for each corner.
+    /// Values &lt;= 0 cause the full rectangle to be drawn. Values larger than half the rectangle width
+    /// are handled by the implementation and clamped or routed to alternate drawing logic.
+    /// </param>
+    /// <param name="cornerLengthVertical">
+    /// The slant length applied along the vertical axis for each corner.
+    /// Values &lt;= 0 cause the full rectangle to be drawn. Values larger than half the rectangle height
+    /// are handled by the implementation and clamped or routed to alternate drawing logic.
+    /// </param>
+    /// <remarks>
+    /// If the rectangle has non-positive width or height, nothing is drawn.
+    /// This method composes the filled shape from triangles and handles the special cases when
+    /// one or both slant lengths exceed the rectangle's half-dimensions.
+    /// </remarks>
+    public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    {
+        if(rect.Width <= 0 || rect.Height <= 0) return;
+        if (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0)
+        {
+            rect.Draw(color);
+            return;
+        }
+
+        float halfWidth = rect.Width / 2f;
+        float halfHeight = rect.Height / 2f;
+        
+        var tl = rect.TopLeft;
+        var br = rect.BottomRight;
+        
+        if (cornerLengthHorizontal >= halfWidth && cornerLengthVertical >= halfHeight)
+        {
+            var p1 = tl + new Vector2(halfWidth, 0f);
+            var p2 = tl + new Vector2(0f, halfHeight);
+            var p3 = br - new Vector2(halfWidth, 0f);
+            var p4 = br - new Vector2(0f, halfHeight);
+            TriangleDrawing.DrawTriangle(p1, p2, p3, color);
+            TriangleDrawing.DrawTriangle(p1, p3, p4, color);
+            return;
+        }
+        
+        var bl = rect.BottomLeft;
+        var tr = rect.TopRight;
+
+
+        if (cornerLengthHorizontal >= halfWidth)
+        {
+            var h = new Vector2(halfWidth, 0f);
+            var v = new Vector2(0f, cornerLengthVertical);
+            var top = tl + h;
+            var bottom = bl + h;
+            var tlV = tl + v;
+            var blV = bl - v;
+            var brV = br - v;
+            var trV = tr + v;
+            
+            TriangleDrawing.DrawTriangle(top, tlV, blV, color);
+            TriangleDrawing.DrawTriangle(top, blV, bottom, color);
+            
+            TriangleDrawing.DrawTriangle(top, bottom, brV, color);
+            TriangleDrawing.DrawTriangle(top, brV, trV, color);
+        }
+        else if (cornerLengthVertical >= halfHeight)
+        {
+            var h = new Vector2(cornerLengthHorizontal, 0f);
+            var v = new Vector2(0f, halfHeight);
+            var left = tl + v;
+            var right = tr + v;
+            var tlH = tl + h;
+            var blH = bl + h;
+            var brH = br - h;
+            var trH = tr - h;
+            
+            TriangleDrawing.DrawTriangle(tlH, left, blH, color);
+            TriangleDrawing.DrawTriangle(tlH, blH, trH, color);
+            
+            TriangleDrawing.DrawTriangle(trH, blH, brH, color);
+            TriangleDrawing.DrawTriangle(trH, brH, right, color);
+        }
+        else
+        {
+            var cornerHorizontal = new Vector2(cornerLengthHorizontal, 0f);
+            var cornerVertical = new Vector2(0f, cornerLengthVertical);
+            var tlH = tl + cornerHorizontal;
+            var tlV = tl + cornerVertical;
+        
+            var blV = bl - cornerVertical;
+            var blH = bl + cornerHorizontal;
+        
+            var brH = br - cornerHorizontal;
+            var brV = br - cornerVertical;
+       
+            var trV = tr + cornerVertical;
+            var trH = tr - cornerHorizontal;
+
+            //left triangles
+            TriangleDrawing.DrawTriangle(tlV, blV, blH, color);
+            TriangleDrawing.DrawTriangle(tlH, blV, blH, color);
+        
+            //center triangles
+            TriangleDrawing.DrawTriangle(tlH, blH, trH, color);
+            TriangleDrawing.DrawTriangle(trH, blH, brH, color);
+        
+            //right triangles
+            TriangleDrawing.DrawTriangle(trH, brH, trV, color);
+            TriangleDrawing.DrawTriangle(trV, brH, brV, color);
+        }
+    }
+    /// <summary>
+    /// Draws a filled rectangle with independent slanted corner sizes specified as relative factors.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
+    /// <param name="color">The fill color used for the slanted corners and remaining area.</param>
+    /// <param name="cornerLengthFactorHorizontal">
+    /// Relative horizontal slant factor (0..1):
+    /// 0 = no slant (full rectangle), 1 = maximum symmetric slant (half the rectangle width).
+    /// Values outside this range are clamped or handled by the implementation.
+    /// </param>
+    /// <param name="cornerLengthFactorVertical">
+    /// Relative vertical slant factor (0..1):
+    /// 0 = no slant (full rectangle), 1 = maximum symmetric slant (half the rectangle height).
+    /// Values outside this range are clamped or handled by the implementation.
+    /// </param>
+    /// <remarks>
+    /// This method computes absolute corner lengths from the provided relative factors and forwards to <see cref="DrawSlantedCorners(Rect, ColorRgba, float, float)"/>.
+    /// </remarks>
+    public static void DrawSlantedCornersRelative(this Rect rect, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    {
+        if(rect.Width <= 0 || rect.Height <= 0) return;
+        if (cornerLengthFactorHorizontal <= 0 && cornerLengthFactorVertical <= 0)
+        {
+            rect.Draw(color);
+            return;
+        }
+
+        if (cornerLengthFactorHorizontal >= 1f) cornerLengthFactorHorizontal = 1f;
+        if(cornerLengthFactorVertical >= 1f) cornerLengthFactorVertical = 1f;
+        
+        float cornerLengthH = cornerLengthFactorHorizontal * rect.Width * 0.5f;
+        float cornerLengthV = cornerLengthFactorVertical * rect.Height * 0.5f;
+        DrawSlantedCorners(rect, color, cornerLengthH, cornerLengthV);
+    }
+    /// <summary>
+    /// Draws the outline (lines) of a rectangle with identical slanted corners on all four corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
+    /// <param name="thickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline lines.</param>
+    /// <param name="cornerLength">
+    /// The slant length applied along both horizontal and vertical axes for each corner.
+    /// If &lt;= 0 the full rectangle is drawn. Values larger than half the rectangle dimension are handled by the implementation
+    /// and result in an adjusted polygonal outline.
+    /// </param>
+    /// <remarks>
+    /// The implementation builds a polygon representing the slanted-corner outline and draws its edges using the shared
+    /// `polygonHelper`. Special cases where the slant exceeds half the rectangle dimension are handled by constructing
+    /// an appropriate reduced polygon so the resulting outline remains valid.
+    /// </remarks>
+    public static void DrawSlantedCornersLines(this Rect rect, float thickness, ColorRgba color, float cornerLength)
+    {
+        DrawSlantedCornersLines(rect, thickness, color, cornerLength, cornerLength);
+    }
+    /// <summary>
+    /// Draws the outline (lines) of a rectangle with slanted corners using a relative corner length factor.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
+    /// <param name="thickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline lines.</param>
+    /// <param name="cornerLengthFactor">
+    /// Relative slant factor (0..1):
+    /// 0 = no slant (full rectangle),
+    /// 1 = maximum symmetric slant (half the rectangle dimension).
+    /// Values outside this range are clamped or handled by the implementation.
+    /// </param>
+    /// <remarks>
+    /// This overload forwards to the two-parameter relative overload using the same factor for both horizontal and vertical slants.
+    /// </remarks>
+    public static void DrawSlantedCornersRelativeLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthFactor)
+    {
+        DrawSlantedCornersRelativeLines(rect, thickness, color, cornerLengthFactor, cornerLengthFactor);
+    }
+    /// <summary>
+    /// Draws the outline (lines) of a rectangle with slanted corners using independent
+    /// horizontal and vertical corner lengths.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
+    /// <param name="thickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline lines.</param>
+    /// <param name="cornerLengthHorizontal">
+    /// The slant length applied along the horizontal axis for each corner.
+    /// Values &lt;= 0 cause the full rectangle to be drawn. Values larger than half the rectangle width
+    /// are handled by the implementation and clamped or routed to alternate drawing logic.
+    /// </param>
+    /// <param name="cornerLengthVertical">
+    /// The slant length applied along the vertical axis for each corner.
+    /// Values &lt;= 0 cause the full rectangle to be drawn. Values larger than half the rectangle height
+    /// are handled by the implementation and clamped or routed to alternate drawing logic.
+    /// </param>
+    /// <remarks>
+    /// The method builds a polygon representing the slanted-corner outline and draws its edges
+    /// using an internal polygon helper. Special cases where one or both slant lengths exceed
+    /// the rectangle's half-dimensions are handled to ensure a valid outline.
+    /// </remarks>
+    public static void DrawSlantedCornersLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    {
+        if(rect.Width <= 0 || rect.Height <= 0) return;
+        if (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0)
+        {
+            rect.Draw(color);
+            return;
+        }
+
+        float halfWidth = rect.Width / 2f;
+        float halfHeight = rect.Height / 2f;
+        
+        var tl = rect.TopLeft;
+        var br = rect.BottomRight;
+        
+        if (cornerLengthHorizontal >= halfWidth && cornerLengthVertical >= halfHeight)
+        {
+            polygonHelper.Clear();
+            polygonHelper.Add(tl + new Vector2(halfWidth, 0f));
+            polygonHelper.Add(tl + new Vector2(0f, halfHeight));
+            polygonHelper.Add(br - new Vector2(halfWidth, 0f));
+            polygonHelper.Add(br - new Vector2(0f, halfHeight));
+            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            return;
+        }
+        
+        var bl = rect.BottomLeft;
+        var tr = rect.TopRight;
+        
+        if (cornerLengthHorizontal >= halfWidth)
+        {
+            var h = new Vector2(halfWidth, 0f);
+            var v = new Vector2(0f, cornerLengthVertical);
+            
+            polygonHelper.Clear();
+            polygonHelper.Add(tl + h);
+            polygonHelper.Add(tl + v);
+            polygonHelper.Add(bl - v);
+            polygonHelper.Add(bl + h);
+            polygonHelper.Add(br - v);
+            polygonHelper.Add(tr + v);
+            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            
+            
+        }
+        else if (cornerLengthVertical >= halfHeight)
+        {
+            var h = new Vector2(cornerLengthHorizontal, 0f);
+            var v = new Vector2(0f, halfHeight);
+
+            polygonHelper.Clear();
+            polygonHelper.Add(tl + h);
+            polygonHelper.Add(tl + v);
+            polygonHelper.Add(bl + h);
+            polygonHelper.Add(br - h);
+            polygonHelper.Add(tr + v);
+            polygonHelper.Add(tr - h);
+            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            
+        }
+        else
+        {
+            var cornerHorizontal = new Vector2(cornerLengthHorizontal, 0f);
+            var cornerVertical = new Vector2(0f, cornerLengthVertical);
+
+            polygonHelper.Clear();
+            polygonHelper.Add(tl + cornerHorizontal);
+            polygonHelper.Add(tl + cornerVertical);
+            polygonHelper.Add(bl - cornerVertical);
+            polygonHelper.Add(bl + cornerHorizontal);
+            polygonHelper.Add(br - cornerHorizontal);
+            polygonHelper.Add(br - cornerVertical);
+            polygonHelper.Add(tr + cornerVertical);
+            polygonHelper.Add(tr - cornerHorizontal);
+            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+           
+        }
+    }
+    /// <summary>
+    /// Draws the outline (lines) of a rectangle with slanted corners using relative horizontal and vertical corner factors.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
+    /// <param name="thickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline lines.</param>
+    /// <param name="cornerLengthFactorHorizontal">
+    /// Relative horizontal slant factor (0..1):
+    /// 0 = no slant (full rectangle),
+    /// 1 = maximum symmetric slant (half the rectangle width).
+    /// Values outside this range are clamped or handled by the implementation.
+    /// </param>
+    /// <param name="cornerLengthFactorVertical">
+    /// Relative vertical slant factor (0..1):
+    /// 0 = no slant (full rectangle),
+    /// 1 = maximum symmetric slant (half the rectangle height).
+    /// Values outside this range are clamped or handled by the implementation.
+    /// </param>
+    /// <remarks>
+    /// This method computes absolute corner lengths from the provided relative factors and forwards to
+    /// the two-parameter overload that performs the actual outline drawing.
+    /// </remarks>
+    public static void DrawSlantedCornersRelativeLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    {
+        var halfWidth = rect.Width / 2f;
+        var halfHeight = rect.Height / 2f;
+        if(cornerLengthFactorHorizontal >= 1f) cornerLengthFactorHorizontal = 1f;
+        if(cornerLengthFactorVertical >= 1f) cornerLengthFactorVertical = 1f;
+        float cornerLengthH = cornerLengthFactorHorizontal * halfWidth;
+        float cornerLengthV = cornerLengthFactorVertical * halfHeight;
+        DrawSlantedCornersLines(rect, thickness, color, cornerLengthH, cornerLengthV);
+    }
+    
+    
+    
     /// <summary>
     /// Draws a filled rectangle with slanted corners.
     /// </summary>
@@ -715,8 +1078,10 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var points = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
-        points.DrawPolygonConvex(rect.Center, color);
+        polygonHelper.Clear();
+        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
+        polygonHelper.DrawPolygonConvex(rect.Center, color);
+
     }
 
     /// <summary>
@@ -736,9 +1101,10 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var poly = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
-        poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
-        poly.DrawPolygonConvex(rect.Center, color);
+        polygonHelper.Clear();
+        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
+        polygonHelper.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
+        polygonHelper.DrawPolygonConvex(rect.Center, color);
     }
 
     /// <summary>
@@ -756,8 +1122,9 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawSlantedCornersLines(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var points = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
-        points.DrawLines(lineInfo);
+        polygonHelper.Clear();
+        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
+        polygonHelper.DrawLines(lineInfo);
     }
 
     /// <summary>
@@ -777,10 +1144,71 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var poly = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
-        poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
-        poly.DrawLines(lineInfo);
+        polygonHelper.Clear();
+        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
+        polygonHelper.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
+        polygonHelper.DrawLines(lineInfo);
     }
+    
+    private static void FillSlantedCornerPoints(Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner, ref Polygon points)
+    {
+        var halfWidth = rect.Width / 2f;
+        var halfHeight = rect.Height / 2f;
+        if (tlCorner <= 0)
+        {
+            points.Add(rect.TopLeft);
+        }
+        else
+        {
+            points.Add(rect.TopLeft + new Vector2(MathF.Min(tlCorner, halfWidth), 0f));
+            points.Add(rect.TopLeft + new Vector2(0f, MathF.Min(tlCorner, halfHeight)));
+        }
+        
+        if (blCorner <= 0)
+        {
+            points.Add(rect.BottomLeft);
+        }
+        else
+        {
+            if (blCorner < halfHeight)
+            {
+                points.Add(rect.BottomLeft - new Vector2(0f, MathF.Min(blCorner, halfHeight)));
+            }
+            
+            if (blCorner < halfWidth)
+            {
+                points.Add(rect.BottomLeft + new Vector2(MathF.Min(blCorner, halfWidth), 0f));
+            }
+        }
+        
+        if (brCorner <= 0)
+        {
+            points.Add(rect.BottomRight);
+        }
+        else
+        {
+            points.Add(rect.BottomRight - new Vector2(MathF.Min(brCorner, halfWidth), 0f));
+            points.Add(rect.BottomRight - new Vector2(0f, MathF.Min(brCorner, halfHeight)));
+        }
+        
+        if (trCorner <= 0)
+        {
+            points.Add(rect.TopRight);
+        }
+        else
+        {
+            if (trCorner < halfHeight)
+            {
+                points.Add(rect.TopRight + new Vector2(0f, MathF.Min(trCorner, halfHeight)));
+            }
+            
+            if (trCorner < halfWidth)
+            {
+                points.Add(rect.TopRight - new Vector2(MathF.Min(trCorner, halfWidth), 0f));
+            }
+        }
+    }
+    
     #endregion
     
     #region Draw Corners
