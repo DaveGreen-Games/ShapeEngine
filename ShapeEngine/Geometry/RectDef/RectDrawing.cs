@@ -1,4 +1,4 @@
-using System.Drawing;
+
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -135,44 +135,47 @@ public static class RectDrawing
     }
    
     /// <summary>
-    /// Draws a filled rectangle using the specified color.
+    /// Draws a filled rectangle.
     /// </summary>
     /// <param name="rect">The rectangle to draw.</param>
     /// <param name="color">The fill color.</param>
-    public static void Draw(this Rect rect, ColorRgba color)
+    /// <param name="roundness">
+    /// Corner roundness factor. When greater than 0 and <paramref name="cornerPoints"/> &gt; 0,
+    /// rounded corners are approximated by the quad drawing helper.
+    /// </param>
+    /// <param name="cornerPoints">
+    /// Number of points used to approximate rounded corners. A value of 0 disables rounded-corner approximation.
+    /// </param>
+    public static void Draw(this Rect rect, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
+        if(cornerPoints > 0 && roundness > 0f)
+        {
+            QuadDrawing.DrawQuad(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, color, roundness, cornerPoints);
+            return;
+        }
         Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
     }
 
     #endregion
     
-    #region Draw Rounded
-    /// <summary>
-    /// Draws a filled rectangle with rounded corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="roundness">The roundness of the corners (0 to 1).</param>
-    /// <param name="segments">The number of segments to approximate the roundness.</param>
-    /// <param name="color">The fill color.</param>
-    public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color)
-    {
-        QuadDrawing.DrawQuad(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, color, roundness, segments);
-    }
-
-    #endregion
-    
     #region Draw Lines
-    
     /// <summary>
-    /// Draws the outline of a rectangle using the specified corners, line thickness, and color.
+    /// Draws the outline of a rectangle using explicit line thickness and color.
     /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color)
+    /// <param name="topLeft">Top-left corner of the rectangle.</param>
+    /// <param name="bottomRight">Bottom-right corner of the rectangle.</param>
+    /// <param name="lineThickness">Thickness of the outline lines.</param>
+    /// <param name="color">Color used to draw the outline.</param>
+    /// <param name="roundness">
+    /// Optional corner roundness factor. When greater than 0 and <paramref name="cornerPoints"/> &gt; 0,
+    /// rounded corners are approximated by the quad drawing helper.
+    /// </param>
+    /// <param name="cornerPoints">
+    /// Number of points used to approximate rounded corners. A value of 0 disables rounded-corner approximation.
+    /// </param>
+    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
-        DrawRectLinesHelper(new Rect(topLeft, bottomRight), lineThickness, color);
+        DrawRectLinesHelper(new Rect(topLeft, bottomRight), lineThickness, color, cornerPoints, roundness);
     }
 
     /// <summary>
@@ -188,14 +191,21 @@ public static class RectDrawing
     }
     
     /// <summary>
-    /// Draws the outline of a rectangle using the specified line thickness and color.
+    /// Draws the outline (lines) of a rectangle using an explicit line thickness and color.
     /// </summary>
     /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color)
+    /// <param name="lineThickness">Thickness of the outline lines.</param>
+    /// <param name="color">Color used to draw the outline.</param>
+    /// <param name="roundness">
+    /// Optional corner roundness factor. When greater than 0 and <paramref name="cornerPoints"/> &gt; 0,
+    /// rounded corners are approximated by the quad drawing helper.
+    /// </param>
+    /// <param name="cornerPoints">
+    /// Number of points used to approximate rounded corners. A value of 0 disables rounded-corner approximation.
+    /// </param>
+    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
-        DrawRectLinesHelper(rect, lineThickness, color);
+        DrawRectLinesHelper(rect, lineThickness, color, cornerPoints, roundness);
     }
 
     /// <summary>
