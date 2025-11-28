@@ -2,7 +2,6 @@ using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
@@ -138,18 +137,31 @@ public static class QuadDrawing
     
     #region Draw
     /// <summary>
-    /// Draws a filled quadrilateral using four vertices.
+    /// Draws a filled quadrilateral defined by four vertices.
     /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="color">The color to fill the quad.</param>
-    /// <remarks>Fills the quad by drawing two triangles.</remarks>
-    public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color)
+    /// <param name="a">First vertex of the quad.</param>
+    /// <param name="b">Second vertex of the quad.</param>
+    /// <param name="c">Third vertex of the quad.</param>
+    /// <param name="d">Fourth vertex of the quad.</param>
+    /// <param name="color">Color used to fill the quad.</param>
+    /// <param name="roundness">Optional corner roundness factor (0 = sharp corners).</param>
+    /// <param name="cornerPoints">Optional number of points used to approximate rounded corners.</param>
+    /// <remarks>
+    /// The quad is rendered as two triangles. Parameters related to rounding are accepted for future
+    /// implementations that render rounded corners; current implementation ignores rounding and cornerPoints.
+    /// </remarks>
+    public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
-        Raylib.DrawTriangle(a, b, c, color.ToRayColor());
-        Raylib.DrawTriangle(a, c, d, color.ToRayColor());
+        if(roundness <= 0f || cornerPoints <= 0)
+        {
+            // Draw sharp-cornered quad as two triangles
+            Raylib.DrawTriangle(a, b, c, color.ToRayColor());
+            Raylib.DrawTriangle(a, c, d, color.ToRayColor());
+            return;
+        }
+        
+        // Draw rounded-cornered quad (not yet implemented)
+        
     }
     /// <summary>
     /// Draws a filled quadrilateral using the vertices of a <see cref="Quad"/>.
@@ -158,85 +170,71 @@ public static class QuadDrawing
     /// <param name="color">The color to fill the quad.</param>
     public static void Draw(this Quad q, ColorRgba color) => DrawQuad(q.A, q.B, q.C, q.D, color);
 
+    
+
     #endregion
     
     #region Draw Lines
+
     /// <summary>
-    /// Draws the outline of a quadrilateral with specified line thickness and style.
+    /// Draws the outline of a quadrilateral given four corner positions.
+    /// Uses straight edges when <paramref name="roundness"/> is 0 or <paramref name="cornerPoints"/> is 0;
+    /// otherwise may be used to draw rounded corners when supported by helpers.
     /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <remarks>Draws each side of the quad as a separate segment.</remarks>
-    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
+    /// <param name="a">First vertex of the quad.</param>
+    /// <param name="b">Second vertex of the quad.</param>
+    /// <param name="c">Third vertex of the quad.</param>
+    /// <param name="d">Fourth vertex of the quad.</param>
+    /// <param name="lineThickness">Thickness of the outline in pixels.</param>
+    /// <param name="color">Color used to draw the outline.</param>
+    /// <param name="roundness">Optional corner roundness factor (0 = sharp corners).</param>
+    /// <param name="cornerPoints">Optional number of points used to approximate rounded corners.</param>
+    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
     {
-        DrawQuadLinesInternal(a, b, c, d, lineThickness, color);
+        DrawQuadLinesInternal(a, b, c, d, lineThickness, color, roundness, cornerPoints);
     }
+
     /// <summary>
-    /// Draws the outline of a quadrilateral, scaling each side by a specified factor.
+    /// Draws the outline of a quadrilateral using the given corner positions and a <see cref="LineDrawingInfo"/>
+    /// that describes thickness, color and cap style.
     /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="sideLengthFactor">The factor by which to scale each side (0 = no line, 1 = full length).</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    /// <remarks>
-    /// Each side is drawn from its starting vertex towards its ending vertex, scaled by <paramref name="sideLengthFactor"/>.
-    /// </remarks>
-    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    /// <param name="a">First vertex of the quad.</param>
+    /// <param name="b">Second vertex of the quad.</param>
+    /// <param name="c">Third vertex of the quad.</param>
+    /// <param name="d">Fourth vertex of the quad.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, cap points).</param>
+    /// <param name="roundness">Optional corner roundness factor (0 = sharp corners). Rounded corners are applied if supported by helpers.</param>
+    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo, float roundness = 0)
     {
-        var side1 = b - a;
-        var end1 = a + side1 * sideLengthFactor;
-        
-        var side2 = c - b;
-        var end2 = b + side2 * sideLengthFactor;
-        
-        var side3 = d - c;
-        var end3 = c + side3 * sideLengthFactor;
-        
-        var side4 = a - d;
-        var end4 = d + side4 * sideLengthFactor;
-        
-        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
+        DrawQuadLinesInternal(a, b, c, d, lineInfo.Thickness, lineInfo.Color, roundness, lineInfo.CapPoints);
     }
+
     /// <summary>
-    /// Draws the outline of a quadrilateral using a <see cref="LineDrawingInfo"/> structure.
+    /// Draws the outline of a <see cref="Quad"/> using a specified line thickness and color.
     /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo)
+    /// <param name="q">The quad whose outline will be drawn.</param>
+    /// <param name="lineThickness">Thickness of the outline in pixels.</param>
+    /// <param name="color">Color used to draw the outline.</param>
+    /// <param name="roundness">Optional corner roundness factor (0 = sharp corners). When non-zero, rounded corners may be used if supported by helpers.</param>
+    /// <param name="cornerPoints">Number of points used to approximate rounded corners (ignored when <paramref name="roundness"/> is 0).</param>
+    public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
     {
-        DrawQuadLinesInternal(a, b, c, d, lineInfo.Thickness, lineInfo.Color);
+        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, roundness, cornerPoints);
     }
+
     /// <summary>
-    /// Draws the outline of a <see cref="Quad"/> with specified line thickness and style.
+    /// Draws the outline of a <see cref="Quad"/> using the supplied <see cref="LineDrawingInfo"/>.
+    /// The <see cref="LineDrawingInfo"/> provides line thickness, color and cap style. When
+    /// <paramref name="roundness"/> is non-zero, rounded corners may be produced if supported by
+    /// the underlying drawing helpers.
     /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawLines(this Quad q, float lineThickness, ColorRgba color)
+    /// <param name="q">The quad whose outline will be drawn.</param>
+    /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, cap points).</param>
+    /// <param name="roundness">Optional corner roundness factor (0 = sharp corners).</param>
+    public static void DrawLines(this Quad q, LineDrawingInfo lineInfo, float roundness = 0)
     {
-        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color);
+        DrawQuadLines(q.A, q.B, q.C, q.D, lineInfo, roundness);
     }
-    /// <summary>
-    /// Draws the outline of a <see cref="Quad"/> using a <see cref="LineDrawingInfo"/> structure.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawLines(this Quad q, LineDrawingInfo lineInfo) => DrawQuadLines(q.A, q.B, q.C, q.D, lineInfo);
 
     #endregion
     
@@ -322,6 +320,40 @@ public static class QuadDrawing
     
     #region Draw Lines Scaled
     /// <summary>
+    /// Draws the outline of a quadrilateral, scaling each side by a specified factor.
+    /// </summary>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="sideLengthFactor">The factor by which to scale each side (0 = no line, 1 = full length).</param>
+    /// <param name="capType">The style of the line caps.</param>
+    /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <remarks>
+    /// Each side is drawn from its starting vertex towards its ending vertex, scaled by <paramref name="sideLengthFactor"/>.
+    /// </remarks>
+    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        var side1 = b - a;
+        var end1 = a + side1 * sideLengthFactor;
+        
+        var side2 = c - b;
+        var end2 = b + side2 * sideLengthFactor;
+        
+        var side3 = d - c;
+        var end3 = c + side3 * sideLengthFactor;
+        
+        var side4 = a - d;
+        var end4 = d + side4 * sideLengthFactor;
+        
+        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
+    }
+    /// <summary>
     /// Draws the outline of a <see cref="Quad"/>, scaling each side by a specified factor.
     /// </summary>
     /// <param name="q">The quad to outline.</param>
@@ -401,70 +433,8 @@ public static class QuadDrawing
     #endregion
     
     #region Helper
-    //TODO: Implement
-    private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
-    {
-        // //TODO: Fix with new system
-        // // - Remove cap type for percentage drawing - its either sharp (cap points <= 0 or round (cap points > 0)
-        // var l1 = (p2 - p1).Length();
-        // var l2 = (p3 - p2).Length();
-        // var l3 = (p4 - p3).Length();
-        // var l4 = (p1 - p4).Length();
-        // var perimeterToDraw = (l1 + l2 + l3 + l4) * percentage;
-        //
-        // // Draw first segment
-        // var curP = p1;
-        // var nextP = p2;
-        // if (perimeterToDraw < l1)
-        // {
-        //     float p = perimeterToDraw / l1;
-        //     nextP = curP.Lerp(nextP, p);
-        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
-        //     return;
-        // }
-        //         
-        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        // perimeterToDraw -= l1;
-        //         
-        // // Draw second segment
-        // curP = nextP;
-        // nextP = p3;
-        // if (perimeterToDraw < l2)
-        // {
-        //     float p = perimeterToDraw / l2;
-        //     nextP = curP.Lerp(nextP, p);
-        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        //     return;
-        // }
-        //         
-        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        // perimeterToDraw -= l2;
-        //         
-        // // Draw third segment
-        // curP = nextP;
-        // nextP = p4;
-        // if (perimeterToDraw < l3)
-        // {
-        //     float p = perimeterToDraw / l3;
-        //     nextP = curP.Lerp(nextP, p);
-        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        //     return;
-        // }
-        //
-        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        // perimeterToDraw -= l3;
-        //        
-        // // Draw fourth segment
-        // curP = nextP;
-        // nextP = p1;
-        // if (perimeterToDraw < l4)
-        // {
-        //     float p = perimeterToDraw / l4;
-        //     nextP = curP.Lerp(nextP, p);
-        // }
-        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-    }
-    private static void DrawQuadLinesInternal(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
+    
+    private static void DrawQuadLinesInternal(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
         var offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
         
@@ -521,14 +491,13 @@ public static class QuadDrawing
         TriangleDrawing.DrawTriangle(outsideD, outsideA, insideD, color);
         TriangleDrawing.DrawTriangle(insideD, outsideA, insideA, color);
     }
+    
    
     private static readonly Vector2[] centerHelper = new Vector2[4];
     private static readonly float[] cornerStartAnglesHelper = new float[4];
     private static readonly List<Vector2> innerPointsHelper = [];
     private static readonly List<Vector2> outerPointsHelper = [];
-    
-    //TODO: make private
-    public static void DrawLinesRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float roundness, int segments, float lineThick, ColorRgba color)
+    private static void DrawLinesRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float roundness, int segments, float lineThick, ColorRgba color)
     {
         //using raylibs C DrawRectangleRoundedLinesEx implementation as a base
         
@@ -633,9 +602,73 @@ public static class QuadDrawing
         
     }
 
-    public static void DrawRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float roundness, int segments, ColorRgba color)
+    private static void DrawRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float roundness, int segments, ColorRgba color)
     {
         //TODO: Implement
+    }
+    
+    //TODO: Implement
+    private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
+    {
+        // //TODO: Fix with new system
+        // // - Remove cap type for percentage drawing - its either sharp (cap points <= 0 or round (cap points > 0)
+        // var l1 = (p2 - p1).Length();
+        // var l2 = (p3 - p2).Length();
+        // var l3 = (p4 - p3).Length();
+        // var l4 = (p1 - p4).Length();
+        // var perimeterToDraw = (l1 + l2 + l3 + l4) * percentage;
+        //
+        // // Draw first segment
+        // var curP = p1;
+        // var nextP = p2;
+        // if (perimeterToDraw < l1)
+        // {
+        //     float p = perimeterToDraw / l1;
+        //     nextP = curP.Lerp(nextP, p);
+        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
+        //     return;
+        // }
+        //         
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        // perimeterToDraw -= l1;
+        //         
+        // // Draw second segment
+        // curP = nextP;
+        // nextP = p3;
+        // if (perimeterToDraw < l2)
+        // {
+        //     float p = perimeterToDraw / l2;
+        //     nextP = curP.Lerp(nextP, p);
+        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        //     return;
+        // }
+        //         
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        // perimeterToDraw -= l2;
+        //         
+        // // Draw third segment
+        // curP = nextP;
+        // nextP = p4;
+        // if (perimeterToDraw < l3)
+        // {
+        //     float p = perimeterToDraw / l3;
+        //     nextP = curP.Lerp(nextP, p);
+        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        //     return;
+        // }
+        //
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        // perimeterToDraw -= l3;
+        //        
+        // // Draw fourth segment
+        // curP = nextP;
+        // nextP = p1;
+        // if (perimeterToDraw < l4)
+        // {
+        //     float p = perimeterToDraw / l4;
+        //     nextP = curP.Lerp(nextP, p);
+        // }
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
     
 
