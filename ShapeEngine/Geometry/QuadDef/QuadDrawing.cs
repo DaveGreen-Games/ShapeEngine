@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -240,143 +241,81 @@ public static class QuadDrawing
     #endregion
     
     #region Draw Lines Percentage
-    /// <summary>
-    /// Draws a specified percentage of the outline of a quadrilateral.
-    /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="f">
-    /// The percentage of the outline to draw. 
-    /// <list type="bullet">
-    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
-    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
-    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
-    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
-    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    /// <remarks>
-    /// Useful for animating outlines or highlighting portions of a quad.
-    /// </remarks>
-    public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
     {
-        if (f == 0) return;
-        if (MathF.Abs(f) >= 1f)
-        {
-            DrawQuadLines(a, b, c, d, lineThickness, color);
-            return;
-        }
-        bool negative = false;
-        if (f < 0)
-        {
-            negative = true;
-            f *= -1;
-        }
-        
-        int startCorner = (int)f;
-        float percentage = f - startCorner;
-        if (percentage <= 0) return;
-        
-        startCorner = ShapeMath.Clamp(startCorner, 0, 3);
-        
-        if (startCorner == 0)
-        {
-            if (negative)
-            {
-               DrawQuadLinesPercentageHelper(a, d, c, b, percentage, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawQuadLinesPercentageHelper(a, b, c, d, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 1)
-        {
-            if (negative)
-            {
-                DrawQuadLinesPercentageHelper(d, c, b, a, percentage, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawQuadLinesPercentageHelper(b, c, d, a, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 2)
-        {
-            if (negative)
-            {
-                DrawQuadLinesPercentageHelper(c, b, a, d, percentage, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawQuadLinesPercentageHelper(c, d, a, b, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 3)
-        {
-            if (negative)
-            {
-                DrawQuadLinesPercentageHelper(b, a, d, c, percentage, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawQuadLinesPercentageHelper(d, a, b, c, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
+        DrawQuadLinesPercentageHelper(a, b, c, d,f, lineThickness, color, roundness, cornerPoints);
+        // if (f == 0) return;
+        // if (MathF.Abs(f) >= 1f)
+        // {
+        //     DrawQuadLines(a, b, c, d, lineThickness, color);
+        //     return;
+        // }
+        // bool negative = false;
+        // if (f < 0)
+        // {
+        //     negative = true;
+        //     f *= -1;
+        // }
+        //
+        // int startCorner = (int)f;
+        // float percentage = f - startCorner;
+        // if (percentage <= 0) return;
+        //
+        // startCorner = ShapeMath.Clamp(startCorner, 0, 3);
+        //
+        // if (startCorner == 0)
+        // {
+        //     if (negative)
+        //     {
+        //        DrawQuadLinesPercentageHelper(a, d, c, b, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawQuadLinesPercentageHelper(a, b, c, d, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        // }
+        // else if (startCorner == 1)
+        // {
+        //     if (negative)
+        //     {
+        //         DrawQuadLinesPercentageHelper(d, c, b, a, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawQuadLinesPercentageHelper(b, c, d, a, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        // }
+        // else if (startCorner == 2)
+        // {
+        //     if (negative)
+        //     {
+        //         DrawQuadLinesPercentageHelper(c, b, a, d, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawQuadLinesPercentageHelper(c, d, a, b, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        // }
+        // else if (startCorner == 3)
+        // {
+        //     if (negative)
+        //     {
+        //         DrawQuadLinesPercentageHelper(b, a, d, c, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawQuadLinesPercentageHelper(d, a, b, c, percentage, lineThickness, color, capType, capPoints);
+        //     }
+        // }
     }
-    /// <summary>
-    /// Draws a specified percentage of the outline of a <see cref="Quad"/>.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="f">
-    /// The percentage of the outline to draw. 
-    /// <list type="bullet">
-    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
-    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
-    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
-    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
-    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    /// <remarks>
-    /// Useful for animating outlines or highlighting portions of a quad.
-    /// </remarks>
-    public static void DrawLinesPercentage(this Quad q, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawLinesPercentage(this Quad q, float f, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
     {
-        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineThickness, color, capType, capPoints);
+        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineThickness, color, roundness, cornerPoints);
     }
 
-    /// <summary>
-    /// Draws a specified percentage of the outline of a <see cref="Quad"/> using a <see cref="LineDrawingInfo"/> structure.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="f">
-    /// The percentage of the outline to draw. 
-    /// <list type="bullet">
-    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
-    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
-    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
-    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
-    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <remarks>
-    /// Useful for animating outlines or highlighting portions of a quad.
-    /// </remarks>
-    public static void DrawLinesPercentage(this Quad q, float f, LineDrawingInfo lineInfo)
+    public static void DrawLinesPercentage(this Quad q, float f, LineDrawingInfo lineInfo, float roundness = 0)
     {
-        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineInfo.Thickness, lineInfo.Color, roundness, lineInfo.CapPoints);
     }
 
     #endregion
@@ -403,8 +342,6 @@ public static class QuadDrawing
     /// </summary>
     /// <param name="q">The quad to outline.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="rotDeg">The rotation of the quad in degrees.</param>
-    /// <param name="alignment">The anchor point for rotation alignment.</param>
     /// <param name="sideScaleFactor">
     /// <para>The scale factor for each side.</para>
     /// <list type="bullet">
@@ -424,11 +361,9 @@ public static class QuadDrawing
     /// <remarks>
     /// Allows for dynamic scaling and rotation of quad outlines, useful for effects and animations.
     /// </remarks>
-    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignment, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0) return;
-        
-        if(rotDeg != 0) q = q.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, alignment);
         
         if (sideScaleFactor >= 1)
         {
@@ -466,66 +401,68 @@ public static class QuadDrawing
     #endregion
     
     #region Helper
-    private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    //TODO: Implement
+    private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
     {
-        //TODO: Fix with new system
-        var l1 = (p2 - p1).Length();
-        var l2 = (p3 - p2).Length();
-        var l3 = (p4 - p3).Length();
-        var l4 = (p1 - p4).Length();
-        var perimeterToDraw = (l1 + l2 + l3 + l4) * percentage;
-        
-        // Draw first segment
-        var curP = p1;
-        var nextP = p2;
-        if (perimeterToDraw < l1)
-        {
-            float p = perimeterToDraw / l1;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
-            return;
-        }
-                
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l1;
-                
-        // Draw second segment
-        curP = nextP;
-        nextP = p3;
-        if (perimeterToDraw < l2)
-        {
-            float p = perimeterToDraw / l2;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-                
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l2;
-                
-        // Draw third segment
-        curP = nextP;
-        nextP = p4;
-        if (perimeterToDraw < l3)
-        {
-            float p = perimeterToDraw / l3;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-        
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l3;
-               
-        // Draw fourth segment
-        curP = nextP;
-        nextP = p1;
-        if (perimeterToDraw < l4)
-        {
-            float p = perimeterToDraw / l4;
-            nextP = curP.Lerp(nextP, p);
-        }
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        // //TODO: Fix with new system
+        // // - Remove cap type for percentage drawing - its either sharp (cap points <= 0 or round (cap points > 0)
+        // var l1 = (p2 - p1).Length();
+        // var l2 = (p3 - p2).Length();
+        // var l3 = (p4 - p3).Length();
+        // var l4 = (p1 - p4).Length();
+        // var perimeterToDraw = (l1 + l2 + l3 + l4) * percentage;
+        //
+        // // Draw first segment
+        // var curP = p1;
+        // var nextP = p2;
+        // if (perimeterToDraw < l1)
+        // {
+        //     float p = perimeterToDraw / l1;
+        //     nextP = curP.Lerp(nextP, p);
+        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
+        //     return;
+        // }
+        //         
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        // perimeterToDraw -= l1;
+        //         
+        // // Draw second segment
+        // curP = nextP;
+        // nextP = p3;
+        // if (perimeterToDraw < l2)
+        // {
+        //     float p = perimeterToDraw / l2;
+        //     nextP = curP.Lerp(nextP, p);
+        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        //     return;
+        // }
+        //         
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        // perimeterToDraw -= l2;
+        //         
+        // // Draw third segment
+        // curP = nextP;
+        // nextP = p4;
+        // if (perimeterToDraw < l3)
+        // {
+        //     float p = perimeterToDraw / l3;
+        //     nextP = curP.Lerp(nextP, p);
+        //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        //     return;
+        // }
+        //
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        // perimeterToDraw -= l3;
+        //        
+        // // Draw fourth segment
+        // curP = nextP;
+        // nextP = p1;
+        // if (perimeterToDraw < l4)
+        // {
+        //     float p = perimeterToDraw / l4;
+        //     nextP = curP.Lerp(nextP, p);
+        // }
+        // SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
     private static void DrawQuadLinesInternal(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
     {
@@ -584,5 +521,186 @@ public static class QuadDrawing
         TriangleDrawing.DrawTriangle(outsideD, outsideA, insideD, color);
         TriangleDrawing.DrawTriangle(insideD, outsideA, insideA, color);
     }
+   
+    private static readonly Vector2[] centerHelper = new Vector2[4];
+    private static readonly float[] cornerStartAnglesHelper = new float[4];
+    private static readonly List<Vector2> innerPointsHelper = [];
+    private static readonly List<Vector2> outerPointsHelper = [];
+    
+    //TODO: make private
+    public static void DrawLinesRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float roundness, int segments, float lineThick, ColorRgba color)
+    {
+        //using raylibs C DrawRectangleRoundedLinesEx implementation as a base
+        
+        if (lineThick < 0f) lineThick = 0f;
+        
+        if (roundness <= 0f)
+        {
+            DrawQuadLines(p1, p2, p3, p4, lineThick, color);
+            return;
+        }
+    
+        if (roundness >= 1.0f) roundness = 1.0f;
+    
+        var edge1 = p2 - p1;
+        var edge2 = p3 - p2;
+        var edge3 = p4 - p3;
+        var edge4 = p1 - p4;
+        float size1 = edge1.Length();
+        float size2 = edge4.Length();
+        
+        // Calculate corner radius
+        float radius = (size1 > size2) ? (size2 * roundness) / 2f : (size1 * roundness) / 2f;
+        if (radius <= 0f) return;
+
+        if(radius <= lineThick) radius = lineThick;
+        
+        // If segments not provided or too small, compute a reasonable default
+        if (segments < 4)
+        {
+            const float SMOOTH_CIRCLE_ERROR_RATE = 0.5f;
+            float th = MathF.Acos(2f * MathF.Pow(1f - SMOOTH_CIRCLE_ERROR_RATE / radius, 2f) - 1f);
+            // Follow original logic: segments = (int)(ceilf(2*PI/th)/2.0f);
+            float raw = MathF.Ceiling((2f * MathF.PI) / th);
+            segments = (int)(raw / 2f);
+            if (segments <= 0) segments = 4;
+        }
+    
+        //this function always goes ccw direction -> so stepLength is negative
+        float stepLengthRad = (-MathF.PI * 0.5f) / (float)segments; // radians per segment on each corner
+        float outerRadius = radius + lineThick;
+        float innerRadius = radius - lineThick;
+
+        var n1 = edge1.Normalize();
+        var n2 = edge2.Normalize();
+        var n3 = edge3.Normalize();
+        var n4 = edge4.Normalize();
+
+        var dir1 = (n1 - n4).Normalize();
+        var dir2 = (n2 - n1).Normalize();
+        var dir3 = (n3 - n2).Normalize();
+        var dir4 = (n4 - n3).Normalize();
+        
+        var dis = MathF.Sqrt(radius * radius * 2f);
+        
+        centerHelper[0] = p1 + dir1 * dis;
+        centerHelper[1] = p2 + dir2 * dis;
+        centerHelper[2] = p3 + dir3 * dis;
+        centerHelper[3] = p4 + dir4 * dis;
+        cornerStartAnglesHelper[0] = (-n1).AngleRad();
+        cornerStartAnglesHelper[1] = (-n2).AngleRad();
+        cornerStartAnglesHelper[2] = (-n3).AngleRad();
+        cornerStartAnglesHelper[3] = (-n4).AngleRad();
+    
+        innerPointsHelper.Clear();
+        outerPointsHelper.Clear();
+
+        for (var c = 0; c < 4; c++)
+        {
+            float startAngRad = cornerStartAnglesHelper[c];
+            var center = centerHelper[c];
+    
+            for (int i = 0; i <= segments; i++) // inclusive to include corner endpoints
+            {
+                float angRad = startAngRad + i * stepLengthRad;
+                var dir = ShapeVec.Right().Rotate(angRad);
+    
+                var outerP = center + dir * outerRadius;
+                var innerP = center + dir * innerRadius;
+    
+                outerPointsHelper.Add(outerP);
+                innerPointsHelper.Add(innerP);
+            }
+        }
+    
+        int count = innerPointsHelper.Count;
+        if (count < 2) return;
+    
+        // Thick outline: draw quads between outer and inner loops using two triangles per segment
+        for (var i = 0; i < count; i++)
+        {
+            int next = (i + 1) % count;
+    
+            var o1 = outerPointsHelper[i];
+            var o2 = outerPointsHelper[next];
+            var i1 = innerPointsHelper[i];
+            var i2 = innerPointsHelper[next];
+    
+            // Draw two triangles that form the quad between o1-o2-i2-i1
+            Raylib.DrawTriangle(i1, o1 , i2, color.ToRayColor());
+            Raylib.DrawTriangle(i2, o1 , o2, color.ToRayColor());
+        }
+        
+    }
+
+    public static void DrawRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float roundness, int segments, ColorRgba color)
+    {
+        //TODO: Implement
+    }
+    
+
+    //Note: Not used right now
+    public static void DrawRectCornerRounded(Vector2 p, Vector2 n1, Vector2 n2, float cornerRadius, int segments, float lineThick, ColorRgba color)
+    {
+        if (lineThick <= 0 || segments < 0) return;
+    
+        float stepLength = 90.0f / (float)segments; // degrees per segment on each corner
+        float outerRadius = cornerRadius + lineThick;
+        float innerRadius = cornerRadius - lineThick;
+    
+        // Corner centers (clockwise from top-left)
+        var n = (n1 + n2).Normalize();
+        var dis = MathF.Sqrt(cornerRadius * cornerRadius * 2f);
+        var center = p - n * dis;
+        
+        center.Draw(8f, ColorRgba.White);
+        p.Draw(8f, ColorRgba.White);
+        var s1 = new Segment(center, center + n1 * 50f);
+        var s2 = new Segment(center, center + n2 * 50f);
+        s1.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.LimeGreen));
+        s2.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.DarkRed));
+        
+        //TODO: Make static
+        //Build points for outer and inner arcs (include endpoints so we can seamlessly stitch corners)
+        List<Vector2> outerPoints = [];
+        List<Vector2> innerPoints = [];
+    
+        const float deg2Rad = MathF.PI / 180f;
+    
+        float startAng = n1.AngleDeg();
+        float endAng = n2.AngleDeg();
+        float angSign = ShapeMath.GetShortestAngleDegSign(startAng, endAng);
+        
+        for (var i = 0; i <= segments; i++) // inclusive to include corner endpoints
+        {
+            float angRad = (startAng + i * stepLength * angSign) * deg2Rad;
+            var dir = ShapeVec.Right().Rotate(angRad);
+    
+            var outerP = center + dir * outerRadius;
+            var innerP = center + dir * innerRadius;
+    
+            outerPoints.Add(outerP);
+            innerPoints.Add(innerP);
+        }
+    
+        int count = innerPoints.Count;
+        if (count < 2) return;
+    
+        // Thick outline: draw quads between outer and inner loops using two triangles per segment
+        for (var i = 0; i < count; i++)
+        {
+            int next = (i + 1) % count;
+    
+            var o1 = outerPoints[i];
+            var o2 = outerPoints[next];
+            var i1 = innerPoints[i];
+            var i2 = innerPoints[next];
+    
+            // Draw two triangles that form the quad between o1-o2-i2-i1
+            Raylib.DrawTriangle(o1, i2, i1, color.ToRayColor());
+            Raylib.DrawTriangle(o2, i2, o1, color.ToRayColor());
+        }
+    }
+    
     #endregion
 }

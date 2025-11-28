@@ -21,8 +21,6 @@ namespace ShapeEngine.Geometry.RectDef;
 /// </remarks>
 public static class RectDrawing
 {
-    //TODO: Use custom function for rounded rect & rounded rect lines
-    
     private static Polygon polygonHelper = new(12);
     
     #region Draw Masked
@@ -148,36 +146,6 @@ public static class RectDrawing
 
     #endregion
     
-    #region Draw Rotation
-    /// <summary>
-    /// Draws a filled, rotated rectangle using the specified corners, pivot, rotation, and color.
-    /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="color">The fill color.</param>
-    public static void DrawRect(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, ColorRgba color)
-    {
-        var a = pivot + (topLeft - pivot).RotateDeg(rotDeg);
-        var b = pivot + (new Vector2(topLeft.X, bottomRight.Y) - pivot).RotateDeg(rotDeg);
-        var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
-        var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
-        QuadDrawing.DrawQuad(a, b, c, d, color);
-    }
-    /// <summary>
-    /// Draws a filled, rotated rectangle using the specified pivot, rotation, and color.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="color">The fill color.</param>
-    public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color)
-    {
-        DrawRect(rect.TopLeft, rect.BottomRight, pivot, rotDeg, color);
-    }
-    #endregion
-    
     #region Draw Rounded
     /// <summary>
     /// Draws a filled rectangle with rounded corners.
@@ -188,7 +156,8 @@ public static class RectDrawing
     /// <param name="color">The fill color.</param>
     public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color)
     {
-        Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
+        QuadDrawing.DrawRoundedHelper(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, roundness, segments, color);
+        // Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
     }
 
     #endregion
@@ -217,8 +186,6 @@ public static class RectDrawing
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, LineDrawingInfo lineInfo, float roundness = 0f)
     {
         DrawRectLinesHelper(new Rect(topLeft, bottomRight), lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints, roundness);
-        // var r = new Rect(topLeft, bottomRight).Rectangle;
-        // Raylib.DrawRectangleLinesEx(r, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
     }
     
     /// <summary>
@@ -230,7 +197,6 @@ public static class RectDrawing
     public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color)
     {
         DrawRectLinesHelper(rect, lineThickness, color);
-        // Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness * 2, color.ToRayColor());
     }
 
     /// <summary>
@@ -242,235 +208,101 @@ public static class RectDrawing
     public static void DrawLines(this Rect rect, LineDrawingInfo lineInfo, float roundness = 0f)
     {
         DrawRectLinesHelper(rect, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints, roundness);
-        // Raylib.DrawRectangleLinesEx(rect.Rectangle, lineInfo.Thickness * 2, lineInfo.Color.ToRayColor());
-    }
-    #endregion
-    
-    #region Draw Lines Rotation
-    /// <summary>
-    /// Draws the outline of a rotated rectangle using the specified corners,
-    /// pivot, rotation, line thickness, color, and cap style.
-    /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color)
-    {
-        var a = pivot + (topLeft - pivot).RotateDeg(rotDeg);
-        var b = pivot + (new Vector2(topLeft.X, bottomRight.Y) - pivot).RotateDeg(rotDeg);
-        var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
-        var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
-        QuadDrawing.DrawQuadLines(a, b, c, d, lineThickness, color);
-    }
-    /// <summary>
-    /// Draws the outline of a rotated rectangle using the specified line drawing information.
-    /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information used for drawing the outline.
-    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
-    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
-    {
-        DrawRectLines(topLeft, bottomRight, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color);
-    }
-    /// <summary>
-    /// Draws the outline of a rotated rectangle using the specified pivot,
-    /// rotation, line thickness, color, and cap style.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color)
-    {
-        DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineThickness, color);
-    }
-    /// <summary>
-    /// Draws the outline of a rotated rectangle using the specified line drawing information.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
-    {
-        DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineInfo);
     }
     #endregion
     
     #region Draw Lines Percentage
-    /// <summary>
-    /// Draws a certain percentage of a rectangle's outline, starting at a specified corner and direction.
-    /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="f">
-    /// Specifies which portion of the rectangle's outline to draw, as well as the starting corner and direction.
-        /// <list type="bullet">
-        /// <item>The integer part (0-3) selects the starting corner:
-            /// <list type="bullet">
-            /// <item><c>Counter-Clockwise</c> -> 0 = top-left, 1 = bottom-left, 2 = bottom-right, 3 = top-right.</item>
-            /// <item><c>Clockwise</c> -> 0 = top-left, 1 = top-right, 2 = bottom-right, 3 = bottom-left.</item>
-            /// </list>
-        /// </item>
-        /// <item>The fractional part (0.0-1.0) determines the percentage of the outline to draw, relative to the full perimeter.</item>
-        /// <item>A negative value reverses the drawing direction (clockwise instead of counter-clockwise).</item>
-        /// </list>
-    /// Examples:
-        /// <list type="bullet">
-        /// <item><c>0.35</c> - Start at top-left, draw 35% of the outline counter-clockwise.</item>
-        /// <item><c>-2.7</c> - Start at bottom-right, draw 70% of the outline clockwise.</item>
-        /// </list>
-    /// </param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    /// <remarks>
-    /// Useful for progress indicators or animated outlines.
-    /// </remarks>
-    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, float lineThickness, ColorRgba color, float roundness = 0,  int cornerPoints = 0)
     {
-        if (f == 0) return;
-        var r = new Rect(topLeft, bottomRight);
-        if (r.Width <= 0 || r.Height <= 0) return;
-        if (MathF.Abs(f) >= 1f)
-        {
-            DrawRectLines(topLeft, bottomRight, lineThickness, color);
-            return;
-        }
-
-        bool negative = false;
-        if (f < 0)
-        {
-            negative = true;
-            f *= -1;
-        }
-
-        int startCorner = (int)f;
-        float percentage = f - startCorner;
-        if (percentage <= 0) return;
-
-        startCorner = ShapeMath.Clamp(startCorner, 0, 3);
-
-        var perimeter = r.Width * 2 + r.Height * 2;
-        var perimeterToDraw = perimeter * percentage;
-
-        if (startCorner == 0)
-        {
-            if (negative)
-            {
-                DrawRectLinesPercentageHelper(r.TopLeft, r.TopRight, r.BottomRight, r.BottomLeft, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawRectLinesPercentageHelper(r.TopLeft, r.BottomLeft, r.BottomRight, r.TopRight, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 1)
-        {
-            if (negative)
-            {
-                DrawRectLinesPercentageHelper(r.TopRight, r.BottomRight, r.BottomLeft, r.TopLeft, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawRectLinesPercentageHelper(r.BottomLeft, r.BottomRight, r.TopRight, r.TopLeft, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 2)
-        {
-            if (negative)
-            {
-                DrawRectLinesPercentageHelper(r.BottomRight, r.BottomLeft, r.TopLeft, r.TopRight, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawRectLinesPercentageHelper(r.BottomRight, r.TopRight, r.TopLeft, r.BottomLeft, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 3)
-        {
-            if (negative)
-            {
-                DrawRectLinesPercentageHelper(r.BottomLeft, r.TopLeft, r.TopRight, r.BottomRight, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawRectLinesPercentageHelper(r.TopRight, r.TopLeft, r.BottomLeft, r.BottomRight, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
-            }
-        }
-
+        var rect = new Rect(topLeft, bottomRight);
+        QuadDrawing.DrawQuadLinesPercentage(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, f, lineThickness, color, roundness, cornerPoints);
+        // if (f == 0) return;
+        // var r = new Rect(topLeft, bottomRight);
+        // if (r.Width <= 0 || r.Height <= 0) return;
+        // if (MathF.Abs(f) >= 1f)
+        // {
+        //     DrawRectLines(topLeft, bottomRight, lineThickness, color);
+        //     return;
+        // }
+        //
+        // bool negative = false;
+        // if (f < 0)
+        // {
+        //     negative = true;
+        //     f *= -1;
+        // }
+        //
+        // int startCorner = (int)f;
+        // float percentage = f - startCorner;
+        // if (percentage <= 0) return;
+        //
+        // startCorner = ShapeMath.Clamp(startCorner, 0, 3);
+        //
+        // var perimeter = r.Width * 2 + r.Height * 2;
+        // var perimeterToDraw = perimeter * percentage;
+        //
+        // if (startCorner == 0)
+        // {
+        //     if (negative)
+        //     {
+        //         DrawRectLinesPercentageHelper(r.TopLeft, r.TopRight, r.BottomRight, r.BottomLeft, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawRectLinesPercentageHelper(r.TopLeft, r.BottomLeft, r.BottomRight, r.TopRight, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
+        //     }
+        // }
+        // else if (startCorner == 1)
+        // {
+        //     if (negative)
+        //     {
+        //         DrawRectLinesPercentageHelper(r.TopRight, r.BottomRight, r.BottomLeft, r.TopLeft, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawRectLinesPercentageHelper(r.BottomLeft, r.BottomRight, r.TopRight, r.TopLeft, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
+        //     }
+        // }
+        // else if (startCorner == 2)
+        // {
+        //     if (negative)
+        //     {
+        //         DrawRectLinesPercentageHelper(r.BottomRight, r.BottomLeft, r.TopLeft, r.TopRight, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawRectLinesPercentageHelper(r.BottomRight, r.TopRight, r.TopLeft, r.BottomLeft, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
+        //     }
+        // }
+        // else if (startCorner == 3)
+        // {
+        //     if (negative)
+        //     {
+        //         DrawRectLinesPercentageHelper(r.BottomLeft, r.TopLeft, r.TopRight, r.BottomRight, perimeterToDraw, r.Height, r.Width, lineThickness, color, capType, capPoints);
+        //     }
+        //     else
+        //     {
+        //         DrawRectLinesPercentageHelper(r.TopRight, r.TopLeft, r.BottomLeft, r.BottomRight, perimeterToDraw, r.Width, r.Height, lineThickness, color, capType, capPoints);
+        //     }
+        // }
     }
 
-    /// <summary>
-    /// Draws a certain percentage of a rotated rectangle's outline, starting at a specified corner and direction.
-    /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="f">See <see cref="DrawRectLinesPercentage(Vector2, Vector2, float, float, ColorRgba, LineCapType, int)"/> for details.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    public static void DrawLinesPercentage(this Rect rect, float f, float lineThickness, ColorRgba color, float roundness = 0,  int capPoints = 0)
     {
-        var a = pivot + (topLeft - pivot).RotateDeg(rotDeg);
-        var b = pivot + (new Vector2(topLeft.X, bottomRight.Y) - pivot).RotateDeg(rotDeg);
-        var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
-        var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
-
-        QuadDrawing.DrawQuadLinesPercentage(a, b, c, d, f, lineThickness, color, capType, capPoints);
+        QuadDrawing.DrawQuadLinesPercentage(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, f, lineThickness, color, roundness, capPoints);
     }
 
-    /// <summary>
-    /// Draws a certain percentage of a rotated rectangle's outline using the specified line drawing information.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="f">See <see cref="DrawRectLinesPercentage(Vector2, Vector2, float, float, ColorRgba, LineCapType, int)"/> for details.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    public static void DrawLinesPercentage(this Rect rect, float f, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    public static void DrawLinesPercentage(this Rect rect, float f,  LineDrawingInfo lineInfo, float roundness = 0)
     {
-        DrawRectLinesPercentage(rect.TopLeft, rect.BottomRight, f, pivot, rotDeg, lineThickness, color, capType, capPoints);
+        QuadDrawing.DrawQuadLinesPercentage(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, f, lineInfo.Thickness, lineInfo.Color, roundness, lineInfo.CapPoints);
     }
 
-    /// <summary>
-    /// Draws a certain percentage of a rotated rectangle's outline using the specified line drawing information.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="f">See <see cref="DrawRectLinesPercentage(Vector2, Vector2, float, float, ColorRgba, LineCapType, int)"/> for details.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    public static void DrawLinesPercentage(this Rect rect, float f, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
+    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, LineDrawingInfo lineInfo, float roundness = 0)
     {
-        DrawRectLinesPercentage(rect.TopLeft, rect.BottomRight, f, pivot, rotDeg, lineInfo);
+        var rect = new Rect(topLeft, bottomRight);
+        QuadDrawing.DrawQuadLinesPercentage(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, f, lineInfo.Thickness, lineInfo.Color, roundness, lineInfo.CapPoints);
     }
 
-    /// <summary>
-    /// Draws a certain percentage of a rotated rectangle's outline using the specified line drawing information.
-    /// </summary>
-    /// <param name="topLeft">The top-left corner of the rectangle.</param>
-    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
-    /// <param name="f">See <see cref="DrawRectLinesPercentage(Vector2, Vector2, float, float, ColorRgba, LineCapType, int)"/> for details.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
-        => DrawRectLinesPercentage(topLeft, bottomRight, f, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     #endregion
     
     #region Draw Lines Scaled
@@ -539,8 +371,6 @@ public static class RectDrawing
     /// </summary>
     /// <param name="r">The rectangle to draw.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
     /// <param name="sideScaleFactor">
     /// <para>The scale factor for each side.</para>
         /// <list type="bullet">
@@ -560,29 +390,18 @@ public static class RectDrawing
     /// <remarks>
     /// Useful for creating stylized or animated rectangles.
     /// </remarks>
-    public static void DrawLinesScaled(this Rect r, LineDrawingInfo lineInfo, float rotDeg, Vector2 pivot, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public static void DrawLinesScaled(this Rect r, LineDrawingInfo lineInfo,  float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0f) return;
         if (sideScaleFactor >= 1f)
         {
-            r.DrawLines(pivot, rotDeg, lineInfo);
+            r.DrawLines(lineInfo);
             return;
         }
-        if (rotDeg == 0f)
-        {
-            SegmentDrawing.DrawSegment(r.TopLeft, r.BottomLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
-            SegmentDrawing.DrawSegment(r.BottomLeft, r.BottomRight, lineInfo, sideScaleFactor, sideScaleOrigin);
-            SegmentDrawing.DrawSegment(r.BottomRight, r.TopRight, lineInfo, sideScaleFactor, sideScaleOrigin);
-            SegmentDrawing.DrawSegment(r.TopRight, r.TopLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
-        }
-        else
-        {
-            var corners = r.RotateCorners(pivot, rotDeg);
-            SegmentDrawing.DrawSegment(corners.tl, corners.bl, lineInfo, sideScaleFactor, sideScaleOrigin);
-            SegmentDrawing.DrawSegment(corners.bl, corners.br, lineInfo, sideScaleFactor, sideScaleOrigin);
-            SegmentDrawing.DrawSegment(corners.br, corners.tr, lineInfo, sideScaleFactor, sideScaleOrigin);
-            SegmentDrawing.DrawSegment(corners.tr, corners.tl, lineInfo, sideScaleFactor, sideScaleOrigin);
-        }
+        SegmentDrawing.DrawSegment(r.TopLeft, r.BottomLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(r.BottomLeft, r.BottomRight, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(r.BottomRight, r.TopRight, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(r.TopRight, r.TopLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
     }
 
     #endregion
@@ -1397,80 +1216,21 @@ public static class RectDrawing
     #endregion
     
     #region Helper
-    private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        //NOTE: Should handled rounded corners as well (with corner points and roundness like DrawLines/Draw functions)
-        
-        //TODO: Fix with new system
-        // - Remove cap type for percentage drawing - its either sharp (cap points <= 0 or round (cap points > 0)
-        
-        // Draw first segment
-        var curP = p1;
-        var nextP = p2;
-        if (perimeterToDraw < size1)
-        {
-            float p = perimeterToDraw / size1;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= size1;
-
-        // Draw second segment
-        curP = nextP;
-        nextP = p3;
-        if (perimeterToDraw < size2)
-        {
-            float p = perimeterToDraw / size2;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= size2;
-
-        // Draw third segment
-        curP = nextP;
-        nextP = p4;
-        if (perimeterToDraw < size1)
-        {
-            float p = perimeterToDraw / size1;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= size1;
-
-        // Draw fourth segment
-        curP = nextP;
-        nextP = p1;
-        if (perimeterToDraw < size2)
-        {
-            float p = perimeterToDraw / size2;
-            nextP = curP.Lerp(nextP, p);
-        }
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-    }
-    
     private static void DrawRectLinesHelper(Rect rect, float thickness, ColorRgba color, int cornerPoints = 0, float roundness = 0f)
     {
         if (cornerPoints <= 0 || roundness <= 0f)
         {
-            rect = rect.ChangeSize(thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
-            Raylib.DrawRectangleLinesEx(rect.Rectangle, thickness * 2, color.ToRayColor());
+            // rect = rect.ChangeSize(thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
+            // Raylib.DrawRectangleLinesEx(rect.Rectangle, thickness * 2, color.ToRayColor());
+            QuadDrawing.DrawQuadLines(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, thickness, color);
         }
         else
         {
-            rect = rect.ChangeSize(-thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
-            Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, cornerPoints, thickness * 2, color.ToRayColor());
+            // rect = rect.ChangeSize(-thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
+            // Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, cornerPoints, thickness * 2, color.ToRayColor());
+            QuadDrawing.DrawLinesRoundedHelper(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, roundness, cornerPoints, thickness, color);
         }
     }
-
     private static void DrawRectCornerSharp(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
         if (capType == LineCapType.Extended || (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0))
@@ -1534,74 +1294,69 @@ public static class RectDrawing
         
         
     }
-
-    
-    
-    
-    
-    
-    public static void DrawRectCornerRounded(Vector2 p, Vector2 n1, Vector2 n2, float cornerRadius, int segments, float lineThick, ColorRgba color)
-    {
-        if (lineThick <= 0 || segments < 0) return;
-    
-        float stepLength = 90.0f / (float)segments; // degrees per segment on each corner
-        float outerRadius = cornerRadius + lineThick;
-        float innerRadius = cornerRadius - lineThick;
-    
-        // Corner centers (clockwise from top-left)
-        var n = (n1 + n2).Normalize();
-        var dis = MathF.Sqrt(cornerRadius * cornerRadius * 2f);
-        var center = p - n * dis;
-        
-        center.Draw(8f, ColorRgba.White);
-        p.Draw(8f, ColorRgba.White);
-        var s1 = new Segment(center, center + n1 * 50f);
-        var s2 = new Segment(center, center + n2 * 50f);
-        s1.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.LimeGreen));
-        s2.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.DarkRed));
-        
-        //TODO: Make static
-        //Build points for outer and inner arcs (include endpoints so we can seamlessly stitch corners)
-        List<Vector2> outerPoints = [];
-        List<Vector2> innerPoints = [];
-    
-        const float deg2Rad = MathF.PI / 180f;
-    
-        float startAng = n1.AngleDeg();
-        float endAng = n2.AngleDeg();
-        float angSign = ShapeMath.GetShortestAngleDegSign(startAng, endAng);
-        
-        for (var i = 0; i <= segments; i++) // inclusive to include corner endpoints
-        {
-            float angRad = (startAng + i * stepLength * angSign) * deg2Rad;
-            var dir = ShapeVec.Right().Rotate(angRad);
-    
-            var outerP = center + dir * outerRadius;
-            var innerP = center + dir * innerRadius;
-    
-            outerPoints.Add(outerP);
-            innerPoints.Add(innerP);
-        }
-    
-        int count = innerPoints.Count;
-        if (count < 2) return;
-    
-        // Thick outline: draw quads between outer and inner loops using two triangles per segment
-        for (var i = 0; i < count; i++)
-        {
-            int next = (i + 1) % count;
-    
-            var o1 = outerPoints[i];
-            var o2 = outerPoints[next];
-            var i1 = innerPoints[i];
-            var i2 = innerPoints[next];
-    
-            // Draw two triangles that form the quad between o1-o2-i2-i1
-            Raylib.DrawTriangle(o1, i2, i1, color.ToRayColor());
-            Raylib.DrawTriangle(o2, i2, o1, color.ToRayColor());
-        }
-    }
-    
+    #endregion
+}
+// private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    // {
+    //     //NOTE: Should handled rounded corners as well (with corner points and roundness like DrawLines/Draw functions)
+    //     
+    //     //TODO: Fix with new system
+    //     // - Remove cap type for percentage drawing - its either sharp (cap points <= 0 or round (cap points > 0)
+    //     
+    //     // Draw first segment
+    //     var curP = p1;
+    //     var nextP = p2;
+    //     if (perimeterToDraw < size1)
+    //     {
+    //         float p = perimeterToDraw / size1;
+    //         nextP = curP.Lerp(nextP, p);
+    //         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    //         return;
+    //     }
+    //
+    //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    //     perimeterToDraw -= size1;
+    //
+    //     // Draw second segment
+    //     curP = nextP;
+    //     nextP = p3;
+    //     if (perimeterToDraw < size2)
+    //     {
+    //         float p = perimeterToDraw / size2;
+    //         nextP = curP.Lerp(nextP, p);
+    //         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    //         return;
+    //     }
+    //
+    //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    //     perimeterToDraw -= size2;
+    //
+    //     // Draw third segment
+    //     curP = nextP;
+    //     nextP = p4;
+    //     if (perimeterToDraw < size1)
+    //     {
+    //         float p = perimeterToDraw / size1;
+    //         nextP = curP.Lerp(nextP, p);
+    //         SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    //         return;
+    //     }
+    //
+    //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    //     perimeterToDraw -= size1;
+    //
+    //     // Draw fourth segment
+    //     curP = nextP;
+    //     nextP = p1;
+    //     if (perimeterToDraw < size2)
+    //     {
+    //         float p = perimeterToDraw / size2;
+    //         nextP = curP.Lerp(nextP, p);
+    //     }
+    //     SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+    // }
+    //
+ /*
     //TODO: Make usable for draw rect rounded and draw rect rounded lines
     //Translate of DrawRectangleRoundedLinesEx from raylib (C) to C#
     //Draw rectangle with rounded edges outline
@@ -1711,7 +1466,4 @@ public static class RectDrawing
             Raylib.DrawTriangle(o1, i2, o2, color.ToRayColor());
         }
     }
-    
-    #endregion
-}
-
+    */

@@ -344,7 +344,7 @@ public class OutlineDrawingExample : ExampleScene
             }
             else
             {
-                rect.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
+                rect.DrawLinesScaled(lineInfo, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 4) // Quad
@@ -356,7 +356,7 @@ public class OutlineDrawingExample : ExampleScene
             }
             else
             {
-                quad.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
+                quad.DrawLinesScaled(lineInfo, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 5) // Polygon
