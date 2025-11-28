@@ -156,8 +156,7 @@ public static class RectDrawing
     /// <param name="color">The fill color.</param>
     public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color)
     {
-        QuadDrawing.DrawRoundedHelper(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, roundness, segments, color);
-        // Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
+        QuadDrawing.DrawQuad(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, color, roundness, segments);
     }
 
     #endregion
@@ -212,6 +211,26 @@ public static class RectDrawing
     #endregion
     
     #region Draw Lines Percentage
+    
+    /// <summary>
+    /// Draws the rectangle outline for a given perimeter percentage.
+    /// </summary>
+    /// <param name="topLeft">Top-left corner of the rectangle.</param>
+    /// <param name="bottomRight">Bottom-right corner of the rectangle.</param>
+    /// <param name="f">
+    /// Percentage parameter controlling which portion of the rectangle outline is drawn.
+    /// The integer part selects the starting corner (0..3), the fractional part specifies the portion
+    /// of the perimeter to draw from that corner. Negative values draw in the opposite direction.
+    /// Values with absolute magnitude &gt;= 1 draw the full outline.
+    /// </param>
+    /// <param name="lineThickness">Thickness of the outline lines.</param>
+    /// <param name="color">Color used to draw the outline.</param>
+    /// <param name="roundness">Optional roundness for corner smoothing (0 = sharp corners).</param>
+    /// <param name="cornerPoints">Number of points used to approximate rounded corners (0 = no rounded corner approximation).</param>
+    /// <remarks>
+    /// This method constructs a Rect from the provided corners and forwards the call to
+    /// QuadDrawing.DrawQuadLinesPercentage which performs the actual drawing.
+    /// </remarks>
     public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, float lineThickness, ColorRgba color, float roundness = 0,  int cornerPoints = 0)
     {
         var rect = new Rect(topLeft, bottomRight);
@@ -287,16 +306,56 @@ public static class RectDrawing
         // }
     }
 
+    /// <summary>
+    /// Draws a portion of the rectangle outline determined by a perimeter percentage and forwards the call
+    /// to <see cref="QuadDrawing.DrawQuadLinesPercentage"/> which performs the actual drawing.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline will be drawn.</param>
+    /// <param name="f">
+    /// Percentage parameter controlling which portion of the rectangle outline is drawn.
+    /// The integer part selects the starting corner (0..3); the fractional part specifies the portion
+    /// of the perimeter to draw from that corner. Negative values draw in the opposite direction.
+    /// Absolute values with magnitude &gt;= 1 draw the full outline.
+    /// </param>
+    /// <param name="lineThickness">Thickness of the outline lines.</param>
+    /// <param name="color">Color used to draw the outline.</param>
+    /// <param name="roundness">Optional roundness for corner smoothing (0 = sharp corners).</param>
+    /// <param name="capPoints">Number of points used to approximate rounded corner caps (0 = no rounded caps).</param>
     public static void DrawLinesPercentage(this Rect rect, float f, float lineThickness, ColorRgba color, float roundness = 0,  int capPoints = 0)
     {
         QuadDrawing.DrawQuadLinesPercentage(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, f, lineThickness, color, roundness, capPoints);
     }
 
+    /// <summary>
+    /// Draws a portion of the rectangle outline determined by a perimeter percentage using the supplied <see cref="LineDrawingInfo"/>.
+    /// This forwards the call to <see cref="QuadDrawing.DrawQuadLinesPercentage"/> which performs the actual drawing.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline will be drawn.</param>
+    /// <param name="f">
+    /// Percentage parameter controlling which portion of the rectangle outline is drawn.
+    /// The integer part selects the starting corner (0..3); the fractional part specifies the portion
+    /// of the perimeter to draw from that corner. Negative values draw in the opposite direction.
+    /// Absolute values with magnitude &gt;= 1 draw the full outline.
+    /// </param>
+    /// <param name="lineInfo">Line drawing information (thickness, color, cap points, etc.) used for drawing the outline.</param>
+    /// <param name="roundness">Optional roundness for corner smoothing (0 = sharp corners). Applied when supported by the underlying drawing helper.</param>
     public static void DrawLinesPercentage(this Rect rect, float f,  LineDrawingInfo lineInfo, float roundness = 0)
     {
         QuadDrawing.DrawQuadLinesPercentage(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, f, lineInfo.Thickness, lineInfo.Color, roundness, lineInfo.CapPoints);
     }
-
+    /// <summary>
+    /// Draws a portion of the rectangle outline determined by a perimeter percentage using the supplied <see cref="LineDrawingInfo"/>.
+    /// Constructs a <see cref="Rect"/> from the provided corners and forwards the call to <see cref="QuadDrawing.DrawQuadLinesPercentage"/> which performs the actual drawing.
+    /// </summary>
+    /// <param name="topLeft">The top-left corner of the rectangle.</param>
+    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
+    /// <param name="f">
+    /// Percentage parameter controlling which portion of the rectangle outline is drawn.
+    /// The integer part selects the starting corner (0..3); the fractional part specifies the portion of the perimeter to draw from that corner.
+    /// Negative values draw in the opposite direction. Absolute values with magnitude &gt;= 1 draw the full outline.
+    /// </param>
+    /// <param name="lineInfo">Line drawing information (thickness, color, cap points, etc.) used for drawing the outline.</param>
+    /// <param name="roundness">Optional roundness for corner smoothing (0 = sharp corners). Applied when supported by the underlying drawing helper.</param>
     public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, LineDrawingInfo lineInfo, float roundness = 0)
     {
         var rect = new Rect(topLeft, bottomRight);
@@ -1218,18 +1277,7 @@ public static class RectDrawing
     #region Helper
     private static void DrawRectLinesHelper(Rect rect, float thickness, ColorRgba color, int cornerPoints = 0, float roundness = 0f)
     {
-        if (cornerPoints <= 0 || roundness <= 0f)
-        {
-            // rect = rect.ChangeSize(thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
-            // Raylib.DrawRectangleLinesEx(rect.Rectangle, thickness * 2, color.ToRayColor());
-            QuadDrawing.DrawQuadLines(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, thickness, color);
-        }
-        else
-        {
-            // rect = rect.ChangeSize(-thickness * 2, AnchorPoint.Center);//To make it consistent with ShapeEngine rect drawing
-            // Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, cornerPoints, thickness * 2, color.ToRayColor());
-            QuadDrawing.DrawLinesRoundedHelper(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, roundness, cornerPoints, thickness, color);
-        }
+        QuadDrawing.DrawQuadLines(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, thickness, color, roundness, cornerPoints);
     }
     private static void DrawRectCornerSharp(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
@@ -1296,6 +1344,10 @@ public static class RectDrawing
     }
     #endregion
 }
+
+
+
+
 // private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     // {
     //     //NOTE: Should handled rounded corners as well (with corner points and roundness like DrawLines/Draw functions)
