@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
@@ -302,6 +303,43 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     
     #region Shapes
 
+    /// <summary>
+    /// Rotates this rectangle by <paramref name="angleDeg"/> around a pivot computed from the given <paramref name="alignment"/>
+    /// and returns the resulting quadrilateral as a <see cref="Quad"/>.
+    /// </summary>
+    /// <param name="angleDeg">Rotation angle in degrees.</param>
+    /// <param name="alignment">Anchor point that determines the rotation pivot relative to the rectangle's top-left and size.</param>
+    /// <returns>
+    /// A <see cref="Quad"/> representing the four corners of the rotated rectangle in the same corner ordering as the source rect.
+    /// </returns>
+    public Quad RotateToQuad(float angleDeg, AnchorPoint alignment)
+    {
+        var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
+        return RotateToQuad(angleDeg, pivot);
+    }
+    
+    /// <summary>
+    /// Rotates the rectangle's four corners around the specified pivot by the provided angle (in degrees)
+    /// and returns the resulting quadrilateral as a <see cref="Quad"/>.
+    /// Points in the returned <see cref="Quad"/> preserve the source rectangle's corner ordering (top-left, bottom-left, bottom-right, top-right).
+    /// </summary>
+    /// <param name="angleDeg">Rotation angle in degrees.</param>
+    /// <param name="pivot">Pivot point to rotate around.</param>
+    /// <returns>A <see cref="Quad"/> representing the rotated rectangle.</returns>
+    public Quad RotateToQuad(float angleDeg, Vector2 pivot)
+    {
+        var rotRad = angleDeg * ShapeMath.DEGTORAD;
+        var w = TopLeft - pivot;
+        var p1 = pivot + w.Rotate(rotRad);
+        w = BottomLeft - pivot;
+        var p2 = pivot + w.Rotate(rotRad);
+        w = BottomRight - pivot;
+        var p3 = pivot + w.Rotate(rotRad);
+        w = TopRight - pivot;
+        var p4 = pivot + w.Rotate(rotRad);
+        return new Quad(p1, p2, p3, p4);
+    }
+    
     /// <summary>
     /// Points are ordered in ccw order starting with top left (tl, bl, br, tr).
     /// </summary>
