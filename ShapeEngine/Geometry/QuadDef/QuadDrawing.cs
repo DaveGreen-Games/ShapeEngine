@@ -655,7 +655,7 @@ public static class QuadDrawing
             return;
         }
         
-        float stepLengthRad = (-MathF.PI * 0.5f) / (float)segments; // radians per segment on each corner
+        // float stepLengthRad = (-MathF.PI * 0.5f) / (float)segments; // radians per segment on each corner
         
         var dir1 = (n1 - n4).Normalize();
         var dir2 = (n2 - n1).Normalize();
@@ -695,20 +695,22 @@ public static class QuadDrawing
         TriangleDrawing.DrawTriangle(center1, center2, center3, color);
         TriangleDrawing.DrawTriangle(center1, center3, center4, color);
         
-        DrawCornerHelper(center1, -n1, n4, radius, segments, color);
-        DrawCornerHelper(center2, -n2, n1, radius, segments, color);
-        DrawCornerHelper(center3, -n3, n2, radius, segments, color);
-        DrawCornerHelper(center4, -n4, n3, radius, segments, color);
+        DrawRoundedCornerHelper(center1, -n1, n4, radius, segments, color);
+        DrawRoundedCornerHelper(center2, -n2, n1, radius, segments, color);
+        DrawRoundedCornerHelper(center3, -n3, n2, radius, segments, color);
+        DrawRoundedCornerHelper(center4, -n4, n3, radius, segments, color);
     }
-    public static void DrawCornerHelper(Vector2 cornerCenter, Vector2 n1, Vector2 n2, float cornerRadius, int segments, ColorRgba color)
+    private static void DrawRoundedCornerHelper(Vector2 cornerCenter, Vector2 n1, Vector2 n2, float cornerRadius, int segments, ColorRgba color)
     {
         if (segments < 0) return;
     
-        float stepLengthRad = (MathF.PI * 0.5f) / (float)segments;
+        // float stepLengthRad = (MathF.PI * 0.5f) / (float)segments;
         
         float startAngRad = n1.AngleRad();
         float endAngRad = n2.AngleRad();
-        float angSign = ShapeMath.GetShortestAngleRadSign(startAngRad, endAngRad);
+        float shortestAngleRad = ShapeMath.GetShortestAngleRad(startAngRad, endAngRad);
+        float stepLengthRad = shortestAngleRad / (float)segments;
+        float angSign = MathF.Sign(shortestAngleRad);
         
         for (var i = 0; i <= segments - 1; i++) // inclusive to include corner endpoints
         {
@@ -728,7 +730,138 @@ public static class QuadDrawing
     // - sharp corners uses inner and outer miter points and interpolates between prev corner miter points and next corner miter points
     private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
     {
+        if (percentage <= 0 || lineThickness <= 0) return;
+        var order = GetDrawLinePercentageOrder(p1, p2, p3, p4, percentage);
+        if(order.p >= 1f)
+        {
+            DrawQuadLinesInternal(p1, p2, p3, p4, lineThickness, color, roundness, cornerPoints);
+            return;
+        }
         
+        p1 = order.a;
+        p2 = order.b;
+        p3 = order.c;
+        p4 = order.d;
+        percentage = order.p;
+        
+        if(cornerPoints <= 0 || roundness <= 0f)
+        {
+            
+        }
+        else
+        {
+            var edge1 = p2 - p1;
+            var edge4 = p1 - p4;
+            float size1 = edge1.Length();
+            float size2 = edge4.Length();
+        
+            float radius = (size1 > size2) ? (size2 * roundness) / 2f : (size1 * roundness) / 2f;
+            if (radius <= 0f) return;
+        
+            float cornerArcLength = MathF.PI * 0.5f * radius;
+            float cornerLength = cornerArcLength * 4;
+            float l1 = size1 - 2 * radius;
+            float l2 = size2 - 2 * radius;
+            float totalPerimeter = cornerLength + l1 * 2f + l2 * 2f;
+            float perimeter = totalPerimeter * percentage;
+            
+            var edge2 = p3 - p2;
+            var edge3 = p4 - p3;
+        
+            var n1 = edge1.Normalize();
+            var n2 = edge2.Normalize();
+            var n3 = edge3.Normalize();
+            var n4 = edge4.Normalize();
+            
+            //draw first half corner
+            
+            // draw first edge
+            
+            //draw second corner
+            
+            // draw second edge
+            
+            //draw third corner
+            
+            // draw third edge
+            
+            //draw fourth corner
+            
+            // draw fourth edge
+        }
+    }
+    private static float DrawRoundedCornerFractionHelper(Vector2 cornerCenter, Vector2 n1, Vector2 n2, float cornerRadius, int segments, ColorRgba color, float remainingLength)
+    {
+        if (segments < 0 || remainingLength <= 0) return 0f;
+    
+        float angle = MathF.Acos(ShapeMath.Clamp(Vector2.Dot(n1, n2), -1f, 1f));
+        float arcLength = angle * cornerRadius;
+        if (remainingLength > arcLength)
+        {
+            DrawRoundedCornerHelper(cornerCenter, n1, n2, cornerRadius, segments, color);
+            return remainingLength - arcLength;
+        }
+        
+        float startAngRad = n1.AngleRad();
+        float endAngRad = n2.AngleRad();
+        float shortestAngleRad = ShapeMath.GetShortestAngleRad(startAngRad, endAngRad);
+        float stepLengthRad = shortestAngleRad / (float)segments;
+        float stepArcLength = arcLength / (float)segments;
+        float angSign = MathF.Sign(shortestAngleRad);
+
+        float curAngleRad = startAngRad;
+        while (remainingLength > 0)
+        {
+            float curStepLengthRad = stepLengthRad;
+            
+            if (remainingLength < stepArcLength)
+            {
+                float f = remainingLength / stepArcLength;
+                remainingLength = 0;
+                curStepLengthRad = stepLengthRad * f;
+            }
+            else
+            {
+                remainingLength -= stepArcLength;
+            }
+            
+            float angRadNext = curAngleRad + curStepLengthRad * angSign;
+            var dir = ShapeVec.Right().Rotate(curAngleRad);
+            var dirNext = ShapeVec.Right().Rotate(angRadNext);
+            
+            var prevPoint = cornerCenter + dir * cornerRadius;
+            var nextPoint = cornerCenter + dirNext * cornerRadius;
+            Raylib.DrawTriangle(nextPoint, cornerCenter, prevPoint, color.ToRayColor());
+
+            curAngleRad = angRadNext;
+        }
+
+        return 0f;
+    }
+
+    private static (Vector2 a, Vector2 b, Vector2 c, Vector2 d, float p) GetDrawLinePercentageOrder(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float percentage)
+    {
+        if (percentage == 0f) return (a, b, c, d, 0f);
+        bool ccw = percentage > 0;
+        float absPercentage = MathF.Abs(percentage);
+        absPercentage = ShapeMath.WrapF(absPercentage, 0f, 4f);
+        var corner = (int)absPercentage;
+        float perc = absPercentage - corner;
+
+        if (corner == 0)
+        {
+            return ccw ? (a, b, c, d, perc) : (a, d, c, b, perc);
+        }
+        if (corner == 1)
+        {
+            return ccw ? (b, c, d, a, perc) : (b, a, d, c, perc);
+        }
+        if (corner == 2)
+        {
+            return ccw ? (c, d, a, b, perc) : (c, b, a, d, perc);
+        }
+        
+        return ccw ? (d, a, b, c, perc) : (d, c, b, a, perc);
     }
     #endregion
 }
