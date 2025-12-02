@@ -906,7 +906,8 @@ public static class QuadDrawing
         
             //draw first half corner
             var curCenter = p1 + dir1 * dis;
-            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, -dir1, n4, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining, ccw);
+            // perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, -dir1, n4, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining, ccw);
+            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, n3, n4, innerRadius, outerRadius, cornerPoints, color, perimeterRemaining, ccw);
             if (perimeterRemaining <= 0f) return;
             
             // draw first edge
@@ -1088,12 +1089,12 @@ public static class QuadDrawing
                     Raylib.DrawTriangle(outerEnd,curOuter, innerEnd, rayColor);
                 }
                 
-                return;
+                // return;
             }
             
             //Draw second half of first corner
-            curCenter = nextCenter;
-            DrawRoundedCornerFractionHelper(curCenter, n3, -dir1, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining, ccw);
+            // curCenter = nextCenter;
+            // DrawRoundedCornerFractionHelper(curCenter, n3, -dir1, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining, ccw);
         }
     }
     private static float DrawRoundedCornerFractionHelper(Vector2 cornerCenter, Vector2 n1, Vector2 n2, float innerRadius, float outerRadius, int segments, ColorRgba color, float remainingLength, bool ccw)
