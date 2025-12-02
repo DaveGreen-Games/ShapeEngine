@@ -442,8 +442,12 @@ public static class QuadDrawing
     private static void DrawLinesRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float roundness, int segments, float lineThick, ColorRgba color)
     {
         //using raylibs C DrawRectangleRoundedLinesEx implementation as a base
-        
-        if (lineThick < 0f) lineThick = 0f;
+
+        if (lineThick < 0f)
+        {
+            // lineThick = 0f;
+            return;
+        }
         
         if (roundness <= 0f)
         {
@@ -648,7 +652,7 @@ public static class QuadDrawing
         float endAngRad = n2.AngleRad();
         float shortestAngleRad = ShapeMath.GetShortestAngleRad(startAngRad, endAngRad);
         float stepLengthRad = shortestAngleRad / (float)segments;
-        float angSign = MathF.Sign(shortestAngleRad);
+        float angSign = -MathF.Sign(shortestAngleRad);
         var rayColor = color.ToRayColor();
         for (var i = 0; i <= segments - 1; i++) // inclusive to include corner endpoints
         {
@@ -871,6 +875,10 @@ public static class QuadDrawing
             float radius = (size1 > size2) ? (size2 * roundness) / 2f : (size1 * roundness) / 2f;
             if (radius <= 0f) return;
         
+            if(radius <= lineThickness) radius = lineThickness;
+
+            if(cornerPoints < 2) cornerPoints = 2;
+            
             float outerRadius = radius + lineThickness;
             float innerRadius = radius - lineThickness;
             
@@ -898,7 +906,7 @@ public static class QuadDrawing
         
             //draw first half corner
             var curCenter = p1 + dir1 * dis;
-            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, -dir1, n4, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining);
+            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, -dir1, n4, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining, ccw);
             if (perimeterRemaining <= 0f) return;
             
             // draw first edge
@@ -912,8 +920,17 @@ public static class QuadDrawing
             if (perimeterRemaining >= l1)
             {
                 perimeterRemaining -= l1;
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle(nextInner,curOuter,  curInner, rayColor);
+                    Raylib.DrawTriangle(nextOuter,curOuter,  nextInner, rayColor);
+                }
+                
                 //Draw edge
             }
             else
@@ -921,14 +938,23 @@ public static class QuadDrawing
                 float f = perimeterRemaining / l1;
                 var innerEnd = Vector2.Lerp(curInner, nextInner, f);
                 var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                    Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+                }
+                
                 return;
             }
             
             //draw second corner
             curCenter = nextCenter;
-            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, -n2, n1, innerRadius, outerRadius, cornerPoints, color, perimeterRemaining);
+            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, n4, n1, innerRadius, outerRadius, cornerPoints, color, perimeterRemaining, ccw);
             if (perimeterRemaining <= 0f) return;
             
             // draw second edge
@@ -942,8 +968,17 @@ public static class QuadDrawing
             if (perimeterRemaining >= l2)
             {
                 perimeterRemaining -= l2;
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle(nextInner,curOuter,  curInner, rayColor);
+                    Raylib.DrawTriangle(nextOuter,curOuter,  nextInner, rayColor);
+                }
+                
                 //Draw edge
             }
             else
@@ -951,13 +986,22 @@ public static class QuadDrawing
                 float f = perimeterRemaining / l2;
                 var innerEnd = Vector2.Lerp(curInner, nextInner, f);
                 var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle(innerEnd,curOuter, curInner, rayColor);
+                    Raylib.DrawTriangle(outerEnd,curOuter, innerEnd, rayColor);
+                }
+                
                 return;
             }
             //draw third corner
             curCenter = nextCenter;
-            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, -n3, n2, innerRadius, outerRadius, cornerPoints, color, perimeterRemaining);
+            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, n1, n2, innerRadius, outerRadius, cornerPoints, color, perimeterRemaining, ccw);
             if (perimeterRemaining <= 0f) return;
             
             // draw third edge
@@ -971,22 +1015,38 @@ public static class QuadDrawing
             if (perimeterRemaining >= l1)
             {
                 perimeterRemaining -= l1;
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
-                //Draw edge
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle(nextInner,curOuter, curInner, rayColor);
+                    Raylib.DrawTriangle(nextOuter,curOuter, nextInner, rayColor);
+                }
             }
             else
             {
                 float f = perimeterRemaining / l1;
                 var innerEnd = Vector2.Lerp(curInner, nextInner, f);
                 var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle(innerEnd,curOuter, curInner, rayColor);
+                    Raylib.DrawTriangle(outerEnd,curOuter, innerEnd, rayColor);
+                }
+                
                 return;
             }
             //draw fourth corner
             curCenter = nextCenter;
-            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, -n4, n3, innerRadius, outerRadius, cornerPoints, color, perimeterRemaining);
+            perimeterRemaining = DrawRoundedCornerFractionHelper(curCenter, n2, n3, innerRadius, outerRadius, cornerPoints, color, perimeterRemaining, ccw);
             if (perimeterRemaining <= 0f) return;
             
             // draw fourth edge
@@ -1000,25 +1060,43 @@ public static class QuadDrawing
             if (perimeterRemaining >= l2)
             {
                 perimeterRemaining -= l2;
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle( nextInner,curOuter, curInner, rayColor);
+                    Raylib.DrawTriangle( nextOuter,curOuter, nextInner, rayColor);
+                }
+                
             }
             else
             {
                 float f = perimeterRemaining / l2;
                 var innerEnd = Vector2.Lerp(curInner, nextInner, f);
                 var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                if (ccw)
+                {
+                    Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                    Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+                }
+                else
+                {
+                    Raylib.DrawTriangle(innerEnd,curOuter, curInner, rayColor);
+                    Raylib.DrawTriangle(outerEnd,curOuter, innerEnd, rayColor);
+                }
+                
                 return;
             }
             
             //Draw second half of first corner
             curCenter = nextCenter;
-            DrawRoundedCornerFractionHelper(curCenter, -n1, -dir1, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining);
+            DrawRoundedCornerFractionHelper(curCenter, n3, -dir1, innerRadius, outerRadius, cornerPoints / 2, color, perimeterRemaining, ccw);
         }
     }
-    private static float DrawRoundedCornerFractionHelper(Vector2 cornerCenter, Vector2 n1, Vector2 n2, float innerRadius, float outerRadius, int segments, ColorRgba color, float remainingLength)
+    private static float DrawRoundedCornerFractionHelper(Vector2 cornerCenter, Vector2 n1, Vector2 n2, float innerRadius, float outerRadius, int segments, ColorRgba color, float remainingLength, bool ccw)
     {
         if (segments < 0 || remainingLength <= 0) return 0f;
     
@@ -1031,10 +1109,18 @@ public static class QuadDrawing
         float stepLengthRad = shortestAngleRad / (float)segments;
         float stepArcLength = arcLength / (float)segments;
         float angSign = MathF.Sign(shortestAngleRad);
+        if (ccw) angSign *= -1f;
         float curAngleRad = startAngRad;
         
         float lengthToDraw = MathF.Min(arcLength, remainingLength);
         var rayColor = color.ToRayColor();
+        
+        // cornerCenter.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.DeepSkyBlue));
+        // var s1 = new Segment(cornerCenter, cornerCenter + n1 * outerRadius);
+        // var s2 = new Segment(cornerCenter, cornerCenter + n2 * outerRadius);
+        // s1.Draw(2f, ColorRgba.CreateKnowColor(KnownColor.Yellow));
+        // s2.Draw(2f, ColorRgba.CreateKnowColor(KnownColor.Orange));
+        
         while (lengthToDraw > 0)
         {
             float curStepLengthRad = stepLengthRad;
@@ -1060,8 +1146,21 @@ public static class QuadDrawing
             var curOuterPoint = cornerCenter + curDir * outerRadius;
             var nextInnerPoint = cornerCenter + dirNext * innerRadius;
             var nextOuterPoint = cornerCenter + dirNext * outerRadius;
-            Raylib.DrawTriangle(curOuterPoint, nextInnerPoint, curInnerPoint,  rayColor);
-            Raylib.DrawTriangle(nextOuterPoint, nextInnerPoint, curOuterPoint, rayColor);
+            // curInnerPoint.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.Red));
+            // curOuterPoint.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.Red));
+            // nextInnerPoint.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.Green));
+            // nextOuterPoint.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.Green));
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuterPoint, nextInnerPoint, curInnerPoint,  rayColor);
+                Raylib.DrawTriangle(nextOuterPoint, nextInnerPoint, curOuterPoint, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( nextInnerPoint,curOuterPoint,  curInnerPoint,  rayColor);
+                Raylib.DrawTriangle( nextInnerPoint,nextOuterPoint, curOuterPoint, rayColor);
+            }
+            
 
             curAngleRad = angRadNext;
         }

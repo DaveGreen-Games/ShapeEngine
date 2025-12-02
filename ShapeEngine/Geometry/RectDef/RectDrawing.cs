@@ -148,12 +148,13 @@ public static class RectDrawing
     /// </param>
     public static void Draw(this Rect rect, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
-        if(cornerPoints > 0 && roundness > 0f)
-        {
-            QuadDrawing.DrawQuad(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, color, roundness, cornerPoints);
-            return;
-        }
-        Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
+        QuadDrawing.DrawQuad(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, color, roundness, cornerPoints);
+        // if(cornerPoints > 0 && roundness > 0f)
+        // {
+        //     QuadDrawing.DrawQuad(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, color, roundness, cornerPoints);
+        //     return;
+        // }
+        // Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
     }
 
     #endregion
