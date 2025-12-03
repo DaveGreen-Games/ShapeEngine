@@ -1,7 +1,8 @@
-using System.Drawing;
+
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
@@ -354,6 +355,133 @@ public static class QuadDrawing
     
     #endregion
  
+    #region Draw Corners
+
+    public static void DrawQuadCorners(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        float w = (d - a).Length();
+        float h = (b - a).Length();
+        var size = new Size(w, h);
+        if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || size.Width <= 0 || size.Height <= 0) return;
+
+        var nL = (a - d).Normalize();
+        var nD = (b - a).Normalize();
+        var nR = (c - b).Normalize();
+        var nU = (d - c).Normalize();
+        
+        float miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
+        float halfWidth = size.Width / 2f;
+        float halfHeight = size.Height / 2f;
+
+        if ((lineInfo.CapType == LineCapType.CappedExtended && lineInfo.CapPoints > 0) || lineInfo.CapType == LineCapType.Extended)
+        {
+            if (halfWidth > halfHeight)
+            {
+                halfHeight -= lineInfo.Thickness;
+            }
+            else if(halfWidth < halfHeight)
+            {
+                halfWidth -= lineInfo.Thickness;
+            }
+            else
+            {
+                halfWidth -= lineInfo.Thickness;
+                halfHeight -= lineInfo.Thickness;
+            }
+        }
+
+        if (tlCorner > 0f)
+        {
+            DrawCorner(a, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
+                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        }
+
+        if (trCorner > 0f)
+        {
+            DrawCorner(d, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
+                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        }
+
+        if (brCorner > 0f)
+        {
+            DrawCorner(c, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
+                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        }
+
+        if (blCorner > 0f)
+        {
+            DrawCorner(b, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
+                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        }
+    }
+    public static void DrawQuadCornersRelative(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
+    {
+        float w = (d - a).Length();
+        float h = (b - a).Length();
+        float minSize = MathF.Min(w, h);
+        DrawQuadCorners(a, b, c, d, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
+    }
+    
+    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        DrawQuadCorners(quad.A, quad.B, quad.C, quad.D, lineInfo, tlCorner, trCorner, brCorner, blCorner);
+        // var size = quad.GetSize();
+        // if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || size.Width <= 0 || size.Height <= 0) return;
+        //
+        // var tl = quad.A;
+        // var bl = quad.B;
+        // var br = quad.C;
+        // var tr = quad.D;
+        //
+        // var nL = quad.NormalLeft;
+        // var nD = quad.NormalDown;
+        // var nR = quad.NormalRight;
+        // var nU = quad.NormalUp;
+        //
+        // var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
+        // var halfWidth = size.Width / 2f;
+        // var halfHeight = size.Height / 2f;
+        //
+        // if (tlCorner > 0f)
+        // {
+        //     DrawCorner(tl, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // }
+        //
+        // if (trCorner > 0f)
+        // {
+        //     DrawCorner(tr, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // }
+        //
+        // if (brCorner > 0f)
+        // {
+        //     DrawCorner(br, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // }
+        //
+        // if (blCorner > 0f)
+        // {
+        //     DrawCorner(bl, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // }
+    }
+    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float cornerLength)
+    {
+        DrawCorners(quad, lineInfo, cornerLength, cornerLength, cornerLength, cornerLength);
+    }
+    public static void DrawCornersRelative(this Quad quad, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
+    {
+        float minSize = quad.GetSize().Min();
+        DrawCorners(quad, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
+    }
+    public static void DrawCornersRelative(this Quad quad, LineDrawingInfo lineInfo, float cornerLengthFactor)
+    {
+        DrawCornersRelative(quad, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
+    }
+
+    #endregion
+    
     #region Draw Vertices
     /// <summary>
     /// Draws circles at each vertex of a <see cref="Quad"/>.
@@ -1201,6 +1329,49 @@ public static class QuadDrawing
         }
         
         return ccw ? (d, a, b, c, perc, ccw) : (d, c, b, a, perc, ccw);
+    }
+    
+    private static void DrawCorner(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    {
+        if (capType == LineCapType.Extended || (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0))
+        {
+            cornerLength1 = MathF.Max(thickness, cornerLength1);
+            cornerLength2 = MathF.Max(thickness, cornerLength2);
+        }
+        var miterDir = (n1 + n2).Normalize();
+        var maxMiterLength = MathF.Sqrt(cornerLength1 * cornerLength1 + cornerLength2 * cornerLength2);
+        miterLength = MathF.Min(miterLength, maxMiterLength);
+        
+        var innerMiter = p - miterDir * miterLength;
+        var end1 = p - n1 * cornerLength1;
+        var end2 = p - n2 * cornerLength2;
+        if (capType == LineCapType.Extended)
+        {
+            end1 -= n1 * thickness;
+            end2 -= n2 * thickness;
+        }
+        else if (capType == LineCapType.Capped && capPoints > 0)
+        {
+            end1 += n1 * thickness;
+            end2 += n2 * thickness;
+        }
+        
+        var end1Inner = end1 - n2 * thickness;
+        var end2Inner = end2 - n1 * thickness;
+        
+        var outerMiter = p + miterDir * miterLength;
+        var end1Outer = end1 + n2 * thickness;
+        var end2Outer = end2 + n1 * thickness;
+        TriangleDrawing.DrawTriangle(outerMiter, end1Outer, innerMiter, color);
+        TriangleDrawing.DrawTriangle(end1Outer, end1Inner, innerMiter, color);
+        TriangleDrawing.DrawTriangle(outerMiter, innerMiter, end2Outer, color); 
+        TriangleDrawing.DrawTriangle(innerMiter, end2Inner, end2Outer, color);
+
+        if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
+        {
+            SegmentDrawing.DrawRoundCap(end1, -n1, thickness, capPoints, color);
+            SegmentDrawing.DrawRoundCap(end2, -n2, thickness, capPoints, color);
+        }
     }
     #endregion
 }

@@ -1118,110 +1118,44 @@ public static class RectDrawing
     /// </remarks>
     public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || rect.Width <= 0 || rect.Height <= 0) return;
-        
-        var tl = rect.TopLeft;
-        var tr = rect.TopRight;
-        var br = rect.BottomRight;
-        var bl = rect.BottomLeft;
-
-        var nL = new Vector2(-1, 0f);
-        var nR = new Vector2(1, 0f);
-        var nU = new Vector2(0f, -1);
-        var nD = new Vector2(0f, 1);
-        var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
-        var halfWidth = rect.Width / 2f;
-        var halfHeight = rect.Height / 2f;
-
-        if (tlCorner > 0f)
-        {
-            DrawRectCornerSharp(tl, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        }
-
-        if (trCorner > 0f)
-        {
-            DrawRectCornerSharp(tr, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        }
-
-        if (brCorner > 0f)
-        {
-            DrawRectCornerSharp(br, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        }
-
-        if (blCorner > 0f)
-        {
-            DrawRectCornerSharp(bl, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        }
-        
-
-        // if (lineInfo.CapPoints <= 0)
+        QuadDrawing.DrawQuadCorners(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, lineInfo, tlCorner, trCorner, brCorner, blCorner);
+        // if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || rect.Width <= 0 || rect.Height <= 0) return;
+        //
+        // var tl = rect.TopLeft;
+        // var tr = rect.TopRight;
+        // var br = rect.BottomRight;
+        // var bl = rect.BottomLeft;
+        //
+        // var nL = new Vector2(-1, 0f);
+        // var nR = new Vector2(1, 0f);
+        // var nU = new Vector2(0f, -1);
+        // var nD = new Vector2(0f, 1);
+        // var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
+        // var halfWidth = rect.Width / 2f;
+        // var halfHeight = rect.Height / 2f;
+        //
+        // if (tlCorner > 0f)
         // {
-        //     var tl = rect.TopLeft;
-        //     var tr = rect.TopRight;
-        //     var br = rect.BottomRight;
-        //     var bl = rect.BottomLeft;
-        //
-        //     var nL = new Vector2(-1, 0f);
-        //     var nR = new Vector2(1, 0f);
-        //     var nU = new Vector2(0f, -1);
-        //     var nD = new Vector2(0f, 1);
-        //     var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
-        //     var halfWidth = rect.Width / 2f;
-        //     var halfHeight = rect.Height / 2f;
-        //
-        //     if (tlCorner > 0f)
-        //     {
-        //         DrawRectCornerSharp(tl, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
-        //             lineInfo.Color);
-        //     }
-        //
-        //     if (trCorner > 0f)
-        //     {
-        //         DrawRectCornerSharp(tr, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
-        //             lineInfo.Color);
-        //     }
-        //
-        //     if (brCorner > 0f)
-        //     {
-        //         DrawRectCornerSharp(br, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
-        //             lineInfo.Color);
-        //     }
-        //
-        //     if (blCorner > 0f)
-        //     {
-        //         DrawRectCornerSharp(bl, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
-        //             lineInfo.Color);
-        //     }
+        //     DrawRectCornerSharp(tl, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
         // }
-        // else
+        //
+        // if (trCorner > 0f)
         // {
-        //     const float roundness = 0.53f;
-        //     float radius = (rect.Width > rect.Height) ? (rect.Height * roundness) / 2f : (rect.Width * roundness) / 2f;
-        //     if (radius <= 0f) return;
+        //     DrawRectCornerSharp(tr, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // }
         //
-        //     if (tlCorner > 0f)
-        //     {
-        //         DrawRectCornerRounded(rect.TopLeft, new Vector2(0, -1), new Vector2(-1, 0), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
-        //     }
+        // if (brCorner > 0f)
+        // {
+        //     DrawRectCornerSharp(br, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        // }
         //
-        //     if (blCorner > 0f)
-        //     {
-        //         DrawRectCornerRounded(rect.BottomLeft, new Vector2(-1, 0), new Vector2(0, 1), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
-        //     }
-        //
-        //     if (brCorner > 0f)
-        //     {
-        //         DrawRectCornerRounded(rect.BottomRight, new Vector2(0, 1), new Vector2(1, 0), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
-        //     }
-        //
-        //     if (trCorner > 0f)
-        //     {
-        //         DrawRectCornerRounded(rect.TopRight, new Vector2(1, 0), new Vector2(0, -1), radius, lineInfo.CapPoints, lineInfo.Thickness, lineInfo.Color);
-        //     }
+        // if (blCorner > 0f)
+        // {
+        //     DrawRectCornerSharp(bl, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
+        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
         // }
     }
     
@@ -1251,7 +1185,7 @@ public static class RectDrawing
     /// <param name="blCornerFactor">The relative length of the bottom-left corner lines (0-1).</param>
     public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
     {
-        var minSize = MathF.Min(rect.Width, rect.Height);
+        float minSize = MathF.Min(rect.Width, rect.Height);
         DrawCorners(rect, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
     }
 
@@ -1290,6 +1224,8 @@ public static class RectDrawing
     {
         QuadDrawing.DrawQuadLines(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, thickness, color, roundness, cornerPoints);
     }
+    
+    /*
     private static void DrawRectCornerSharp(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
         if (capType == LineCapType.Extended || (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0))
@@ -1332,5 +1268,7 @@ public static class RectDrawing
             SegmentDrawing.DrawRoundCap(end2, -n2, thickness, capPoints, color);
         }
     }
+    */
+    
     #endregion
 }
