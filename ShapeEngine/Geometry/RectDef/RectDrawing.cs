@@ -608,32 +608,6 @@ public static class RectDrawing
         DrawSlantedCorners(rect, color, cornerLength, cornerLength);
     }
     /// <summary>
-    /// Draws a filled rectangle with identical slanted corners on all four corners,
-    /// where the slant size is specified relative to the rectangle's half-size.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="color">The fill color used for the slanted corners and remaining area.</param>
-    /// <param name="cornerLengthFactor">
-    /// A relative factor (0..1) that controls the slant length.
-    /// 0 = no slant (draw full rectangle), 1 = maximum symmetric slant (half the rect dimension).
-    /// Values outside this range are handled by the implementation (clamped or treated appropriately).
-    /// </param>
-    public static void DrawSlantedCornersRelative(this Rect rect, ColorRgba color, float cornerLengthFactor)
-    {
-        if(rect.Width <= 0 || rect.Height <= 0) return;
-        if (cornerLengthFactor <= 0)
-        {
-            rect.Draw(color);
-            return;
-        }
-        
-        float halfWidth = rect.Width / 2f;
-        float halfHeight = rect.Height / 2f;
-
-        if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
-        DrawSlantedCorners(rect, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
-    }
-    /// <summary>
     /// Draws a filled rectangle with independent slanted corners for horizontal and vertical directions.
     /// </summary>
     /// <param name="rect">The rectangle to draw.</param>
@@ -746,6 +720,34 @@ public static class RectDrawing
             TriangleDrawing.DrawTriangle(trV, brH, brV, color);
         }
     }
+    
+    
+    /// <summary>
+    /// Draws a filled rectangle with identical slanted corners on all four corners,
+    /// where the slant size is specified relative to the rectangle's half-size.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color used for the slanted corners and remaining area.</param>
+    /// <param name="cornerLengthFactor">
+    /// A relative factor (0..1) that controls the slant length.
+    /// 0 = no slant (draw full rectangle), 1 = maximum symmetric slant (half the rect dimension).
+    /// Values outside this range are handled by the implementation (clamped or treated appropriately).
+    /// </param>
+    public static void DrawSlantedCornersRelative(this Rect rect, ColorRgba color, float cornerLengthFactor)
+    {
+        if(rect.Width <= 0 || rect.Height <= 0) return;
+        if (cornerLengthFactor <= 0)
+        {
+            rect.Draw(color);
+            return;
+        }
+        
+        float halfWidth = rect.Width / 2f;
+        float halfHeight = rect.Height / 2f;
+
+        if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
+        DrawSlantedCorners(rect, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
+    }
     /// <summary>
     /// Draws a filled rectangle with independent slanted corner sizes specified as relative factors.
     /// </summary>
@@ -781,6 +783,28 @@ public static class RectDrawing
         DrawSlantedCorners(rect, color, cornerLengthH, cornerLengthV);
     }
     /// <summary>
+    /// Draws a filled rectangle with slanted corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="tlCorner">The slant amount for the top-left corner.</param>
+    /// <param name="trCorner">The slant amount for the top-right corner.</param>
+    /// <param name="brCorner">The slant amount for the bottom-right corner.</param>
+    /// <param name="blCorner">The slant amount for the bottom-left corner.</param>
+    /// <remarks>
+    /// Uses absolute values for corner values from 0 to Min(width,height) of the rect.
+    /// Therefore, the corner values should be positive and not exceed the smallest dimension of the rect.
+    /// </remarks>
+    public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        polygonHelper.Clear();
+        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
+        polygonHelper.DrawPolygonConvex(rect.Center, color);
+
+    }
+    
+    
+    /// <summary>
     /// Draws the outline (lines) of a rectangle with identical slanted corners on all four corners.
     /// </summary>
     /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
@@ -799,25 +823,6 @@ public static class RectDrawing
     public static void DrawSlantedCornersLines(this Rect rect, float thickness, ColorRgba color, float cornerLength)
     {
         DrawSlantedCornersLines(rect, thickness, color, cornerLength, cornerLength);
-    }
-    /// <summary>
-    /// Draws the outline (lines) of a rectangle with slanted corners using a relative corner length factor.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
-    /// <param name="thickness">The thickness of the outline lines.</param>
-    /// <param name="color">The color of the outline lines.</param>
-    /// <param name="cornerLengthFactor">
-    /// Relative slant factor (0..1):
-    /// 0 = no slant (full rectangle),
-    /// 1 = maximum symmetric slant (half the rectangle dimension).
-    /// Values outside this range are clamped or handled by the implementation.
-    /// </param>
-    /// <remarks>
-    /// This overload forwards to the two-parameter relative overload using the same factor for both horizontal and vertical slants.
-    /// </remarks>
-    public static void DrawSlantedCornersRelativeLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthFactor)
-    {
-        DrawSlantedCornersRelativeLines(rect, thickness, color, cornerLengthFactor, cornerLengthFactor);
     }
     /// <summary>
     /// Draws the outline (lines) of a rectangle with slanted corners using independent
@@ -920,6 +925,46 @@ public static class RectDrawing
         }
     }
     /// <summary>
+    /// Draws the outline of a rectangle with slanted corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
+    /// <param name="tlCorner">The slant amount for the top-left corner.</param>
+    /// <param name="trCorner">The slant amount for the top-right corner.</param>
+    /// <param name="brCorner">The slant amount for the bottom-right corner.</param>
+    /// <param name="blCorner">The slant amount for the bottom-left corner.</param>
+    /// <remarks>
+    /// Uses absolute values for corner values from 0 to Min(width,height) of the rect.
+    /// Therefore, the corner values should be positive and not exceed the smallest dimension of the rect.
+    /// </remarks>
+    public static void DrawSlantedCornersLines(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        polygonHelper.Clear();
+        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
+        polygonHelper.DrawLines(lineInfo);
+    }
+    
+    
+    /// <summary>
+    /// Draws the outline (lines) of a rectangle with slanted corners using a relative corner length factor.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
+    /// <param name="thickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline lines.</param>
+    /// <param name="cornerLengthFactor">
+    /// Relative slant factor (0..1):
+    /// 0 = no slant (full rectangle),
+    /// 1 = maximum symmetric slant (half the rectangle dimension).
+    /// Values outside this range are clamped or handled by the implementation.
+    /// </param>
+    /// <remarks>
+    /// This overload forwards to the two-parameter relative overload using the same factor for both horizontal and vertical slants.
+    /// </remarks>
+    public static void DrawSlantedCornersRelativeLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthFactor)
+    {
+        DrawSlantedCornersRelativeLines(rect, thickness, color, cornerLengthFactor, cornerLengthFactor);
+    }
+    /// <summary>
     /// Draws the outline (lines) of a rectangle with slanted corners using relative horizontal and vertical corner factors.
     /// </summary>
     /// <param name="rect">The rectangle to draw. Nothing is drawn for non-positive width or height.</param>
@@ -952,94 +997,6 @@ public static class RectDrawing
         DrawSlantedCornersLines(rect, thickness, color, cornerLengthH, cornerLengthV);
     }
     
-    
-    
-    /// <summary>
-    /// Draws a filled rectangle with slanted corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="color">The fill color.</param>
-    /// <param name="tlCorner">The slant amount for the top-left corner.</param>
-    /// <param name="trCorner">The slant amount for the top-right corner.</param>
-    /// <param name="brCorner">The slant amount for the bottom-right corner.</param>
-    /// <param name="blCorner">The slant amount for the bottom-left corner.</param>
-    /// <remarks>
-    /// Uses absolute values for corner values from 0 to Min(width,height) of the rect.
-    /// Therefore, the corner values should be positive and not exceed the smallest dimension of the rect.
-    /// </remarks>
-    public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        polygonHelper.Clear();
-        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
-        polygonHelper.DrawPolygonConvex(rect.Center, color);
-
-    }
-
-    /// <summary>
-    /// Draws a filled, rotated rectangle with slanted corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="color">The fill color.</param>
-    /// <param name="tlCorner">The slant amount for the top-left corner.</param>
-    /// <param name="trCorner">The slant amount for the top-right corner.</param>
-    /// <param name="brCorner">The slant amount for the bottom-right corner.</param>
-    /// <param name="blCorner">The slant amount for the bottom-left corner.</param>
-    /// <remarks>
-    /// Uses absolute values for corner values from 0 to Min(width,height) of the rect.
-    /// Therefore, the corner values should be positive and not exceed the smallest dimension of the rect.
-    /// </remarks>
-    public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        polygonHelper.Clear();
-        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
-        polygonHelper.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
-        polygonHelper.DrawPolygonConvex(rect.Center, color);
-    }
-
-    /// <summary>
-    /// Draws the outline of a rectangle with slanted corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="tlCorner">The slant amount for the top-left corner.</param>
-    /// <param name="trCorner">The slant amount for the top-right corner.</param>
-    /// <param name="brCorner">The slant amount for the bottom-right corner.</param>
-    /// <param name="blCorner">The slant amount for the bottom-left corner.</param>
-    /// <remarks>
-    /// Uses absolute values for corner values from 0 to Min(width,height) of the rect.
-    /// Therefore, the corner values should be positive and not exceed the smallest dimension of the rect.
-    /// </remarks>
-    public static void DrawSlantedCornersLines(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        polygonHelper.Clear();
-        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
-        polygonHelper.DrawLines(lineInfo);
-    }
-
-    /// <summary>
-    /// Draws the outline of a rotated rectangle with slanted corners.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="pivot">The pivot point for rotation.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="tlCorner">The slant amount for the top-left corner.</param>
-    /// <param name="trCorner">The slant amount for the top-right corner.</param>
-    /// <param name="brCorner">The slant amount for the bottom-right corner.</param>
-    /// <param name="blCorner">The slant amount for the bottom-left corner.</param>
-    /// <remarks>
-    /// Uses absolute values for corner values from 0 to Min(width,height) of the rect.
-    /// Therefore, the corner values should be positive and not exceed the smallest dimension of the rect.
-    /// </remarks>
-    public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        polygonHelper.Clear();
-        FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
-        polygonHelper.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
-        polygonHelper.DrawLines(lineInfo);
-    }
     
     private static void FillSlantedCornerPoints(Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner, ref Polygon points)
     {
