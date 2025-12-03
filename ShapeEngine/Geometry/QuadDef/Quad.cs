@@ -40,6 +40,27 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     #region Getters
 
     /// <summary>
+    /// Gets the top-left vertex of the quad (alias for <c>A</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 TopLeft => A;
+    /// <summary>
+    /// Gets the top-right vertex of the quad (alias for <c>D</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 TopRight => D;
+    /// <summary>
+    /// Gets the bottom-right vertex of the quad (alias for <c>C</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 BottomRight => C;
+    /// <summary>
+    /// Gets the bottom-left vertex of the quad (alias for <c>B</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 BottomLeft => B;
+    
+    /// <summary>
     /// Gets the center point of the quad.
     /// </summary>
     public Vector2 Center => GetPoint(0.5f);
