@@ -137,18 +137,18 @@ public static class QuadDrawing
     
     #region Draw
     /// <summary>
-    /// Draws a filled quadrilateral defined by four vertices.
+    /// Draws a filled quadrilateral from four corner positions.
     /// </summary>
     /// <param name="a">First vertex of the quad.</param>
     /// <param name="b">Second vertex of the quad.</param>
     /// <param name="c">Third vertex of the quad.</param>
     /// <param name="d">Fourth vertex of the quad.</param>
-    /// <param name="color">Color used to fill the quad.</param>
-    /// <param name="roundness">Optional corner roundness factor (0 = sharp corners).</param>
-    /// <param name="cornerPoints">Optional number of points used to approximate rounded corners.</param>
+    /// <param name="color">Fill color for the quad.</param>
+    /// <param name="roundness">Corner roundness factor. If &lt;= 0 the quad is drawn with sharp corners.</param>
+    /// <param name="cornerPoints">Number of points used to approximate rounded corners. Ignored when <paramref name="roundness"/> &lt;= 0.</param>
     /// <remarks>
-    /// The quad is rendered as two triangles. Parameters related to rounding are accepted for future
-    /// implementations that render rounded corners; current implementation ignores rounding and cornerPoints.
+    /// If <paramref name="roundness"/> &gt; 0 and <paramref name="cornerPoints"/> &gt; 0, rounded-corner helpers are used.
+    /// Otherwise the quad is rendered as two triangles for sharp corners.
     /// </remarks>
     public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
@@ -163,16 +163,20 @@ public static class QuadDrawing
         DrawRoundedHelper(a, b, c, d, roundness, cornerPoints, color);
         
     }
+    
     /// <summary>
-    /// Draws a filled quadrilateral using the vertices of a <see cref="Quad"/>.
+    /// Draws this <see cref="Quad"/> filled with the specified <paramref name="color"/>.
+    /// This is an extension convenience that forwards to the quad vertex overload.
     /// </summary>
-    /// <param name="q">The quad to draw.</param>
-    /// <param name="color">The color to fill the quad.</param>
-    public static void Draw(this Quad q, ColorRgba color)
+    /// <param name="q">The quad instance to draw (extension receiver).</param>
+    /// <param name="color">Fill color for the quad.</param>
+    /// <param name="roundness">Optional corner roundness factor (0 = sharp corners).</param>
+    /// <param name="cornerPoints">Number of points used to approximate rounded corners. Ignored when <paramref name="roundness"/> is 0.</param>
+    public static void Draw(this Quad q, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
-        DrawQuad(q.A, q.B, q.C, q.D, color);
+        DrawQuad(q.A, q.B, q.C, q.D, color, roundness, cornerPoints);
+        
     }
-
     #endregion
     
     #region Draw Lines
