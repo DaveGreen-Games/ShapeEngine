@@ -1119,44 +1119,6 @@ public static class RectDrawing
     public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         QuadDrawing.DrawQuadCorners(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, lineInfo, tlCorner, trCorner, brCorner, blCorner);
-        // if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || rect.Width <= 0 || rect.Height <= 0) return;
-        //
-        // var tl = rect.TopLeft;
-        // var tr = rect.TopRight;
-        // var br = rect.BottomRight;
-        // var bl = rect.BottomLeft;
-        //
-        // var nL = new Vector2(-1, 0f);
-        // var nR = new Vector2(1, 0f);
-        // var nU = new Vector2(0f, -1);
-        // var nD = new Vector2(0f, 1);
-        // var miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
-        // var halfWidth = rect.Width / 2f;
-        // var halfHeight = rect.Height / 2f;
-        //
-        // if (tlCorner > 0f)
-        // {
-        //     DrawRectCornerSharp(tl, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
-        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        // }
-        //
-        // if (trCorner > 0f)
-        // {
-        //     DrawRectCornerSharp(tr, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
-        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        // }
-        //
-        // if (brCorner > 0f)
-        // {
-        //     DrawRectCornerSharp(br, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
-        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        // }
-        //
-        // if (blCorner > 0f)
-        // {
-        //     DrawRectCornerSharp(bl, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
-        //         lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        // }
     }
     
     /// <summary>
@@ -1224,51 +1186,5 @@ public static class RectDrawing
     {
         QuadDrawing.DrawQuadLines(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight, thickness, color, roundness, cornerPoints);
     }
-    
-    /*
-    private static void DrawRectCornerSharp(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
-    {
-        if (capType == LineCapType.Extended || (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0))
-        {
-            cornerLength1 = MathF.Max(thickness, cornerLength1);
-            cornerLength2 = MathF.Max(thickness, cornerLength2);
-        }
-        var miterDir = (n1 + n2).Normalize();
-        var maxMiterLength = MathF.Sqrt(cornerLength1 * cornerLength1 + cornerLength2 * cornerLength2);
-        miterLength = MathF.Min(miterLength, maxMiterLength);
-        
-        var innerMiter = p - miterDir * miterLength;
-        var end1 = p - n1 * cornerLength1;
-        var end2 = p - n2 * cornerLength2;
-        if (capType == LineCapType.Extended)
-        {
-            end1 -= n1 * thickness;
-            end2 -= n2 * thickness;
-        }
-        else if (capType == LineCapType.Capped && capPoints > 0)
-        {
-            end1 += n1 * thickness;
-            end2 += n2 * thickness;
-        }
-        
-        var end1Inner = end1 - n2 * thickness;
-        var end2Inner = end2 - n1 * thickness;
-        
-        var outerMiter = p + miterDir * miterLength;
-        var end1Outer = end1 + n2 * thickness;
-        var end2Outer = end2 + n1 * thickness;
-        TriangleDrawing.DrawTriangle(outerMiter, end1Outer, innerMiter, color);
-        TriangleDrawing.DrawTriangle(end1Outer, end1Inner, innerMiter, color);
-        TriangleDrawing.DrawTriangle(outerMiter, innerMiter, end2Outer, color); 
-        TriangleDrawing.DrawTriangle(innerMiter, end2Inner, end2Outer, color);
-
-        if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
-        {
-            SegmentDrawing.DrawRoundCap(end1, -n1, thickness, capPoints, color);
-            SegmentDrawing.DrawRoundCap(end2, -n2, thickness, capPoints, color);
-        }
-    }
-    */
-    
     #endregion
 }
