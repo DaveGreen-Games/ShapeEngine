@@ -89,7 +89,9 @@ public class Sequencer<T> where T : ISequenceable
     public uint StartSequence(params T[] items)
     {
         var id = SequencerIdGenerator.NextID;
-        sequences.Add(id, items.Reverse().ToList());
+        var list = new List<T>(items);
+        list.Reverse();
+        sequences.Add(id, list);
         return id;
     }
 
