@@ -905,174 +905,34 @@ public static class PolygonDrawing
         CircleDrawing.DrawCircle(poly[^1], lineThickness * 2f, endColorRgba);
     }
     #endregion
-}
+    
+    #region Helper
+    
+    private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0)
+    {
+        if (poly.Count <= 2) return;
+        if (poly.Count == 3)
+        {
+            TriangleDrawing.DrawTriangleLines(poly[0], poly[1], poly[2], thickness, color, cornerPoints);
+            return;
+        }
+        if(cornerPoints == 0) DrawLinesMiteredHelper(poly, thickness, color);
+        else if (cornerPoints == 1) DrawLinesBeveledHelper(poly, thickness, color);
+        else DrawLinesRoundedHelper(poly, thickness, color, cornerPoints);
+    }
 
-// public static void DrawOutlineBlended(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 4f)
-    // {
-    //     int n = poly.Count;
-    //     if (n < 2 || lineThickness <= 0f) return;
-    //     float half = lineThickness * 0.5f;
-    //
-    //     // Handle degenerate case (line segment)
-    //     if (n == 2)
-    //     {
-    //         var a = poly[0];
-    //         var b = poly[1];
-    //         var dir = Vector2.Normalize(b - a);
-    //         var normal = new Vector2(-dir.Y, dir.X) * half;
-    //         var oa = a + normal;
-    //         var ia = a - normal;
-    //         var ob = b + normal;
-    //         var ib = b - normal;
-    //         TriangleDrawing.DrawTriangle(oa, ia, ob, color);
-    //         TriangleDrawing.DrawTriangle(ob, ia, ib, color);
-    //         return;
-    //     }
-    //
-    //     static float Cross(Vector2 u, Vector2 v) => u.X * v.Y - u.Y * v.X;
-    //
-    //     static bool TryLineIntersection(Vector2 p, Vector2 r, Vector2 q, Vector2 s, out Vector2 res)
-    //     {
-    //         float rxs = Cross(r, s);
-    //         if (MathF.Abs(rxs) < 1e-8f) { res = default; return false; }
-    //         float t = Cross(q - p, s) / rxs;
-    //         res = p + r * t;
-    //         return true;
-    //     }
-    //
-    //     // Pre-allocate arrays once
-    //     var outerStart = new Vector2[n];
-    //     var outerEnd = new Vector2[n];
-    //     var innerStart = new Vector2[n];
-    //     var innerEnd = new Vector2[n];
-    //     var dirs = new Vector2[n];
-    //     var normals = new Vector2[n];
-    //
-    //     // Calculate edge directions, normals, and offset vertices
-    //     for (var i = 0; i < n; i++)
-    //     {
-    //         var a = poly[i];
-    //         var b = poly[(i + 1) % n];
-    //         var dir = b - a;
-    //         float lenSq = dir.LengthSquared();
-    //         dir = lenSq > 1e-8f ? dir / MathF.Sqrt(lenSq) : new Vector2(1, 0);
-    //
-    //         dirs[i] = dir;
-    //         var normal = new Vector2(-dir.Y, dir.X);
-    //         normals[i] = normal;
-    //
-    //         outerStart[i] = a + normal * half;
-    //         innerStart[i] = a - normal * half;
-    //         outerEnd[i] = b + normal * half;
-    //         innerEnd[i] = b - normal * half;
-    //     }
-    //
-    //     // Draw per-edge quads (two triangles each)
-    //     for (var i = 0; i < n; i++)
-    //     {
-    //         TriangleDrawing.DrawTriangle(outerStart[i], innerStart[i], outerEnd[i], color);
-    //         TriangleDrawing.DrawTriangle(outerEnd[i], innerStart[i], innerEnd[i], color);
-    //     }
-    //
-    //     // Fix joins at each vertex
-    //     for (var i = 0; i < n; i++)
-    //     {
-    //         int ePrev = (i - 1 + n) % n;
-    //         int eCur = i;
-    //
-    //         var p = poly[i];
-    //         var ePrevVec = dirs[ePrev];
-    //         var eCurVec = dirs[eCur];
-    //         var nPrev = normals[ePrev];
-    //         var nCur = normals[eCur];
-    //
-    //         var outerPrev = outerEnd[ePrev];
-    //         var outerCur = outerStart[eCur];
-    //         var innerPrev = innerEnd[ePrev];
-    //         var innerCur = innerStart[eCur];
-    //
-    //         float cross = Cross(ePrevVec, eCurVec);
-    //         float absCross = MathF.Abs(cross);
-    //
-    //         // Nearly straight line - no join needed
-    //         if (absCross < 1e-6f) continue;
-    //
-    //         bool isConvex = cross >= 0f;
-    //
-    //         if (isConvex)
-    //         {
-    //             // Convex vertex: outer needs join, inner needs intersection
-    //             bool hasMiter = TryLineIntersection(p + nPrev * half, ePrevVec, p + nCur * half, eCurVec, out Vector2 miterPoint);
-    //
-    //             if (hasMiter)
-    //             {
-    //                 float miterLength = (miterPoint - p).Length();
-    //                 float miterRatio = miterLength / half;
-    //
-    //                 if (miterRatio <= miterLimit)
-    //                 {
-    //                     // Use miter join
-    //                     TriangleDrawing.DrawTriangle(p, outerPrev, miterPoint, color);
-    //                     TriangleDrawing.DrawTriangle(p, miterPoint, outerCur, color);
-    //                 }
-    //                 else
-    //                 {
-    //                     // Miter too long, use bevel join
-    //                     TriangleDrawing.DrawTriangle(p, outerPrev, outerCur, color);
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 // Parallel or degenerate case, use bevel
-    //                 TriangleDrawing.DrawTriangle(p, outerPrev, outerCur, color);
-    //             }
-    //
-    //             // Inner side: compute intersection and fill
-    //             bool hasInner = TryLineIntersection(p - nPrev * half, ePrevVec, p - nCur * half, eCurVec, out Vector2 innerIntersection);
-    //             if (hasInner)
-    //             {
-    //                 float innerDist = (innerIntersection - p).Length();
-    //                 if (innerDist < half * 10f)
-    //                 {
-    //                     TriangleDrawing.DrawTriangle(innerPrev, innerIntersection, innerCur, color);
-    //                 }
-    //             }
-    //         }
-    //         else
-    //         {
-    //             // Concave vertex: inner needs join, outer needs intersection
-    //             bool hasOuter = TryLineIntersection(p + nPrev * half, ePrevVec, p + nCur * half, eCurVec, out Vector2 outerIntersection);
-    //             if (hasOuter)
-    //             {
-    //                 TriangleDrawing.DrawTriangle(outerPrev, outerIntersection, outerCur, color);
-    //             }
-    //             else
-    //             {
-    //                 TriangleDrawing.DrawTriangle(outerPrev, p, outerCur, color);
-    //             }
-    //
-    //             // Inner side: try miter, fall back to bevel
-    //             bool hasInnerMiter = TryLineIntersection(p - nPrev * half, ePrevVec, p - nCur * half, eCurVec, out Vector2 innerMiter);
-    //
-    //             if (hasInnerMiter)
-    //             {
-    //                 float miterLength = (innerMiter - p).Length();
-    //                 float miterRatio = miterLength / half;
-    //
-    //                 if (miterRatio <= miterLimit)
-    //                 {
-    //                     TriangleDrawing.DrawTriangle(p, innerPrev, innerMiter, color);
-    //                     TriangleDrawing.DrawTriangle(p, innerMiter, innerCur, color);
-    //                 }
-    //                 else
-    //                 {
-    //                     TriangleDrawing.DrawTriangle(p, innerPrev, innerCur, color);
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 TriangleDrawing.DrawTriangle(p, innerPrev, innerCur, color);
-    //             }
-    //         }
-    //     }
-    // }
+    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color)
+    {
+        
+    }
+    private static void DrawLinesBeveledHelper(Polygon poly, float lineThickness, ColorRgba color)
+    {
+        
+    }
+    private static void DrawLinesRoundedHelper(Polygon poly, float lineThickness, ColorRgba color, int cornerPoints)
+    {
+        
+    }
+    
+    #endregion
+}
