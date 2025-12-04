@@ -217,7 +217,6 @@ namespace Examples.Scenes
             int curPage = buttonContainer.CurPage;
             string prevName = GameloopExamples.Instance.InputActionUIPrevTab.GetInputTypeDescription(Input.CurrentInputDeviceType, true, 1, false);
             string nextName = GameloopExamples.Instance.InputActionUINextTab.GetInputTypeDescription(Input.CurrentInputDeviceType, true, 1, false);
-            
             string pagesText = $"{prevName} <- Page #{curPage}/{pages} -> {nextName}";
             var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize.ToSize() * new Vector2(0.3f, 0.06f), new AnchorPoint(0f, 0f));
             titleFont.FontSpacing = 4f;
