@@ -10,9 +10,18 @@ namespace ShapeEngine.StaticLib
     public static class PerlinNoise2D
     {
         private static Dictionary<(int, int), Vector2> gradients = new Dictionary<(int, int), Vector2>();
-        private static int seed;
+        private static int _seed = 0;
+        public static int seed
+        {
+            get { return _seed; }
+            set
+            {
+                _seed = value;
+                gradients.Clear();
+            }
+        }
 
-        
+
         private static Vector2 Gradient(int x, int y)
         {
             var key = (x, y);
@@ -21,8 +30,8 @@ namespace ShapeEngine.StaticLib
 
             System.Random rand = new System.Random(seed + x * 4967 + y * 3253);
 
-            float angle = (float)(rand.NextDouble() * Math.PI * 2);
-            Vector2 g = new Vector2(ShapeMath.Cos(angle), ShapeMath.Sin(angle));
+            float angle = (float)(rand.NextDouble() * ShapeMath.PI * 2);
+            Vector2 g = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
 
             gradients[key] = g;
             return g;
