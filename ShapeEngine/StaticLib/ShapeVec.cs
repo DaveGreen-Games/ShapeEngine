@@ -725,8 +725,8 @@ public static class ShapeVec
     /// <returns>The angle in radians between the two vectors.</returns>
     public static float AngleRad(this Vector2 v1, Vector2 v2)
     {
-        // return MathF.Atan2(v1.Cross(v2), v1.Dot(v2));
-        return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X);
+        return MathF.Atan2(v1.Cross(v2), v1.Dot(v2));
+        // return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X);
     }
     /// <summary>
     /// Calculates the distance between two vectors.
