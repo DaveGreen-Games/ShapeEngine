@@ -716,13 +716,18 @@ public static class ShapeVec
     /// <param name="v">The vector.</param>
     /// <returns>The angle in radians.</returns>
     public static float AngleRad(this Vector2 v) { return AngleRad(Zero(), v); }
+
     /// <summary>
     /// Calculates the angle in radians between two vectors.
     /// </summary>
     /// <param name="v1">The first vector.</param>
     /// <param name="v2">The second vector.</param>
     /// <returns>The angle in radians between the two vectors.</returns>
-    public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }
+    public static float AngleRad(this Vector2 v1, Vector2 v2)
+    {
+        // return MathF.Atan2(v1.Cross(v2), v1.Dot(v2));
+        return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X);
+    }
     /// <summary>
     /// Calculates the distance between two vectors.
     /// </summary>
