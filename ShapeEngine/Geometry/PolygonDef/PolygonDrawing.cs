@@ -21,6 +21,7 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public static class PolygonDrawing
 {
+    
     #region Draw Masked
     /// <summary>
     /// Draws the polygon's edges while applying a triangular mask to each segment.
@@ -139,7 +140,7 @@ public static class PolygonDrawing
     }
     #endregion
     
-    
+    #region Draw Convex
     /// <summary>
     /// Draws a convex polygon filled with the specified color, using the polygon's centroid as the center.
     /// </summary>
@@ -235,7 +236,9 @@ public static class PolygonDrawing
     {
         DrawPolygonConvex(relativePoly, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, color, clockwise);
     }
-
+    #endregion
+    
+    #region Draw
     /// <summary>
     /// Draws the polygon filled with the specified color. Uses triangulation for polygons with more than 3 vertices.
     /// </summary>
@@ -256,26 +259,9 @@ public static class PolygonDrawing
         }
         poly.Triangulate().Draw(color);
     }
+    #endregion
 
-    /// <summary>
-    /// Debug method: draws the polygon's outline with a color gradient from start to end, and highlights the first and last vertices.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="startColorRgba">The color at the start vertex.</param>
-    /// <param name="endColorRgba">The color at the end vertex.</param>
-    /// <remarks>
-    /// Useful for debugging polygon winding and vertex order.
-    /// </remarks>
-    public static void DEBUG_DrawLinesCCW(this Polygon poly, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba)
-    {
-        if (poly.Count < 3) return;
-
-        DrawLines(poly, lineThickness, startColorRgba, endColorRgba);
-        CircleDrawing.DrawCircle(poly[0], lineThickness * 2f, startColorRgba);
-        CircleDrawing.DrawCircle(poly[^1], lineThickness * 2f, endColorRgba);
-    }
-
+    #region Draw Lines
     /// <summary>
     /// Draws the polygon's outline with a color gradient from start to end.
     /// </summary>
@@ -304,7 +290,7 @@ public static class PolygonDrawing
                 startColorRgba.B + blueStep * i,
                 startColorRgba.A + alphaStep * i
             );
-            SegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints); //TODO: Replace with internal version
         }
     }
 
@@ -324,7 +310,7 @@ public static class PolygonDrawing
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints); //TODO: Replace with internal version
         }
     }
 
@@ -345,7 +331,7 @@ public static class PolygonDrawing
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints); //TODO: Replace with internal version
         }
     }
 
@@ -368,7 +354,7 @@ public static class PolygonDrawing
         {
             var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints); //TODO: Replace with internal version
         }
     }
 
@@ -410,7 +396,9 @@ public static class PolygonDrawing
     /// <param name="transform">The transform to apply (position, scale, rotation).</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     public static void DrawLines(this Polygon relative, Transform2D transform, LineDrawingInfo lineInfo) => DrawLines(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-
+    #endregion
+    
+    #region Draw Lines Perimeter & Percentage
     /// <summary>
     /// Draws a certain amount of the polygon's perimeter as an outline.
     /// </summary>
@@ -430,7 +418,7 @@ public static class PolygonDrawing
     {
         ShapeDrawing.DrawOutlinePerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, capType, capPoints);
     }
-
+    
     /// <summary>
     /// Draws a certain percentage of the polygon's outline.
     /// </summary>
@@ -476,7 +464,9 @@ public static class PolygonDrawing
     {
         ShapeDrawing.DrawOutlinePercentage(poly, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
-
+    #endregion
+    
+    #region Draw Vertices
     /// <summary>
     /// Draws a circle at each vertex of the polygon.
     /// </summary>
@@ -494,7 +484,9 @@ public static class PolygonDrawing
             CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
         }
     }
-
+    #endregion
+    
+    #region Draw Cornered
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with custom lengths for each corner.
     /// </summary>
@@ -520,7 +512,98 @@ public static class PolygonDrawing
             SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
+    
+    /// <summary>
+    /// Draws lines from each corner of the polygon outward, with custom lengths for each corner, using <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="cornerLengths">A list of lengths for each corner. Cycles if fewer than corners.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <remarks>
+    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
+    /// </remarks>
+    public static void DrawCornered(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < poly.Count; i++)
+        {
+            float cornerLength = cornerLengths[i%cornerLengths.Count];
+            var prev = poly[(i - 1) % poly.Count];
+            var cur = poly[i];
+            var next = poly[(i + 1) % poly.Count];
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+        }
+    }
+    
+    /// <summary>
+    /// Draws lines from each corner of the polygon outward, with a uniform length for all corners.
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="lineThickness">The thickness of the lines.</param>
+    /// <param name="color">The color of the lines.</param>
+    /// <param name="cornerLength">The length of each corner line.</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <remarks>
+    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
+    /// </remarks>
+    public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var prev = poly[(i-1)%poly.Count];
+            var cur = poly[i];
+            var next = poly[(i+1)%poly.Count];
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+        }
+    }
+    
+    /// <summary>
+    /// Draws lines from each corner of the polygon outward, with a uniform length for all corners, using <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="cornerLength">The length of each corner line.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <remarks>
+    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
+    /// </remarks>
+    public static void DrawCornered(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var prev = poly[(i-1)%poly.Count];
+            var cur = poly[i];
+            var next = poly[(i+1)%poly.Count];
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+        }
+    }
+    
+    /// <summary>
+    /// Draws lines from each corner of the polygon outward, with a uniform length for all corners, using <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="cornerLength">The length of each corner line.</param>
+    /// <remarks>
+    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
+    /// </remarks>
+    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, float cornerLength) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
 
+    /// <summary>
+    /// Draws lines from each corner of the polygon outward, with custom lengths for each corner, using <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="cornerLengths">A list of lengths for each corner. Cycles if fewer than corners.</param>
+    /// <remarks>
+    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
+    /// </remarks>
+    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerLengths) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+    #endregion
+    
+    #region Draw Cornered Relative
     /// <summary>
     /// Draws lines from each corner of the polygon outward, using relative factors for each corner.
     /// </summary>
@@ -547,29 +630,7 @@ public static class PolygonDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
-
-    /// <summary>
-    /// Draws lines from each corner of the polygon outward, with custom lengths for each corner, using <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="cornerLengths">A list of lengths for each corner. Cycles if fewer than corners.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <remarks>
-    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
-    /// </remarks>
-    public static void DrawCornered(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
-    {
-        for (var i = 0; i < poly.Count; i++)
-        {
-            float cornerLength = cornerLengths[i%cornerLengths.Count];
-            var prev = poly[(i - 1) % poly.Count];
-            var cur = poly[i];
-            var next = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
-        }
-    }
-
+  
     /// <summary>
     /// Draws lines from each corner of the polygon outward, using relative factors for each corner, with <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -592,31 +653,7 @@ public static class PolygonDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
-
-    /// <summary>
-    /// Draws lines from each corner of the polygon outward, with a uniform length for all corners.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="lineThickness">The thickness of the lines.</param>
-    /// <param name="color">The color of the lines.</param>
-    /// <param name="cornerLength">The length of each corner line.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    /// <remarks>
-    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
-    /// </remarks>
-    public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        for (var i = 0; i < poly.Count; i++)
-        {
-            var prev = poly[(i-1)%poly.Count];
-            var cur = poly[i];
-            var next = poly[(i+1)%poly.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-        }
-    }
-
+    
     /// <summary>
     /// Draws lines from each corner of the polygon outward, using a uniform relative factor for all corners.
     /// </summary>
@@ -641,28 +678,7 @@ public static class PolygonDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
-
-    /// <summary>
-    /// Draws lines from each corner of the polygon outward, with a uniform length for all corners, using <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="cornerLength">The length of each corner line.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <remarks>
-    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
-    /// </remarks>
-    public static void DrawCornered(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
-    {
-        for (var i = 0; i < poly.Count; i++)
-        {
-            var prev = poly[(i-1)%poly.Count];
-            var cur = poly[i];
-            var next = poly[(i+1)%poly.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
-        }
-    }
-
+   
     /// <summary>
     /// Draws lines from each corner of the polygon outward, using a uniform relative factor for all corners, with <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -684,29 +700,7 @@ public static class PolygonDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
-
-    /// <summary>
-    /// Draws lines from each corner of the polygon outward, with a uniform length for all corners, using <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="cornerLength">The length of each corner line.</param>
-    /// <remarks>
-    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
-    /// </remarks>
-    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, float cornerLength) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
-
-    /// <summary>
-    /// Draws lines from each corner of the polygon outward, with custom lengths for each corner, using <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="cornerLengths">A list of lengths for each corner. Cycles if fewer than corners.</param>
-    /// <remarks>
-    /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
-    /// </remarks>
-    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerLengths) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
-
+    
     /// <summary>
     /// Draws lines from each corner of the polygon outward, using a uniform relative factor for all corners, with <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -730,7 +724,9 @@ public static class PolygonDrawing
     /// <c>CornerFactors</c> are used to interpolate from previous to current and from current to next point to form a corner.
     /// </remarks>
     public static void DrawCorneredRelative(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerFactors) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerFactors, lineInfo.CapType, lineInfo.CapPoints);
-
+    #endregion
+    
+    #region Draw Lines Scaled
     /// <summary>
     /// Draws a polygon where each side can be scaled towards the origin of the side.
     /// </summary>
@@ -845,7 +841,9 @@ public static class PolygonDrawing
         DrawLinesScaled(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo, sideScaleFactor, sideScaleOrigin);
 
     }
+    #endregion
     
+    #region Draw Glow
     /// <summary>
     /// Draws the polygon with a glow effect, interpolating width and color along each segment.
     /// </summary>
@@ -885,4 +883,196 @@ public static class PolygonDrawing
             DrawLines(polygon, currentWidth, currentColor, capType, capPoints);
         }
     }
+    #endregion
+    
+    #region Debug
+    /// <summary>
+    /// Debug method: draws the polygon's outline with a color gradient from start to end, and highlights the first and last vertices.
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="startColorRgba">The color at the start vertex.</param>
+    /// <param name="endColorRgba">The color at the end vertex.</param>
+    /// <remarks>
+    /// Useful for debugging polygon winding and vertex order.
+    /// </remarks>
+    public static void DEBUG_DrawLinesCCW(this Polygon poly, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba)
+    {
+        if (poly.Count < 3) return;
+
+        DrawLines(poly, lineThickness, startColorRgba, endColorRgba);
+        CircleDrawing.DrawCircle(poly[0], lineThickness * 2f, startColorRgba);
+        CircleDrawing.DrawCircle(poly[^1], lineThickness * 2f, endColorRgba);
+    }
+    #endregion
 }
+
+// public static void DrawOutlineBlended(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 4f)
+    // {
+    //     int n = poly.Count;
+    //     if (n < 2 || lineThickness <= 0f) return;
+    //     float half = lineThickness * 0.5f;
+    //
+    //     // Handle degenerate case (line segment)
+    //     if (n == 2)
+    //     {
+    //         var a = poly[0];
+    //         var b = poly[1];
+    //         var dir = Vector2.Normalize(b - a);
+    //         var normal = new Vector2(-dir.Y, dir.X) * half;
+    //         var oa = a + normal;
+    //         var ia = a - normal;
+    //         var ob = b + normal;
+    //         var ib = b - normal;
+    //         TriangleDrawing.DrawTriangle(oa, ia, ob, color);
+    //         TriangleDrawing.DrawTriangle(ob, ia, ib, color);
+    //         return;
+    //     }
+    //
+    //     static float Cross(Vector2 u, Vector2 v) => u.X * v.Y - u.Y * v.X;
+    //
+    //     static bool TryLineIntersection(Vector2 p, Vector2 r, Vector2 q, Vector2 s, out Vector2 res)
+    //     {
+    //         float rxs = Cross(r, s);
+    //         if (MathF.Abs(rxs) < 1e-8f) { res = default; return false; }
+    //         float t = Cross(q - p, s) / rxs;
+    //         res = p + r * t;
+    //         return true;
+    //     }
+    //
+    //     // Pre-allocate arrays once
+    //     var outerStart = new Vector2[n];
+    //     var outerEnd = new Vector2[n];
+    //     var innerStart = new Vector2[n];
+    //     var innerEnd = new Vector2[n];
+    //     var dirs = new Vector2[n];
+    //     var normals = new Vector2[n];
+    //
+    //     // Calculate edge directions, normals, and offset vertices
+    //     for (var i = 0; i < n; i++)
+    //     {
+    //         var a = poly[i];
+    //         var b = poly[(i + 1) % n];
+    //         var dir = b - a;
+    //         float lenSq = dir.LengthSquared();
+    //         dir = lenSq > 1e-8f ? dir / MathF.Sqrt(lenSq) : new Vector2(1, 0);
+    //
+    //         dirs[i] = dir;
+    //         var normal = new Vector2(-dir.Y, dir.X);
+    //         normals[i] = normal;
+    //
+    //         outerStart[i] = a + normal * half;
+    //         innerStart[i] = a - normal * half;
+    //         outerEnd[i] = b + normal * half;
+    //         innerEnd[i] = b - normal * half;
+    //     }
+    //
+    //     // Draw per-edge quads (two triangles each)
+    //     for (var i = 0; i < n; i++)
+    //     {
+    //         TriangleDrawing.DrawTriangle(outerStart[i], innerStart[i], outerEnd[i], color);
+    //         TriangleDrawing.DrawTriangle(outerEnd[i], innerStart[i], innerEnd[i], color);
+    //     }
+    //
+    //     // Fix joins at each vertex
+    //     for (var i = 0; i < n; i++)
+    //     {
+    //         int ePrev = (i - 1 + n) % n;
+    //         int eCur = i;
+    //
+    //         var p = poly[i];
+    //         var ePrevVec = dirs[ePrev];
+    //         var eCurVec = dirs[eCur];
+    //         var nPrev = normals[ePrev];
+    //         var nCur = normals[eCur];
+    //
+    //         var outerPrev = outerEnd[ePrev];
+    //         var outerCur = outerStart[eCur];
+    //         var innerPrev = innerEnd[ePrev];
+    //         var innerCur = innerStart[eCur];
+    //
+    //         float cross = Cross(ePrevVec, eCurVec);
+    //         float absCross = MathF.Abs(cross);
+    //
+    //         // Nearly straight line - no join needed
+    //         if (absCross < 1e-6f) continue;
+    //
+    //         bool isConvex = cross >= 0f;
+    //
+    //         if (isConvex)
+    //         {
+    //             // Convex vertex: outer needs join, inner needs intersection
+    //             bool hasMiter = TryLineIntersection(p + nPrev * half, ePrevVec, p + nCur * half, eCurVec, out Vector2 miterPoint);
+    //
+    //             if (hasMiter)
+    //             {
+    //                 float miterLength = (miterPoint - p).Length();
+    //                 float miterRatio = miterLength / half;
+    //
+    //                 if (miterRatio <= miterLimit)
+    //                 {
+    //                     // Use miter join
+    //                     TriangleDrawing.DrawTriangle(p, outerPrev, miterPoint, color);
+    //                     TriangleDrawing.DrawTriangle(p, miterPoint, outerCur, color);
+    //                 }
+    //                 else
+    //                 {
+    //                     // Miter too long, use bevel join
+    //                     TriangleDrawing.DrawTriangle(p, outerPrev, outerCur, color);
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 // Parallel or degenerate case, use bevel
+    //                 TriangleDrawing.DrawTriangle(p, outerPrev, outerCur, color);
+    //             }
+    //
+    //             // Inner side: compute intersection and fill
+    //             bool hasInner = TryLineIntersection(p - nPrev * half, ePrevVec, p - nCur * half, eCurVec, out Vector2 innerIntersection);
+    //             if (hasInner)
+    //             {
+    //                 float innerDist = (innerIntersection - p).Length();
+    //                 if (innerDist < half * 10f)
+    //                 {
+    //                     TriangleDrawing.DrawTriangle(innerPrev, innerIntersection, innerCur, color);
+    //                 }
+    //             }
+    //         }
+    //         else
+    //         {
+    //             // Concave vertex: inner needs join, outer needs intersection
+    //             bool hasOuter = TryLineIntersection(p + nPrev * half, ePrevVec, p + nCur * half, eCurVec, out Vector2 outerIntersection);
+    //             if (hasOuter)
+    //             {
+    //                 TriangleDrawing.DrawTriangle(outerPrev, outerIntersection, outerCur, color);
+    //             }
+    //             else
+    //             {
+    //                 TriangleDrawing.DrawTriangle(outerPrev, p, outerCur, color);
+    //             }
+    //
+    //             // Inner side: try miter, fall back to bevel
+    //             bool hasInnerMiter = TryLineIntersection(p - nPrev * half, ePrevVec, p - nCur * half, eCurVec, out Vector2 innerMiter);
+    //
+    //             if (hasInnerMiter)
+    //             {
+    //                 float miterLength = (innerMiter - p).Length();
+    //                 float miterRatio = miterLength / half;
+    //
+    //                 if (miterRatio <= miterLimit)
+    //                 {
+    //                     TriangleDrawing.DrawTriangle(p, innerPrev, innerMiter, color);
+    //                     TriangleDrawing.DrawTriangle(p, innerMiter, innerCur, color);
+    //                 }
+    //                 else
+    //                 {
+    //                     TriangleDrawing.DrawTriangle(p, innerPrev, innerCur, color);
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 TriangleDrawing.DrawTriangle(p, innerPrev, innerCur, color);
+    //             }
+    //         }
+    //     }
+    // }
