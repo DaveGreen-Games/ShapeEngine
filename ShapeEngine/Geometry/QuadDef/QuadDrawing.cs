@@ -20,8 +20,6 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// </remarks>
 public static class QuadDrawing
 {
-    private static Polygon polygonHelper = new(12);
-    
     #region Draw Masked
     /// <summary>
     /// Draws the quad's outline segments constrained by a <see cref="Triangle"/> mask.
@@ -446,7 +444,6 @@ public static class QuadDrawing
     
     #region Draw Slanted Corners
     
-
     public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float cornerLength)
     {
         DrawSlantedCorners(quad, color, cornerLength, cornerLength);
@@ -601,81 +598,72 @@ public static class QuadDrawing
     }
     public static void DrawSlantedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
-        if(quad.Width <= 0 || quad.Height <= 0) return;
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
         if (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0)
         {
             quad.Draw(color);
             return;
         }
 
-        float halfWidth = quad.Width / 2f;
-        float halfHeight = quad.Height / 2f;
+        float halfWidth = size.Width / 2f;
+        float halfHeight = size.Height / 2f;
         
         var tl = quad.TopLeft;
         var br = quad.BottomRight;
         
+        var nD = quad.NormalDown;
+        var nR = quad.NormalRight;
+        var nL = -nR;
+        var nU = -nD;
+        
         if (cornerLengthHorizontal >= halfWidth && cornerLengthVertical >= halfHeight)
         {
             polygonHelper.Clear();
-            polygonHelper.Add(tl + new Vector2(halfWidth, 0f));
-            polygonHelper.Add(tl + new Vector2(0f, halfHeight));
-            polygonHelper.Add(br - new Vector2(halfWidth, 0f));
-            polygonHelper.Add(br - new Vector2(0f, halfHeight));
+            polygonHelper.Add(tl + nR * halfWidth);
+            polygonHelper.Add(tl + nD * halfHeight);
+            polygonHelper.Add(br + nL * halfWidth);
+            polygonHelper.Add(br + nU * halfHeight);
             polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
             return;
         }
         
         var bl = quad.BottomLeft;
         var tr = quad.TopRight;
+
+        polygonHelper.Clear();
         
         if (cornerLengthHorizontal >= halfWidth)
         {
-            var h = new Vector2(halfWidth, 0f);
-            var v = new Vector2(0f, cornerLengthVertical);
-            
-            polygonHelper.Clear();
-            polygonHelper.Add(tl + h);
-            polygonHelper.Add(tl + v);
-            polygonHelper.Add(bl - v);
-            polygonHelper.Add(bl + h);
-            polygonHelper.Add(br - v);
-            polygonHelper.Add(tr + v);
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
-            
-            
+            polygonHelper.Add(tl + nR * halfWidth);
+            polygonHelper.Add(tl + nD * cornerLengthVertical);
+            polygonHelper.Add(bl + nU * cornerLengthVertical);
+            polygonHelper.Add(bl + nR * halfWidth);
+            polygonHelper.Add(br + nU * halfWidth);
+            polygonHelper.Add(tr + nD * halfWidth);
         }
         else if (cornerLengthVertical >= halfHeight)
         {
-            var h = new Vector2(cornerLengthHorizontal, 0f);
-            var v = new Vector2(0f, halfHeight);
-
-            polygonHelper.Clear();
-            polygonHelper.Add(tl + h);
-            polygonHelper.Add(tl + v);
-            polygonHelper.Add(bl + h);
-            polygonHelper.Add(br - h);
-            polygonHelper.Add(tr + v);
-            polygonHelper.Add(tr - h);
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
-            
+            polygonHelper.Add(tl + nR * cornerLengthHorizontal);
+            polygonHelper.Add(tl + nD * halfHeight);
+            polygonHelper.Add(bl + nR * cornerLengthHorizontal);
+            polygonHelper.Add(br + nL * cornerLengthHorizontal);
+            polygonHelper.Add(tr + nD * halfHeight);
+            polygonHelper.Add(tr + nL * cornerLengthHorizontal);
         }
         else
         {
-            var cornerHorizontal = new Vector2(cornerLengthHorizontal, 0f);
-            var cornerVertical = new Vector2(0f, cornerLengthVertical);
-
-            polygonHelper.Clear();
-            polygonHelper.Add(tl + cornerHorizontal);
-            polygonHelper.Add(tl + cornerVertical);
-            polygonHelper.Add(bl - cornerVertical);
-            polygonHelper.Add(bl + cornerHorizontal);
-            polygonHelper.Add(br - cornerHorizontal);
-            polygonHelper.Add(br - cornerVertical);
-            polygonHelper.Add(tr + cornerVertical);
-            polygonHelper.Add(tr - cornerHorizontal);
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
-           
+            polygonHelper.Add(tl + nR * cornerLengthHorizontal);
+            polygonHelper.Add(tl + nD * cornerLengthVertical);
+            polygonHelper.Add(bl + nU * cornerLengthVertical);
+            polygonHelper.Add(bl + nR * cornerLengthHorizontal);
+            polygonHelper.Add(br + nL * cornerLengthHorizontal);
+            polygonHelper.Add(br + nU *  cornerLengthVertical);
+            polygonHelper.Add(tr + nD * cornerLengthVertical);
+            polygonHelper.Add(tr + nL * cornerLengthHorizontal);
         }
+
+        polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
     }
     public static void DrawSlantedCornersLines(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
@@ -710,76 +698,6 @@ public static class QuadDrawing
         float cornerLengthH = cornerLengthFactorHorizontal * halfWidth;
         float cornerLengthV = cornerLengthFactorVertical * halfHeight;
         DrawSlantedCornersLines(quad, thickness, color, cornerLengthH, cornerLengthV);
-    }
-    
-    
-    private static void FillSlantedCornerPoints(Quad quad, float tlCorner, float trCorner, float brCorner, float blCorner, ref Polygon points)
-    {
-        var size = quad.GetSize();
-        
-        if(size.Width <= 0 || size.Height <= 0) return;
-        
-        float halfWidth = size.Width / 2f;
-        float halfHeight = size.Height / 2f;
-
-        var nD = quad.NormalDown;
-        var nR = quad.NormalRight;
-        var nL = -nR;
-        var nU = -nD;
-        
-        if (tlCorner <= 0)
-        {
-            points.Add(quad.TopLeft);
-        }
-        else
-        {
-            points.Add(quad.TopLeft + nR * MathF.Min(tlCorner, halfWidth));
-            points.Add(quad.TopLeft + nD * MathF.Min(tlCorner, halfHeight));
-        }
-        
-        if (blCorner <= 0)
-        {
-            points.Add(quad.BottomLeft);
-        }
-        else
-        {
-            if (blCorner < halfHeight)
-            {
-                points.Add(quad.BottomLeft + nU * MathF.Min(blCorner, halfHeight));
-            }
-            
-            if (blCorner < halfWidth)
-            {
-                points.Add(quad.BottomLeft + nR * MathF.Min(blCorner, halfWidth));
-            }
-        }
-        
-        if (brCorner <= 0)
-        {
-            points.Add(quad.BottomRight);
-        }
-        else
-        {
-            points.Add(quad.BottomRight + nL * MathF.Min(brCorner, halfWidth));
-            points.Add(quad.BottomRight + nU * MathF.Min(brCorner, halfHeight));
-        }
-        
-        if (trCorner <= 0)
-        {
-            points.Add(quad.TopRight);
-        }
-        else
-        {
-            if (trCorner < halfHeight)
-            {
-                points.Add(quad.TopRight + nD * MathF.Min(trCorner, halfHeight));
-            }
-            
-            if (trCorner < halfWidth)
-            {
-                points.Add(quad.TopRight + nL * MathF.Min(trCorner, halfWidth));
-            }
-        }
     }
     
     #endregion
@@ -867,7 +785,6 @@ public static class QuadDrawing
         TriangleDrawing.DrawTriangle(outsideD, outsideA, insideD, color);
         TriangleDrawing.DrawTriangle(insideD, outsideA, insideA, color);
     }
-    
     
     private static readonly Vector2[] centerHelper = new Vector2[4];
     private static readonly float[] cornerStartAnglesHelper = new float[4];
@@ -1101,7 +1018,6 @@ public static class QuadDrawing
         }
     }
     
-    //TODO: Test
     private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
     {
         if (percentage == 0f || lineThickness <= 0) return;
@@ -1673,6 +1589,76 @@ public static class QuadDrawing
         {
             SegmentDrawing.DrawRoundCap(end1, -n1, thickness, capPoints, color);
             SegmentDrawing.DrawRoundCap(end2, -n2, thickness, capPoints, color);
+        }
+    }
+    
+    private static Polygon polygonHelper = new(12);
+    private static void FillSlantedCornerPoints(Quad quad, float tlCorner, float trCorner, float brCorner, float blCorner, ref Polygon points)
+    {
+        var size = quad.GetSize();
+        
+        if(size.Width <= 0 || size.Height <= 0) return;
+        
+        float halfWidth = size.Width / 2f;
+        float halfHeight = size.Height / 2f;
+
+        var nD = quad.NormalDown;
+        var nR = quad.NormalRight;
+        var nL = -nR;
+        var nU = -nD;
+        
+        if (tlCorner <= 0)
+        {
+            points.Add(quad.TopLeft);
+        }
+        else
+        {
+            points.Add(quad.TopLeft + nR * MathF.Min(tlCorner, halfWidth));
+            points.Add(quad.TopLeft + nD * MathF.Min(tlCorner, halfHeight));
+        }
+        
+        if (blCorner <= 0)
+        {
+            points.Add(quad.BottomLeft);
+        }
+        else
+        {
+            if (blCorner < halfHeight)
+            {
+                points.Add(quad.BottomLeft + nU * MathF.Min(blCorner, halfHeight));
+            }
+            
+            if (blCorner < halfWidth)
+            {
+                points.Add(quad.BottomLeft + nR * MathF.Min(blCorner, halfWidth));
+            }
+        }
+        
+        if (brCorner <= 0)
+        {
+            points.Add(quad.BottomRight);
+        }
+        else
+        {
+            points.Add(quad.BottomRight + nL * MathF.Min(brCorner, halfWidth));
+            points.Add(quad.BottomRight + nU * MathF.Min(brCorner, halfHeight));
+        }
+        
+        if (trCorner <= 0)
+        {
+            points.Add(quad.TopRight);
+        }
+        else
+        {
+            if (trCorner < halfHeight)
+            {
+                points.Add(quad.TopRight + nD * MathF.Min(trCorner, halfHeight));
+            }
+            
+            if (trCorner < halfWidth)
+            {
+                points.Add(quad.TopRight + nL * MathF.Min(trCorner, halfWidth));
+            }
         }
     }
     #endregion
