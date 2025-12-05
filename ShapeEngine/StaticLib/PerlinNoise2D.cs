@@ -9,26 +9,34 @@ namespace ShapeEngine.StaticLib
 {
     public static class PerlinNoise2D
     {
+
         private static Dictionary<(int, int), Vector2> gradients = new Dictionary<(int, int), Vector2>();
-        private static long _seed = 0;
-        public static long seed
+        private static int _seed = 0;
+
+        public static int Seed
         {
             get { return _seed; }
             set
             {
                 _seed = value;
-                gradients.Clear();
+                if (gradients != null && Seed != _seed)
+                {
+                    gradients.Clear();
+                }
             }
         }
+       
 
-
+        /// <summary>
+        /// Generates a pseudo-random unit gradient vector for a given integer grid coordinate (x, y).
+        /// </summary>
         private static Vector2 Gradient(int x, int y)
         {
             var key = (x, y);
             if (gradients.ContainsKey(key))
                 return gradients[key];
 
-            System.Random rand = new System.Random(seed + x * 4967 + y * 3253);
+            System.Random rand = new System.Random(_seed + x * 4967 + y * 3253);
 
             float angle = (float)(rand.NextDouble() * ShapeMath.PI * 2);
             Vector2 g = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
@@ -37,20 +45,30 @@ namespace ShapeEngine.StaticLib
             return g;
         }
 
+        /// <summary>
+        /// Performs standard linear interpolation between two values a and b based on the weight t.
+        /// <param name="a"/>    : The start value.
+        /// <param name="b"/>    : The end value.
+        /// <param name="t"/> : The interpolation factor, typically in the range [0, 1].
+        /// </summary>
         private static float Lerp(float a, float b, float t)
         {
             return a + t * (b - a);
         }
 
+        /// <summary>
+        /// Ken Perlin's smoother step function: 6t^5 - 15t^4 + 10t^3.
+        /// This ensures the derivatives are zero at t=0 and t=1, producing smoother transitions.
+        /// <param name="t"/>    : The input value to be smoothed, typically in the range [0, 1].
+        /// </summary>
         private static float Fade(float t)
         {
-            return t * t * t * (t * (t * 6 - 15) + 10);
+            return t * t * t * (t * (t * 6f - 15f) + 10f);
         }
 
         /// <summary>
-        /// Perlin Noise is a gradient-based noise function used to generate smooth, natural-looking patterns.
-        ///It produces values that vary continuously across space, avoiding sharp transitions and pure randomness.
-        /// Because nearby points generate similar values, the output forms soft, organic structures.
+        /// Generates a 2D Perlin Noise value for a given coordinate (x, y) at a specified grid scale.
+        /// The noise is smooth, continuous, and typically normalized to the range [-1.0, 1.0].
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -58,8 +76,8 @@ namespace ShapeEngine.StaticLib
         /// <returns></returns>
         public static float Noise(float x, float y, float gridSize)
         {
-            int x0 = (int)Math.Floor(x / gridSize);
-            int y0 = (int)Math.Floor(y / gridSize);
+            int x0 = (int)MathF.Floor(x / gridSize);
+            int y0 = (int)MathF.Floor(y / gridSize);
             int x1 = x0 + 1;
             int y1 = y0 + 1;
 
