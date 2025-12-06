@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -920,32 +921,48 @@ public static class PolygonDrawing
         else if (cornerPoints == 1) DrawLinesBeveledHelper(poly, thickness, color);
         else DrawLinesRoundedHelper(poly, thickness, color, cornerPoints);
     }
-    
-    //TODO: Fix
-    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 3f)//miterLimit is a factor based on lineThickness
+
+    // private static (Vector2 miterDir, float miterLengthOutside, float miterLengthInside) CalculateMiterInfo(Vector2 n1, Vector2 n2, float thickness)
+    // {
+    //     //NOTE: Sin formula for inside corners and cos formula for outside corners
+    //     var miterDir = (n1 + n2).Normalize();
+    //     var angleRad = MathF.Abs(miterDir.AngleRad(n2));
+    //     float miterLengthInside = thickness / MathF.Sin(angleRad);
+    //     float miterLengthOutside = thickness / MathF.Cos(angleRad);
+    //     return (miterDir, miterLengthOutside, miterLengthInside);
+    // }
+    private static bool IsOutsideCorner(Vector2 dirPrev, Vector2 dirNext)
+    {
+        //TODO: Fix this!
+        var angle = dirPrev.AngleRad(dirNext);
+        return angle < MathF.PI;
+    }
+
+    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 6f)//miterLimit is a factor based on lineThickness
     {
         int count = poly.Count;
         if (count < 3 || lineThickness <= 0f || miterLimit <= 0f) return;
         
         var rayColor = color.ToRayColor();
         
-        var prev = poly[^1];
-        var cur = poly[0];
-        var next = poly[1];
+        var prev = poly[^2];
+        var cur = poly[^1];
+        var next = poly[0];
 
         var dirPrev = (cur - prev).Normalize();
         var dirNext = (next - cur).Normalize();
         var normalPrev = dirPrev.GetPerpendicularRight();
         var normalNext = dirNext.GetPerpendicularRight();
-            
+
         var miterDir = (normalPrev + normalNext).Normalize();
         var angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-        float miterLength = lineThickness / MathF.Sin(angleRad);
+        float miterLength = lineThickness / MathF.Cos(angleRad);
         miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
+        
         var prevInside = cur - miterDir * miterLength;
         var prevOutside = cur + miterDir * miterLength;
         
-        for (var i = 1; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             cur = poly[i];
             next = poly[(i + 1) % count];
@@ -956,10 +973,7 @@ public static class PolygonDrawing
             
             miterDir = (normalPrev + normalNext).Normalize();
             angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-            //TODO: Draw triangle used for calculating miter length
-            // - draw miterdir * miterlength segment inward and outward
-            // - draw normals from cur point
-            miterLength = lineThickness / MathF.Sin(angleRad); //right triangle formula for hypotenuse = opposite / sin(angle)
+            miterLength = lineThickness / MathF.Cos(angleRad); //right triangle formula for hypotenuse = opposite / sin(angle)
             miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
             
             var curInside = cur - miterDir * miterLength;
