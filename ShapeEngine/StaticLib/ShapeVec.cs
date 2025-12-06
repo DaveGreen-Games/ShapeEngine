@@ -776,7 +776,7 @@ public static class ShapeVec
     /// - Otherwise the sign of cross determines inward/outward classification while the angle is computed with <c>Atan2(|cross|, dot)</c>.
     /// Angle close to 0 indicates collinear in the same direction, angle close to π indicates collinear in opposite directions.
     /// </remarks>
-    public static (int cornerType, float angle) ClassifyCorner(Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
+    public static (int cornerType, float angle) ClassifyCorner(this Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
     {
         float cross = dirPrev.X * dirNext.Y - dirPrev.Y * dirNext.X;
         float dot = Vector2.Dot(dirPrev, dirNext);
