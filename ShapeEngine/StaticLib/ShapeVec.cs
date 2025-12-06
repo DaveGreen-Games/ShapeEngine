@@ -767,7 +767,7 @@ public static class ShapeVec
     /// <param name="epsilon">Small tolerance used to treat vectors as colinear (default 1e-6).</param>
     /// <returns>
     /// A tuple containing:
-    /// - <c>cornerType</c>: an integer where 0 = colinear, 1 = ccw outwards, -1 = ccw inwards.
+    /// - <c>type</c>: an integer where 0 = colinear, 1 = ccw outwards, -1 = ccw inwards.
     /// - <c>angle</c>: the absolute angle between the two directions in radians (range 0..π).
     /// </returns>
     /// <remarks>
@@ -776,7 +776,7 @@ public static class ShapeVec
     /// - Otherwise the sign of cross determines inward/outward classification while the angle is computed with <c>Atan2(|cross|, dot)</c>.
     /// Angle close to 0 indicates collinear in the same direction, angle close to π indicates collinear in opposite directions.
     /// </remarks>
-    public static (int cornerType, float angle) ClassifyCorner(this Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
+    public static (int type, float angle) ClassifyCorner(this Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
     {
         float cross = dirPrev.X * dirNext.Y - dirPrev.Y * dirNext.X;
         float dot = Vector2.Dot(dirPrev, dirNext);
