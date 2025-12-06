@@ -39,6 +39,23 @@ public static class ShapeMath
     /// A small constant value used for floating-point comparisons to account for precision errors (float version).
     /// </summary>
     public const float EpsilonF = 1e-10f;
+
+    /// <summary>
+    /// The radian value equivalent to 360 degrees (one full turn), equal to Tau (2π).
+    /// </summary>
+    public const float Rad360Degrees = Tau;
+    /// <summary>
+    /// The radian value equivalent to 180 degrees (half turn), equal to PI (π).
+    /// </summary>
+    public const float Rad180Degrees = PI;
+    /// <summary>
+    /// The radian value equivalent to 90 degrees (quarter turn), equal to PI * 0.5.
+    /// </summary>
+    public const float Rad90Degrees = PI * 0.5f;
+    /// <summary>
+    /// The radian value equivalent to 45 degrees (eighth turn), equal to PI * 0.25.
+    /// </summary>
+    public const float Rad45Degrees = PI * 0.25f;
     #endregion
     
     #region Round
