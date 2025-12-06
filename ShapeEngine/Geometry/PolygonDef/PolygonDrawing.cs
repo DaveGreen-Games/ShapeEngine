@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Numerics;
+using Clipper2Lib;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
@@ -922,29 +923,18 @@ public static class PolygonDrawing
         else DrawLinesRoundedHelper(poly, thickness, color, cornerPoints);
     }
 
-    // private static (Vector2 miterDir, float miterLengthOutside, float miterLengthInside) CalculateMiterInfo(Vector2 n1, Vector2 n2, float thickness)
-    // {
-    //     //NOTE: Sin formula for inside corners and cos formula for outside corners
-    //     var miterDir = (n1 + n2).Normalize();
-    //     var angleRad = MathF.Abs(miterDir.AngleRad(n2));
-    //     float miterLengthInside = thickness / MathF.Sin(angleRad);
-    //     float miterLengthOutside = thickness / MathF.Cos(angleRad);
-    //     return (miterDir, miterLengthOutside, miterLengthInside);
-    // }
-    private static bool IsOutsideCorner(Vector2 dirPrev, Vector2 dirNext)
-    {
-        //TODO: Fix this!
-        var angle = dirPrev.AngleRad(dirNext);
-        return angle < MathF.PI;
-    }
 
+    
+    
     private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 6f)//miterLimit is a factor based on lineThickness
     {
+        // miterLimit = 1000f;
         int count = poly.Count;
         if (count < 3 || lineThickness <= 0f || miterLimit <= 0f) return;
         
         var rayColor = color.ToRayColor();
-        
+        // rayColor = rayColor with { A = 0 };
+        // rayColor = rayColor with { A = 255 };
         var prev = poly[^2];
         var cur = poly[^1];
         var next = poly[0];
@@ -954,13 +944,35 @@ public static class PolygonDrawing
         var normalPrev = dirPrev.GetPerpendicularRight();
         var normalNext = dirNext.GetPerpendicularRight();
 
-        var miterDir = (normalPrev + normalNext).Normalize();
-        var angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-        float miterLength = lineThickness / MathF.Cos(angleRad);
-        miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
+        Vector2 miterDir;
+        float miterLength;
+        float angleRad;
+        
+        var corner = dirPrev.ClassifyCorner(dirNext);
+        if (corner.type == 0) //collinear
+        {
+            miterDir = dirNext;
+            miterLength = lineThickness;
+        }
+        else
+        {
+            miterDir = (normalPrev + normalNext).Normalize();
+            angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
+            miterLength = lineThickness / MathF.Cos(angleRad);
+
+            //TODO: If reaches miter limit, switch to beveled corner instead of clamping miter length
+            //- just use cur + edge normals * linethickness to calculate the 2 bevel points.
+            // if (miterLength > miterLimit * lineThickness)
+            // {
+            //     
+            // }
+            
+            miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
+        }
         
         var prevInside = cur - miterDir * miterLength;
         var prevOutside = cur + miterDir * miterLength;
+        dirPrev = dirNext;
         
         for (var i = 0; i < count; i++)
         {
@@ -970,11 +982,23 @@ public static class PolygonDrawing
             dirNext = (next - cur).Normalize();
             normalPrev = normalNext;
             normalNext = dirNext.GetPerpendicularRight();
+            corner = dirPrev.ClassifyCorner(dirNext);
             
-            miterDir = (normalPrev + normalNext).Normalize();
-            angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-            miterLength = lineThickness / MathF.Cos(angleRad); //right triangle formula for hypotenuse = opposite / sin(angle)
-            miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
+            if (corner.type == 0) //collinear
+            {
+                miterDir = dirNext;
+                miterLength = lineThickness;
+            }
+            else
+            {
+                miterDir = (normalPrev + normalNext).Normalize();
+                angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
+                miterLength = lineThickness / MathF.Cos(angleRad); //right triangle formula for hypotenuse = adjacent / cos(angle) -> angle between adjacent and hypotenuse
+                
+                //TODO: If reaches miter limit, switch to beveled corner instead of clamping miter length
+                // - only outward part is beveled
+                miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
+            }
             
             var curInside = cur - miterDir * miterLength;
             var curOutside = cur + miterDir * miterLength;
@@ -985,7 +1009,9 @@ public static class PolygonDrawing
             
             prevInside = curInside;
             prevOutside = curOutside;
+            dirPrev = dirNext;
             
+            // cur.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.Red));
         }
     }
 
@@ -1002,3 +1028,45 @@ public static class PolygonDrawing
 
     #endregion
 }
+
+
+// private static (Vector2 miterDir, float miterLengthOutside, float miterLengthInside) CalculateMiterInfo(Vector2 n1, Vector2 n2, float thickness)
+// {
+//     //NOTE: Sin formula for inside corners and cos formula for outside corners
+//     var miterDir = (n1 + n2).Normalize();
+//     var angleRad = MathF.Abs(miterDir.AngleRad(n2));
+//     float miterLengthInside = thickness / MathF.Sin(angleRad);
+//     float miterLengthOutside = thickness / MathF.Cos(angleRad);
+//     return (miterDir, miterLengthOutside, miterLengthInside);
+// }
+    
+// private enum CornerType
+// {
+//     Colinear,
+//     ColinearObtuse,
+//     Inward,
+//     Outward
+// }
+// private static CornerType ClassifyCorner(Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
+// {
+//     // dirPrev = Vector2.Normalize(dirPrev);
+//     // dirNext = Vector2.Normalize(dirNext);
+//
+//     float cross = dirPrev.X * dirNext.Y - dirPrev.Y * dirNext.X;
+//     float dot = Vector2.Dot(dirPrev, dirNext);
+//     // float angle = MathF.Atan2(MathF.Abs(cross), dot); // 0..π
+//
+//     if (MathF.Abs(cross) <= epsilon) return dot >= 0f ? CornerType.Colinear : CornerType.ColinearObtuse;
+//
+//     return cross < 0f ? CornerType.Outward : CornerType.Inward;
+// }
+// private static void DrawLinesMiteredHelper2(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 6f)
+// {
+//     //TODO: Use shape clipper to produce points?
+//     var results = poly.Inflate(lineThickness, JoinType.Square, EndType.Square, miterLimit, 2).ToPolygons();
+//     foreach (var polygon in results)
+//     {
+//         if(polygon.IsClockwise()) continue;
+//         polygon.Draw(color);
+//     }
+// }
