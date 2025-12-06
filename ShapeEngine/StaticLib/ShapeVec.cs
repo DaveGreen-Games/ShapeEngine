@@ -729,6 +729,67 @@ public static class ShapeVec
         // return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X);
     }
     /// <summary>
+    /// Calculates the unsigned angle in radians between two vectors.
+    /// This returns the acute or obtuse angle between the directions without sign,
+    /// i.e. the result is always in the range [0, π].
+    /// </summary>
+    /// <param name="v1">The first vector.</param>
+    /// <param name="v2">The second vector.</param>
+    /// <returns>The unsigned angle in radians between <paramref name="v1"/> and <paramref name="v2"/>.</returns>
+    public static float AngleRadUnsigned(this Vector2 v1, Vector2 v2)
+    {
+        // dirPrev = Vector2.Normalize(dirPrev);
+        // dirNext = Vector2.Normalize(dirNext);
+        
+        float cross = v1.X * v2.Y - v1.Y * v2.X;
+        float dot = Vector2.Dot(v1, v2);
+        return  MathF.Atan2(MathF.Abs(cross), dot); // 0..π
+    }
+    
+    /// <summary>
+    /// Calculates the unsigned angle in degrees between two vectors.
+    /// The result is always in the range [0, 180], representing the smallest angle between directions.
+    /// </summary>
+    /// <param name="v1">The first vector.</param>
+    /// <param name="v2">The second vector.</param>
+    /// <returns>The unsigned angle in degrees between <paramref name="v1"/> and <paramref name="v2"/>.</returns>
+    public static float AngleDegUnsigned(this Vector2 v1, Vector2 v2)
+    {
+        return AngleRadUnsigned(v1, v2) * ShapeMath.RADTODEG;
+    }
+    
+    
+    /// <summary>
+    /// Classifies the corner formed by two direction vectors.
+    /// </summary>
+    /// <param name="dirPrev">The previous (incoming) direction vector.</param>
+    /// <param name="dirNext">The next (outgoing) direction vector.</param>
+    /// <param name="epsilon">Small tolerance used to treat vectors as colinear (default 1e-6).</param>
+    /// <returns>
+    /// A tuple containing:
+    /// - <c>cornerType</c>: an integer where 0 = colinear, 1 = ccw outwards, -1 = ccw inwards.
+    /// - <c>angle</c>: the absolute angle between the two directions in radians (range 0..π).
+    /// </returns>
+    /// <remarks>
+    /// The classification is determined using the 2D cross product and dot product:
+    /// - If |cross| ≤ epsilon the vectors are considered colinear.
+    /// - Otherwise the sign of cross determines inward/outward classification while the angle is computed with <c>Atan2(|cross|, dot)</c>.
+    /// Angle close to 0 indicates collinear in the same direction, angle close to π indicates collinear in opposite directions.
+    /// </remarks>
+    public static (int cornerType, float angle) ClassifyCorner(Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
+    {
+        float cross = dirPrev.X * dirNext.Y - dirPrev.Y * dirNext.X;
+        float dot = Vector2.Dot(dirPrev, dirNext);
+        float angle = MathF.Atan2(MathF.Abs(cross), dot); // 0..π
+
+        if (MathF.Abs(cross) <= epsilon) return (0, angle); /* collinear */
+
+        return cross < 0f ? 
+            (1, angle)/* ccw outwards*/ : 
+            (-1, angle); /*ccw inwards*/
+    }
+    
+    /// <summary>
     /// Calculates the distance between two vectors.
     /// </summary>
     /// <param name="v1">The first vector.</param>
