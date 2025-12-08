@@ -28,10 +28,7 @@ public static class PerlinNoise2D
             if(_seed == value) return;
             _seed = value;
             
-            if (gradients != null)
-            {
-                gradients.Clear();
-            }
+            gradients.Clear();
         }
     }
     
