@@ -910,7 +910,7 @@ public static class PolygonDrawing
     
     #region Helper
     
-    public static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0)
+    public static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 1f)
     {
         if (poly.Count <= 2) return;
         if (poly.Count == 3)
@@ -918,23 +918,16 @@ public static class PolygonDrawing
             TriangleDrawing.DrawTriangleLines(poly[0], poly[1], poly[2], thickness, color, cornerPoints);
             return;
         }
-        if(cornerPoints <= 0) DrawLinesMiteredHelper(poly, thickness, color);
-        else if (cornerPoints == 1) DrawLinesBeveledHelper(poly, thickness, color);
+        if(cornerPoints <= 0) DrawLinesMiteredHelper(poly, thickness, color, miterLimit);
         else DrawLinesRoundedHelper(poly, thickness, color, cornerPoints);
     }
-
-
-    
-    
-    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 6f)//miterLimit is a factor based on lineThickness
+    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 1f)
     {
-        // miterLimit = 1000f;
         int count = poly.Count;
-        if (count < 3 || lineThickness <= 0f || miterLimit <= 0f) return;
+        if (count < 3 || lineThickness <= 0f) return;
         
+        float totalMiterLengthLimit = miterLimit >= 0 ? lineThickness * (miterLimit + 1) : -1f;
         var rayColor = color.ToRayColor();
-        // rayColor = rayColor with { A = 0 };
-        // rayColor = rayColor with { A = 255 };
         var prev = poly[^2];
         var cur = poly[^1];
         var next = poly[0];
@@ -947,32 +940,57 @@ public static class PolygonDrawing
         Vector2 miterDir;
         float miterLength;
         float angleRad;
+        Vector2 prevInside, prevOutside;
         
         var corner = dirPrev.ClassifyCorner(dirNext);
         if (corner.type == 0) //collinear
         {
             miterDir = dirNext;
             miterLength = lineThickness;
+            prevInside = cur - miterDir * miterLength;
+            prevOutside = cur + miterDir * miterLength;
         }
         else
         {
             miterDir = (normalPrev + normalNext).Normalize();
             angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
             miterLength = lineThickness / MathF.Cos(angleRad);
-
-            //TODO: If reaches miter limit, switch to beveled corner instead of clamping miter length
-            //- just use cur + edge normals * linethickness to calculate the 2 bevel points.
-            // if (miterLength > miterLimit * lineThickness)
-            // {
-            //     
-            // }
             
-            miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
+            if (totalMiterLengthLimit > 0 && miterLength > totalMiterLengthLimit)
+            {
+                var bevelDir = corner.type < 0 ? -miterDir : miterDir;
+                var limitPoint = cur + bevelDir * totalMiterLengthLimit;
+                
+                var miterDirPRight = corner.type < 0 ? miterDir.GetPerpendicularLeft() : miterDir.GetPerpendicularRight();
+                var miterDirPLeft = -miterDirPRight;
+                var p2 = next + (corner.type < 0 ? -normalNext : normalNext) * lineThickness;
+                var bevelLeft = TryIntersectLines(limitPoint, miterDirPLeft, p2, -dirNext, out var intersectionLeft)
+                    ? intersectionLeft
+                    : cur + normalNext * lineThickness;
+                
+                var bevelInside = cur - bevelDir * miterLength;
+                
+                if (corner.type < 0) //ccw inwards corner
+                {
+                    prevOutside = bevelInside;
+                    prevInside = bevelLeft;
+                }
+                else
+                {
+                    prevInside = bevelInside;
+                    prevOutside = bevelLeft;
+                }
+            }
+            else
+            {
+                prevInside = cur - miterDir * miterLength;
+                prevOutside = cur + miterDir * miterLength;
+            }
         }
         
-        var prevInside = cur - miterDir * miterLength;
-        var prevOutside = cur + miterDir * miterLength;
+        
         dirPrev = dirNext;
+        prev = cur;
         
         for (var i = 0; i < count; i++)
         {
@@ -994,10 +1012,48 @@ public static class PolygonDrawing
                 miterDir = (normalPrev + normalNext).Normalize();
                 angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
                 miterLength = lineThickness / MathF.Cos(angleRad); //right triangle formula for hypotenuse = adjacent / cos(angle) -> angle between adjacent and hypotenuse
-                
-                //TODO: If reaches miter limit, switch to beveled corner instead of clamping miter length
-                // - only outward part is beveled
-                miterLength = MathF.Min(miterLength, lineThickness * miterLimit);
+
+                if (totalMiterLengthLimit > 0 && miterLength > totalMiterLengthLimit)
+                {
+                    var bevelDir = corner.type < 0 ? -miterDir : miterDir;
+                    var limitPoint = cur + bevelDir * totalMiterLengthLimit;
+                    
+                    var miterDirPRight = corner.type < 0 ? miterDir.GetPerpendicularLeft() : miterDir.GetPerpendicularRight();
+                    var miterDirPLeft = -miterDirPRight;
+                    var p1 = prev + (corner.type < 0 ? -normalPrev : normalPrev) * lineThickness;
+                    var p2 = next + (corner.type < 0 ? -normalNext : normalNext) * lineThickness;
+                    var bevelRight = TryIntersectLines(limitPoint, miterDirPRight, p1, dirPrev, out var intersectionRight)
+                        ? intersectionRight
+                        : cur + normalPrev * lineThickness;
+                    var bevelLeft = TryIntersectLines(limitPoint, miterDirPLeft, p2, -dirNext, out var intersectionLeft)
+                        ? intersectionLeft
+                        : cur + normalNext * lineThickness;
+                    
+                    var bevelInside = cur - bevelDir * miterLength;
+                    
+
+                    if (corner.type < 0) //ccw inwards corner
+                    {
+                        (bevelLeft, bevelRight) = (bevelRight, bevelLeft);
+                        Raylib.DrawTriangle(bevelInside, bevelLeft, prevInside, rayColor);
+                        Raylib.DrawTriangle(bevelInside, prevInside, prevOutside, rayColor);
+                        Raylib.DrawTriangle(bevelInside, bevelRight, bevelLeft, rayColor);
+                        prevOutside = bevelInside;
+                        prevInside = bevelRight;
+                    }
+                    else
+                    {
+                        Raylib.DrawTriangle(bevelRight, prevInside, prevOutside, rayColor);
+                        Raylib.DrawTriangle(bevelRight, bevelInside, prevInside, rayColor);
+                        Raylib.DrawTriangle(bevelLeft, bevelInside, bevelRight,  rayColor);
+                        prevInside = bevelInside;
+                        prevOutside = bevelLeft;
+                    }
+                    
+                    dirPrev = dirNext;
+                    prev = cur;
+                    continue;
+                }
             }
             
             var curInside = cur - miterDir * miterLength;
@@ -1010,63 +1066,24 @@ public static class PolygonDrawing
             prevInside = curInside;
             prevOutside = curOutside;
             dirPrev = dirNext;
-            
-            // cur.Draw(4f, ColorRgba.CreateKnowColor(KnownColor.Red));
+            prev = cur;
         }
     }
-
-
-    private static void DrawLinesBeveledHelper(Polygon poly, float lineThickness, ColorRgba color)
-    {
-        
-    }
-
     private static void DrawLinesRoundedHelper(Polygon poly, float lineThickness, ColorRgba color, int cornerPoints)
     {
-        
+        //TODO: Implement
+    }
+    public static bool TryIntersectLines(Vector2 pointA, Vector2 dirA, Vector2 pointB, Vector2 dirB, out Vector2 intersection)
+    {
+        intersection = default;
+        float denom = dirA.X * dirB.Y - dirA.Y * dirB.X;
+        if (MathF.Abs(denom) <= float.Epsilon) return false; // parallel
+
+        var diff = pointB - pointA;
+        float t = (diff.X * dirB.Y - diff.Y * dirB.X) / denom;
+        intersection = pointA + dirA * t;
+        return true;
     }
 
     #endregion
 }
-
-
-// private static (Vector2 miterDir, float miterLengthOutside, float miterLengthInside) CalculateMiterInfo(Vector2 n1, Vector2 n2, float thickness)
-// {
-//     //NOTE: Sin formula for inside corners and cos formula for outside corners
-//     var miterDir = (n1 + n2).Normalize();
-//     var angleRad = MathF.Abs(miterDir.AngleRad(n2));
-//     float miterLengthInside = thickness / MathF.Sin(angleRad);
-//     float miterLengthOutside = thickness / MathF.Cos(angleRad);
-//     return (miterDir, miterLengthOutside, miterLengthInside);
-// }
-    
-// private enum CornerType
-// {
-//     Colinear,
-//     ColinearObtuse,
-//     Inward,
-//     Outward
-// }
-// private static CornerType ClassifyCorner(Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
-// {
-//     // dirPrev = Vector2.Normalize(dirPrev);
-//     // dirNext = Vector2.Normalize(dirNext);
-//
-//     float cross = dirPrev.X * dirNext.Y - dirPrev.Y * dirNext.X;
-//     float dot = Vector2.Dot(dirPrev, dirNext);
-//     // float angle = MathF.Atan2(MathF.Abs(cross), dot); // 0..π
-//
-//     if (MathF.Abs(cross) <= epsilon) return dot >= 0f ? CornerType.Colinear : CornerType.ColinearObtuse;
-//
-//     return cross < 0f ? CornerType.Outward : CornerType.Inward;
-// }
-// private static void DrawLinesMiteredHelper2(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 6f)
-// {
-//     //TODO: Use shape clipper to produce points?
-//     var results = poly.Inflate(lineThickness, JoinType.Square, EndType.Square, miterLimit, 2).ToPolygons();
-//     foreach (var polygon in results)
-//     {
-//         if(polygon.IsClockwise()) continue;
-//         polygon.Draw(color);
-//     }
-// }
