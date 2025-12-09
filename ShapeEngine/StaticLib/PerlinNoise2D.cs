@@ -53,10 +53,11 @@ public static class PerlinNoise2D
 
     /// <summary>
     /// Performs standard linear interpolation between two values a and b based on the weight t.
-    /// <param name="a"/>    : The start value.
-    /// <param name="b"/>    : The end value.
-    /// <param name="t"/> : The interpolation factor, typically in the range [0, 1].
     /// </summary>
+    /// <param name="a">The Start value.</param>
+    /// <param name="b">The end value.</param>
+    /// <param name="t">The interpolation factor, typically in the range [0, 1].</param>
+    /// <returns>The interpolated value between a and b based on t.</returns>
     private static float Lerp(float a, float b, float t)
     {
         return a + t * (b - a);
@@ -65,8 +66,8 @@ public static class PerlinNoise2D
     /// <summary>
     /// Ken Perlin's smoother step function: 6t^5 - 15t^4 + 10t^3.
     /// This ensures the derivatives are zero at t=0 and t=1, producing smoother transitions.
-    /// <param name="t"/>    : The input value to be smoothed, typically in the range [0, 1].
     /// </summary>
+    /// <param name="t">The input value to be smoothed, typically in the range [0, 1].</param>
     private static float Fade(float t)
     {
         return t * t * t * (t * (t * 6f - 15f) + 10f);
