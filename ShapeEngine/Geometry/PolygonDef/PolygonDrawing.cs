@@ -591,7 +591,10 @@ public static class PolygonDrawing
     /// <remarks>
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// </remarks>
-    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, float cornerLength) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, float cornerLength)
+    {
+        DrawCornered(poly, lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
+    }
 
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with custom lengths for each corner, using <see cref="LineDrawingInfo"/>.
@@ -602,7 +605,11 @@ public static class PolygonDrawing
     /// <remarks>
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// </remarks>
-    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerLengths) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerLengths)
+    {
+        DrawCornered(poly, lineInfo.Thickness, lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+    }
+
     #endregion
     
     #region Draw Cornered Relative
@@ -713,7 +720,10 @@ public static class PolygonDrawing
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// <c>CornerF</c> is used to interpolate from previous to current and from current to next point to form a corner.
     /// </remarks>
-    public static void DrawCorneredRelative(this Polygon poly, LineDrawingInfo lineInfo, float cornerF) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerF, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawCorneredRelative(this Polygon poly, LineDrawingInfo lineInfo, float cornerF)
+    {
+        DrawCornered(poly, lineInfo.Thickness, lineInfo.Color, cornerF, lineInfo.CapType, lineInfo.CapPoints);
+    }
 
     /// <summary>
     /// Draws lines from each corner of the polygon outward, using relative factors for each corner, with <see cref="LineDrawingInfo"/>.
@@ -725,7 +735,11 @@ public static class PolygonDrawing
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// <c>CornerFactors</c> are used to interpolate from previous to current and from current to next point to form a corner.
     /// </remarks>
-    public static void DrawCorneredRelative(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerFactors) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerFactors, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawCorneredRelative(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerFactors)
+    {
+        DrawCornered(poly, lineInfo.Thickness, lineInfo.Color, cornerFactors, lineInfo.CapType, lineInfo.CapPoints);
+    }
+
     #endregion
     
     #region Draw Lines Scaled
@@ -910,7 +924,7 @@ public static class PolygonDrawing
     
     #region Helper
     
-    public static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 1f)
+    public static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
     {
         if (poly.Count <= 2) return;
         if (poly.Count == 3)
@@ -918,15 +932,16 @@ public static class PolygonDrawing
             TriangleDrawing.DrawTriangleLines(poly[0], poly[1], poly[2], thickness, color, cornerPoints);
             return;
         }
+        
         if(cornerPoints <= 0) DrawLinesMiteredHelper(poly, thickness, color, miterLimit);
         else DrawLinesRoundedHelper(poly, thickness, color, cornerPoints);
     }
-    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 1f)
+    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f)
     {
         int count = poly.Count;
         if (count < 3 || lineThickness <= 0f) return;
-        
-        float totalMiterLengthLimit = miterLimit >= 0 ? lineThickness * (miterLimit + 1) : -1f;
+
+        float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);  //miterLimit >= 0 ? lineThickness * (miterLimit + 1) : -1f;
         var rayColor = color.ToRayColor();
         var prev = poly[^2];
         var cur = poly[^1];
@@ -1084,6 +1099,5 @@ public static class PolygonDrawing
         intersection = pointA + dirA * t;
         return true;
     }
-
     #endregion
 }
