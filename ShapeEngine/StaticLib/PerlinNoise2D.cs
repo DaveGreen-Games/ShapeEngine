@@ -39,8 +39,7 @@ public static class PerlinNoise2D
     private static Vector2 Gradient(int x, int y)
     {
         var key = (x, y);
-        if (gradients.ContainsKey(key))
-            return gradients[key];
+        if(gradients.TryGetValue(key, out var existingGradient)) return existingGradient;
 
         System.Random rand = new System.Random(_seed + x * 4967 + y * 3253);
 
