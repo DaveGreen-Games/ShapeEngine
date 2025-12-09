@@ -12,7 +12,7 @@ namespace ShapeEngine.StaticLib;
 public static class PerlinNoise2D
 {
 
-    private static Dictionary<(int, int), Vector2> gradients = new Dictionary<(int, int), Vector2>();
+    private static readonly Dictionary<(int, int), Vector2> gradients = new Dictionary<(int, int), Vector2>();
     private static int _seed = 0;
 
     /// <summary>
