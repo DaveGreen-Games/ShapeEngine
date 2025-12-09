@@ -649,7 +649,7 @@ public static class ShapeMath
 
 
     #endregion
-
+    
     /// <summary>
     /// Determines whether a blinking effect should be active at the current timer value and interval.
     /// </summary>

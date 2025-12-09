@@ -89,7 +89,7 @@
 
 
 	<ItemGroup>
-		<None Include="readme-nuget.md" Pack="true" PackagePath="\" />
+		<None Include="readme-nuget.md" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 	
   <ItemGroup>
@@ -114,7 +114,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="LICENSE.txt" Pack="true" PackagePath="" />
+		<None Include="LICENSE.txt" Pack="true" PackagePath=""/>
 	</ItemGroup>
 
 	<ItemGroup>
