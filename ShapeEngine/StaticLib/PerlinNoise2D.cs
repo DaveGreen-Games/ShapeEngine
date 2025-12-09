@@ -11,9 +11,9 @@ namespace ShapeEngine.StaticLib;
 /// </summary>
 public static class PerlinNoise2D
 {
-
-    private static readonly Dictionary<(int, int), Vector2> gradients = new Dictionary<(int, int), Vector2>();
+    private static readonly Dictionary<(int, int), Vector2> gradients = [];
     private static int _seed = 0;
+
 
     /// <summary>
     /// Gets or sets the integer seed used to generate pseudo-random gradient vectors.
@@ -41,10 +41,10 @@ public static class PerlinNoise2D
         var key = (x, y);
         if(gradients.TryGetValue(key, out var existingGradient)) return existingGradient;
 
-        System.Random rand = new System.Random(_seed + x * 4967 + y * 3253);
+        System.Random rand = new(_seed + x * 4967 + y * 3253);
 
-        float angle = (float)(rand.NextDouble() * ShapeMath.PI * 2);
-        Vector2 g = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+        float angle = rand.NextSingle() * MathF.PI * 2f;
+        Vector2 g = new(MathF.Cos(angle), MathF.Sin(angle));
 
         gradients[key] = g;
         return g;
@@ -95,10 +95,10 @@ public static class PerlinNoise2D
         Vector2 g01 = Gradient(x0, y1);
         Vector2 g11 = Gradient(x1, y1);
 
-        Vector2 d00 = new Vector2(dx, dy);
-        Vector2 d10 = new Vector2(dx - 1, dy);
-        Vector2 d01 = new Vector2(dx, dy - 1);
-        Vector2 d11 = new Vector2(dx - 1, dy - 1);
+        Vector2 d00 = new(dx, dy);
+        Vector2 d10 = new(dx - 1, dy);
+        Vector2 d01 = new(dx, dy - 1);
+        Vector2 d11 = new(dx - 1, dy - 1);
 
         float n00 = Vector2.Dot(g00, d00);
         float n10 = Vector2.Dot(g10, d10);
