@@ -342,7 +342,7 @@ public sealed class GameWindow
         set
         {
             if (value == minFramerate) return;
-            if (value <= 0) minFramerate = 1;
+            if (value < 0) minFramerate = 0;
             else if (value >= maxFramerate)
             {
                 minFramerate = maxFramerate;
@@ -366,7 +366,8 @@ public sealed class GameWindow
         set
         {
             if (value == maxFramerate) return;
-            if (value <= minFramerate)
+            if (value < 0) maxFramerate = 0;
+            else if (value <= minFramerate)
             {
                 maxFramerate = minFramerate;
                 minFramerate = value;
@@ -495,8 +496,14 @@ public sealed class GameWindow
 
         FullscreenAutoRestoring = windowSettings.FullscreenAutoRestoring;
         VSync = windowSettings.Vsync;
-        MinFramerate = windowSettings.MinFramerate;
-        MaxFramerate = windowSettings.MaxFramerate;
+        minFramerate = windowSettings.MinFramerate;
+        maxFramerate = windowSettings.MaxFramerate;
+        if (minFramerate < 0) minFramerate = 0;
+        if (maxFramerate < 0) maxFramerate = 0;
+        if (minFramerate > maxFramerate)
+        {
+            (minFramerate, maxFramerate) = (maxFramerate, minFramerate);
+        }
         FpsLimit = windowSettings.FrameRateLimit;
 
         switch (windowSettings.WindowBorder)
