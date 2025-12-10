@@ -68,10 +68,10 @@ public sealed class GameWindow
         /// </summary>
         public readonly bool MousePassThrough;
 
-        /// <summary>
-        /// Indicates whether VSync is enabled for the window.
-        /// </summary>
-        public readonly bool VSync;
+        // /// <summary>
+        // /// Indicates whether VSync is enabled for the window.
+        // /// </summary>
+        // public readonly bool VSync;
         
         /// <summary>
         /// Gets the current window configuration flags from Raylib.
@@ -98,7 +98,7 @@ public sealed class GameWindow
             Focused = value;
             AlwaysRun = value;
             MousePassThrough = value;
-            VSync = value;
+            // VSync = value;
             Minimized = value;
             Maximized = value;
             Fullscreen = value;
@@ -116,7 +116,7 @@ public sealed class GameWindow
             Focused = !Raylib.IsWindowState(ConfigFlags.UnfocusedWindow);
             AlwaysRun = Raylib.IsWindowState(ConfigFlags.AlwaysRunWindow);
             MousePassThrough = Raylib.IsWindowState(ConfigFlags.MousePassthroughWindow);
-            VSync = Raylib.IsWindowState(ConfigFlags.VSyncHint);
+            // VSync = Raylib.IsWindowState(ConfigFlags.VSyncHint);
             Minimized = Raylib.IsWindowState(ConfigFlags.MinimizedWindow);
             Maximized = Raylib.IsWindowState(ConfigFlags.MaximizedWindow);
             Fullscreen = Raylib.IsWindowFullscreen();
@@ -135,8 +135,8 @@ public sealed class GameWindow
         public bool HasAlwaysRunChanged(WindowConfigFlags other) => AlwaysRun != other.AlwaysRun;
         /// <summary>Checks if the MousePassThrough flag has changed compared to another instance.</summary>
         public bool HasMousePassThroughChanged(WindowConfigFlags other) => MousePassThrough != other.MousePassThrough;
-        /// <summary>Checks if the VSync flag has changed compared to another instance.</summary>
-        public bool HasVSyncChanged(WindowConfigFlags other) => VSync != other.VSync;
+        // /// <summary>Checks if the VSync flag has changed compared to another instance.</summary>
+        // public bool HasVSyncChanged(WindowConfigFlags other) => VSync != other.VSync;
         /// <summary>Checks if the Minimized flag has changed compared to another instance.</summary>
         public bool HasMinimizedChanged(WindowConfigFlags other) => Minimized != other.Minimized;
         /// <summary>Checks if the Maximized flag has changed compared to another instance.</summary>
@@ -395,27 +395,44 @@ public sealed class GameWindow
     /// Gets the current frames per second.
     /// </summary>
     public int Fps => Raylib.GetFPS();
+    
     /// <summary>
     /// Gets or sets whether VSync is enabled.
+    /// If VSync is enabled, the target framerate will be set to the current monitors <see cref="MonitorInfo.Refreshrate"/>.
+    /// Otherwise, the target framerate will be set to <see cref="FpsLimit"/>.
     /// </summary>
     public bool VSync
     {
-        get => Raylib.IsWindowState(ConfigFlags.VSyncHint);
+        get => vsync; // Raylib.IsWindowState(ConfigFlags.VSyncHint);
         set
         {
-            if (Raylib.IsWindowState(ConfigFlags.VSyncHint) == value) return;
+            if (vsync == value) return;
             if (value)
             {
-                Raylib.SetWindowState(ConfigFlags.VSyncHint);
+                vsync = true;
                 Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
             }
             else
             {
-                Raylib.ClearWindowState(ConfigFlags.VSyncHint);
+                vsync = false;
                 Raylib.SetTargetFPS(fpsLimit);
             }
+            OnWindowVSyncChanged?.Invoke(vsync);
+            // if (Raylib.IsWindowState(ConfigFlags.VSyncHint) == value) return;
+            // if (value)
+            // {
+            //     Raylib.SetWindowState(ConfigFlags.VSyncHint);
+            //     Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
+            // }
+            // else
+            // {
+            //     Raylib.ClearWindowState(ConfigFlags.VSyncHint);
+            //     Raylib.SetTargetFPS(fpsLimit);
+            // }
         }
     }
+
+    private bool vsync;
 
     /// <summary>
     /// Gets whether the mouse is currently on the window screen.
@@ -1118,10 +1135,10 @@ public sealed class GameWindow
             OnWindowMousePassThroughChanged?.Invoke(cur.MousePassThrough);
         }
 
-        if (cur.HasVSyncChanged(windowConfigFlags))
-        {
-            OnWindowVSyncChanged?.Invoke(cur.VSync);
-        }
+        // if (cur.HasVSyncChanged(windowConfigFlags))
+        // {
+        //     OnWindowVSyncChanged?.Invoke(cur.VSync);
+        // }
         if (cur.HasFullscreenChanged(windowConfigFlags))
         {
             OnWindowFullscreenChanged?.Invoke(cur.Fullscreen);
