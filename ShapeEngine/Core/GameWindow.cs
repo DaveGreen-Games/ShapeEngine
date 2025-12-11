@@ -420,17 +420,8 @@ public sealed class GameWindow
     public int TargetFps
     {
         get => targetFps;
-        private set
-        {
-            targetFps = value;
-            Raylib.SetTargetFPS(value); 
-        }
+        private set => targetFps = value;
     }
-    
-    /// <summary>
-    /// Gets the current frames per second.
-    /// </summary>
-    public int Fps => Raylib.GetFPS();
     
     /// <summary>
     /// Gets or sets whether VSync is enabled.
@@ -447,26 +438,13 @@ public sealed class GameWindow
             {
                 vsync = true;
                 TargetFps = Monitor.CurMonitor().Refreshrate;
-                // Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
             }
             else
             {
                 vsync = false;
                 TargetFps = fpsLimit;
-                // Raylib.SetTargetFPS(fpsLimit);
             }
             OnWindowVSyncChanged?.Invoke(vsync);
-            // if (Raylib.IsWindowState(ConfigFlags.VSyncHint) == value) return;
-            // if (value)
-            // {
-            //     Raylib.SetWindowState(ConfigFlags.VSyncHint);
-            //     Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
-            // }
-            // else
-            // {
-            //     Raylib.ClearWindowState(ConfigFlags.VSyncHint);
-            //     Raylib.SetTargetFPS(fpsLimit);
-            // }
         }
     }
     
@@ -479,7 +457,6 @@ public sealed class GameWindow
         private set
         {
             mouseOnScreen = value;
-            // IsMouseOnScreen = value;
         }
     }
     private bool mouseOnScreen;
@@ -599,6 +576,8 @@ public sealed class GameWindow
 
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         windowConfigFlags = WindowConfigFlags.Get();
+        
+        Raylib.SetTargetFPS(0);//Prevent raylib from capping fps
         
         Instance = this;
     }
