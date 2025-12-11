@@ -332,10 +332,17 @@ public sealed class GameWindow
     /// </summary>
     public WindowBorder WindowBorder { get; private set; }
 
-   /// <summary>
-   /// Gets or sets the minimum allowed framerate.
-   /// </summary>
-   /// <remarks>If set, updates <see cref="FpsLimit"/> if it is below the new minimum.</remarks>
+    /// <summary>
+    /// Gets or sets the minimum allowed framerate for the application.
+    /// </summary>
+    /// <remarks>
+    /// - Negative values are clamped to 0.
+    /// - If the new minimum is greater than or equal to <see cref="MaxFramerate"/>,
+    ///   the previous <see cref="MaxFramerate"/> will be assigned to <see cref="MinFramerate"/>
+    ///   and <see cref="MaxFramerate"/> will be set to the provided value (effectively swapping).
+    /// - When the <see cref="FpsLimit"/> is lower than the new minimum, <see cref="FpsLimit"/>
+    ///   is adjusted to match the new minimum.
+    /// </remarks>
     public int MinFramerate
     {
         get => minFramerate;
@@ -354,12 +361,16 @@ public sealed class GameWindow
         }
     }
     /// <summary>
-    /// Gets or sets the maximum allowed framerate for the window.
-    /// <remarks>
-    /// If set below <see cref="MinFramerate"/>, both values will be synchronized.
-    /// If set, updates <see cref="FpsLimit"/> if it is above the new maximum.
-    /// </remarks>
+    /// Gets or sets the maximum allowed framerate for the application.
     /// </summary>
+    /// <remarks>
+    /// - Negative values are clamped to 0.
+    /// - If the provided value is less than or equal to <see cref="MinFramerate"/>,
+    ///   the previous <see cref="MinFramerate"/> will be assigned to <see cref="MaxFramerate"/>
+    ///   and <see cref="MinFramerate"/> will be set to the provided value (effectively swapping).
+    /// - When <see cref="FpsLimit"/> is greater than the new maximum, <see cref="FpsLimit"/>
+    ///   is adjusted to match the new maximum to maintain consistency.
+    /// </remarks>
     public int MaxFramerate
     {
         get => maxFramerate;
@@ -377,9 +388,14 @@ public sealed class GameWindow
             if (FpsLimit > maxFramerate) fpsLimit = maxFramerate;
         }
     }
+    
     /// <summary>
-    /// Gets or sets the framerate limit.
+    /// Gets or sets the frames-per-second limit used when VSync is disabled.
     /// </summary>
+    /// <remarks>
+    /// Value is clamped to the current <see cref="MinFramerate"/> and <see cref="MaxFramerate"/> range.
+    /// When VSync is disabled, assigning to this property will update <see cref="TargetFps"/> accordingly.
+    /// </remarks>
     public int FpsLimit
     {
         get => fpsLimit;
@@ -388,9 +404,29 @@ public sealed class GameWindow
             if (value < MinFramerate) fpsLimit = MinFramerate;
             else if (value > MaxFramerate) fpsLimit = MaxFramerate;
             else fpsLimit = value;
-            if(!VSync) Raylib.SetTargetFPS(fpsLimit);
+            if(!VSync) TargetFps = fpsLimit;
         }
     }
+    
+    /// <summary>
+    /// Gets the current target frames-per-second used by the engine.
+    /// </summary>
+    /// <remarks>
+    /// The setter is private and updates the underlying native Raylib target FPS via
+    /// <see cref="Raylib.SetTargetFPS(int)"/> whenever the value changes.
+    /// This property reflects the effective FPS cap whether driven by VSync (monitor refresh)
+    /// or by the manual <see cref="FpsLimit"/> when VSync is disabled.
+    /// </remarks>
+    public int TargetFps
+    {
+        get => targetFps;
+        private set
+        {
+            targetFps = value;
+            Raylib.SetTargetFPS(value); 
+        }
+    }
+    
     /// <summary>
     /// Gets the current frames per second.
     /// </summary>
@@ -410,12 +446,14 @@ public sealed class GameWindow
             if (value)
             {
                 vsync = true;
-                Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
+                TargetFps = Monitor.CurMonitor().Refreshrate;
+                // Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
             }
             else
             {
                 vsync = false;
-                Raylib.SetTargetFPS(fpsLimit);
+                TargetFps = fpsLimit;
+                // Raylib.SetTargetFPS(fpsLimit);
             }
             OnWindowVSyncChanged?.Invoke(vsync);
             // if (Raylib.IsWindowState(ConfigFlags.VSyncHint) == value) return;
@@ -431,9 +469,7 @@ public sealed class GameWindow
             // }
         }
     }
-
-    private bool vsync;
-
+    
     /// <summary>
     /// Gets whether the mouse is currently on the window screen.
     /// </summary>
@@ -464,6 +500,8 @@ public sealed class GameWindow
     private int fpsLimit = 60;
     private int minFramerate;
     private int maxFramerate;
+    private bool vsync;
+    private int targetFps;
     private Dimensions windowSize = new();
 
     private bool? wasMouseEnabled;
@@ -561,7 +599,7 @@ public sealed class GameWindow
 
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         windowConfigFlags = WindowConfigFlags.Get();
-
+        
         Instance = this;
     }
 
