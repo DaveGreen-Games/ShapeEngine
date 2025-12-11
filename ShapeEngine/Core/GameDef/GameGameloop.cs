@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
@@ -9,6 +10,29 @@ public partial class Game
 {
     private List<ScreenTexture>? customScreenTexturesDrawBefore;
     private List<ScreenTexture>? customScreenTexturesDrawAfter;
+
+    private double frameDelta;
+    private int fps;
+    private long frameDeltaNanoSeconds;
+    
+    /// <summary>
+    /// Gets the current frames per second (FPS) calculated from the latest frame delta.
+    /// </summary>
+    /// <value>Frames per second as an integer. Updated each frame.</value>
+    public int FramesPerSecond => fps;
+    
+    /// <summary>
+    /// Gets the elapsed time in seconds for the most recent frame.
+    /// </summary>
+    /// <value>Frame delta time in seconds. Updated each frame and used for time-based updates.</value>
+    public double FrameDelta => frameDelta;
+    
+    /// <summary>
+    /// Gets the elapsed time in nanoseconds for the most recent frame.
+    /// </summary>
+    /// <value>Frame delta time in nanoseconds. Updated each frame and useful for high-resolution timing and profiling.</value>
+    public long FrameDeltaNanoSeconds => frameDeltaNanoSeconds;
+    
     
     private void StartGameloop()
     {
@@ -25,15 +49,27 @@ public partial class Game
 
     private void RunGameloop()
     {
+        Stopwatch frameWatch = new();
+        long frequency = Stopwatch.Frequency;
+        const long  nanoSecPerSecond = 1000L * 1000L * 1000L;
+        const long nanoSecPerMilliSec = 1000L * 1000L;
+        long nanosecPerTick = nanoSecPerSecond / frequency;
+        
         while (!quit)
         {
+            frameDeltaNanoSeconds = frameWatch.ElapsedTicks * nanosecPerTick;
+            frameDelta = frameDeltaNanoSeconds / (double)nanoSecPerSecond;
+            fps = (int)Math.Ceiling(1.0 / frameDelta);
+            frameWatch.Restart();
+            int targetFps = Window.TargetFps;
+            
             if (Raylib.WindowShouldClose())
             {
                 Quit();
                 continue;
             }
 
-            var dt = Raylib.GetFrameTime();
+            var dt = (float)frameDelta;
             Time = Time.TickF(dt);
 
             Window.Update(dt);
@@ -82,6 +118,41 @@ public partial class Game
             ResolveDeferred();
 
             Input.EndFrame();
+
+
+            if (targetFps > 0)
+            {
+                long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                long totalFrameTimeNanoSec = nanoSecPerSecond / targetFps;
+                long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                
+                long msToWait = remainingNanoSec / nanoSecPerMilliSec;
+                if (msToWait > 1)
+                {
+                    Thread.Sleep((int)(msToWait - 1));
+                }
+                elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                
+                while (remainingNanoSec > 0)
+                {
+                    // if (remainingNanoSec > 1_000_000) Thread.SpinWait(100);
+                    // else if(remainingNanoSec > 750_000)Thread.SpinWait(50);
+                    // else if(remainingNanoSec > 250_000)Thread.SpinWait(10);
+                    // else Thread.SpinWait(1);
+                    
+                    // if (remainingNanoSec > 1_000_000) Thread.SpinWait(100); //more than 1 ms
+                    // else if(remainingNanoSec > 500_000)Thread.SpinWait(50); //more than 0.5 ms
+                    // else if(remainingNanoSec > 250_000)Thread.SpinWait(25); //more than 0.25 ms
+                    // else if(remainingNanoSec > 100_000)Thread.SpinWait(10); //more than 0.1 ms
+                    // else Thread.SpinWait(1); //less than 0.1 ms
+                    
+                    Thread.SpinWait((int)(remainingNanoSec / 10_000L)); //approximate
+                    elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                    remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                }
+            }
+            
         }
     }
 
