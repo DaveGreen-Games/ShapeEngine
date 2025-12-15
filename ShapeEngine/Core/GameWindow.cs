@@ -3,6 +3,7 @@ using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Screen;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core;
 
@@ -412,8 +413,6 @@ public sealed class GameWindow
     /// Gets the current target frames-per-second used by the engine.
     /// </summary>
     /// <remarks>
-    /// The setter is private and updates the underlying native Raylib target FPS via
-    /// <see cref="Raylib.SetTargetFPS(int)"/> whenever the value changes.
     /// This property reflects the effective FPS cap whether driven by VSync (monitor refresh)
     /// or by the manual <see cref="FpsLimit"/> when VSync is disabled.
     /// </remarks>
@@ -425,7 +424,7 @@ public sealed class GameWindow
     
     /// <summary>
     /// Gets or sets whether VSync is enabled.
-    /// If VSync is enabled, the target framerate will be set to the current monitors <see cref="MonitorInfo.Refreshrate"/>.
+    /// If VSync is enabled, the target framerate will be set to the current monitor's refresh rate (<see cref="MonitorInfo.Refreshrate"/>).
     /// Otherwise, the target framerate will be set to <see cref="FpsLimit"/>.
     /// </summary>
     public bool VSync
@@ -474,7 +473,7 @@ public sealed class GameWindow
     #region Private Members
 
     private Vector2 osxWindowScaleDpi;
-    private int fpsLimit = 60;
+    private int fpsLimit;
     private int minFramerate;
     private int maxFramerate;
     private bool vsync;
@@ -527,7 +526,8 @@ public sealed class GameWindow
         if (windowSettings.Topmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
 
         FullscreenAutoRestoring = windowSettings.FullscreenAutoRestoring;
-        VSync = windowSettings.Vsync;
+        
+        vsync = windowSettings.Vsync;
         minFramerate = windowSettings.MinFramerate;
         maxFramerate = windowSettings.MaxFramerate;
         if (minFramerate < 0) minFramerate = 0;
@@ -536,8 +536,19 @@ public sealed class GameWindow
         {
             (minFramerate, maxFramerate) = (maxFramerate, minFramerate);
         }
-        FpsLimit = windowSettings.FrameRateLimit;
 
+        fpsLimit = ShapeMath.Clamp(windowSettings.FrameRateLimit, minFramerate, maxFramerate);
+        
+        if (vsync)
+        {
+            TargetFps = Monitor.CurMonitor().Refreshrate;
+        }
+        else
+        {
+            TargetFps = fpsLimit;
+        }
+
+        
         switch (windowSettings.WindowBorder)
         {
             case WindowBorder.Resizabled: 
@@ -577,7 +588,8 @@ public sealed class GameWindow
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         windowConfigFlags = WindowConfigFlags.Get();
         
-        Raylib.SetTargetFPS(0);//Prevent raylib from capping fps
+        // Prevent raylib from capping fps - ShapeEngine now handles frame limiting manually in the game loop for better accuracy
+        Raylib.SetTargetFPS(0);
         
         Instance = this;
     }
@@ -1152,10 +1164,6 @@ public sealed class GameWindow
             OnWindowMousePassThroughChanged?.Invoke(cur.MousePassThrough);
         }
 
-        // if (cur.HasVSyncChanged(windowConfigFlags))
-        // {
-        //     OnWindowVSyncChanged?.Invoke(cur.VSync);
-        // }
         if (cur.HasFullscreenChanged(windowConfigFlags))
         {
             OnWindowFullscreenChanged?.Invoke(cur.Fullscreen);

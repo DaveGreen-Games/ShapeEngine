@@ -50,6 +50,7 @@ public partial class Game
     private void RunGameloop()
     {
         Stopwatch frameWatch = new();
+        frameWatch.Start(); // prevent 0 delta on first frame
         long frequency = Stopwatch.Frequency;
         const long  nanoSecPerSecond = 1000L * 1000L * 1000L;
         const long nanoSecPerMilliSec = 1000L * 1000L;
@@ -136,18 +137,9 @@ public partial class Game
                 
                 while (remainingNanoSec > 0)
                 {
-                    // if (remainingNanoSec > 1_000_000) Thread.SpinWait(100);
-                    // else if(remainingNanoSec > 750_000)Thread.SpinWait(50);
-                    // else if(remainingNanoSec > 250_000)Thread.SpinWait(10);
-                    // else Thread.SpinWait(1);
-                    
-                    // if (remainingNanoSec > 1_000_000) Thread.SpinWait(100); //more than 1 ms
-                    // else if(remainingNanoSec > 500_000)Thread.SpinWait(50); //more than 0.5 ms
-                    // else if(remainingNanoSec > 250_000)Thread.SpinWait(25); //more than 0.25 ms
-                    // else if(remainingNanoSec > 100_000)Thread.SpinWait(10); //more than 0.1 ms
-                    // else Thread.SpinWait(1); //less than 0.1 ms
-                    
-                    Thread.SpinWait((int)(remainingNanoSec / 10_000L)); //approximate
+                    // Divide by 10_000 to convert nanoseconds to an approximate number of SpinWait iterations.
+                    // This value was empirically determined to balance CPU usage and timing accuracy.
+                    Thread.SpinWait((int)(remainingNanoSec / 10_000L));
                     elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
                     remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
                 }
