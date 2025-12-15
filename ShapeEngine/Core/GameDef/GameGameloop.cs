@@ -142,6 +142,7 @@ public partial class Game
                     Thread.SpinWait((int)(remainingNanoSec / 10_000L));
                     elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
                     remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                    Thread.Yield();
                 }
             }
             
