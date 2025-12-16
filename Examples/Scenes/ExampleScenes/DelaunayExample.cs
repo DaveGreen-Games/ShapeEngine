@@ -158,11 +158,11 @@ namespace Examples.Scenes.ExampleScenes
             {
                 var tri = curTriangulation[i];
                 if (i == closeTriangleIndex) continue;
-                tri.DrawLines(lineThickness, Colors.Light, LineCapType.CappedExtended, 4);
+                tri.DrawLines(lineThickness, Colors.Light, 4);
             }
             
             
-            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, Colors.Highlight, LineCapType.CappedExtended, 4);
+            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, Colors.Highlight, 4);
 
             for (int i = 0; i < points.Count; i++)
             {

@@ -5,6 +5,7 @@ using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
@@ -141,7 +142,8 @@ internal class Autogun
             float sideScaleFactor = ShapeMath.LerpFloat(0.2f, 0.5f, targetingAnimationF);
             // float targetingAnimationRotation = ShapeMath.LerpFloat(-15, 15, targetingAnimationF);
             var bb = curTarget.GetBoundingBox();
-            bb.DrawLinesScaled(new LineDrawingInfo(6f, c), 45f, bb.Center, sideScaleFactor, 0.5f); //DrawLines(4f, c);
+            var bbQuad = new Quad(bb, 45f, bb.Center);
+            bbQuad.DrawLinesScaled(new LineDrawingInfo(6f, c), sideScaleFactor, 0.5f);
             
             var targetPos = curTarget.GetBoundingBox().Center;
             pos.Draw(5f, c);

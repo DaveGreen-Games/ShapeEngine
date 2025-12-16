@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
@@ -146,13 +147,21 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <param name="y">The Y-coordinate of the top-left corner.</param>
     /// <param name="width">The width of the rectangle.</param>
     /// <param name="height">The height of the rectangle.</param>
-    /// <remarks>Use this constructor to create a rectangle by specifying its position and size directly.</remarks>
+    /// <remarks>Use this constructor to create a rectangle by specifying its position and size directly.
+    /// Negative width/height mirrors the rect.</remarks>
     public Rect(float x, float y, float width, float height)
     {
-        this.X = x;
-        this.Y = y;
-        this.Width = width;
-        this.Height = height;
+        // X = x;
+        // Y = y;
+        // Width = width;
+        // Height = height;
+        float right = x + width;
+        float bottom = y + height;
+
+        X = MathF.Min(x, right);
+        Y = MathF.Min(y, bottom);
+        Width = MathF.Abs(width);
+        Height = MathF.Abs(height);
     }
 
     /// <summary>
@@ -164,10 +173,10 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     public Rect(Vector2 topLeft, Vector2 bottomRight)
     {
         var final = Fix(topLeft, bottomRight);
-        this.X = final.topLeft.X;
-        this.Y = final.topLeft.Y;
-        this.Width = final.bottomRight.X - this.X;
-        this.Height = final.bottomRight.Y - this.Y;
+        X = final.topLeft.X;
+        Y = final.topLeft.Y;
+        Width = final.bottomRight.X - this.X;
+        Height = final.bottomRight.Y - this.Y;
     }
 
     /// <summary>
@@ -175,13 +184,21 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </summary>
     /// <param name="topLeft">The top-left corner of the rectangle.</param>
     /// <param name="size">The size of the rectangle.</param>
-    /// <remarks>Use this constructor to create a rectangle by specifying its top-left corner and size.</remarks>
+    /// <remarks>Use this constructor to create a rectangle by specifying its top-left corner and size.
+    /// Negative width/height mirrors the rect.</remarks>
     public Rect(Vector2 topLeft, Size size)
     {
-        this.X = topLeft.X;
-        this.Y = topLeft.Y;
-        this.Width = size.Width;
-        this.Height = size.Height;
+        // X = topLeft.X;
+        // Y = topLeft.Y;
+        // Width = size.Width;
+        // Height = size.Height;
+        float right = topLeft.X + size.Width;
+        float bottom = topLeft.Y + size.Height;
+
+        X = MathF.Min(topLeft.X, right);
+        Y = MathF.Min(topLeft.Y, bottom);
+        Width = MathF.Abs(size.Width);
+        Height = MathF.Abs(size.Height);
     }
     /// <summary>
     /// Initializes a new instance of the <see cref="Rect"/> struct from a position, size, and alignment anchor.
@@ -189,15 +206,20 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <param name="position">The reference position for the rectangle.</param>
     /// <param name="size">The size of the rectangle.</param>
     /// <param name="alignment">The anchor point used to align the rectangle relative to the position.</param>
-    /// <remarks>The anchor point determines how the rectangle is positioned relative to the given position.</remarks>
+    /// <remarks>The anchor point determines how the rectangle is positioned relative to the given position.
+    /// Negative width/height mirrors the rect.</remarks>
     public Rect(Vector2 position, Size size, AnchorPoint alignment)
     {
         var offset = size * alignment.ToVector2();
         var topLeft = position - offset;
-        this.X = topLeft.X;
-        this.Y = topLeft.Y;
-        this.Width = size.Width;
-        this.Height = size.Height;
+
+        float right = topLeft.X + size.Width;
+        float bottom = topLeft.Y + size.Height;
+
+        X = MathF.Min(topLeft.X, right);
+        Y = MathF.Min(topLeft.Y, bottom);
+        Width = MathF.Abs(size.Width);
+        Height = MathF.Abs(size.Height);
     }
 
     /// <summary>
@@ -206,10 +228,10 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <param name="rect">The rectangle structure.</param>
     public Rect(Rectangle rect)
     {
-        this.X = rect.X;
-        this.Y = rect.Y;
-        this.Width = rect.Width;
-        this.Height = rect.Height;
+        X = rect.X;
+        Y = rect.Y;
+        Width = rect.Width;
+        Height = rect.Height;
     }
     #endregion
 
@@ -281,6 +303,43 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     
     #region Shapes
 
+    /// <summary>
+    /// Rotates this rectangle by <paramref name="angleDeg"/> around a pivot computed from the given <paramref name="alignment"/>
+    /// and returns the resulting quadrilateral as a <see cref="Quad"/>.
+    /// </summary>
+    /// <param name="angleDeg">Rotation angle in degrees.</param>
+    /// <param name="alignment">Anchor point that determines the rotation pivot relative to the rectangle's top-left and size.</param>
+    /// <returns>
+    /// A <see cref="Quad"/> representing the four corners of the rotated rectangle in the same corner ordering as the source rect.
+    /// </returns>
+    public Quad RotateToQuad(float angleDeg, AnchorPoint alignment)
+    {
+        var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
+        return RotateToQuad(angleDeg, pivot);
+    }
+    
+    /// <summary>
+    /// Rotates the rectangle's four corners around the specified pivot by the provided angle (in degrees)
+    /// and returns the resulting quadrilateral as a <see cref="Quad"/>.
+    /// Points in the returned <see cref="Quad"/> preserve the source rectangle's corner ordering (top-left, bottom-left, bottom-right, top-right).
+    /// </summary>
+    /// <param name="angleDeg">Rotation angle in degrees.</param>
+    /// <param name="pivot">Pivot point to rotate around.</param>
+    /// <returns>A <see cref="Quad"/> representing the rotated rectangle.</returns>
+    public Quad RotateToQuad(float angleDeg, Vector2 pivot)
+    {
+        var rotRad = angleDeg * ShapeMath.DEGTORAD;
+        var w = TopLeft - pivot;
+        var p1 = pivot + w.Rotate(rotRad);
+        w = BottomLeft - pivot;
+        var p2 = pivot + w.Rotate(rotRad);
+        w = BottomRight - pivot;
+        var p3 = pivot + w.Rotate(rotRad);
+        w = TopRight - pivot;
+        var p4 = pivot + w.Rotate(rotRad);
+        return new Quad(p1, p2, p3, p4);
+    }
+    
     /// <summary>
     /// Points are ordered in ccw order starting with top left (tl, bl, br, tr).
     /// </summary>
@@ -367,75 +426,6 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         Triangle a = new(TopLeft, BottomLeft, BottomRight);
         Triangle b = new(TopLeft, BottomRight, TopRight);
         return new Triangulation() { a, b };
-    }
-
-    /// <summary>
-    /// Gets points for slanted corners of the rectangle.
-    /// </summary>
-    /// <param name="tlCorner">Top-left corner slant amount.</param>
-    /// <param name="trCorner">Top-right corner slant amount.</param>
-    /// <param name="brCorner">Bottom-right corner slant amount.</param>
-    /// <param name="blCorner">Bottom-left corner slant amount.</param>
-    /// <returns>A <see cref="Polygon"/> object containing the slanted corner points.</returns>
-    public Polygon GetSlantedCornerPoints(float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        Polygon points = [];
-        
-        var tl = TopLeft;
-        tlCorner = MathF.Max(tlCorner, 0);
-        points.Add(tl + new Vector2(MathF.Min(tlCorner, Width), 0f));
-        points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, Height)));
-        
-        var bl = BottomLeft;
-        blCorner = MathF.Max(blCorner, 0);
-        points.Add(bl - new Vector2(0f, MathF.Min(blCorner, Height)));
-        points.Add(bl + new Vector2(MathF.Min(blCorner, Width), 0f));
-        
-        var br = BottomRight;
-        brCorner = MathF.Max(brCorner, 0);
-        points.Add(br - new Vector2(MathF.Min(brCorner, Width), 0f));
-        points.Add(br - new Vector2(0f, MathF.Min(brCorner, Height)));
-       
-        var tr = TopRight;
-        trCorner = MathF.Max(trCorner, 0);
-        points.Add(tr + new Vector2(0f, MathF.Min(trCorner, Height)));
-        points.Add(tr - new Vector2(MathF.Min(trCorner, Width), 0f));
-        
-        return points;
-    }
-    /// <summary>
-    /// Get the points to draw a rectangle with slanted corners. The corner values are the percentage of the width/height of the rectange the should be used for the slant.
-    /// </summary>
-    /// <param name="tlCorner">Should be between <c>0-1</c></param>
-    /// <param name="trCorner">Should be between <c>0-1</c></param>
-    /// <param name="brCorner">Should be between <c>0-1</c></param>
-    /// <param name="blCorner">Should be between <c>0-1</c></param>
-    /// <returns>Returns points in ccw order.</returns>
-    public Polygon GetSlantedCornerPointsRelative(float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        Polygon points = [];
-        
-        var tl = TopLeft;
-        tlCorner = ShapeMath.Clamp(tlCorner, 0f, 1f);
-        points.Add(tl + new Vector2(tlCorner * Width, 0f));
-        points.Add(tl + new Vector2(0f, tlCorner * Height));
-        
-        var bl = BottomLeft;
-        blCorner = ShapeMath.Clamp(blCorner, 0f, 1f);
-        points.Add(bl - new Vector2(0f, blCorner * Height));
-        points.Add(bl + new Vector2(blCorner * Width, 0f));
-        
-        var br = BottomRight;
-        brCorner = ShapeMath.Clamp(brCorner, 0f, 1f);
-        points.Add(br - new Vector2(brCorner * Width, 0f));
-        points.Add(br - new Vector2(0f, brCorner * Height));
-        
-        var tr = TopRight;
-        trCorner = ShapeMath.Clamp(trCorner, 0f, 1f);
-        points.Add(tr + new Vector2(0f, trCorner * Height));
-        points.Add(tr - new Vector2(trCorner * Width, 0f));
-        
-        return points;
     }
     #endregion
 
@@ -586,7 +576,31 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <returns>A <see cref="Points"/> object containing the random points on the rectangle's edge.</returns>
     public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
+    /// <summary>
+    /// Gets a random triangle contained inside this rectangle.
+    /// Attempts up to 100 random samples of three points inside the rectangle and returns the first triangle
+    /// whose area is greater than <paramref name="minArea"/>. If <paramref name="minArea"/> is greater than or
+    /// equal to half the rectangle area or sampling fails, a fallback triangle formed by the rect's left edge
+    /// (TopLeft, BottomLeft, BottomRight) is returned.
+    /// </summary>
+    /// <param name="minArea">Minimum required triangle area. Defaults to 1e-6f.</param>
+    /// <returns>A <see cref="Triangle"/> that lies inside the rectangle.</returns>
+    public Triangle GetRandomTriangleInside(float minArea = 1e-6f)
+    {
+        const int maxAttempts = 100;
+        if(minArea >= GetArea() * 0.5f) return new Triangle(TopLeft, BottomLeft, BottomRight);
+        for (int i = 0; i < maxAttempts; i++)
+        {
+            var a = GetRandomPointInside();
+            var b = GetRandomPointInside();
+            var c = GetRandomPointInside();
 
+            float area = MathF.Abs((b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y)) * 0.5f;
+            if (area > minArea) return new Triangle(a, b, c);
+        }
+
+        return new Triangle(TopLeft, BottomLeft, BottomRight);
+    }
     #endregion
     
     #region Corners

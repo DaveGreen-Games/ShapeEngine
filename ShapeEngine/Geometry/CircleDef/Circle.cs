@@ -729,5 +729,66 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     
     #endregion
     
+    
+    /// <summary>
+    /// Converts an arc length on a circle to the corresponding central angle in radians.
+    /// </summary>
+    /// <param name="arcLength">The length of the arc along the circle's circumference.</param>
+    /// <param name="radius">The radius of the circle. Must be greater than zero.</param>
+    /// <param name="normalize">If <c>true</c>, the returned angle is normalized into the range \[0, 2\*π). If <c>false</c>, the raw angle (arcLength / radius) is returned.</param>
+    /// <returns>The angle in radians corresponding to the given arc length.</returns>
+    /// <exception cref="System.ArgumentException">Thrown when <paramref name="radius"/> is less than or equal to zero.</exception>
+    public static float ArcLengthToAngle(float arcLength, float radius, bool normalize = true)
+    {
+        if (radius <= 0f) throw new ArgumentException("radius must be > 0", nameof(radius));
+        float theta = arcLength / radius;
+        if (normalize)
+        {
+            float twoPi = 2f * MathF.PI;
+            theta %= twoPi;
+            if (theta < 0f) theta += twoPi;
+        }
+        return theta;
+    }
+    
+    /// <summary>
+    /// Converts an angle (in radians) to the corresponding arc length on a circle with the specified radius.
+    /// </summary>
+    /// <param name="angleRad">Angle in radians.</param>
+    /// <param name="radius">Radius of the circle. Must be greater than zero.</param>
+    /// <param name="normalize">If <c>true</c>, the angle is normalized into the range [0, 2π) before computing the arc length.</param>
+    /// <returns>The arc length on the circle corresponding to <paramref name="angleRad"/>.</returns>
+    public static float ArcLengthFromAngle(float angleRad, float radius, bool normalize = true)
+    {
+        if (radius <= 0f) throw new ArgumentException("radius must be > 0", nameof(radius));
+        float theta = angleRad;
+        if (normalize)
+        {
+            float twoPi = 2f * MathF.PI;
+            theta %= twoPi;
+            if (theta < 0f) theta += twoPi;
+        }
+        return radius * theta;
+    }
+    /// <summary>
+    /// Converts an angle in radians to the corresponding arc length on this circle using its <see cref="Radius"/>.
+    /// </summary>
+    /// <param name="angleRad">Angle in radians.</param>
+    /// <returns>The arc length along the circle corresponding to <paramref name="angleRad"/>.</returns>
+    public float GetArcLengthFromAngle(float angleRad)
+    {
+        return ArcLengthFromAngle(angleRad, Radius);
+    }
+    /// <summary>
+    /// Converts an arc length along this circle to the corresponding central angle in radians.
+    /// </summary>
+    /// <param name="arcLength">The length of the arc along the circle.</param>
+    /// <returns>The angle in radians corresponding to the provided arc length.</returns>
+    /// <exception cref="System.ArgumentException">Thrown when this circle's <see cref="Radius"/> is less than or equal to zero.</exception>
+    public float GetAngleFromArcLength(float arcLength)
+    {
+        return ArcLengthToAngle(arcLength, Radius);
+    }
+    
 }
 

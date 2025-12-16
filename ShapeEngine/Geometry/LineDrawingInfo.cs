@@ -103,6 +103,19 @@ public readonly struct LineDrawingInfo
     /// </summary>
     /// <param name="thickness">The thickness of the line.</param>
     /// <param name="color">The color of the line.</param>
+    /// <param name="capPoints">The number of cap points to use.</param>
+    public LineDrawingInfo(float thickness, ColorRgba color, int capPoints)
+    {
+        Thickness = MathF.Max(thickness, LineMinThickness);
+        Color = color;
+        CapType = LineCapType.None;
+        CapPoints = capPoints;
+    }
+    /// <summary>
+    /// Creates a new line drawing info.
+    /// </summary>
+    /// <param name="thickness">The thickness of the line.</param>
+    /// <param name="color">The color of the line.</param>
     /// <param name="capType">The line cap type.</param>
     /// <param name="capPoints">The amount of points for the cap.</param>
     public LineDrawingInfo(float thickness, ColorRgba color, LineCapType capType, int capPoints)
@@ -113,6 +126,7 @@ public readonly struct LineDrawingInfo
         CapPoints = capPoints;
     }
 
+    
     /// <summary>
     /// Creates a new line drawing info with a new thickness.
     /// </summary>

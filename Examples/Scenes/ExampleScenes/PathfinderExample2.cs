@@ -996,7 +996,7 @@ public class PathfinderExample2 : ExampleScene
                 outerBoundary.DrawLines(thickness, outerColor);
             }
             
-            CircleDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba);
+            CircleDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba, 0f, 8f);
             // ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), Chaser.MaxPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
         }
 

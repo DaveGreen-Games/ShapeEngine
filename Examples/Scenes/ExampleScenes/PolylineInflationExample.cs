@@ -221,7 +221,7 @@ namespace Examples.Scenes.ExampleScenes
             if (drawClosest) CircleDrawing.DrawCircle(closest.Point, vertexRadius, Colors.Warm);
 
             Polygons? inflatedPolygons = null;
-            if (lerpOffsetDelta > 10f)
+            if (lerpOffsetDelta > 10f && polyline.Count > 1)
             {
                 inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
                 foreach (var polygon in inflatedPolygons)

@@ -34,6 +34,7 @@ public readonly partial struct Rect
     /// <param name="scale">The uniform scale factor.</param>
     /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the scaled size.</returns>
+    /// <remarks> Use a negative scale value to mirror the rect.</remarks>
     public Rect ScaleSize(float scale, AnchorPoint alignment) => new(GetPoint(alignment), Size * scale, alignment);
 
     /// <summary>
@@ -42,6 +43,7 @@ public readonly partial struct Rect
     /// <param name="scale">The scale factor for width and height.</param>
     /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the scaled size.</returns>
+    /// <remarks> Use negative scale values to mirror the rect.</remarks>
     public Rect ScaleSize(Vector2 scale, AnchorPoint alignment) => new(GetPoint(alignment), Size * scale, alignment);
 
     /// <summary>
@@ -49,6 +51,7 @@ public readonly partial struct Rect
     /// </summary>
     /// <param name="newSize">The new size for the rectangle.</param>
     /// <returns>A new rectangle with the specified size.</returns>
+    /// <remarks>Use negative size values to mirror the rect.</remarks>
     public Rect SetSize(Size newSize) => new(TopLeft, newSize);
 
     /// <summary>
@@ -436,5 +439,6 @@ public readonly partial struct Rect
         return Clamp(new Rect(min, max));
     }
 
+    
     #endregion
 }
