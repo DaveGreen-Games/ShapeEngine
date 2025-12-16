@@ -119,8 +119,7 @@ public partial class Game
             ResolveDeferred();
 
             Input.EndFrame();
-
-
+            
             if (targetFps > 0)
             {
                 long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
@@ -140,12 +139,11 @@ public partial class Game
                     // Divide by 10_000 to convert nanoseconds to an approximate number of SpinWait iterations.
                     // This value was empirically determined to balance CPU usage and timing accuracy.
                     Thread.SpinWait((int)(remainingNanoSec / 10_000L));
+                    Thread.Yield();
                     elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
                     remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
-                    Thread.Yield();
                 }
             }
-            
         }
     }
 
