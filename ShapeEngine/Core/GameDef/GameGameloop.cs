@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
@@ -9,6 +10,29 @@ public partial class Game
 {
     private List<ScreenTexture>? customScreenTexturesDrawBefore;
     private List<ScreenTexture>? customScreenTexturesDrawAfter;
+
+    private double frameDelta;
+    private int fps;
+    private long frameDeltaNanoSeconds;
+    
+    /// <summary>
+    /// Gets the current frames per second (FPS) calculated from the latest frame delta.
+    /// </summary>
+    /// <value>Frames per second as an integer. Updated each frame.</value>
+    public int FramesPerSecond => fps;
+    
+    /// <summary>
+    /// Gets the elapsed time in seconds for the most recent frame.
+    /// </summary>
+    /// <value>Frame delta time in seconds. Updated each frame and used for time-based updates.</value>
+    public double FrameDelta => frameDelta;
+    
+    /// <summary>
+    /// Gets the elapsed time in nanoseconds for the most recent frame.
+    /// </summary>
+    /// <value>Frame delta time in nanoseconds. Updated each frame and useful for high-resolution timing and profiling.</value>
+    public long FrameDeltaNanoSeconds => frameDeltaNanoSeconds;
+    
     
     private void StartGameloop()
     {
@@ -25,15 +49,36 @@ public partial class Game
 
     private void RunGameloop()
     {
+        Stopwatch frameWatch = new();
+        
+        // Start the stopwatch before the loop to prevent a 0 delta on the first frame.
+        // A 0 delta would cause division by zero in FPS calculation and could break game logic that depends on delta time.
+        frameWatch.Start();
+        long frequency = Stopwatch.Frequency;
+        const long  nanoSecPerSecond = 1000L * 1000L * 1000L;
+        const long nanoSecPerMilliSec = 1000L * 1000L;
+        long nanosecPerTick = nanoSecPerSecond / frequency;
+        
         while (!quit)
         {
+            frameDeltaNanoSeconds = frameWatch.ElapsedTicks * nanosecPerTick;
+            frameDelta = frameDeltaNanoSeconds / (double)nanoSecPerSecond;
+            
+            // Clamp frameDelta to a small minimum to avoid division by zero or extremely large FPS values
+            const double minFrameDelta = 1e-6;
+            double safeFrameDelta = frameDelta < minFrameDelta ? minFrameDelta : frameDelta;
+            fps = (int)Math.Ceiling(1.0 / safeFrameDelta);
+            
+            frameWatch.Restart();
+            int targetFps = Window.TargetFps;
+            
             if (Raylib.WindowShouldClose())
             {
                 Quit();
                 continue;
             }
 
-            var dt = Raylib.GetFrameTime();
+            var dt = (float)frameDelta;
             Time = Time.TickF(dt);
 
             Window.Update(dt);
@@ -82,6 +127,34 @@ public partial class Game
             ResolveDeferred();
 
             Input.EndFrame();
+            
+            if (targetFps > 0)
+            {
+                long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                long totalFrameTimeNanoSec = nanoSecPerSecond / targetFps;
+                long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                
+                long msToWait = remainingNanoSec / nanoSecPerMilliSec;
+                if (msToWait > 1)
+                {
+                    // Subtract 1 millisecond to account for OS scheduling imprecision and ensure we don't overshoot the target frame time.
+                    Thread.Sleep((int)(msToWait - 1));
+                }
+                elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                
+                while (remainingNanoSec > 0)
+                {
+                    // Divide by 10_000 to convert nanoseconds to an approximate number of SpinWait iterations.
+                    // This value was empirically determined to balance CPU usage and timing accuracy.
+                    // Needs more testing on other platforms, cpu architectures, and operating systems. (MacOS M2 works well)
+                    Thread.SpinWait((int)(remainingNanoSec / 10_000L));
+                    Thread.Yield();
+                    
+                    elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                    remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                }
+            }
         }
     }
 

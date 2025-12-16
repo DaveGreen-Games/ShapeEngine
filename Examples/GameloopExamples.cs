@@ -404,10 +404,7 @@ public class GameloopExamples : Game
         }
         
         FontDefault = GetFont(FontIDs.JetBrains);
-
-        Window.FpsLimit = 60;
-        Window.VSync = false;
-
+        
         fpsLabel = new(FontDefault, Colors.PcCold, Colors.PcText, Colors.PcHighlight);
         
         paletteInfoBox = new();
