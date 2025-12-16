@@ -68,11 +68,6 @@ public sealed class GameWindow
         /// Indicates whether the window allows mouse pass-through.
         /// </summary>
         public readonly bool MousePassThrough;
-
-        // /// <summary>
-        // /// Indicates whether VSync is enabled for the window.
-        // /// </summary>
-        // public readonly bool VSync;
         
         /// <summary>
         /// Gets the current window configuration flags from Raylib.
@@ -99,7 +94,6 @@ public sealed class GameWindow
             Focused = value;
             AlwaysRun = value;
             MousePassThrough = value;
-            // VSync = value;
             Minimized = value;
             Maximized = value;
             Fullscreen = value;
@@ -117,7 +111,6 @@ public sealed class GameWindow
             Focused = !Raylib.IsWindowState(ConfigFlags.UnfocusedWindow);
             AlwaysRun = Raylib.IsWindowState(ConfigFlags.AlwaysRunWindow);
             MousePassThrough = Raylib.IsWindowState(ConfigFlags.MousePassthroughWindow);
-            // VSync = Raylib.IsWindowState(ConfigFlags.VSyncHint);
             Minimized = Raylib.IsWindowState(ConfigFlags.MinimizedWindow);
             Maximized = Raylib.IsWindowState(ConfigFlags.MaximizedWindow);
             Fullscreen = Raylib.IsWindowFullscreen();
@@ -136,8 +129,6 @@ public sealed class GameWindow
         public bool HasAlwaysRunChanged(WindowConfigFlags other) => AlwaysRun != other.AlwaysRun;
         /// <summary>Checks if the MousePassThrough flag has changed compared to another instance.</summary>
         public bool HasMousePassThroughChanged(WindowConfigFlags other) => MousePassThrough != other.MousePassThrough;
-        // /// <summary>Checks if the VSync flag has changed compared to another instance.</summary>
-        // public bool HasVSyncChanged(WindowConfigFlags other) => VSync != other.VSync;
         /// <summary>Checks if the Minimized flag has changed compared to another instance.</summary>
         public bool HasMinimizedChanged(WindowConfigFlags other) => Minimized != other.Minimized;
         /// <summary>Checks if the Maximized flag has changed compared to another instance.</summary>
@@ -335,10 +326,11 @@ public sealed class GameWindow
 
     /// <summary>
     /// Gets or sets the minimum allowed framerate for the application.
+    /// To allow an unlimited frame rate, <see cref="MinFramerate"/> has to be set to 0, <see cref="FpsLimit"/> has to be set to 0, and <see cref="VSync"/> has to be false.
     /// </summary>
     /// <remarks>
     /// - Negative values are clamped to 0.
-    /// - If the new minimum is greater than or equal to <see cref="MaxFramerate"/>,
+    /// - If the new minimum is greater than <see cref="MaxFramerate"/>,
     ///   the previous <see cref="MaxFramerate"/> will be assigned to <see cref="MinFramerate"/>
     ///   and <see cref="MaxFramerate"/> will be set to the provided value (effectively swapping).
     /// - When the <see cref="FpsLimit"/> is lower than the new minimum, <see cref="FpsLimit"/>
@@ -351,7 +343,7 @@ public sealed class GameWindow
         {
             if (value == minFramerate) return;
             if (value < 0) minFramerate = 0;
-            else if (value >= maxFramerate)
+            else if (value > maxFramerate)
             {
                 minFramerate = maxFramerate;
                 maxFramerate = value;
@@ -363,10 +355,11 @@ public sealed class GameWindow
     }
     /// <summary>
     /// Gets or sets the maximum allowed framerate for the application.
+    /// If set to 0 frame rate will be unlimited when <see cref="VSync"/> is disabled.
     /// </summary>
     /// <remarks>
     /// - Negative values are clamped to 0.
-    /// - If the provided value is less than or equal to <see cref="MinFramerate"/>,
+    /// - If the provided value is less than <see cref="MinFramerate"/>,
     ///   the previous <see cref="MinFramerate"/> will be assigned to <see cref="MaxFramerate"/>
     ///   and <see cref="MinFramerate"/> will be set to the provided value (effectively swapping).
     /// - When <see cref="FpsLimit"/> is greater than the new maximum, <see cref="FpsLimit"/>
@@ -378,8 +371,19 @@ public sealed class GameWindow
         set
         {
             if (value == maxFramerate) return;
-            if (value < 0) maxFramerate = 0;
-            else if (value <= minFramerate)
+            if (value < 0)
+            {
+                if (minFramerate > 0)
+                {
+                    maxFramerate = minFramerate;
+                    minFramerate = 0;
+                }
+                else
+                {
+                    maxFramerate = 0;
+                }
+            }
+            else if (value < minFramerate)
             {
                 maxFramerate = minFramerate;
                 minFramerate = value;
@@ -391,7 +395,8 @@ public sealed class GameWindow
     }
     
     /// <summary>
-    /// Gets or sets the frames-per-second limit used when VSync is disabled.
+    /// Gets or sets the frames-per-second limit used when VSync is disabled. 0 means unlimited.
+    /// <see cref="MinFramerate"/> has to be set to 0 and <see cref="VSync"/> has to be false to allow an unlimited frame rate.
     /// </summary>
     /// <remarks>
     /// Value is clamped to the current <see cref="MinFramerate"/> and <see cref="MaxFramerate"/> range.
@@ -427,16 +432,26 @@ public sealed class GameWindow
     /// If VSync is enabled, the target framerate will be set to the current monitor's refresh rate (<see cref="MonitorInfo.Refreshrate"/>).
     /// Otherwise, the target framerate will be set to <see cref="FpsLimit"/>.
     /// </summary>
+    /// <remarks>
+    /// VSync is only enabled if the monitor has a valid refresh rate greater than 0.
+    /// VSync synchronizes the application's framerate with the monitor's refresh rate to prevent screen tearing.
+    /// </remarks>
     public bool VSync
     {
-        get => vsync; // Raylib.IsWindowState(ConfigFlags.VSyncHint);
+        get => vsync;
         set
         {
             if (vsync == value) return;
             if (value)
             {
-                vsync = true;
-                TargetFps = Monitor.CurMonitor().Refreshrate;
+                
+                int refreshRate = Monitor.CurMonitor().Refreshrate;
+                //Only enable VSync if the monitor has a valid refresh rate
+                if (refreshRate > 0)
+                {
+                    vsync = true;
+                    TargetFps = refreshRate;
+                }
             }
             else
             {
@@ -505,8 +520,7 @@ public sealed class GameWindow
         if(windowSettings.Msaa4x) Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
         if(windowSettings.HighDPI) Raylib.SetConfigFlags(ConfigFlags.HighDpiWindow);
         if(windowSettings.FramebufferTransparent) Raylib.SetConfigFlags(ConfigFlags.TransparentWindow);
-
-        // Raylib.InitWindow(windowSettings.WindowMinSize.Width, windowSettings.WindowMinSize.Height, windowSettings.Title);
+        
         Raylib.InitWindow(0,0, windowSettings.Title);//sets autoiconify to false until my changes are in raylib cs
         Raylib.SetWindowOpacity(0f);
 
@@ -517,16 +531,11 @@ public sealed class GameWindow
 
         Raylib.SetWindowState(ConfigFlags.AlwaysRunWindow);
 
-        // if (windowSettings.Focused)
-        // {
-        //     Raylib.ClearWindowState(ConfigFlags.UnfocusedWindow);
-        // }
-        // else Raylib.SetWindowState(ConfigFlags.UnfocusedWindow);
-
         if (windowSettings.Topmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
 
         FullscreenAutoRestoring = windowSettings.FullscreenAutoRestoring;
         
+        //Setup frame rate variables and vsync directly bypassing getters and setters to avoid logic errors on startup.
         vsync = windowSettings.Vsync;
         minFramerate = windowSettings.MinFramerate;
         maxFramerate = windowSettings.MaxFramerate;
@@ -541,13 +550,22 @@ public sealed class GameWindow
         
         if (vsync)
         {
-            TargetFps = Monitor.CurMonitor().Refreshrate;
+            int monitorRefreshRate = Monitor.CurMonitor().Refreshrate;
+            // Validate refresh rate; fallback to fpsLimit
+            if (monitorRefreshRate > 0)
+            {
+                TargetFps = monitorRefreshRate;
+            }
+            else
+            {
+                TargetFps = fpsLimit;
+                vsync = false;
+            }
         }
         else
         {
             TargetFps = fpsLimit;
         }
-
         
         switch (windowSettings.WindowBorder)
         {
@@ -588,8 +606,16 @@ public sealed class GameWindow
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         windowConfigFlags = WindowConfigFlags.Get();
         
-        // Prevent raylib from capping fps - ShapeEngine now handles frame limiting manually in the game loop for better accuracy
-        Raylib.SetTargetFPS(0);
+        
+        // Rationale: ShapeEngine handles frame limiting manually in the game loop for improved timing accuracy and frame pacing.
+        // Raylib's built-in frame limiter (SetTargetFPS) can introduce inconsistent frame pacing and timing inaccuracies.
+        // By implementing a custom frame limiter, ShapeEngine can:
+        //   - Achieve more precise control over frame timing and delta time calculations.
+        //   - Ensure consistent frame pacing across different platforms and hardware.
+        //   - Integrate frame limiting with the engine's own timing, update, and rendering logic.
+        //   - Avoid issues where Raylib's limiter may not synchronize well with vsync or system timers.
+        // For these reasons, we disable Raylib's frame limiting by setting the target FPS to 0, and rely on our own implementation.
+        Raylib.SetTargetFPS(0); // Prevent Raylib from capping FPS.
         
         Instance = this;
     }
