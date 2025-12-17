@@ -324,95 +324,24 @@ public sealed class GameWindow
     /// </summary>
     public WindowBorder WindowBorder { get; private set; }
 
+    /// <summary>
+    /// If enabled the FPS limiter will dynamically adjust the frame rate limit based on performance.
+    /// If an <see cref="FpsLimit"/> is set (whether through <see cref="VSync"/> with a valid monitor refresh rate or manually),
+    /// the adaptive limiter will try to keep the frame rate close to that limit and reduce the limit if performance drops.
+    /// If no <see cref="FpsLimit"/> is set (0 = unlimited), the adaptive limiter will try to keep the frame rate between its configured minimum and maximum limits,
+    /// trying to reach the maximum limit when possible and never going below the minimum limit.
+    /// </summary>
+    /// <remarks>
+    /// Can be enabled or disabled through <see cref="AdaptiveFpsLimiter.Enabled"/> at any time.
+    /// </remarks>
     public AdaptiveFpsLimiter AdaptiveFpsLimiter { get; private set; }
     
-    //Note: Automatic capping just uses the current TargetFps
-    // - works with vsync on and of, and with TargetFps <= 0 or > 0
-    // - when TargetFps is set to a value other than 0, then system tries to stay at that target or it goes lower but never higher
-    // - when TargetFps is set to 0, then system tries to reach max frame rate but never goes below min frame rate or above max frame rate (both min and max are set in the AdaptiveFpsLimiter)
-    // - AdaptiveFpsLimiter can be enabled or disabled
-    
-    //Todo: Update window settings to include adaptive fps limiter settings
-    
-    
-    //TODO: Remove Min and Max Framerate (also from window settings)
-    /// <summary>
-    /// Gets or sets the minimum allowed framerate for the application.
-    /// To allow an unlimited frame rate, <see cref="MinFramerate"/> has to be set to 0, <see cref="FpsLimit"/> has to be set to 0, and <see cref="VSync"/> has to be false.
-    /// </summary>
-    /// <remarks>
-    /// - Negative values are clamped to 0.
-    /// - If the new minimum is greater than <see cref="MaxFramerate"/>,
-    ///   the previous <see cref="MaxFramerate"/> will be assigned to <see cref="MinFramerate"/>
-    ///   and <see cref="MaxFramerate"/> will be set to the provided value (effectively swapping).
-    /// - When the <see cref="FpsLimit"/> is lower than the new minimum, <see cref="FpsLimit"/>
-    ///   is adjusted to match the new minimum.
-    /// </remarks>
-    public int MinFramerate
-    {
-        get => minFramerate;
-        set
-        {
-            if (value == minFramerate) return;
-            if (value < 0) minFramerate = 0;
-            else if (value > maxFramerate)
-            {
-                minFramerate = maxFramerate;
-                maxFramerate = value;
-            }
-            else minFramerate = value;
-
-            if (FpsLimit < minFramerate) fpsLimit = minFramerate;
-        }
-    }
-    
-    /// <summary>
-    /// Gets or sets the maximum allowed framerate for the application.
-    /// If set to 0 frame rate will be unlimited when <see cref="VSync"/> is disabled.
-    /// </summary>
-    /// <remarks>
-    /// - Negative values are clamped to 0.
-    /// - If the provided value is less than <see cref="MinFramerate"/>,
-    ///   the previous <see cref="MinFramerate"/> will be assigned to <see cref="MaxFramerate"/>
-    ///   and <see cref="MinFramerate"/> will be set to the provided value (effectively swapping).
-    /// - When <see cref="FpsLimit"/> is greater than the new maximum, <see cref="FpsLimit"/>
-    ///   is adjusted to match the new maximum to maintain consistency.
-    /// </remarks>
-    public int MaxFramerate
-    {
-        get => maxFramerate;
-        set
-        {
-            if (value == maxFramerate) return;
-            if (value < 0)
-            {
-                if (minFramerate > 0)
-                {
-                    maxFramerate = minFramerate;
-                    minFramerate = 0;
-                }
-                else
-                {
-                    maxFramerate = 0;
-                }
-            }
-            else if (value < minFramerate)
-            {
-                maxFramerate = minFramerate;
-                minFramerate = value;
-            }
-            else maxFramerate = value;
-
-            if (FpsLimit > maxFramerate) fpsLimit = maxFramerate;
-        }
-    }
     
     /// <summary>
     /// Gets or sets the frames-per-second limit used when VSync is disabled. 0 means unlimited.
-    /// <see cref="MinFramerate"/> has to be set to 0 and <see cref="VSync"/> has to be false to allow an unlimited frame rate.
+    /// <see cref="VSync"/> has to be false to allow an unlimited frame rate.
     /// </summary>
     /// <remarks>
-    /// Value is clamped to the current <see cref="MinFramerate"/> and <see cref="MaxFramerate"/> range.
     /// When VSync is disabled, assigning to this property will update <see cref="TargetFps"/> accordingly.
     /// </remarks>
     public int FpsLimit
@@ -420,9 +349,7 @@ public sealed class GameWindow
         get => fpsLimit;
         set
         {
-            if (value < MinFramerate) fpsLimit = MinFramerate;
-            else if (value > MaxFramerate) fpsLimit = MaxFramerate;
-            else fpsLimit = value;
+            fpsLimit = value < 0 ? 0 : value;
             if(!VSync) TargetFps = fpsLimit;
         }
     }
@@ -502,8 +429,6 @@ public sealed class GameWindow
 
     private Vector2 osxWindowScaleDpi;
     private int fpsLimit;
-    private int minFramerate;
-    private int maxFramerate;
     private bool vsync;
     private int targetFps;
     private Dimensions windowSize = new();
@@ -550,17 +475,8 @@ public sealed class GameWindow
         
         //Setup frame rate variables and vsync directly bypassing getters and setters to avoid logic errors on startup.
         vsync = windowSettings.Vsync;
-        AdaptiveFpsLimiter = new(30, 240, true);//TODO: use settings for setup
-        minFramerate = windowSettings.MinFramerate;
-        maxFramerate = windowSettings.MaxFramerate;
-        if (minFramerate < 0) minFramerate = 0;
-        if (maxFramerate < 0) maxFramerate = 0;
-        if (minFramerate > maxFramerate)
-        {
-            (minFramerate, maxFramerate) = (maxFramerate, minFramerate);
-        }
-
-        fpsLimit = ShapeMath.Clamp(windowSettings.FrameRateLimit, minFramerate, maxFramerate);
+        AdaptiveFpsLimiter = new(windowSettings.AdaptiveFpsLimiterSettings);
+        fpsLimit = ShapeMath.MaxInt(windowSettings.FrameRateLimit, 0);
         
         if (vsync)
         {

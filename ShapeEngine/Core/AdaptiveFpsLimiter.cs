@@ -2,21 +2,33 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core;
 
-public struct AdaptiveFpsLimiterSettings
-{
-    
-}
+
 public sealed class AdaptiveFpsLimiter
 {
-    private ValueRangeInt limit;
+    public readonly struct Settings
+    {
+        public readonly bool Enabled;
+        public readonly int MinFps;
+        public readonly int MaxFps;
+
+        public Settings(int minFps, int maxFps, bool enabled)
+        {
+            Enabled = enabled;
+            MinFps = minFps;
+            MaxFps = maxFps;
+        }
+    }
+    
+    public ValueRangeInt Limit { get; private set; }
     public double TargetFps { get; private set; }
     public bool Enabled { get; set; }
     
-    public AdaptiveFpsLimiter(int minFps, int maxFps, bool enabled)
+    
+    public AdaptiveFpsLimiter(Settings settings)
     {
-        limit = new ValueRangeInt(minFps, maxFps);
-        TargetFps = minFps;
-        Enabled = enabled;
+        Limit = new ValueRangeInt(settings.MinFps, settings.MaxFps);
+        TargetFps = Limit.Min;
+        Enabled = settings.Enabled;
     }
     
     

@@ -20,8 +20,7 @@ public struct WindowSettings
     /// Monitor = 0,
     /// Vsync = false,
     /// FrameRateLimit = 60,
-    /// MinFramerate = 30,
-    /// MaxFramerate = 240,
+    /// AdaptiveFpsLimiterSettings = new(30, 240, true),
     /// WindowOpacity = 1f,
     /// MouseEnabled = true,
     /// MouseVisible = true,
@@ -40,8 +39,7 @@ public struct WindowSettings
         Monitor = 0,
         Vsync = false,
         FrameRateLimit = 60,
-        MinFramerate = 30,
-        MaxFramerate = 240,
+        AdaptiveFpsLimiterSettings = new(30, 240, true),
         WindowOpacity = 1f,
         MouseEnabled = true,
         MouseVisible = true,
@@ -93,19 +91,15 @@ public struct WindowSettings
     public bool Vsync;
     
     /// <summary>
-    /// The target frame rate limit for the application.
+    /// The target frame rate limit for the application. 0 or less means unlimited frame rate.
     /// </summary>
     public int FrameRateLimit;
     
     /// <summary>
-    /// The minimum acceptable frame rate for the application.
+    /// Settings for the adaptive FPS limiter which dynamically adjusts the frame cap.
+    /// Contains minimum and maximum target frame rates and whether adaptive limiting is enabled.
     /// </summary>
-    public int MinFramerate;
-    
-    /// <summary>
-    /// The maximum allowed frame rate for the application.
-    /// </summary>
-    public int MaxFramerate;
+    public AdaptiveFpsLimiter.Settings AdaptiveFpsLimiterSettings;
     
     /// <summary>
     /// The opacity of the window, ranging from 0.0 (completely transparent) to 1.0 (completely opaque).
