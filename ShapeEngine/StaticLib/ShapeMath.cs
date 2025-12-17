@@ -39,6 +39,98 @@ public static class ShapeMath
     /// A small constant value used for floating-point comparisons to account for precision errors (float version).
     /// </summary>
     public const float EpsilonF = 1e-10f;
+    /// <summary>
+    /// Number of nanoseconds in one second.
+    /// </summary>
+    /// <remarks>
+    /// 1 second = 1,000,000,000 nanoseconds.
+    /// </remarks>
+    public const long  NanoSecondsInOneSecond = 1000L * 1000L * 1000L;
+    /// <summary>
+    /// Number of nanoseconds in one millisecond.
+    /// </summary>
+    /// <remarks>
+    /// 1 millisecond = 1,000,000 nanoseconds.
+    /// </remarks>
+    public const long NanoSecondsInOneMilliSecond = 1000L * 1000L;
+    /// <summary>
+    /// Number of milliseconds in one second.
+    /// </summary>
+    /// <remarks>
+    /// 1 second = 1,000 milliseconds.
+    /// </remarks>
+    public const long MilliSecondsInOneSecond = 1000L;
+    #endregion
+    
+    #region Time
+    
+    /// <summary>
+    /// Converts nanoseconds to seconds.
+    /// </summary>
+    /// <param name="nanoseconds">The number of nanoseconds.</param>
+    /// <returns>The equivalent time in seconds as a <see cref="double"/>.</returns>
+    public static double NanoSecondsToSeconds(long nanoseconds)
+    {
+        return nanoseconds / (double)NanoSecondsInOneSecond;
+    }
+
+    /// <summary>
+    /// Converts seconds to nanoseconds.
+    /// </summary>
+    /// <param name="seconds">The time in seconds.</param>
+    /// <returns>The equivalent time in nanoseconds as a <see cref="long"/>.</returns>
+    /// <remarks>
+    /// Fractional nanoseconds are truncated when casting to <see cref="long"/> and large values may overflow
+    /// </remarks>
+    public static long SecondsToNanoSeconds(double seconds)
+    {
+        return (long)(seconds * NanoSecondsInOneSecond);
+    }
+
+    /// <summary>
+    /// Converts milliseconds to seconds.
+    /// </summary>
+    /// <param name="milliseconds">The number of milliseconds.</param>
+    /// <returns>The equivalent time in seconds as a <see cref="double"/>.</returns>
+    public static double MilliSecondsToSeconds(long milliseconds)
+    {
+        return milliseconds / (double)MilliSecondsInOneSecond;
+    }
+
+    /// <summary>
+    /// Converts seconds to milliseconds.
+    /// </summary>
+    /// <param name="seconds">The time in seconds.</param>
+    /// <returns>The equivalent time in milliseconds as a <see cref="long"/>.</returns>
+    /// <remarks>
+    /// Fractional milliseconds are truncated when casting to <see cref="long"/> and large values may overflow.
+    /// </remarks>
+    public static long SecondsToMilliSeconds(double seconds)
+    {
+        return (long)(seconds * MilliSecondsInOneSecond);
+    }
+
+    /// <summary>
+    /// Converts milliseconds to nanoseconds.
+    /// </summary>
+    /// <param name="milliseconds">The number of milliseconds.</param>
+    /// <returns>The equivalent time in nanoseconds as a <see cref="long"/>.
+    /// This is an exact integer multiplication and may overflow for very large input values.</returns>
+    public static long MilliSecondsToNanoSeconds(long milliseconds)
+    {
+        return milliseconds * NanoSecondsInOneMilliSecond;
+    }
+
+    /// <summary>
+    /// Converts nanoseconds to milliseconds.
+    /// </summary>
+    /// <param name="nanoseconds">The number of nanoseconds.</param>
+    /// <returns>The equivalent time in milliseconds as a <see cref="long"/> (integer division).</returns>
+    public static long NanoSecondsToMilliSeconds(long nanoseconds)
+    {
+        return nanoseconds / NanoSecondsInOneMilliSecond;
+    }
+    
     #endregion
     
     #region Round
