@@ -324,6 +324,18 @@ public sealed class GameWindow
     /// </summary>
     public WindowBorder WindowBorder { get; private set; }
 
+    public AdaptiveFpsLimiter AdaptiveFpsLimiter { get; private set; }
+    
+    //Note: Automatic capping just uses the current TargetFps
+    // - works with vsync on and of, and with TargetFps <= 0 or > 0
+    // - when TargetFps is set to a value other than 0, then system tries to stay at that target or it goes lower but never higher
+    // - when TargetFps is set to 0, then system tries to reach max frame rate but never goes below min frame rate or above max frame rate (both min and max are set in the AdaptiveFpsLimiter)
+    // - AdaptiveFpsLimiter can be enabled or disabled
+    
+    //Todo: Update window settings to include adaptive fps limiter settings
+    
+    
+    //TODO: Remove Min and Max Framerate (also from window settings)
     /// <summary>
     /// Gets or sets the minimum allowed framerate for the application.
     /// To allow an unlimited frame rate, <see cref="MinFramerate"/> has to be set to 0, <see cref="FpsLimit"/> has to be set to 0, and <see cref="VSync"/> has to be false.
@@ -353,6 +365,7 @@ public sealed class GameWindow
             if (FpsLimit < minFramerate) fpsLimit = minFramerate;
         }
     }
+    
     /// <summary>
     /// Gets or sets the maximum allowed framerate for the application.
     /// If set to 0 frame rate will be unlimited when <see cref="VSync"/> is disabled.
@@ -537,6 +550,7 @@ public sealed class GameWindow
         
         //Setup frame rate variables and vsync directly bypassing getters and setters to avoid logic errors on startup.
         vsync = windowSettings.Vsync;
+        AdaptiveFpsLimiter = new(30, 240, true);//TODO: use settings for setup
         minFramerate = windowSettings.MinFramerate;
         maxFramerate = windowSettings.MaxFramerate;
         if (minFramerate < 0) minFramerate = 0;
