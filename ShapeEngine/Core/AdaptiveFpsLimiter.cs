@@ -1,4 +1,5 @@
 using ShapeEngine.Core.Structs;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core;
 
@@ -20,8 +21,23 @@ public sealed class AdaptiveFpsLimiter
     }
     
     public ValueRangeInt Limit { get; private set; }
-    public double TargetFps { get; private set; }
+    public int TargetFps { get; private set; }
     public bool Enabled { get; set; }
+    
+    //TODO: add some of the variables to settings
+    private double cooldownTimer = 0.0;
+    private double cooldownDuration = 2.0;
+    private double additionalCooldownDuration = 0.0;
+    
+    
+    private int consecutiveFasterChecks = 0;
+    private int consecutiveSlowerChecks = 0;
+    private int requiredConsecutiveChecks = 6;
+    
+    // private float limitingWeight = 0.5f;
+    
+    private int frameReductionStep = 5;
+    private int criticalFrameReductionStep = 30;
     
     
     public AdaptiveFpsLimiter(Settings settings)
@@ -47,31 +63,102 @@ public sealed class AdaptiveFpsLimiter
     // - if there is no remaining time, lower the frame rate
     // - if there is more remaining time than tolerance (1ms for instance), try to raise the frame rate
     
-    //TODO: Figure out formula to calculate target frame time / target frame rate
-    
-    public int Update(int targetFrameRate, double frameTimeMs, double frameDeltaMs)
+    private bool IsCooldownActive => cooldownTimer > 0.0;
+    private void StartCooldown()
     {
+        cooldownTimer = cooldownDuration + additionalCooldownDuration;
+    }
+    private void StopCooldown()
+    {
+        cooldownTimer = 0.0;
+    }
+    
+    public int Update(int targetFrameRate, double frameTime, double frameDelta)
+    {
+        //TODO: add to settings?
+        const double milliSecondTolerance = 1.25 / 1000.0; //1.25ms tolerance
         if(!Enabled)
         {
             TargetFps = targetFrameRate;
             return targetFrameRate;
         }
+        
+        if(cooldownTimer > 0.0)
+        {
+            cooldownTimer -= frameDelta;
+            if(cooldownTimer < 0.0) cooldownTimer = 0.0;
+        }
+        
+        double totalFrameTime = 1.0 / TargetFps;
+        double remainingFrameTime = totalFrameTime - frameTime;
 
         if (targetFrameRate > 0)
         {
-            //TODO: implement
-            TargetFps = targetFrameRate;
-            return targetFrameRate;
+            if (remainingFrameTime <= 0.0 || remainingFrameTime < milliSecondTolerance)//reduce fps
+            {
+                bool critical = remainingFrameTime <= 0.0;
+                consecutiveSlowerChecks += critical ? 2 : 1;
+                consecutiveFasterChecks = 0;
+                
+                if (consecutiveSlowerChecks >= requiredConsecutiveChecks)
+                {
+                    consecutiveSlowerChecks = 0;
+                    StartCooldown();
+
+                    if (critical)
+                    {
+                        TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - criticalFrameReductionStep);
+                    }
+                    else
+                    {
+                        TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - frameReductionStep);
+                    }
+                }
+                
+                return TargetFps;
+            }
+            
+            double targetFrameTime = 1.0 / targetFrameRate;
+            if (frameTime + milliSecondTolerance * 2 < targetFrameTime)//raise fps
+            {
+                consecutiveFasterChecks += 1;
+                consecutiveSlowerChecks = 0;
+                if (!IsCooldownActive &&  consecutiveFasterChecks >= requiredConsecutiveChecks)
+                {
+                    consecutiveFasterChecks = 0;
+
+                    double newFrameTime = frameTime + milliSecondTolerance;
+                    int newFps = ShapeMath.MinInt(targetFrameRate, (int)Math.Round(1.0 / newFrameTime));
+                    TargetFps = newFps;
+                    return newFps;
+                }
+            }
+            
+            //steady -> hold fps
+            return TargetFps;
         }
         else
         {
+            //TODO: implement
             
+            // if (remainingFrameTime > milliSecondTolerance * 2)//raise fps
+            // {
+            //     consecutiveFasterChecks += 1;
+            //     consecutiveSlowerChecks = 0;
+            //     if (!IsCooldownActive &&  consecutiveFasterChecks >= requiredConsecutiveChecks)
+            //     {
+            //         consecutiveFasterChecks = 0;
+            //
+            //         double newFrameTime = frameTime + milliSecondTolerance;
+            //         int newFps = ShapeMath.MaxInt(Limit.Max, (int)Math.Round(1.0 / newFrameTime));
+            //         TargetFps = newFps;
+            //         return newFps;
+            //     }
+            //     TargetFps = targetFrameRate;
+            //     return targetFrameRate;
+            // }
+
         }
-        
-        
-        
-        
-        
         
         TargetFps = targetFrameRate;
         return targetFrameRate;

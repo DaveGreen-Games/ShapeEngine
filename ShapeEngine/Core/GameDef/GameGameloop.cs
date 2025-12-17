@@ -65,8 +65,6 @@ public partial class Game
         // A 0 delta would cause division by zero in FPS calculation and could break game logic that depends on delta time.
         frameWatch.Start();
         long frequency = Stopwatch.Frequency;
-        // const long  nanoSecPerSecond = 1000L * 1000L * 1000L;
-        // const long nanoSecPerMilliSec = 1000L * 1000L;
         long nanosecPerTick = ShapeMath.NanoSecondsInOneSecond / frequency;
         
         while (!quit)
@@ -137,18 +135,25 @@ public partial class Game
 
             Input.EndFrame();
             
+            int targetFps = Window.TargetFps;
             long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
-            FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);//  elapsedNanoSec / (double)nanoSecPerSecond;
-
-            int targetFps = Window.AdaptiveFpsLimiter.Update(Window.TargetFps, FrameTime, FrameDelta);
+            long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
+            long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+            
+            FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
+            
+            int newTargetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta);
+            
+            if (newTargetFps != targetFps)
+            {
+                targetFps = newTargetFps;
+                totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
+                remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+            }
             
             if (targetFps > 0)
             {
-                
-                long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
-                long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
-
-                long msToWait = ShapeMath.NanoSecondsToMilliSeconds(remainingNanoSec); //  remainingNanoSec / nanoSecPerMilliSec;
+                long msToWait = ShapeMath.NanoSecondsToMilliSeconds(remainingNanoSec);
                 if (msToWait > 1)
                 {
                     // Subtract 1 millisecond to account for OS scheduling imprecision and ensure we don't overshoot the target frame time.
