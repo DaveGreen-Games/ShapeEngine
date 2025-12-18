@@ -301,6 +301,77 @@ public static class ShapeMath
 
     #endregion
     
+    #region Double
+    /// <summary>
+    /// Performs linear interpolation between two double values.
+    /// </summary>
+    /// <param name="from">The starting value.</param>
+    /// <param name="to">The target value.</param>
+    /// <param name="f">The interpolation factor (0 to 1).</param>
+    /// <returns>The interpolated value.</returns>
+    public static double LerpDouble(double from, double to, double f) => (1.0f - f) * from + to * f;
+    /// <summary>
+    /// Calculates the normalized interpolation factor for a value between two doubles.
+    /// </summary>
+    /// <param name="from">The starting value.</param>
+    /// <param name="to">The target value.</param>
+    /// <param name="value">The value to evaluate.</param>
+    /// <returns>The normalized interpolation factor.</returns>
+    public static double LerpInverseDouble(double from, double to, double value)
+    {
+        return (value - from) / (to - from);
+    }
+    /// <summary>
+    /// Remaps a value from one double range to another using linear interpolation.
+    /// </summary>
+    /// <param name="value">The value to remap.</param>
+    /// <param name="minOld">The minimum of the old range.</param>
+    /// <param name="maxOld">The maximum of the old range.</param>
+    /// <param name="minNew">The minimum of the new range.</param>
+    /// <param name="maxNew">The maximum of the new range.</param>
+    /// <returns>The remapped value.</returns>
+    public static double RemapDouble(double value, double minOld, double maxOld, double minNew, double maxNew)
+    {
+        return LerpDouble(minNew, maxNew, LerpInverseDouble(minOld, maxOld, value));
+    }
+    
+    /// <summary>
+    /// Performs a framerate-independent interpolation using Math.Pow. More expensive than exponential decay lerp.
+    /// </summary>
+    /// <param name="from">The starting value.</param>
+    /// <param name="to">The target value.</param>
+    /// <param name="remainder">Fraction remaining after 1 second.</param>
+    /// <param name="dt">Delta time in seconds.</param>
+    /// <returns>The interpolated value.</returns>
+    public static double PowLerpDouble(double from, double to, double remainder, double dt) => to + (from - to) * Math.Pow(remainder, dt);
+    
+    /// <summary>
+    /// Performs a framerate-independent exponential decay interpolation (cheaper than PowLerp).
+    /// </summary>
+    /// <param name="from">The starting value.</param>
+    /// <param name="to">The target value.</param>
+    /// <param name="decay">Decay rate (recommended between 1 and 25).</param>
+    /// <param name="dt">Delta time in seconds.</param>
+    /// <returns>The interpolated value.</returns>
+    public static double ExpDecayLerpDoubleComplex(double from, double to, double decay, double dt) => to + (from - to) * Math.Exp(-decay * dt);
+
+    /// <summary>
+    /// Performs a framerate-independent exponential decay interpolation with a normalized fraction.
+    /// </summary>
+    /// <param name="from">The starting value.</param>
+    /// <param name="to">The target value.</param>
+    /// <param name="f">Normalized fraction (0 to 1).</param>
+    /// <param name="dt">Delta time in seconds.</param>
+    /// <returns>The interpolated value.</returns>
+    public static double ExpDecayLerpDouble(double from, double to, double f, double dt)
+    {
+        double decay = LerpDouble(1, 25, f);
+        return ExpDecayLerpDoubleComplex(from, to, decay, dt);
+    }
+
+    
+    #endregion
+    
     #region Lerp
     
     /// <summary>
