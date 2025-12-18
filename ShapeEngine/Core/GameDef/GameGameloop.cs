@@ -137,25 +137,18 @@ public partial class Game
             
             int targetFps = Window.TargetFps;
             long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
-            long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
-            long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
             
             FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
             
             if (Window.AdaptiveFpsLimiter.Enabled)
             {
-                int newTargetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta);
-            
-                if (newTargetFps != targetFps)
-                {
-                    targetFps = newTargetFps;
-                    totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
-                    remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
-                }
+                targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta);
             }
             
             if (targetFps > 0)
             {
+                long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
+                long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
                 long msToWait = ShapeMath.NanoSecondsToMilliSeconds(remainingNanoSec);
                 if (msToWait > 1)
                 {
