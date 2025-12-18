@@ -8,10 +8,19 @@ public sealed class AdaptiveFpsLimiter
 {
     public readonly struct Settings
     {
+        public static readonly Settings Default = new(30, 120, true);
+        public static readonly Settings Disabled = new(30, 120, false);
+        
         public readonly bool Enabled;
         public readonly int MinFps;
         public readonly int MaxFps;
 
+        public Settings()
+        {
+            Enabled = false;
+            MinFps = 30;
+            MaxFps = 120;
+        }
         public Settings(int minFps, int maxFps, bool enabled)
         {
             Enabled = enabled;
@@ -38,7 +47,13 @@ public sealed class AdaptiveFpsLimiter
     
     private int frameReductionStep = 5;
     private int criticalFrameReductionStep = 30;
+
+
+    private int consectiveSlowDowns = 0;
+    private int requiredConsectiveSlowDownsForExtraCooldown = 2;
+    private float consecutiveSlowDownAdditionalCooldown = 1f;
     
+    private double milliSecondTolerance = 1.25 / 1000.0; //1.25ms tolerance
     
     public AdaptiveFpsLimiter(Settings settings)
     {
@@ -48,11 +63,11 @@ public sealed class AdaptiveFpsLimiter
     }
     
     
+    
     //NOTE: Uses raise cooldown timer
     // - when fps has been lowered, it cannot be raised again until the cooldown timer expires
     // - once the cooldown timer expires, fps can be raised again
     // - implement a system that increases the cooldown timer duration based on how often fps is lowered recently? (eg. exponential backoff) - successful raises reduce the cooldown timer duration back to normal
-    
     
     //NOTE: should try to find a frame rate that uses up almost all the frame time budget (around 1ms left of frame time budget)
     // - if target frame rate <= 0 -> unlimited frame rate tries to reach max frame rate and never goes below min frame rate
@@ -62,6 +77,8 @@ public sealed class AdaptiveFpsLimiter
     //NOTE: Use the remaining frame time as target
     // - if there is no remaining time, lower the frame rate
     // - if there is more remaining time than tolerance (1ms for instance), try to raise the frame rate
+    
+    
     
     private bool IsCooldownActive => cooldownTimer > 0.0;
     private void StartCooldown()
@@ -75,8 +92,6 @@ public sealed class AdaptiveFpsLimiter
     
     public int Update(int targetFrameRate, double frameTime, double frameDelta)
     {
-        //TODO: add to settings?
-        const double milliSecondTolerance = 1.25 / 1000.0; //1.25ms tolerance
         if(!Enabled)
         {
             TargetFps = targetFrameRate;
@@ -89,20 +104,30 @@ public sealed class AdaptiveFpsLimiter
             if(cooldownTimer < 0.0) cooldownTimer = 0.0;
         }
         
-        double totalFrameTime = 1.0 / TargetFps;
-        double remainingFrameTime = totalFrameTime - frameTime;
+        double targetFrameTime = 1.0 / TargetFps;
 
         if (targetFrameRate > 0)
         {
-            if (remainingFrameTime <= 0.0 || remainingFrameTime < milliSecondTolerance)//reduce fps
+            //TODO: Test with console write line if cooldowns and everything else works as intended
+            
+            if(targetFrameTime <= frameTime + milliSecondTolerance)//reduce fps
             {
-                bool critical = remainingFrameTime <= 0.0;
+                // bool critical = remainingFrameTime <= 0.0;
+                bool critical = targetFrameTime <= frameTime;
                 consecutiveSlowerChecks += critical ? 2 : 1;
                 consecutiveFasterChecks = 0;
                 
                 if (consecutiveSlowerChecks >= requiredConsecutiveChecks)
                 {
                     consecutiveSlowerChecks = 0;
+                    
+                    consectiveSlowDowns += 1;
+                    if (consectiveSlowDowns >= requiredConsectiveSlowDownsForExtraCooldown)
+                    {
+                        consectiveSlowDowns = 0;
+                        additionalCooldownDuration += consecutiveSlowDownAdditionalCooldown; //increase additional cooldown duration by 1 second
+                    }
+                    
                     StartCooldown();
 
                     if (critical)
@@ -118,19 +143,26 @@ public sealed class AdaptiveFpsLimiter
                 return TargetFps;
             }
             
-            double targetFrameTime = 1.0 / targetFrameRate;
-            if (frameTime + milliSecondTolerance * 2 < targetFrameTime)//raise fps
+            //raise fps
+            if (targetFrameTime > frameTime + milliSecondTolerance * 2)
             {
                 consecutiveFasterChecks += 1;
                 consecutiveSlowerChecks = 0;
                 if (!IsCooldownActive &&  consecutiveFasterChecks >= requiredConsecutiveChecks)
                 {
                     consecutiveFasterChecks = 0;
+                    consectiveSlowDowns = 0;
+                    
+                    additionalCooldownDuration -= consecutiveSlowDownAdditionalCooldown; //decrease additional cooldown duration by 1 second
+                    if (additionalCooldownDuration < 0.0) additionalCooldownDuration = 0.0;
 
-                    double newFrameTime = frameTime + milliSecondTolerance;
-                    int newFps = ShapeMath.MinInt(targetFrameRate, (int)Math.Round(1.0 / newFrameTime));
-                    TargetFps = newFps;
-                    return newFps;
+                    if (TargetFps < targetFrameRate)
+                    {
+                        double newFrameTime = frameTime + milliSecondTolerance;
+                        int newFps = ShapeMath.MinInt(targetFrameRate, (int)Math.Round(1.0 / newFrameTime));
+                        TargetFps = newFps;
+                        return newFps;
+                    }
                 }
             }
             
@@ -169,7 +201,9 @@ public sealed class AdaptiveFpsLimiter
 
 
 
-
+// double totalFrameTime = 1.0 / TargetFps;
+// double remainingFrameTime = totalFrameTime - frameTime;
+// if (remainingFrameTime <= 0.0 || remainingFrameTime < milliSecondTolerance)//reduce fps
 
 
 /*public sealed class AdaptiveFpsLimiter
