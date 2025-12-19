@@ -4,6 +4,7 @@ using ShapeEngine.StaticLib;
 namespace ShapeEngine.Core;
 
 
+
 public sealed class AdaptiveFpsLimiter
 {
     #region Settings
@@ -94,7 +95,7 @@ public sealed class AdaptiveFpsLimiter
     public ValueRangeInt Limit
     {
         get => limit;
-        set
+        private set
         {
             limit = value;
             if (TargetFps < limit.Min) TargetFps = limit.Min;
@@ -102,15 +103,15 @@ public sealed class AdaptiveFpsLimiter
         } 
     }
     
-    public bool Enabled { get; set; }
-    public double RaiseFpsCooldownDuration { get; set; }
-    public int RequiredConsecutiveChecks { get; set; }
-    public float FasterFrameTimeAverageWeight { get; set; }
-    public int FramerateReductionStep { get; set; }
-    public int CriticalFramerateReductionStep { get; set; }
-    public int RequiredConsecutiveExtraCooldownChecks { get; set; }
-    public double FrameTimeTolerance { get; set; }
-    public float RaiseFpsAdditionalCooldownDuration { get; set; }
+    public bool Enabled { get; private set; }
+    public double RaiseFpsCooldownDuration { get; private set; }
+    public int RequiredConsecutiveChecks { get; private set; }
+    public float FasterFrameTimeAverageWeight { get; private set; }
+    public int FramerateReductionStep { get; private set; }
+    public int CriticalFramerateReductionStep { get; private set; }
+    public int RequiredConsecutiveExtraCooldownChecks { get; private set; }
+    public double FrameTimeTolerance { get; private set; }
+    public float RaiseFpsAdditionalCooldownDuration { get; private set; }
     
     #endregion
     
@@ -122,17 +123,30 @@ public sealed class AdaptiveFpsLimiter
     
     private int consecutiveFasterChecks;
     private int consecutiveSlowerChecks;
-    private int consectiveSlowDowns;
+    private int consecutiveSlowDowns;
     
     private double fasterFrameTimeAccumulator;
+    #endregion
+    
+    #region Static Members
+    public static readonly int MinFpsLimit = 1;
+    public static readonly int MaxFpsLimit = int.MaxValue;
     #endregion
     
     #region Constructor
     
     public AdaptiveFpsLimiter(Settings settings)
     {
-        Limit = new ValueRangeInt(settings.MinFps, settings.MaxFps);
-        TargetFps = Limit.Min;
+        int min = settings.MinFps;
+        int max = settings.MaxFps;
+        if(min < MinFpsLimit) min = MinFpsLimit;
+        if(max < MaxFpsLimit) max = MaxFpsLimit;
+        if (min > max)
+        {
+            (min, max) = (max, min);
+        }
+        
+        Limit = new ValueRangeInt(min, max); //TargetFps will be clamped to new limits in setter
         Enabled = settings.Enabled;
         RaiseFpsCooldownDuration = settings.RaiseFpsCooldownDuration;
         RequiredConsecutiveChecks = settings.RequiredConsecutiveChecks;
@@ -161,6 +175,8 @@ public sealed class AdaptiveFpsLimiter
             if(cooldownTimer < 0.0) cooldownTimer = 0.0;
         }
         
+        
+        if(TargetFps <= 0) TargetFps = Limit.Min;
         double targetFrameTime = 1.0 / TargetFps;
         
         if(targetFrameTime <= frameTime + FrameTimeTolerance)//reduce fps
@@ -173,10 +189,10 @@ public sealed class AdaptiveFpsLimiter
             {
                 consecutiveSlowerChecks = 0;
                 
-                consectiveSlowDowns += 1;
-                if (consectiveSlowDowns >= RequiredConsecutiveExtraCooldownChecks)
+                consecutiveSlowDowns += 1;
+                if (consecutiveSlowDowns >= RequiredConsecutiveExtraCooldownChecks)
                 {
-                    consectiveSlowDowns = 0;
+                    consecutiveSlowDowns = 0;
                     additionalCooldownDuration += RaiseFpsAdditionalCooldownDuration; //increase additional cooldown duration by 1 second
                 }
                 
@@ -207,18 +223,19 @@ public sealed class AdaptiveFpsLimiter
                 
                 fasterFrameTimeAccumulator = 0.0;
                 consecutiveFasterChecks = 0;
-                consectiveSlowDowns = 0;
+                consecutiveSlowDowns = 0;
                 
                 additionalCooldownDuration -= RaiseFpsAdditionalCooldownDuration; //decrease additional cooldown duration by 1 second
                 if (additionalCooldownDuration < 0.0) additionalCooldownDuration = 0.0;
 
-                int target = targetFrameRate > 0 ? targetFrameRate : Limit.Max;
+                int target = targetFrameRate > 0 ? targetFrameRate > Limit.Max ? Limit.Max : targetFrameRate : Limit.Max;
                 
                 if (TargetFps < target)
                 {
                     double weightedAverageFasterFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight);
                     double newFrameTime = weightedAverageFasterFrameTime + FrameTimeTolerance;
                     int newFps = ShapeMath.MinInt(target, (int)Math.Round(1.0 / newFrameTime));
+                    
                     TargetFps = newFps;
                     return newFps;
                 }
@@ -230,7 +247,16 @@ public sealed class AdaptiveFpsLimiter
 
     public bool ChangeSettings(Settings newSettings)
     {
-        Limit = new ValueRangeInt(newSettings.MinFps, newSettings.MaxFps); //TargetFps will be clamped to new limits in setter
+        int min = newSettings.MinFps;
+        int max = newSettings.MaxFps;
+        if(min < MinFpsLimit) min = MinFpsLimit;
+        if(max < MaxFpsLimit) max = MaxFpsLimit;
+        if (min > max)
+        {
+            (min, max) = (max, min);
+        }
+        
+        Limit = new ValueRangeInt(min, max); //TargetFps will be clamped to new limits in setter
         
         Enabled = newSettings.Enabled;
         RaiseFpsCooldownDuration = newSettings.RaiseFpsCooldownDuration;
@@ -242,7 +268,19 @@ public sealed class AdaptiveFpsLimiter
         RaiseFpsAdditionalCooldownDuration = newSettings.RaiseFpsAdditionalCooldownDuration;
         FrameTimeTolerance = newSettings.Tolerance;
 
+        ResetState();
+        
         return true;
+    }
+    
+    public void SetEnabled(bool enabled)
+    {
+        if(Enabled == enabled) return;
+        Enabled = enabled;
+        if (!Enabled)
+        {
+            ResetState();
+        }
     }
     #endregion
     
@@ -255,6 +293,15 @@ public sealed class AdaptiveFpsLimiter
     private void StopCooldown()
     {
         cooldownTimer = 0.0;
+    }
+    private void ResetState()
+    {
+        consecutiveFasterChecks = 0;
+        consecutiveSlowerChecks = 0;
+        consecutiveSlowDowns = 0;
+        fasterFrameTimeAccumulator = 0.0;
+        additionalCooldownDuration = 0.0;
+        StopCooldown();
     }
     #endregion
 }
