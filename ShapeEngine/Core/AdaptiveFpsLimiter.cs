@@ -17,7 +17,7 @@ public sealed class AdaptiveFpsLimiter
             5, 30, 2,
             1f, 1.25f);
         
-        public static readonly Settings NoExtraCooldown = new(
+        public static readonly Settings NoAdditionalCooldown = new(
             true, 30, 120,
             2.0, 6, 0.5f,
             5, 30, 0,
@@ -29,16 +29,16 @@ public sealed class AdaptiveFpsLimiter
             framerateReduction, criticalFramerateReduction, 2,
             1f, 1.25f);
         
-        public static Settings Advanced(int minFps = 30, int maxFps = 120, 
-            double raiseFpsCooldownDuration = 2.0, int requiredConsecutiveChecks = 6, float fasterFrameTimeAverageWeight = 0.5f,
-            int framerateReduction = 5, int criticalFramerateReduction = 30,
-            int requiredConsectiveExtraCooldownChecks = 2, float additionalCooldown = 1f,
-            float millisecondTolerance = 1.25f) => new(
-            true, minFps, maxFps,
-            raiseFpsCooldownDuration, requiredConsecutiveChecks, fasterFrameTimeAverageWeight,
-            framerateReduction, criticalFramerateReduction,
-            requiredConsectiveExtraCooldownChecks, additionalCooldown,
-            millisecondTolerance);
+        public static Settings Advanced(int minFps = 30, int maxFps = 120, double raiseFpsCooldownDuration = 2.0, int requiredConsecutiveChecks = 6, 
+            float fasterFrameTimeAverageWeight = 0.5f, int framerateReduction = 5, int criticalFramerateReduction = 30,
+            int requiredConsectiveExtraCooldownChecks = 2, float additionalCooldown = 1f, float millisecondTolerance = 1.25f) => new
+            (
+                true, minFps, maxFps,
+                raiseFpsCooldownDuration, requiredConsecutiveChecks, fasterFrameTimeAverageWeight,
+                framerateReduction, criticalFramerateReduction,
+                requiredConsectiveExtraCooldownChecks, additionalCooldown,
+                millisecondTolerance
+            );
         
         public readonly bool Enabled;
         public readonly int MinFps;
@@ -48,8 +48,8 @@ public sealed class AdaptiveFpsLimiter
         public readonly float FasterFrameTimeAverageWeight; //weight for averaging frame time when raising fps (0.0 = only average, 1.0 = only current)
         public readonly int FramerateReduction; //by how much to reduce fps on each adjustment
         public readonly int CriticalFramerateReduction; //by how much to reduce fps on each critical adjustment
-        public readonly int RequiredConsectiveExtraCooldownChecks; //how many consecutive slow down adjustments are required to add extra cooldown
-        public readonly float AdditionalCooldown; //extra cooldown duration added on each consecutive slow down adjustment
+        public readonly int RequiredConsecutiveExtraCooldownChecks; //how many consecutive slow down adjustments are required to add extra cooldown
+        public readonly float RaiseFpsAdditionalCooldownDuration; //extra cooldown duration added on each consecutive slow down adjustment
         public readonly double Tolerance;//Frame Time tolerance in seconds, makes the limiter less sensitive to minor fluctuations
         
         
@@ -63,14 +63,14 @@ public sealed class AdaptiveFpsLimiter
             FasterFrameTimeAverageWeight = 0.5f;
             FramerateReduction = 5;
             CriticalFramerateReduction = 30;
-            RequiredConsectiveExtraCooldownChecks = 2;
-            AdditionalCooldown = 1f;
+            RequiredConsecutiveExtraCooldownChecks = 2;
+            RaiseFpsAdditionalCooldownDuration = 1f;
             Tolerance = 1.25 / 1000.0;
         }
         private Settings(bool enabled, int minFps, int maxFps,
             double raiseFpsCooldownDuration, int requiredConsecutiveChecks,float fasterFrameTimeAverageWeight, 
             int framerateReduction, int criticalFramerateReduction,
-            int requiredConsectiveExtraCooldownChecks, float additionalCooldown, 
+            int requiredConsecutiveExtraCooldownChecks, float raiseFpsAdditionalCooldownDuration, 
             float millisecondTolerance)
         {
             Enabled = enabled;
@@ -81,38 +81,50 @@ public sealed class AdaptiveFpsLimiter
             FasterFrameTimeAverageWeight = fasterFrameTimeAverageWeight;
             FramerateReduction = framerateReduction;
             CriticalFramerateReduction = criticalFramerateReduction;
-            RequiredConsectiveExtraCooldownChecks = requiredConsectiveExtraCooldownChecks;
-            AdditionalCooldown = additionalCooldown;
+            RequiredConsecutiveExtraCooldownChecks = requiredConsecutiveExtraCooldownChecks;
+            RaiseFpsAdditionalCooldownDuration = raiseFpsAdditionalCooldownDuration;
             Tolerance = millisecondTolerance / 1000.0;
         }
     }
     #endregion
     
     #region Public Members
-    public ValueRangeInt Limit { get; private set; }
     public int TargetFps { get; private set; }
-    public bool Enabled { get; set; }
     
-    private double cooldownDuration = 2.0;
-    private int requiredConsecutiveChecks = 6;
-    private float fasterFrameTimeAverageWeight = 0.5f;
-    private int frameReductionStep = 5;
-    private int criticalFrameReductionStep = 30;
-    private int requiredConsectiveSlowDownsForExtraCooldown = 2;
-    private double milliSecondTolerance = 1.25 / 1000.0; //1.25ms tolerance
-    private float consecutiveSlowDownAdditionalCooldown = 1f;
+    public ValueRangeInt Limit
+    {
+        get => limit;
+        set
+        {
+            limit = value;
+            if (TargetFps < limit.Min) TargetFps = limit.Min;
+            else if (TargetFps > limit.Max) TargetFps = limit.Max;
+        } 
+    }
+    
+    public bool Enabled { get; set; }
+    public double RaiseFpsCooldownDuration { get; set; }
+    public int RequiredConsecutiveChecks { get; set; }
+    public float FasterFrameTimeAverageWeight { get; set; }
+    public int FramerateReductionStep { get; set; }
+    public int CriticalFramerateReductionStep { get; set; }
+    public int RequiredConsecutiveExtraCooldownChecks { get; set; }
+    public double FrameTimeTolerance { get; set; }
+    public float RaiseFpsAdditionalCooldownDuration { get; set; }
     
     #endregion
     
     #region Private Members
-    private double cooldownTimer = 0.0;
-    private double additionalCooldownDuration = 0.0;
+
+    private ValueRangeInt limit;
+    private double cooldownTimer;
+    private double additionalCooldownDuration;
     
-    private int consecutiveFasterChecks = 0;
-    private int consecutiveSlowerChecks = 0;
-    private int consectiveSlowDowns = 0;
+    private int consecutiveFasterChecks;
+    private int consecutiveSlowerChecks;
+    private int consectiveSlowDowns;
     
-    private double fasterFrameTimeAccumulator = 0.0;
+    private double fasterFrameTimeAccumulator;
     #endregion
     
     #region Constructor
@@ -122,6 +134,14 @@ public sealed class AdaptiveFpsLimiter
         Limit = new ValueRangeInt(settings.MinFps, settings.MaxFps);
         TargetFps = Limit.Min;
         Enabled = settings.Enabled;
+        RaiseFpsCooldownDuration = settings.RaiseFpsCooldownDuration;
+        RequiredConsecutiveChecks = settings.RequiredConsecutiveChecks;
+        FasterFrameTimeAverageWeight = settings.FasterFrameTimeAverageWeight;
+        FramerateReductionStep = settings.FramerateReduction;
+        CriticalFramerateReductionStep = settings.CriticalFramerateReduction;
+        RequiredConsecutiveExtraCooldownChecks = settings.RequiredConsecutiveExtraCooldownChecks;
+        RaiseFpsAdditionalCooldownDuration = settings.RaiseFpsAdditionalCooldownDuration;
+        FrameTimeTolerance = settings.Tolerance;
     }
     #endregion
     
@@ -143,32 +163,32 @@ public sealed class AdaptiveFpsLimiter
         
         double targetFrameTime = 1.0 / TargetFps;
         
-        if(targetFrameTime <= frameTime + milliSecondTolerance)//reduce fps
+        if(targetFrameTime <= frameTime + FrameTimeTolerance)//reduce fps
         {
             bool critical = targetFrameTime <= frameTime;
             consecutiveSlowerChecks += critical ? 2 : 1;
             consecutiveFasterChecks = 0;
             fasterFrameTimeAccumulator = 0.0;
-            if (consecutiveSlowerChecks >= requiredConsecutiveChecks)
+            if (consecutiveSlowerChecks >= RequiredConsecutiveChecks)
             {
                 consecutiveSlowerChecks = 0;
                 
                 consectiveSlowDowns += 1;
-                if (consectiveSlowDowns >= requiredConsectiveSlowDownsForExtraCooldown)
+                if (consectiveSlowDowns >= RequiredConsecutiveExtraCooldownChecks)
                 {
                     consectiveSlowDowns = 0;
-                    additionalCooldownDuration += consecutiveSlowDownAdditionalCooldown; //increase additional cooldown duration by 1 second
+                    additionalCooldownDuration += RaiseFpsAdditionalCooldownDuration; //increase additional cooldown duration by 1 second
                 }
                 
                 StartCooldown();
 
                 if (critical)
                 {
-                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - criticalFrameReductionStep);
+                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - CriticalFramerateReductionStep);
                 }
                 else
                 {
-                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - frameReductionStep);
+                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - FramerateReductionStep);
                 }
             }
             
@@ -176,12 +196,12 @@ public sealed class AdaptiveFpsLimiter
         }
         
         //raise fps
-        if (targetFrameTime > frameTime + milliSecondTolerance * 2)
+        if (targetFrameTime > frameTime + FrameTimeTolerance * 2)
         {
             consecutiveFasterChecks += 1;
             consecutiveSlowerChecks = 0;
             fasterFrameTimeAccumulator += frameTime;
-            if (!IsCooldownActive &&  consecutiveFasterChecks >= requiredConsecutiveChecks)
+            if (!IsCooldownActive &&  consecutiveFasterChecks >= RequiredConsecutiveChecks)
             {
                 double averageFasterFrameTime = fasterFrameTimeAccumulator / consecutiveFasterChecks;
                 
@@ -189,15 +209,15 @@ public sealed class AdaptiveFpsLimiter
                 consecutiveFasterChecks = 0;
                 consectiveSlowDowns = 0;
                 
-                additionalCooldownDuration -= consecutiveSlowDownAdditionalCooldown; //decrease additional cooldown duration by 1 second
+                additionalCooldownDuration -= RaiseFpsAdditionalCooldownDuration; //decrease additional cooldown duration by 1 second
                 if (additionalCooldownDuration < 0.0) additionalCooldownDuration = 0.0;
 
                 int target = targetFrameRate > 0 ? targetFrameRate : Limit.Max;
                 
                 if (TargetFps < target)
                 {
-                    double weightedAverageFasterFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, fasterFrameTimeAverageWeight);
-                    double newFrameTime = weightedAverageFasterFrameTime + milliSecondTolerance;
+                    double weightedAverageFasterFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight);
+                    double newFrameTime = weightedAverageFasterFrameTime + FrameTimeTolerance;
                     int newFps = ShapeMath.MinInt(target, (int)Math.Round(1.0 / newFrameTime));
                     TargetFps = newFps;
                     return newFps;
@@ -207,13 +227,30 @@ public sealed class AdaptiveFpsLimiter
         //steady -> hold fps
         return TargetFps;
     }
+
+    public bool ChangeSettings(Settings newSettings)
+    {
+        Limit = new ValueRangeInt(newSettings.MinFps, newSettings.MaxFps); //TargetFps will be clamped to new limits in setter
+        
+        Enabled = newSettings.Enabled;
+        RaiseFpsCooldownDuration = newSettings.RaiseFpsCooldownDuration;
+        RequiredConsecutiveChecks = newSettings.RequiredConsecutiveChecks;
+        FasterFrameTimeAverageWeight = newSettings.FasterFrameTimeAverageWeight;
+        FramerateReductionStep = newSettings.FramerateReduction;
+        CriticalFramerateReductionStep = newSettings.CriticalFramerateReduction;
+        RequiredConsecutiveExtraCooldownChecks = newSettings.RequiredConsecutiveExtraCooldownChecks;
+        RaiseFpsAdditionalCooldownDuration = newSettings.RaiseFpsAdditionalCooldownDuration;
+        FrameTimeTolerance = newSettings.Tolerance;
+
+        return true;
+    }
     #endregion
     
     #region Helper Functions
     private bool IsCooldownActive => cooldownTimer > 0.0;
     private void StartCooldown()
     {
-        cooldownTimer = cooldownDuration + additionalCooldownDuration;
+        cooldownTimer = RaiseFpsCooldownDuration + additionalCooldownDuration;
     }
     private void StopCooldown()
     {
