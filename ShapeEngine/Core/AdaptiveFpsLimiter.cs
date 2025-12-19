@@ -88,7 +88,7 @@ public sealed class AdaptiveFpsLimiter
         /// </param>
         /// <param name="framerateReduction">FPS reduction applied on a normal slowdown (default 5).</param>
         /// <param name="criticalFramerateReduction">FPS reduction applied on a critical slowdown (default 30).</param>
-        /// <param name="requiredConsectiveExtraCooldownChecks">
+        /// <param name="requiredConsecutiveExtraCooldownChecks">
         /// Number of consecutive slow-down adjustments required to add extra raise-FPS cooldown (default 2).
         /// </param>
         /// <param name="additionalCooldown">Additional cooldown duration in seconds added per consecutive slowdowns (default 1f).</param>
@@ -96,12 +96,12 @@ public sealed class AdaptiveFpsLimiter
         /// <returns>A new <see cref="Settings"/> instance configured with the provided advanced values.</returns>
         public static Settings Advanced(int minFps = 30, int maxFps = 120, double raiseFpsCooldownDuration = 2.0, int requiredConsecutiveChecks = 6, 
             float fasterFrameTimeAverageWeight = 0.5f, int framerateReduction = 5, int criticalFramerateReduction = 30,
-            int requiredConsectiveExtraCooldownChecks = 2, float additionalCooldown = 1f, float millisecondTolerance = 1.25f) => new
+            int requiredConsecutiveExtraCooldownChecks = 2, float additionalCooldown = 1f, float millisecondTolerance = 1.25f) => new
             (
                 true, minFps, maxFps,
                 raiseFpsCooldownDuration, requiredConsecutiveChecks, fasterFrameTimeAverageWeight,
                 framerateReduction, criticalFramerateReduction,
-                requiredConsectiveExtraCooldownChecks, additionalCooldown,
+                requiredConsecutiveExtraCooldownChecks, additionalCooldown,
                 millisecondTolerance
             );
         
@@ -149,7 +149,7 @@ public sealed class AdaptiveFpsLimiter
         /// <summary>
         /// Frame time tolerance in seconds. Small fluctuations within this tolerance are ignored to reduce oscillation.
         /// This value is specified in milliseconds in the constructor and static factory methods
-        /// and internally  converted to seconds. (tolerance in milliseconds / 1000.0 = <see cref="Tolerance"/>)
+        /// and internally converted to seconds. (tolerance in milliseconds / 1000.0 = <see cref="Tolerance"/>)
         /// </summary>
         public readonly double Tolerance;
         
@@ -379,7 +379,7 @@ public sealed class AdaptiveFpsLimiter
         int min = settings.MinFps;
         int max = settings.MaxFps;
         if(min < MinFpsLimit) min = MinFpsLimit;
-        if(max < MaxFpsLimit) max = MaxFpsLimit;
+        if(max > MaxFpsLimit) max = MaxFpsLimit;
         if (min > max)
         {
             (min, max) = (max, min);
@@ -444,15 +444,9 @@ public sealed class AdaptiveFpsLimiter
                 }
                 
                 StartCooldown();
-
-                if (critical)
-                {
-                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - CriticalFramerateReductionStep);
-                }
-                else
-                {
-                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - FramerateReductionStep);
-                }
+                
+                TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - (critical ? CriticalFramerateReductionStep : FramerateReductionStep));
+                
             }
             
             return TargetFps;
@@ -475,12 +469,11 @@ public sealed class AdaptiveFpsLimiter
                 additionalCooldownDuration -= RaiseFpsAdditionalCooldownDuration; //decrease additional cooldown duration by 1 second
                 if (additionalCooldownDuration < 0.0) additionalCooldownDuration = 0.0;
 
-                int target = targetFrameRate > 0 ? targetFrameRate > Limit.Max ? Limit.Max : targetFrameRate : Limit.Max;
+                int target = targetFrameRate > 0 ? ShapeMath.MinInt(targetFrameRate, Limit.Max) : Limit.Max;
                 
                 if (TargetFps < target)
                 {
-                    double weightedAverageFasterFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight);
-                    double newFrameTime = weightedAverageFasterFrameTime + FrameTimeTolerance;
+                    double newFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight) + FrameTimeTolerance;
                     int newFps = ShapeMath.MinInt(target, (int)Math.Round(1.0 / newFrameTime));
                     
                     TargetFps = newFps;
@@ -507,7 +500,7 @@ public sealed class AdaptiveFpsLimiter
         int min = newSettings.MinFps;
         int max = newSettings.MaxFps;
         if(min < MinFpsLimit) min = MinFpsLimit;
-        if(max < MaxFpsLimit) max = MaxFpsLimit;
+        if(max > MaxFpsLimit) max = MaxFpsLimit;
         if (min > max)
         {
             (min, max) = (max, min);
