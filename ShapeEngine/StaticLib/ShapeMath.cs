@@ -309,7 +309,7 @@ public static class ShapeMath
     /// <param name="to">The target value.</param>
     /// <param name="f">The interpolation factor (0 to 1).</param>
     /// <returns>The interpolated value.</returns>
-    public static double LerpDouble(double from, double to, double f) => (1.0f - f) * from + to * f;
+    public static double LerpDouble(double from, double to, double f) => (1.0 - f) * from + to * f;
     /// <summary>
     /// Calculates the normalized interpolation factor for a value between two doubles.
     /// </summary>
