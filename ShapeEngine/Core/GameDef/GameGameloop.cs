@@ -3,6 +3,7 @@ using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Screen;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.GameDef;
 
@@ -33,7 +34,16 @@ public partial class Game
     /// <value>Frame delta time in nanoseconds. Updated each frame and useful for high-resolution timing and profiling.</value>
     public long FrameDeltaNanoSeconds => frameDeltaNanoSeconds;
     
-    
+    /// <summary>
+    /// Gets the time in milliseconds that the most recent frame took to complete.
+    /// </summary>
+    /// <remarks>
+    /// This value is updated each frame and represents the elapsed frame duration in
+    /// milliseconds. Use for profiling or UI display; prefer <see cref="FrameDelta"/> for
+    /// time-step calculations in seconds.
+    /// </remarks>
+    public double FrameTime { get; private set; }
+
     private void StartGameloop()
     {
         Input.Keyboard.OnButtonPressed += KeyboardButtonPressed;
@@ -55,14 +65,12 @@ public partial class Game
         // A 0 delta would cause division by zero in FPS calculation and could break game logic that depends on delta time.
         frameWatch.Start();
         long frequency = Stopwatch.Frequency;
-        const long  nanoSecPerSecond = 1000L * 1000L * 1000L;
-        const long nanoSecPerMilliSec = 1000L * 1000L;
-        long nanosecPerTick = nanoSecPerSecond / frequency;
+        long nanosecPerTick = ShapeMath.NanoSecondsInOneSecond / frequency;
         
         while (!quit)
         {
             frameDeltaNanoSeconds = frameWatch.ElapsedTicks * nanosecPerTick;
-            frameDelta = frameDeltaNanoSeconds / (double)nanoSecPerSecond;
+            frameDelta = frameDeltaNanoSeconds / (double)ShapeMath.NanoSecondsInOneSecond;
             
             // Clamp frameDelta to a small minimum to avoid division by zero or extremely large FPS values
             const double minFrameDelta = 1e-6;
@@ -70,7 +78,6 @@ public partial class Game
             fps = (int)Math.Ceiling(1.0 / safeFrameDelta);
             
             frameWatch.Restart();
-            int targetFps = Window.TargetFps;
             
             if (Raylib.WindowShouldClose())
             {
@@ -128,13 +135,21 @@ public partial class Game
 
             Input.EndFrame();
             
+            int targetFps = Window.TargetFps;
+            long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+            
+            FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
+            
+            if (Window.AdaptiveFpsLimiter.Enabled)
+            {
+                targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta);
+            }
+            
             if (targetFps > 0)
             {
-                long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
-                long totalFrameTimeNanoSec = nanoSecPerSecond / targetFps;
+                long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
                 long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
-                
-                long msToWait = remainingNanoSec / nanoSecPerMilliSec;
+                long msToWait = ShapeMath.NanoSecondsToMilliSeconds(remainingNanoSec);
                 if (msToWait > 1)
                 {
                     // Subtract 1 millisecond to account for OS scheduling imprecision and ensure we don't overshoot the target frame time.
