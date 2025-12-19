@@ -39,7 +39,7 @@ public struct WindowSettings
         Monitor = 0,
         Vsync = false,
         FrameRateLimit = 60,
-        AdaptiveFpsLimiterSettings = new(30, 240, true),
+        AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Default),
         WindowOpacity = 1f,
         MouseEnabled = true,
         MouseVisible = true,
