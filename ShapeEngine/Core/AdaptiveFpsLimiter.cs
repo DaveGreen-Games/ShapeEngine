@@ -113,6 +113,8 @@ public sealed class AdaptiveFpsLimiter
     public double FrameTimeTolerance { get; private set; }
     public float RaiseFpsAdditionalCooldownDuration { get; private set; }
     
+    
+    public double MaxRaiseFpsCooldownDuration => RaiseFpsCooldownDuration * 4f;
     #endregion
     
     #region Private Members
@@ -289,6 +291,9 @@ public sealed class AdaptiveFpsLimiter
     private void StartCooldown()
     {
         cooldownTimer = RaiseFpsCooldownDuration + additionalCooldownDuration;
+        
+        //limits the maximum cooldown duration to prevent excessively long cooldowns (e.g. due to many consecutive slow downs)
+        if(cooldownTimer > MaxRaiseFpsCooldownDuration) cooldownTimer = MaxRaiseFpsCooldownDuration;
     }
     private void StopCooldown()
     {
