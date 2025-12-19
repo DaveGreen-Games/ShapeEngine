@@ -35,11 +35,11 @@ public partial class Game
     public long FrameDeltaNanoSeconds => frameDeltaNanoSeconds;
     
     /// <summary>
-    /// Gets the time in milliseconds that the most recent frame took to complete.
+    /// Gets the time in seconds that the most recent frame took to complete.
     /// </summary>
     /// <remarks>
     /// This value is updated each frame and represents the elapsed frame duration in
-    /// milliseconds. Use for profiling or UI display; prefer <see cref="FrameDelta"/> for
+    /// seconds. Use for profiling or UI display; prefer <see cref="FrameDelta"/> for
     /// time-step calculations in seconds.
     /// </remarks>
     public double FrameTime { get; private set; }
