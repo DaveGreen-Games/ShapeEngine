@@ -408,8 +408,22 @@ public sealed class AdaptiveFpsLimiter
     /// <param name="frameTime">Measured frame time of the current frame in seconds.</param>
     /// <param name="frameDelta">Elapsed time since the last update in seconds (used to decrement cooldown timers).</param>
     /// <returns>The resulting target FPS after applying the adaptive limiter logic.</returns>
-    internal int Update(int targetFrameRate, double frameTime, double frameDelta)
+    internal int Update(int targetFrameRate, double frameTime, double frameDelta)//TODO: Add vsync mode parameter
     {
+        
+        //TODO: Now also adpats when certain vsync modes are active?
+        
+        //NOTE: All vsync modes that enabled adaptive fps limiter will only use descrete steps for limiting.
+        // - 120hz monitor with adaptive mode will try to reach 120 fps, if not possible will try 60 fps, then 30 fps, etc.
+        // - 60hz monitor with 2x adaptive mode will try to reach 120 fps, if not possible will try 60 fps, then 30 fps, etc.
+        // - The allowed steps will be 30, 60, 120, 240 (for standard hz monitors).
+        // - 30 will always be the minimum for adpative vsnc modes.
+        
+        //Q: Does it make sense to limit to fps limit with adaptive vsync modes?
+        //NOTE: Should still adhere to limit -> if adaptive quadruple on a 120hz monitor is bigger than max fps limit, find the lowest one allowed
+        // - The same goes for the minimum fps limit
+        
+        
         if(!Enabled)
         {
             TargetFps = targetFrameRate;
