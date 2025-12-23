@@ -7,6 +7,23 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core;
 
+
+//TODO: use this instead of the vsync boolean.
+//TODO: This allows fps limiter to adapt frame rate limit based on vsync mode. (It will try to reach target but can use steps in between if performance drops)
+//Q: Is Adaptive Half necessary? (Could make sense on high refresh rate monitors where half is still good)
+//Q: Better naming necessary?
+public enum VsyncMode
+{
+    Disabled, //no vsnyc (same as false right now)
+    Enabled, // will disable adaptive fps limiter (same as true right now)
+    Adaptive,  //will use adaptive fps limiter if enabled and will drop to half the monitor refresh rate if performance drops
+    AdaptiveHalf, //will use adaptive fps limiter if enabled and will drop to a quarter of the monitor refresh rate if performance drops (min is 30)
+    AdaptiveDouble, //will use adaptive fps limiter if enabled and will try to reach double the monitor refresh rate if possible
+    AdaptiveQuadruple //will use adaptive fps limiter if enabled and will try to reach quadruple the monitor refresh rate if possible
+    
+}
+
+
 /// <summary>
 /// Manages the main application window, including its state, size, position, monitor, framerate, and mouse/cursor behavior.
 /// Provides events for window and mouse state changes.
@@ -376,7 +393,7 @@ public sealed class GameWindow
     /// VSync is only enabled if the monitor has a valid refresh rate greater than 0.
     /// VSync synchronizes the application's framerate with the monitor's refresh rate to prevent screen tearing.
     /// </remarks>
-    public bool VSync
+    public bool VSync //TODO: Change this to VsyncMode
     {
         get => vsync;
         set

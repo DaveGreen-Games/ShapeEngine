@@ -140,9 +140,10 @@ public partial class Game
             
             FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
             
+            //TODO: check new vsync mode if fps limiter can be used
             if (Window.AdaptiveFpsLimiter.Enabled)
             {
-                targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta);
+                targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta);//TODO: Should recieve the current vsync modes
             }
             
             if (targetFps > 0)
