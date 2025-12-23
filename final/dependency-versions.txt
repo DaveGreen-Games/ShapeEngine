@@ -1,2 +1,2 @@
-Clipper2 1.5.4
+Clipper2 2.0.0
 Raylib-cs 7.0.2
