@@ -142,7 +142,7 @@ public partial class Game
             
             if (Window.AdaptiveFpsLimiter.Enabled)
             {
-                targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta);
+                targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta, Window.VSync);
             }
             
             if (targetFps > 0)
