@@ -407,23 +407,10 @@ public sealed class AdaptiveFpsLimiter
     /// <param name="targetFrameRate">Requested/desired target framerate from the engine (used as an upper bound when raising).</param>
     /// <param name="frameTime">Measured frame time of the current frame in seconds.</param>
     /// <param name="frameDelta">Elapsed time since the last update in seconds (used to decrement cooldown timers).</param>
+    /// <param name ="vsyncMode">Current VSync mode of the engine/window (affects adaptive limiting behavior).</param>
     /// <returns>The resulting target FPS after applying the adaptive limiter logic.</returns>
-    internal int Update(int targetFrameRate, double frameTime, double frameDelta)//TODO: Add vsync mode parameter
+    internal int Update(int targetFrameRate, double frameTime, double frameDelta, VsyncMode vsyncMode)
     {
-        
-        //TODO: Now also adpats when certain vsync modes are active?
-        
-        //NOTE: All vsync modes that enabled adaptive fps limiter will only use descrete steps for limiting.
-        // - 120hz monitor with adaptive mode will try to reach 120 fps, if not possible will try 60 fps, then 30 fps, etc.
-        // - 60hz monitor with 2x adaptive mode will try to reach 120 fps, if not possible will try 60 fps, then 30 fps, etc.
-        // - The allowed steps will be 30, 60, 120, 240 (for standard hz monitors).
-        // - 30 will always be the minimum for adpative vsnc modes.
-        
-        //Q: Does it make sense to limit to fps limit with adaptive vsync modes?
-        //NOTE: Should still adhere to limit -> if adaptive quadruple on a 120hz monitor is bigger than max fps limit, find the lowest one allowed
-        // - The same goes for the minimum fps limit
-        
-        
         if(!Enabled)
         {
             TargetFps = targetFrameRate;
@@ -435,7 +422,6 @@ public sealed class AdaptiveFpsLimiter
             cooldownTimer -= frameDelta;
             if(cooldownTimer < 0.0) cooldownTimer = 0.0;
         }
-        
         
         if(TargetFps <= 0) TargetFps = Limit.Min;
         double targetFrameTime = 1.0 / TargetFps;
@@ -459,8 +445,29 @@ public sealed class AdaptiveFpsLimiter
                 
                 StartCooldown();
                 
-                TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - (critical ? CriticalFramerateReductionStep : FramerateReductionStep));
-                
+                if (vsyncMode == VsyncMode.Disabled || targetFrameRate <= 0)
+                {
+                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - (critical ? CriticalFramerateReductionStep : FramerateReductionStep));
+                }
+                else
+                {
+                    //TODO: Check if this is correct and works!
+                    
+                    // vsync is enabled, reduce target fps to nearest divisor of the display refresh rate (powers-of-two divisors only)
+                    int candidate = targetFrameRate;
+
+                    // step down by factors of 2 until we get strictly below the current target
+                    while (candidate >= TargetFps && candidate > 1)
+                    {
+                        candidate /= 2;
+                    }
+
+                    // apply only if candidate is within the allowed limit; otherwise do nothing
+                    if (candidate >= Limit.Min && candidate < TargetFps)
+                    {
+                        TargetFps = candidate;
+                    }
+                }
             }
             
             return TargetFps;
@@ -483,15 +490,36 @@ public sealed class AdaptiveFpsLimiter
                 additionalCooldownDuration -= RaiseFpsAdditionalCooldownDuration; //decrease additional cooldown duration by 1 second
                 if (additionalCooldownDuration < 0.0) additionalCooldownDuration = 0.0;
 
-                int target = targetFrameRate > 0 ? ShapeMath.MinInt(targetFrameRate, Limit.Max) : Limit.Max;
                 
-                if (TargetFps < target)
+                if (vsyncMode == VsyncMode.Disabled || targetFrameRate <= 0)
                 {
-                    double newFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight) + FrameTimeTolerance;
-                    int newFps = ShapeMath.MinInt(target, (int)Math.Round(1.0 / newFrameTime));
+                    int target = targetFrameRate > 0 ? ShapeMath.MinInt(targetFrameRate, Limit.Max) : Limit.Max;
+                
+                    if (TargetFps < target)
+                    {
+                        double newFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight) + FrameTimeTolerance;
+                        int newFps = ShapeMath.MinInt(target, (int)Math.Round(1.0 / newFrameTime));
                     
-                    TargetFps = newFps;
-                    return newFps;
+                        TargetFps = newFps;
+                        return newFps;
+                    }
+                }
+                else
+                {
+                    //TODO: Check if this is correct and works!
+                    
+                    int candidate = TargetFps;
+
+                    while (candidate < targetFrameRate && candidate < Limit.Max)
+                    {
+                        candidate *= 2;
+                    }
+                    
+                    if (candidate > TargetFps && candidate <= targetFrameRate)
+                    {
+                        TargetFps = candidate;
+                        return candidate;
+                    }
                 }
             }
         }
