@@ -33,7 +33,9 @@ public sealed class InputSystem
     /// Event triggered when the input device type changes.
     /// </summary>
     public event Action<InputDeviceType, InputDeviceType>? OnInputDeviceChanged;
-    
+
+
+    public bool InputUsed { get; private set; } = false;
     
     /// <summary>
     /// Current <see cref="InputAction"/> based device type detected by <see cref="ActiveInputActionTreeGroup"/>.
@@ -131,6 +133,9 @@ public sealed class InputSystem
     /// </summary>
     internal void Update(float dt)
     {
+        InputUsed = false; //TODO: Implement detection of any input used in this function
+        
+        
         if (InputDeviceSelectionCooldownActive)
         {
             inputDeviceSelectionCooldownTimer -= dt;

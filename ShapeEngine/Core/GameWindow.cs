@@ -367,6 +367,32 @@ public sealed class GameWindow
         get => targetFps;
         private set => targetFps = value;
     }
+
+    /// <summary>
+    /// Determines whether the unfocused FPS limit is currently active.
+    /// </summary>
+    /// <remarks>
+    /// The unfocused target FPS limit is considered active when <see cref="UnfocusedFrameRateLimit"/>
+    /// is greater than zero and the cached window focus state indicates the window is not focused.
+    /// This method does not query focus from the OS directly;
+    /// it relies on the last-polled window configuration flags.
+    /// </remarks>
+    /// <returns>
+    /// True if an unfocused FPS limit is set and the window is not focused; otherwise false.
+    /// </returns>
+    internal bool IsUnfocusedFrameRateLimitActive()
+    {
+        return UnfocusedFrameRateLimit > 0 && !windowConfigFlags.Focused;
+    }
+    /// <summary>
+    /// Target frames-per-second to apply when the window is unfocused (in FPS).
+    /// A value of 0 disables the unfocused frame rate limit (no restriction).
+    /// Used by <see cref="IsUnfocusedFrameRateLimitActive"/> to decide if the unfocused cap is active.
+    /// </summary>
+    /// <remarks>
+    /// If <see cref="GameDef.Game.IdleFrameRateLimit"/> is active as well, the lower of the two limits will be used.
+    /// </remarks>
+    public int UnfocusedFrameRateLimit;
     
 
     /// <summary>
@@ -495,7 +521,7 @@ public sealed class GameWindow
         vsync = windowSettings.Vsync;
         AdaptiveFpsLimiter = new(windowSettings.AdaptiveFpsLimiterSettings);
         fpsLimit = ShapeMath.MaxInt(windowSettings.FrameRateLimit, 0);
-        
+        UnfocusedFrameRateLimit = windowSettings.UnfocusedFrameRateLimit;
         
         int newLimit = ComputeTargetFpsFromMode(vsync);
         if (newLimit <= 0)
