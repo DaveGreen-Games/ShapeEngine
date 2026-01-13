@@ -18,7 +18,7 @@ public struct WindowSettings
     /// WindowMinSize = new(480, 270),
     /// WindowSize = new(960, 540),
     /// Monitor = 0,
-    /// Vsync = false,
+    /// Vsync = VsyncMode.Disabled,
     /// FrameRateLimit = 60,
     /// AdaptiveFpsLimiterSettings = new(30, 240, true),
     /// WindowOpacity = 1f,
@@ -37,7 +37,7 @@ public struct WindowSettings
         WindowMinSize = new(480, 270),
         WindowSize = new(960, 540),
         Monitor = 0,
-        Vsync = false,
+        Vsync = VsyncMode.Disabled,
         FrameRateLimit = 60,
         AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Default,
         WindowOpacity = 1f,
@@ -86,9 +86,13 @@ public struct WindowSettings
     public WindowBorder WindowBorder;
     
     /// <summary>
-    /// Determines whether vertical synchronization is enabled.
+    /// Vertical synchronization (VSync) mode for the window.
+    /// Controls whether rendering is synchronized to the display's refresh rate to reduce screen tearing.
     /// </summary>
-    public bool Vsync;
+    /// <remarks>
+    /// Values are defined by the <see cref="VsyncMode"/> enum.
+    /// </remarks>
+    public VsyncMode Vsync;
     
     /// <summary>
     /// The target frame rate limit for the application. 0 or less means unlimited frame rate.

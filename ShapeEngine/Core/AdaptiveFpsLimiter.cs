@@ -344,6 +344,8 @@ public sealed class AdaptiveFpsLimiter
     /// Defaults to 4.0. Values below 1.0 are clamped by the property setter.
     /// </summary>
     private double maxFpsCooldownDurationFactor = 4.0;
+    
+    private VsyncMode prevVsyncMode = VsyncMode.Disabled;
     #endregion
     
     #region Static Members
@@ -407,9 +409,52 @@ public sealed class AdaptiveFpsLimiter
     /// <param name="targetFrameRate">Requested/desired target framerate from the engine (used as an upper bound when raising).</param>
     /// <param name="frameTime">Measured frame time of the current frame in seconds.</param>
     /// <param name="frameDelta">Elapsed time since the last update in seconds (used to decrement cooldown timers).</param>
+    /// <param name="vsyncMode">Current VSync mode of the engine/window (affects adaptive limiting behavior).</param>
     /// <returns>The resulting target FPS after applying the adaptive limiter logic.</returns>
-    internal int Update(int targetFrameRate, double frameTime, double frameDelta)
+    internal int Update(int targetFrameRate, double frameTime, double frameDelta, VsyncMode vsyncMode)
     {
+        if (prevVsyncMode != vsyncMode)
+        {
+            if (TargetFps != targetFrameRate)
+            {
+                if (prevVsyncMode == VsyncMode.Disabled) //from disabled to enabled
+                {
+                    if (TargetFps > targetFrameRate)
+                    {
+                        TargetFps = targetFrameRate;
+                    }
+                    else if (TargetFps < targetFrameRate)
+                    {
+                        int candidate = targetFrameRate;
+                
+                        while (TargetFps < candidate && candidate > Limit.Min)
+                        {
+                            candidate /= 2;
+                        }
+                    
+                        TargetFps = ShapeMath.MaxInt(candidate, Limit.Min);
+                    }
+                }
+                else if (vsyncMode == VsyncMode.Disabled) //from enabled to disabled
+                {
+                    if (TargetFps > targetFrameRate && targetFrameRate > 0)
+                    {
+                        TargetFps = targetFrameRate;
+                    }
+                }
+                else //from one enabled mode to another
+                {
+                    if (TargetFps > targetFrameRate)
+                    {
+                        TargetFps = targetFrameRate;
+                    }
+                }
+            }
+            
+            ResetState();
+            prevVsyncMode = vsyncMode;
+        }
+        
         if(!Enabled)
         {
             TargetFps = targetFrameRate;
@@ -422,11 +467,11 @@ public sealed class AdaptiveFpsLimiter
             if(cooldownTimer < 0.0) cooldownTimer = 0.0;
         }
         
-        
         if(TargetFps <= 0) TargetFps = Limit.Min;
         double targetFrameTime = 1.0 / TargetFps;
         
-        if(targetFrameTime <= frameTime + FrameTimeTolerance)//reduce fps
+        //reduce fps
+        if(targetFrameTime <= frameTime + FrameTimeTolerance)
         {
             bool critical = targetFrameTime <= frameTime;
             consecutiveSlowerChecks += critical ? 2 : 1;
@@ -445,8 +490,26 @@ public sealed class AdaptiveFpsLimiter
                 
                 StartCooldown();
                 
-                TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - (critical ? CriticalFramerateReductionStep : FramerateReductionStep));
-                
+                if (vsyncMode == VsyncMode.Disabled || targetFrameRate <= 0)
+                {
+                    TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - (critical ? CriticalFramerateReductionStep : FramerateReductionStep));
+                }
+                else
+                {
+                    // vsync is enabled, reduce target fps to nearest divisor of the display refresh rate (powers-of-two divisors only)
+                    int candidate = targetFrameRate;
+                    // step down by factors of 2 until we get strictly below the current target
+                    while (candidate >= TargetFps && candidate > Limit.Min)
+                    {
+                        candidate /= 2;
+                    }
+
+                    // apply only if candidate is within the allowed limit; otherwise do nothing
+                    if (candidate >= Limit.Min && candidate < TargetFps)
+                    {
+                        TargetFps = candidate;
+                    }
+                }
             }
             
             return TargetFps;
@@ -469,15 +532,34 @@ public sealed class AdaptiveFpsLimiter
                 additionalCooldownDuration -= RaiseFpsAdditionalCooldownDuration; //decrease additional cooldown duration by 1 second
                 if (additionalCooldownDuration < 0.0) additionalCooldownDuration = 0.0;
 
-                int target = targetFrameRate > 0 ? ShapeMath.MinInt(targetFrameRate, Limit.Max) : Limit.Max;
                 
-                if (TargetFps < target)
+                if (vsyncMode == VsyncMode.Disabled || targetFrameRate <= 0)
                 {
-                    double newFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight) + FrameTimeTolerance;
-                    int newFps = ShapeMath.MinInt(target, (int)Math.Round(1.0 / newFrameTime));
+                    int target = targetFrameRate > 0 ? ShapeMath.MinInt(targetFrameRate, Limit.Max) : Limit.Max;
+                
+                    if (TargetFps < target)
+                    {
+                        double newFrameTime = ShapeMath.LerpDouble(averageFasterFrameTime, frameTime, FasterFrameTimeAverageWeight) + FrameTimeTolerance;
+                        int newFps = ShapeMath.MinInt(target, (int)Math.Round(1.0 / newFrameTime));
                     
-                    TargetFps = newFps;
-                    return newFps;
+                        TargetFps = newFps;
+                        return newFps;
+                    }
+                }
+                else
+                {
+                    int candidate = TargetFps;
+
+                    while (candidate < targetFrameRate && candidate < Limit.Max)
+                    {
+                        candidate *= 2;
+                    }
+                    
+                    if (candidate > TargetFps && candidate <= targetFrameRate)
+                    {
+                        TargetFps = candidate;
+                        return candidate;
+                    }
                 }
             }
         }

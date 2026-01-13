@@ -18,7 +18,7 @@ public static class Program
             WindowMinSize = new(480, 270),
             WindowSize = new(960, 540),
             Monitor = 0,
-            Vsync = false,
+            Vsync = VsyncMode.Disabled,
             FrameRateLimit = 60,
             AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Default,
             WindowOpacity = 1f,

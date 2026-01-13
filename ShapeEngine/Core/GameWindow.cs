@@ -246,7 +246,7 @@ public sealed class GameWindow
     /// <summary>
     /// Occurs when the window VSync state changes.
     /// </summary>
-    public event Action<bool>? OnWindowVSyncChanged;
+    public event Action<VsyncMode>? OnWindowVSyncChanged;
 
     #endregion
 
@@ -339,10 +339,11 @@ public sealed class GameWindow
     
     /// <summary>
     /// Gets or sets the frames-per-second limit used when VSync is disabled. 0 means unlimited.
-    /// <see cref="VSync"/> has to be false to allow an unlimited frame rate.
+    /// <see cref="VSync"/> has to be <see cref="VsyncMode.Disabled"/> to allow an unlimited frame rate.
     /// </summary>
     /// <remarks>
     /// When VSync is disabled, assigning to this property will update <see cref="TargetFps"/> accordingly.
+    /// Otherwise, changing this property has no immediate effect until VSync is set to <see cref="VsyncMode.Disabled"/>. 
     /// </remarks>
     public int FpsLimit
     {
@@ -350,7 +351,7 @@ public sealed class GameWindow
         set
         {
             fpsLimit = value < 0 ? 0 : value;
-            if(!VSync) TargetFps = fpsLimit;
+            if(VSync == VsyncMode.Disabled) TargetFps = fpsLimit;
         }
     }
     
@@ -367,39 +368,56 @@ public sealed class GameWindow
         private set => targetFps = value;
     }
     
+
     /// <summary>
-    /// Gets or sets whether VSync is enabled.
-    /// If VSync is enabled, the target framerate will be set to the current monitor's refresh rate (<see cref="MonitorInfo.Refreshrate"/>).
-    /// Otherwise, the target framerate will be set to <see cref="FpsLimit"/>.
+    /// Gets or sets the current vertical sync mode for the window.
+    /// Changing this property updates the effective <see cref="TargetFps"/> according to the selected <see cref="VsyncMode"/>.
+    /// Setting to <see cref="VsyncMode.Disabled"/> causes the engine to use the manual <see cref="FpsLimit"/> for frame limiting.
     /// </summary>
-    /// <remarks>
-    /// VSync is only enabled if the monitor has a valid refresh rate greater than 0.
-    /// VSync synchronizes the application's framerate with the monitor's refresh rate to prevent screen tearing.
-    /// </remarks>
-    public bool VSync
+    public VsyncMode VSync
     {
         get => vsync;
         set
         {
             if (vsync == value) return;
-            if (value)
+            
+            int newLimit = ComputeTargetFpsFromMode(value);
+            if (newLimit <= 0)
             {
-                
-                int refreshRate = Monitor.CurMonitor().Refreshrate;
-                //Only enable VSync if the monitor has a valid refresh rate
-                if (refreshRate > 0)
-                {
-                    vsync = true;
-                    TargetFps = refreshRate;
-                }
+                TargetFps = fpsLimit;
+                vsync = VsyncMode.Disabled;
             }
             else
             {
-                vsync = false;
-                TargetFps = fpsLimit;
+                TargetFps = newLimit;
+                vsync = value;
             }
+            
             OnWindowVSyncChanged?.Invoke(vsync);
         }
+    }
+    
+    /// <summary>
+    /// Computes the effective target frames-per-second for the provided <see cref="VsyncMode"/>.
+    /// Returns 0 when VSync is disabled or when the monitor refresh rate is unknown/invalid.
+    /// </summary>
+    /// <param name="mode">The VSync mode to compute the target FPS for.</param>
+    /// <returns>The calculated target FPS based on the current monitor refresh rate and the requested mode.</returns>
+    private int ComputeTargetFpsFromMode(VsyncMode mode)
+    {
+        if(mode == VsyncMode.Disabled) return 0;
+        
+        int refresh = Monitor.CurMonitor().Refreshrate;
+        if(refresh <= 0) return 0;
+
+        return mode switch
+        {
+            VsyncMode.Half => Math.Max(30, refresh / 2),
+            VsyncMode.Normal => refresh,
+            VsyncMode.Double => refresh * 2,
+            VsyncMode.Quadruple => refresh * 4,
+            _ => 0
+        };
     }
     
     /// <summary>
@@ -429,7 +447,7 @@ public sealed class GameWindow
 
     private Vector2 osxWindowScaleDpi;
     private int fpsLimit;
-    private bool vsync;
+    private VsyncMode vsync;
     private int targetFps;
     private Dimensions windowSize = new();
 
@@ -478,23 +496,16 @@ public sealed class GameWindow
         AdaptiveFpsLimiter = new(windowSettings.AdaptiveFpsLimiterSettings);
         fpsLimit = ShapeMath.MaxInt(windowSettings.FrameRateLimit, 0);
         
-        if (vsync)
+        
+        int newLimit = ComputeTargetFpsFromMode(vsync);
+        if (newLimit <= 0)
         {
-            int monitorRefreshRate = Monitor.CurMonitor().Refreshrate;
-            // Validate refresh rate; fallback to fpsLimit
-            if (monitorRefreshRate > 0)
-            {
-                TargetFps = monitorRefreshRate;
-            }
-            else
-            {
-                TargetFps = fpsLimit;
-                vsync = false;
-            }
+            TargetFps = fpsLimit;
+            vsync = VsyncMode.Disabled;
         }
         else
         {
-            TargetFps = fpsLimit;
+            TargetFps = newLimit;
         }
         
         switch (windowSettings.WindowBorder)
@@ -1238,6 +1249,7 @@ public sealed class GameWindow
 
         cursorState = curCursorState;
     }
+
 
     #endregion
 
