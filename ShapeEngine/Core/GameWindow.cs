@@ -343,7 +343,7 @@ public sealed class GameWindow
     /// </summary>
     /// <remarks>
     /// When VSync is disabled, assigning to this property will update <see cref="TargetFps"/> accordingly.
-    /// Otherwise, changing this property has no immediate effect until VSync is set to <see cref="VsyncMode.Disabled"/>
+    /// Otherwise, changing this property has no immediate effect until VSync is set to <see cref="VsyncMode.Disabled"/>. 
     /// </remarks>
     public int FpsLimit
     {
@@ -416,7 +416,7 @@ public sealed class GameWindow
             VsyncMode.Normal => refresh,
             VsyncMode.Double => refresh * 2,
             VsyncMode.Quadruple => refresh * 4,
-            _ => fpsLimit
+            _ => 0
         };
     }
     

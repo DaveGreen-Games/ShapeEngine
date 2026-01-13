@@ -409,7 +409,7 @@ public sealed class AdaptiveFpsLimiter
     /// <param name="targetFrameRate">Requested/desired target framerate from the engine (used as an upper bound when raising).</param>
     /// <param name="frameTime">Measured frame time of the current frame in seconds.</param>
     /// <param name="frameDelta">Elapsed time since the last update in seconds (used to decrement cooldown timers).</param>
-    /// <param name ="vsyncMode">Current VSync mode of the engine/window (affects adaptive limiting behavior).</param>
+    /// <param name="vsyncMode">Current VSync mode of the engine/window (affects adaptive limiting behavior).</param>
     /// <returns>The resulting target FPS after applying the adaptive limiter logic.</returns>
     internal int Update(int targetFrameRate, double frameTime, double frameDelta, VsyncMode vsyncMode)
     {
@@ -417,7 +417,7 @@ public sealed class AdaptiveFpsLimiter
         {
             if (TargetFps != targetFrameRate)
             {
-                if (prevVsyncMode == VsyncMode.Disabled)//from disabled to enabled
+                if (prevVsyncMode == VsyncMode.Disabled) //from disabled to enabled
                 {
                     if (TargetFps > targetFrameRate)
                     {
@@ -427,15 +427,15 @@ public sealed class AdaptiveFpsLimiter
                     {
                         int candidate = targetFrameRate;
                 
-                        while (TargetFps < candidate && candidate > limit.Min)
+                        while (TargetFps < candidate && candidate > Limit.Min)
                         {
                             candidate /= 2;
                         }
                     
-                        TargetFps = ShapeMath.MaxInt(candidate, limit.Min);
+                        TargetFps = ShapeMath.MaxInt(candidate, Limit.Min);
                     }
                 }
-                else if (vsyncMode == VsyncMode.Disabled)//from enabled to disabled
+                else if (vsyncMode == VsyncMode.Disabled) //from enabled to disabled
                 {
                     if (TargetFps > targetFrameRate && targetFrameRate > 0)
                     {
@@ -499,7 +499,7 @@ public sealed class AdaptiveFpsLimiter
                     // vsync is enabled, reduce target fps to nearest divisor of the display refresh rate (powers-of-two divisors only)
                     int candidate = targetFrameRate;
                     // step down by factors of 2 until we get strictly below the current target
-                    while (candidate >= TargetFps && candidate > limit.Min)
+                    while (candidate >= TargetFps && candidate > Limit.Min)
                     {
                         candidate /= 2;
                     }
