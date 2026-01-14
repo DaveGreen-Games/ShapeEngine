@@ -40,7 +40,7 @@ public struct WindowSettings
         Monitor = 0,
         Vsync = VsyncMode.Disabled,
         FrameRateLimit = 60,
-        UnfocusedFrameRateLimit = 15,
+        UnfocusedFrameRateLimit = 30,
         AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Default,
         WindowOpacity = 1f,
         MouseEnabled = true,
