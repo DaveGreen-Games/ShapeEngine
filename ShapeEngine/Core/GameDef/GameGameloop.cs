@@ -92,6 +92,7 @@ public partial class Game
             AudioDevice.Update(dt, curCamera);
             Input.Update(dt);
 
+            //Mouse Movement System
             if (Window.MouseOnScreen)
             {
                 if (Input.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
@@ -100,6 +101,7 @@ public partial class Game
                 }
             }
 
+            //Idle Detection System
             if (IdleTimeTreshold > 0f)
             {
                 if (Input.InputUsed)
@@ -137,7 +139,6 @@ public partial class Game
             }
             else IsIdle = false;
             
-            
             var mousePosUI = Window.MousePosition;
             gameTexture.Update(dt, Window.CurScreenSize, mousePosUI, Paused);
 
@@ -173,6 +174,7 @@ public partial class Game
 
             Input.EndFrame();
             
+            //Frame Time Management
             int targetFps = Window.TargetFps;
             
             long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
@@ -205,6 +207,7 @@ public partial class Game
                 targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta, Window.VSync);
             }
             
+            // Wait to maintain target frame rate
             if (targetFps > 0)
             {
                 long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
