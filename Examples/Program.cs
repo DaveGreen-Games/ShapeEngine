@@ -20,6 +20,7 @@ public static class Program
             Monitor = 0,
             Vsync = VsyncMode.Disabled,
             FrameRateLimit = 60,
+            UnfocusedFrameRateLimit = 30,
             AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Default,
             WindowOpacity = 1f,
             MouseEnabled = true,

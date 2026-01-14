@@ -92,6 +92,7 @@ public partial class Game
             AudioDevice.Update(dt, curCamera);
             Input.Update(dt);
 
+            //Mouse Movement System
             if (Window.MouseOnScreen)
             {
                 if (Input.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
@@ -100,6 +101,44 @@ public partial class Game
                 }
             }
 
+            //Idle Detection System
+            if (IdleTimeThreshold > 0f)
+            {
+                if (Input.InputUsed)
+                {
+                    //reset timer
+                    if (idleTimer > 0f)
+                    {
+                        idleTimer = 0f;
+                    }
+
+                    if (IsIdle)
+                    {
+                        IsIdle = false;
+                        OnIdleChanged?.Invoke(false);
+                    }
+                    
+                }
+                else
+                {
+                    if (idleTimer <= 0f && !IsIdle)
+                    {
+                        idleTimer = IdleTimeThreshold;
+                    }
+                }
+
+                if (idleTimer > 0f)
+                {
+                    idleTimer -= dt;
+                    if (idleTimer <= 0f)
+                    {
+                        IsIdle = true;
+                        OnIdleChanged?.Invoke(true);
+                    }
+                }
+            }
+            else IsIdle = false;
+            
             var mousePosUI = Window.MousePosition;
             gameTexture.Update(dt, Window.CurScreenSize, mousePosUI, Paused);
 
@@ -135,16 +174,40 @@ public partial class Game
 
             Input.EndFrame();
             
+            //Frame Time Management
             int targetFps = Window.TargetFps;
+            
             long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
-            
             FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
+
+            bool idleUnfocusedLimitActive = false;
             
-            if (Window.AdaptiveFpsLimiter.Enabled)
+            if (Window.IsUnfocusedFrameRateLimitActive())
+            {
+                int limit = Window.UnfocusedFrameRateLimit;
+                if (limit > 0 && limit < targetFps)
+                {
+                    targetFps = limit;
+                    idleUnfocusedLimitActive = true;
+                }
+            }
+            
+            if (IsIdleFrameRateLimitActive())
+            {
+                int limit = IdleFrameRateLimit;
+                if (limit > 0 && limit < targetFps)
+                {
+                    targetFps = limit;
+                    idleUnfocusedLimitActive = true;
+                }
+            }
+            
+            if (Window.AdaptiveFpsLimiter.Enabled && !idleUnfocusedLimitActive)
             {
                 targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta, Window.VSync);
             }
             
+            // Wait to maintain target frame rate
             if (targetFps > 0)
             {
                 long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;

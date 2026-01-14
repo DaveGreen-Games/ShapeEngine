@@ -16,11 +16,14 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
+    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
+    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings StretchMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, 
+        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
     {
         return new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, 
-            applicationName, saveDirectory);
+            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
     }
 
     /// <summary>
@@ -29,11 +32,14 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
+    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
+    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings FixedMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
+        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
     {
         return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, 
-            applicationName, saveDirectory);
+            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
     }
 
     /// <summary>
@@ -42,12 +48,14 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-
+    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
+    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings FixedNearestMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
+        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
     {
         return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, 
-            applicationName, saveDirectory);
+            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
     }
 
     /// <summary>
@@ -56,11 +64,14 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
+    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
+    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings PixelationMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
+        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
     {
         return new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, 
-            applicationName, saveDirectory);
+            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
     }
 
     #endregion
@@ -76,8 +87,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
+    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
+    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public GameSettings (int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, 
+        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -87,6 +101,8 @@ public readonly struct GameSettings
         ScreenTextureMode = ScreenTextureMode.Stretch;
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
+        IdleFrameRateLimit = idleFrameRateLimit;
+        IdleTimeThreshold = idleTimeThreshold;
     }
 
     /// <summary>
@@ -100,8 +116,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
+    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
+    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public GameSettings(Dimensions fixedDimensions, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
+        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
+        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -128,6 +147,9 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
+        
+        IdleFrameRateLimit = idleFrameRateLimit;
+        IdleTimeThreshold = idleTimeThreshold;
     }
 
     /// <summary>
@@ -140,8 +162,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
+    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
+    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public GameSettings(float pixelationFactor, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
+        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -160,6 +185,9 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
+        
+        IdleFrameRateLimit = idleFrameRateLimit;
+        IdleTimeThreshold = idleTimeThreshold;
     }
     
     #endregion
@@ -222,6 +250,22 @@ public readonly struct GameSettings
     /// </remarks>
     public readonly Environment.SpecialFolder? SaveDirectory = Environment.SpecialFolder.LocalApplicationData;
 
+    /// <summary>
+    /// The target frame rate limit applied when the application is idle (no input detected for <see cref="IdleTimeThreshold"/> seconds).
+    /// Set to 0 or less to disable the idle-specific limit (no change from the normal limit).
+    /// </summary>
+    /// <remarks>
+    /// Use this to reduce CPU/GPU usage while the window does not have focus.
+    /// </remarks>
+    public readonly int IdleFrameRateLimit;
+    
+    /// <summary>
+    /// Time in seconds without input after which the application is considered idle.
+    /// When the idle period is reached the <see cref="IdleFrameRateLimit"/> may be applied.
+    /// Set to 0 or less to disable idle detection.
+    /// </summary>
+    public readonly float IdleTimeThreshold;
+    
     // /// <summary>
     // /// Gets the maximum number of savegame backup files to keep.
     // /// </summary>

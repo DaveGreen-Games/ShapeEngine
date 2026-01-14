@@ -272,6 +272,68 @@ public partial class Game
     /// Gets the input manager for handling keyboard, mouse, and gamepad input.
     /// </summary>
     public readonly InputSystem Input;
+    
+    #endregion
+    
+    #region Idle
+
+    /// <summary>
+    /// Event fired when the game's idle state changes.
+    /// </summary>
+    /// <remarks>
+    /// The boolean argument indicates the new idle state:
+    /// - <c>true</c> when the game became idle.
+    /// - <c>false</c> when the game is no longer idle.
+    /// Subscribers can use this to adjust behavior when idle (for example, apply a framerate cap or reduce updates).
+    /// </remarks>
+    public event Action<bool>? OnIdleChanged;
+    
+    /// <summary>
+    /// Time in seconds of inactivity (no input) before the game is considered idle.
+    /// Setting to 0 or less disables idle detection.
+    /// </summary>
+    /// <remarks>
+    /// When the accumulated idle timer exceeds this threshold, <see cref="IsIdle"/> may be set to true
+    /// and idle-specific behaviour (such as framerate limiting) can be applied.
+    /// </remarks>
+    public float IdleTimeThreshold;
+    
+    /// <summary>
+    /// Target framerate to cap the game to while idle.
+    /// </summary>
+    /// <remarks>
+    /// If this value is less than or equal to 0, no idle framerate limiting is applied.
+    /// When greater than 0 and the game is idle, the engine may limit updates/rendering to this value.
+    /// If <see cref="GameWindow.UnfocusedFrameRateLimit"/> is active as well, the lower of the two limits will be used.
+    /// </remarks>
+    public int IdleFrameRateLimit;
+    
+    /// <summary>
+    /// Indicates whether the game is currently considered idle.
+    /// </summary>
+    /// <remarks>
+    /// This property is set internally based on <see cref="idleTimer"/> and <see cref="IdleTimeThreshold"/>.
+    /// It is read-only to external callers.
+    /// </remarks>
+    public bool IsIdle { get; private set; }
+    
+    /// <summary>
+    /// Accumulated time in seconds since the last detected user input or activity.
+    /// </summary>
+    /// <remarks>
+    /// Resets to 0 when activity is detected. Used to determine when the idle threshold is reached.
+    /// </remarks>
+    private float idleTimer = 0f;
+    
+    /// <summary>
+    /// Determines if the idle framerate cap should be active.
+    /// </summary>
+    /// <returns>True when <see cref="IdleFrameRateLimit"/> is greater than 0 and the game is currently idle.</returns>
+    private bool IsIdleFrameRateLimitActive()
+    {
+        return IdleFrameRateLimit > 0 && IsIdle;
+    }
+
     #endregion
     
     #region Private Members
@@ -521,6 +583,8 @@ public partial class Game
         Input.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
         Input.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
         
+        IdleTimeThreshold = gameSettings.IdleTimeThreshold;
+        IdleFrameRateLimit = gameSettings.IdleFrameRateLimit;
         
     }
 

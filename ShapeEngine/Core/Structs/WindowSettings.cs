@@ -20,6 +20,7 @@ public struct WindowSettings
     /// Monitor = 0,
     /// Vsync = VsyncMode.Disabled,
     /// FrameRateLimit = 60,
+    /// UnfocusedFrameRateLimit = 15,
     /// AdaptiveFpsLimiterSettings = new(30, 240, true),
     /// WindowOpacity = 1f,
     /// MouseEnabled = true,
@@ -39,6 +40,7 @@ public struct WindowSettings
         Monitor = 0,
         Vsync = VsyncMode.Disabled,
         FrameRateLimit = 60,
+        UnfocusedFrameRateLimit = 30,
         AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Default,
         WindowOpacity = 1f,
         MouseEnabled = true,
@@ -98,6 +100,15 @@ public struct WindowSettings
     /// The target frame rate limit for the application. 0 or less means unlimited frame rate.
     /// </summary>
     public int FrameRateLimit;
+    
+    /// <summary>
+    /// The target frame rate limit applied when the application window is unfocused.
+    /// Set to 0 or less to disable the unfocused-specific limit (no change from the normal limit).
+    /// </summary>
+    /// <remarks>
+    /// Use this to reduce CPU/GPU usage while the window does not have focus.
+    /// </remarks>
+    public int UnfocusedFrameRateLimit;
     
     /// <summary>
     /// Settings for the adaptive FPS limiter which dynamically adjusts the frame cap.
