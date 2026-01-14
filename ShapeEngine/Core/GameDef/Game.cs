@@ -296,7 +296,7 @@ public partial class Game
     /// When the accumulated idle timer exceeds this threshold, <see cref="IsIdle"/> may be set to true
     /// and idle-specific behaviour (such as framerate limiting) can be applied.
     /// </remarks>
-    public float IdleTimeTreshold;
+    public float IdleTimeThreshold;
     
     /// <summary>
     /// Target framerate to cap the game to while idle.
@@ -312,7 +312,7 @@ public partial class Game
     /// Indicates whether the game is currently considered idle.
     /// </summary>
     /// <remarks>
-    /// This property is set internally based on <see cref="idleTimer"/> and <see cref="IdleTimeTreshold"/>.
+    /// This property is set internally based on <see cref="idleTimer"/> and <see cref="IdleTimeThreshold"/>.
     /// It is read-only to external callers.
     /// </remarks>
     public bool IsIdle { get; private set; }
@@ -583,7 +583,7 @@ public partial class Game
         Input.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
         Input.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
         
-        IdleTimeTreshold = gameSettings.IdleTimeThreshold;
+        IdleTimeThreshold = gameSettings.IdleTimeThreshold;
         IdleFrameRateLimit = gameSettings.IdleFrameRateLimit;
         
     }

@@ -251,7 +251,7 @@ public readonly struct GameSettings
     public readonly Environment.SpecialFolder? SaveDirectory = Environment.SpecialFolder.LocalApplicationData;
 
     /// <summary>
-    /// The target frame rate limit applied when the application is idle (not input detected for <see cref="IdleTimeThreshold"/> seconds).
+    /// The target frame rate limit applied when the application is idle (no input detected for <see cref="IdleTimeThreshold"/> seconds).
     /// Set to 0 or less to disable the idle-specific limit (no change from the normal limit).
     /// </summary>
     /// <remarks>

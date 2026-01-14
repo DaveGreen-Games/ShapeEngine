@@ -102,7 +102,7 @@ public partial class Game
             }
 
             //Idle Detection System
-            if (IdleTimeTreshold > 0f)
+            if (IdleTimeThreshold > 0f)
             {
                 if (Input.InputUsed)
                 {
@@ -123,7 +123,7 @@ public partial class Game
                 {
                     if (idleTimer <= 0f && !IsIdle)
                     {
-                        idleTimer = IdleTimeTreshold;
+                        idleTimer = IdleTimeThreshold;
                     }
                 }
 
