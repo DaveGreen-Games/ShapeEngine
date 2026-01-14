@@ -133,8 +133,7 @@ public sealed class InputSystem
     /// </summary>
     internal void Update(float dt)
     {
-        InputUsed = false; //TODO: Implement detection of any input used in this function
-        
+        InputUsed = false;
         
         if (InputDeviceSelectionCooldownActive)
         {
@@ -194,6 +193,7 @@ public sealed class InputSystem
                 if(!deviceTypeLocked && wasOtherDeviceUsed && !prevUsed) usedInputDevice = inputDevice.GetDeviceType();
             }
             
+            if(inputDevice.WasUsedRaw()) InputUsed = true;
         }
         
         if (usedInputDevice != InputDeviceType.None && usedInputDevice != CurrentInputDeviceType)
@@ -238,7 +238,6 @@ public sealed class InputSystem
                 }
             }
         }
-
         
     }
 
