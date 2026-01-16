@@ -108,6 +108,15 @@ public readonly struct GameTime
     public readonly float Delta => (float)ElapsedSeconds;
     
     /// <summary>
+    /// Gets the elapsed time since the last frame as a double-precision value.
+    /// </summary>
+    /// <remarks>
+    /// Use <see cref="DeltaDouble"/> when double precision is required instead of the single-precision <see cref="Delta"/>.
+    /// This property simply returns the underlying <see cref="ElapsedSeconds"/> value.
+    /// </remarks>
+    public readonly double DeltaDouble => ElapsedSeconds;
+    
+    /// <summary>
     /// Gets the current frames per second (FPS) based on the elapsed time between frames.
     /// </summary>
     /// <remarks>

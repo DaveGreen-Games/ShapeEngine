@@ -164,7 +164,8 @@ public partial class Game
             if (FixedPhysicsEnabled)
             {
                 ResolveUpdate(true);
-                AdvanceFixedUpdate(dt);
+                // Use double-precision frameDelta for more accurate fixed-step physics timing
+                AdvanceFixedUpdate(frameDelta);
             }
             else ResolveUpdate(false);
 
@@ -341,25 +342,27 @@ public partial class Game
         ResolveOnGameTextureResized(w, h);
     }
 
-    private void AdvanceFixedUpdate(float dt)
+    private void AdvanceFixedUpdate(double dt)
     {
-        const float maxFrameTime = 1f / 30f;
-        float frameTime = dt;
-        // var t = 0.0f;
+        const double maxFrameTime = 1.0 / 30.0;
+        double frameTime = dt;
 
         if (frameTime > maxFrameTime) frameTime = maxFrameTime;
 
         physicsAccumulator += frameTime;
         while (physicsAccumulator >= FixedPhysicsTimestep)
         {
-            FixedTime = FixedTime.TickF(FixedPhysicsFramerate);
+            FixedTime = FixedTime.Tick(FixedPhysicsTimestep);
             ResolveFixedUpdate();
             // t += FixedPhysicsTimestep;
             physicsAccumulator -= FixedPhysicsTimestep;
         }
 
-        float alpha = physicsAccumulator / FixedPhysicsTimestep;
-        ResolveInterpolateFixedUpdate(alpha);
+        double alpha = physicsAccumulator / FixedPhysicsTimestep;
+        // alpha is computed in double precision for timing accuracy, but interpolation
+        // uses float because ResolveInterpolateFixedUpdate (e.g., via IUpdateable) has
+        // a float-based public API. This precision downgrade is intentional.
+        ResolveInterpolateFixedUpdate((float)alpha);
     }
 
 }
