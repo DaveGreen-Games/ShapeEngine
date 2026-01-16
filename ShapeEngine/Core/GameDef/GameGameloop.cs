@@ -164,7 +164,7 @@ public partial class Game
             if (FixedPhysicsEnabled)
             {
                 ResolveUpdate(true);
-                AdvanceFixedUpdate(dt);
+                AdvanceFixedUpdate(frameDelta); //frameDelta is a double instead of dt that is a float
             }
             else ResolveUpdate(false);
 
@@ -341,10 +341,10 @@ public partial class Game
         ResolveOnGameTextureResized(w, h);
     }
 
-    private void AdvanceFixedUpdate(float dt)
+    private void AdvanceFixedUpdate(double dt)
     {
-        const float maxFrameTime = 1f / 30f;
-        float frameTime = dt;
+        const double maxFrameTime = 1.0 / 30.0;
+        double frameTime = dt;
         // var t = 0.0f;
 
         if (frameTime > maxFrameTime) frameTime = maxFrameTime;
@@ -352,14 +352,14 @@ public partial class Game
         physicsAccumulator += frameTime;
         while (physicsAccumulator >= FixedPhysicsTimestep)
         {
-            FixedTime = FixedTime.TickF(FixedPhysicsFramerate);
+            FixedTime = FixedTime.Tick(FixedPhysicsTimestep);
             ResolveFixedUpdate();
             // t += FixedPhysicsTimestep;
             physicsAccumulator -= FixedPhysicsTimestep;
         }
 
-        float alpha = physicsAccumulator / FixedPhysicsTimestep;
-        ResolveInterpolateFixedUpdate(alpha);
+        double alpha = physicsAccumulator / FixedPhysicsTimestep;
+        ResolveInterpolateFixedUpdate((float)alpha);
     }
 
 }

@@ -111,7 +111,7 @@ public partial class Game
     /// This value is calculated as 1.0 / FixedPhysicsFramerate and represents
     /// the duration of each physics step in seconds.
     /// </remarks>
-    public float FixedPhysicsTimestep { get; private set; }
+    public double FixedPhysicsTimestep { get; private set; }
 
     /// <summary>
     /// Gets the game time information for the variable update loop.
@@ -348,7 +348,7 @@ public partial class Game
     private readonly List<ShapeFlash> shapeFlashes = [];
     private readonly List<DeferredInfo> deferred = [];
 
-    private float physicsAccumulator;
+    private double physicsAccumulator;
 
     private List<ScreenTexture>? customScreenTextures;
     #endregion
@@ -540,7 +540,7 @@ public partial class Game
         {
             if (fixedFramerate < 30) fixedFramerate = 30;
             FixedPhysicsFramerate = fixedFramerate;
-            FixedPhysicsTimestep = 1f / FixedPhysicsFramerate;
+            FixedPhysicsTimestep = 1.0 / FixedPhysicsFramerate;
             FixedPhysicsEnabled = true;
         }
         
