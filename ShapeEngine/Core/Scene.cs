@@ -230,7 +230,7 @@ public abstract class Scene
         }
         else
         {
-            SpawnArea?.Update(time, game, gameUi, ui, false);
+            SpawnArea?.Update(time, game, gameUi, ui);
             CollisionHandler?.Update(time.Delta);
             Pathfinder?.Update(time.Delta);
         }
