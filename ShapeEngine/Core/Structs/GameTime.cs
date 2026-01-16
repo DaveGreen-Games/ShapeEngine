@@ -22,7 +22,21 @@ public readonly struct GameTime
     /// Seconds since last frame
     /// </summary>
     public readonly double ElapsedSeconds;
+    
+    /// <summary>
+    /// Indicates whether the game loop is operating in fixed-timestep mode.
+    /// </summary>
+    public readonly bool FixedMode;
 
+    /// <summary>
+    /// Indicates whether this GameTime instance represents a fixed-step update.
+    /// </summary>
+    /// <remarks>
+    /// Use to distinguish individual fixed-step updates from variable-step updates.
+    /// This is distinct from <c>FixedMode</c>, which denotes the game loop's operating mode.
+    /// </remarks>
+    public readonly bool FixedStep;
+    
     /// <summary>
     /// Initializes a new instance of the GameTime struct with default values.
     /// </summary>
@@ -34,6 +48,8 @@ public readonly struct GameTime
         TotalSeconds = 0;
         TotalFrames = 0;
         ElapsedSeconds = 0;
+        FixedMode = false;
+        FixedStep = false;
     }
     /// <summary>
     /// Initializes a new instance of the GameTime struct with specified values.
@@ -41,11 +57,15 @@ public readonly struct GameTime
     /// <param name="totalSeconds">The total seconds elapsed since the start of the application.</param>
     /// <param name="totalFrames">The total number of frames processed since the start of the application.</param>
     /// <param name="elapsedSeconds">The seconds elapsed since the last frame.</param>
-    public GameTime(double totalSeconds, int totalFrames, double elapsedSeconds)
+    /// <param name="fixedMode">Indicates whether the game loop is in fixed-timestep mode.</param>
+    /// <param name="fixedStep">Indicates whether this instance represents a fixed-step update.</param>
+    public GameTime(double totalSeconds, int totalFrames, double elapsedSeconds, bool fixedMode, bool fixedStep)
     {
         this.TotalSeconds = totalSeconds;
         this.TotalFrames = totalFrames;
         this.ElapsedSeconds = elapsedSeconds;
+        this.FixedMode = fixedMode;
+        this.FixedStep = fixedStep;
     }
 
     #region Tick
@@ -54,14 +74,14 @@ public readonly struct GameTime
     /// </summary>
     /// <param name="dt">The time delta in seconds to advance the game time by.</param>
     /// <returns>A new GameTime instance with updated total seconds, incremented frame count, and the provided delta as elapsed seconds.</returns>
-    public GameTime Tick(double dt) => new(TotalSeconds + dt, TotalFrames + 1, dt);
+    public GameTime Tick(double dt) => new(TotalSeconds + dt, TotalFrames + 1, dt, FixedMode, FixedStep);
 
     /// <summary>
     /// Advances the game time by the specified time delta using a float value.
     /// </summary>
     /// <param name="dt">The time delta in seconds (as float) to advance the game time by.</param>
     /// <returns>A new GameTime instance with updated total seconds, incremented frame count, and the provided delta as elapsed seconds.</returns>
-    public GameTime TickF(float dt) => new(TotalSeconds + dt, TotalFrames + 1, dt);
+    public GameTime TickF(float dt) => new(TotalSeconds + dt, TotalFrames + 1, dt, FixedMode, FixedStep);
     #endregion
     
     #region Conversion

@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.StaticLib;
 
@@ -131,7 +132,24 @@ public abstract class PhysicsObject : GameObject
     /// <param name="ui">UI screen info.</param>
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        UpdatePhysicsState(time.Delta);
+        if (!time.FixedMode)
+        {
+            UpdatePhysicsState(time.Delta);
+        }
+    }
+
+    /// <summary>
+    /// Called on a fixed timestep to perform deterministic physics updates.
+    /// This method is invoked by the engine's fixed-update loop and should be used
+    /// for simulation steps that require a constant delta time (e.g., physics).
+    /// </summary>
+    /// <param name="fixedTime">The fixed game time containing the delta for this physics step.</param>
+    /// <param name="game">Primary game screen information.</param>
+    /// <param name="gameUi">Game UI screen information.</param>
+    /// <param name="ui">Global UI screen information.</param>
+    public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    {
+        UpdatePhysicsState(fixedTime.Delta);
     }
 
     /// <summary>

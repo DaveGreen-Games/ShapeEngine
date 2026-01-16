@@ -39,11 +39,11 @@ public partial class Game
         CurScene.ResolveOnButtonReleased(e);
     }
 
-    private void ResolveUpdate(bool fixedFramerateMode)
+    private void ResolveUpdate()
     {
         TriggerCustomEventsOnUpdate(true, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, fixedFramerateMode);
+        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         TriggerCustomEventsOnUpdate(false, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
     

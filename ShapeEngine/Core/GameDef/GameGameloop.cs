@@ -161,13 +161,10 @@ public partial class Game
 
             UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
 
-            if (FixedPhysicsEnabled)
-            {
-                ResolveUpdate(true);
-                // Use double-precision frameDelta for more accurate fixed-step physics timing
-                AdvanceFixedUpdate(frameDelta);
-            }
-            else ResolveUpdate(false);
+            ResolveUpdate();
+            
+            // Use double-precision frameDelta for more accurate fixed-step physics timing
+            if (FixedPhysicsEnabled) AdvanceFixedUpdate(frameDelta);
 
             DrawToScreen();
 

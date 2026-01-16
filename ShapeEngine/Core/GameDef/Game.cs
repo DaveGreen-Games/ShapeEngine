@@ -120,7 +120,7 @@ public partial class Game
     /// Contains timing data such as elapsed time, delta time, and frame count
     /// for the main game loop that runs at variable framerates.
     /// </remarks>
-    public GameTime Time { get; private set; } = new GameTime();
+    public GameTime Time { get; private set; }
 
     /// <summary>
     /// Gets the game time information for the fixed update loop.
@@ -129,7 +129,7 @@ public partial class Game
     /// Contains timing data for the physics update loop that runs at a fixed timestep.
     /// Only relevant when FixedPhysicsEnabled is true.
     /// </remarks>
-    public GameTime FixedTime { get; private set; } = new GameTime();
+    public GameTime FixedTime { get; private set; }
 
     /// <summary>
     /// Gets or sets the background color of the game window.
@@ -543,6 +543,9 @@ public partial class Game
             FixedPhysicsTimestep = 1.0 / FixedPhysicsFramerate;
             FixedPhysicsEnabled = true;
         }
+
+        Time = new GameTime(0.0, 0, 0.0, FixedPhysicsEnabled, false);
+        FixedTime = new GameTime(0.0, 0, 0.0, FixedPhysicsEnabled, true);
         
         curCamera = basicCamera;
         curCamera.Activate();
