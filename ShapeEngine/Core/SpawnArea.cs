@@ -514,10 +514,9 @@ namespace ShapeEngine.Core
         /// <param name="game">The screen information for the game area.</param>
         /// <param name="gameUi">The screen information for the game UI area.</param>
         /// <param name="ui">The screen information for the UI area.</param>
-        /// <param name="fixedFramerateMode">If this update is called in the open frame rate or fixed frame rate mode.</param>
-        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, bool fixedFramerateMode)
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            if (fixedFramerateMode)
+            if (time.FixedMode)
             {
                 if (clearAreaActive && HasValidBounds())
                 {

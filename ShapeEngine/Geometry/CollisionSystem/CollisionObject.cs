@@ -329,18 +329,38 @@ public abstract class CollisionObject : PhysicsObject
     /// </remarks>
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
+        if (!time.FixedMode)
+        {
+            var trans = Transform;
+            base.Update(time, game, gameUi, ui); // updates physics state
+            foreach (var collider in Colliders)
+            {
+                if (collider.Parent != this)
+                {
+                    throw new WarningException("Collision Object tried to update collider with different parent!");
+                }
+                collider.UpdateShape(time.Delta, trans);
+                OnColliderUpdated(collider);
+            }
+            OnColliderUpdateFinished();
+        }
+    }
+
+    public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    {
         var trans = Transform;
-        base.Update(time, game, gameUi, ui); // updates physics state
+        base.FixedUpdate(fixedTime, game, gameUi, ui); // updates physics state
         foreach (var collider in Colliders)
         {
             if (collider.Parent != this)
             {
                 throw new WarningException("Collision Object tried to update collider with different parent!");
             }
-            collider.UpdateShape(time.Delta, trans);
+            collider.UpdateShape(fixedTime.Delta, trans);
             OnColliderUpdated(collider);
         }
         OnColliderUpdateFinished();
+        
     }
 
     /// <summary>
