@@ -164,7 +164,8 @@ public partial class Game
             if (FixedPhysicsEnabled)
             {
                 ResolveUpdate(true);
-                AdvanceFixedUpdate(frameDelta); //frameDelta is a double instead of dt that is a float
+                // Use double-precision frameDelta for more accurate fixed-step physics timing
+                AdvanceFixedUpdate(frameDelta);
             }
             else ResolveUpdate(false);
 
@@ -345,7 +346,6 @@ public partial class Game
     {
         const double maxFrameTime = 1.0 / 30.0;
         double frameTime = dt;
-        // var t = 0.0f;
 
         if (frameTime > maxFrameTime) frameTime = maxFrameTime;
 
@@ -359,6 +359,9 @@ public partial class Game
         }
 
         double alpha = physicsAccumulator / FixedPhysicsTimestep;
+        // alpha is computed in double precision for timing accuracy, but interpolation
+        // uses float because ResolveInterpolateFixedUpdate (e.g., via IUpdateable) has
+        // a float-based public API. This precision downgrade is intentional.
         ResolveInterpolateFixedUpdate((float)alpha);
     }
 
