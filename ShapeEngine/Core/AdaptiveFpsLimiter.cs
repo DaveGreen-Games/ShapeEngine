@@ -1,3 +1,4 @@
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.StaticLib;
 
@@ -205,8 +206,8 @@ public sealed class AdaptiveFpsLimiter
         private set
         {
             limit = value;
-            if (TargetFps < limit.Min) TargetFps = limit.Min;
-            else if (TargetFps > limit.Max) TargetFps = limit.Max;
+            // if (TargetFps < limit.Min) TargetFps = limit.Min;
+            // else if (TargetFps > limit.Max) TargetFps = limit.Max;
         } 
     }
     
@@ -341,9 +342,9 @@ public sealed class AdaptiveFpsLimiter
 
     /// <summary>
     /// Maximum allowed FPS limit used to clamp the limiter's configured maximum.
-    /// Set to <see cref="int.MaxValue"/> to indicate effectively no practical upper bound.
+    /// Set to half of <see cref="int.MaxValue"/> to indicate effectively no practical upper bound.
     /// </summary>
-    public static readonly int MaxFpsLimit = int.MaxValue;
+    public static readonly int MaxFpsLimit = int.MaxValue / 2;
     #endregion
     
     #region Constructor
@@ -367,13 +368,13 @@ public sealed class AdaptiveFpsLimiter
         int min = minFpsLimit;
         int max = maxFpsLimit;
         if(min < MinFpsLimit) min = MinFpsLimit;
-        if(max > MaxFpsLimit) max = MaxFpsLimit;
+        if(max > MaxFpsLimit || max <= 0) max = MaxFpsLimit;
         if (min > max)
         {
             (min, max) = (max, min);
         }
         
-        Limit = new ValueRangeInt(min, max); //TargetFps will be clamped to new limits in setter
+        Limit = new ValueRangeInt(min, max);
         Enabled = settings.Enabled;
         RaiseFpsCooldownDuration = settings.RaiseFpsCooldownDuration;
         RequiredConsecutiveChecks = settings.RequiredConsecutiveChecks;
@@ -399,6 +400,26 @@ public sealed class AdaptiveFpsLimiter
     /// <returns>The resulting target FPS after applying the adaptive limiter logic.</returns>
     internal int Update(int targetFrameRate, double frameTime, double frameDelta, VsyncMode vsyncMode)
     {
+        //initialize target fps on first update
+        if (TargetFps <= 0)
+        {
+            if (targetFrameRate > 0)
+            {
+                TargetFps = targetFrameRate;
+            }
+            else
+            {
+                if (frameTime <= 0.0)
+                {
+                    TargetFps = 30; //safeguard
+                }
+                else
+                {
+                    TargetFps = (int)(1.0 / frameTime);
+                }
+            }
+        }
+        
         if (prevVsyncMode != vsyncMode)
         {
             if (TargetFps != targetFrameRate)
@@ -452,8 +473,18 @@ public sealed class AdaptiveFpsLimiter
             cooldownTimer -= frameDelta;
             if(cooldownTimer < 0.0) cooldownTimer = 0.0;
         }
+
+        if (TargetFps <= 0)
+        {
+            TargetFps = 30;
+            Game.Instance.Logger.LogWarning($"AdaptiveFpsLimiter: TargetFps was <= 0, resetting to {TargetFps} as a safe default. This should never happen.");
+        }
+        else
+        {
+            if(TargetFps < Limit.Min) TargetFps = Limit.Min;
+            if(TargetFps > Limit.Max) TargetFps = Limit.Max;
+        }
         
-        if(TargetFps <= 0) TargetFps = Limit.Min;
         double targetFrameTime = 1.0 / TargetFps;
         
         //reduce fps
@@ -479,6 +510,7 @@ public sealed class AdaptiveFpsLimiter
                 if (vsyncMode == VsyncMode.Disabled || targetFrameRate <= 0)
                 {
                     TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - (critical ? CriticalFramerateReductionStep : FramerateReductionStep));
+                    Console.WriteLine($"--------------- Reduced target FPS to {TargetFps} (critical: {critical})");
                 }
                 else
                 {
