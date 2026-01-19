@@ -176,11 +176,10 @@ public partial class Game
             FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
 
             bool idleUnfocusedLimitActive = false;
-            
             if (Window.IsUnfocusedFrameRateLimitActive())
             {
                 int limit = Window.UnfocusedFrameRateLimit;
-                if (limit > 0 && limit < targetFps)
+                if (limit > 0 && (limit < targetFps || targetFps <= 0))
                 {
                     targetFps = limit;
                     idleUnfocusedLimitActive = true;
