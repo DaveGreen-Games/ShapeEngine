@@ -520,8 +520,8 @@ public sealed class GameWindow
         
         //Setup frame rate variables and vsync directly bypassing getters and setters to avoid logic errors on startup.
         vsync = windowSettings.Vsync;
-        AdaptiveFpsLimiter = new(framerateSettings.AdaptiveFpsLimiterSettings);
-        fpsLimit = ShapeMath.MaxInt(framerateSettings.FrameRateLimit, 0);
+        AdaptiveFpsLimiter = new(framerateSettings.AdaptiveFpsLimiterSettings, framerateSettings.MinFrameRate, framerateSettings.MaxFrameRate);
+        fpsLimit = framerateSettings.FrameRateLimit;
         UnfocusedFrameRateLimit = framerateSettings.UnfocusedFrameRateLimit;
         
         int newLimit = ComputeTargetFpsFromMode(vsync);

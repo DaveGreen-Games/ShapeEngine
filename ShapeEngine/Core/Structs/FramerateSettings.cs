@@ -1,3 +1,5 @@
+using ShapeEngine.StaticLib;
+
 namespace ShapeEngine.Core.Structs;
 
 public readonly struct FramerateSettings
@@ -50,6 +52,7 @@ public readonly struct FramerateSettings
     public readonly int FixedFramerate;
 
     public readonly int MinFrameRate;
+    public readonly int MaxFrameRate;
     public readonly double MaxDeltaTime;
     public readonly int MaxSubsteps;
 
@@ -58,6 +61,7 @@ public readonly struct FramerateSettings
         60,
         0,
         30,
+        120,
         30,
         30, 120f,
         AdaptiveFpsLimiter.Settings.Default,
@@ -69,6 +73,7 @@ public readonly struct FramerateSettings
         60,
         60,
         30,
+        60,
         30,
         30, 120f,
         AdaptiveFpsLimiter.Settings.Default,
@@ -77,42 +82,63 @@ public readonly struct FramerateSettings
     );
     public static readonly FramerateSettings Unlimited = new
     (
-        60,
         0,
-        30,
+        0,
+        0,
+        500,
         30,
         30, 120f,
-        AdaptiveFpsLimiter.Settings.Default,
+        AdaptiveFpsLimiter.Settings.Disabled,
         0.25,
         5
     );
     public static readonly FramerateSettings UnlimitedAdaptive = new
     (
-        60,
         0,
-        30,
+        0,
+        0,
+        500,
         30,
         30, 120f,
         AdaptiveFpsLimiter.Settings.Default,
         0.25,
         5
     );
+    
     public FramerateSettings(
         int frameRateLimit, 
         int fixedFramerate,
         int minFrameRate, 
+        int maxFrameRate,
         int unfocusedFrameRateLimit,
         int idleFrameRateLimit, float idleTimeThreshold,
         AdaptiveFpsLimiter.Settings adaptiveFpsLimiterSettings,
         double maxDeltaTime = 0.25,
         int maxSubsteps = 5)
     {
-        FrameRateLimit = frameRateLimit;
-        FixedFramerate = fixedFramerate;
-        MinFrameRate = minFrameRate;
-        UnfocusedFrameRateLimit = unfocusedFrameRateLimit;
-        IdleFrameRateLimit = idleFrameRateLimit;
-        IdleTimeThreshold = idleTimeThreshold;
+        MinFrameRate = ShapeMath.MaxInt(minFrameRate, 0);
+        MaxFrameRate = ShapeMath.MaxInt(maxFrameRate, 0);
+
+        if (MinFrameRate > MaxFrameRate)//Swap if min is greater than max
+        {
+            (MinFrameRate, MaxFrameRate) = (MaxFrameRate, MinFrameRate);
+        }
+        
+        if (idleTimeThreshold > 0 && idleFrameRateLimit > 0)
+        {
+            IdleFrameRateLimit = ShapeMath.MaxInt(idleFrameRateLimit, MinFrameRate);
+            IdleTimeThreshold = idleTimeThreshold;
+        }
+        else
+        {
+            IdleFrameRateLimit = 0;
+            IdleTimeThreshold = 0f;
+        }
+        
+        FrameRateLimit = frameRateLimit > 0 ? ShapeMath.MaxInt(frameRateLimit, MinFrameRate) : 0;
+        FixedFramerate = fixedFramerate > 0 ? ShapeMath.MaxInt(fixedFramerate, MinFrameRate) : 0;
+        UnfocusedFrameRateLimit = unfocusedFrameRateLimit > 0 ? ShapeMath.MaxInt(unfocusedFrameRateLimit, MinFrameRate) : 0; 
+
         AdaptiveFpsLimiterSettings = adaptiveFpsLimiterSettings;
         MaxDeltaTime = maxDeltaTime;
         MaxSubsteps = maxSubsteps;

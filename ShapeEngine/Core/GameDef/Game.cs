@@ -493,15 +493,16 @@ public partial class Game
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
         UpdateGamepadMappings(inputSettings);
-        
+
         MinFrameRate = framerateSettings.MinFrameRate;
+        IdleTimeThreshold = framerateSettings.IdleTimeThreshold;
+        IdleFrameRateLimit = framerateSettings.IdleFrameRateLimit;
         MaxDeltaTime = framerateSettings.MaxDeltaTime;
         MaxSubsteps = framerateSettings.MaxSubsteps;
         
         var fixedFramerate = framerateSettings.FixedFramerate;
         if (fixedFramerate > 0)
         {
-            if (fixedFramerate < MinFrameRate && MinFrameRate > 0) fixedFramerate = MinFrameRate;
             FixedFramerate = fixedFramerate;
             FixedPhysicsTimestep = 1.0 / FixedFramerate;
         }
@@ -546,9 +547,6 @@ public partial class Game
         Input.GamepadManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
         Input.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
         Input.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
-        
-        IdleTimeThreshold = framerateSettings.IdleTimeThreshold;
-        IdleFrameRateLimit = framerateSettings.IdleFrameRateLimit;
         
     }
 
