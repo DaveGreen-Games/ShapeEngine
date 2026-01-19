@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Windows.Markup;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
@@ -336,6 +337,8 @@ public sealed class GameWindow
     /// </remarks>
     public AdaptiveFpsLimiter AdaptiveFpsLimiter { get; private set; }
     
+    public int MinFrameRate { get; private set; }
+    public int MaxFrameRate { get; private set; }
     
     /// <summary>
     /// Gets or sets the frames-per-second limit used when VSync is disabled. 0 means unlimited.
@@ -351,6 +354,17 @@ public sealed class GameWindow
         set
         {
             fpsLimit = value < 0 ? 0 : value;
+
+            if (fpsLimit > 0)
+            {
+                if(MinFrameRate > 0 && fpsLimit < MinFrameRate) fpsLimit = MinFrameRate;
+                if(MaxFrameRate > 0 && fpsLimit > MaxFrameRate) fpsLimit = MaxFrameRate;
+            }
+            else
+            {
+                fpsLimit = MaxFrameRate > 0 ? MaxFrameRate : 0;
+            }
+            
             if(VSync == VsyncMode.Disabled) TargetFps = fpsLimit;
         }
     }
@@ -436,14 +450,17 @@ public sealed class GameWindow
         int refresh = Monitor.CurMonitor().Refreshrate;
         if(refresh <= 0) return 0;
 
-        return mode switch
+        int value = 0;
+        switch (mode)
         {
-            VsyncMode.Half => Math.Max(30, refresh / 2),
-            VsyncMode.Normal => refresh,
-            VsyncMode.Double => refresh * 2,
-            VsyncMode.Quadruple => refresh * 4,
-            _ => 0
-        };
+            case VsyncMode.Half: value = Math.Max(30, refresh / 2); break;
+            case VsyncMode.Normal: value = refresh; break;
+            case VsyncMode.Double: value = refresh * 2; break;
+            case VsyncMode.Quadruple: value = refresh * 4; break;
+        }
+        if(MinFrameRate > 0 && value < MinFrameRate) value = MinFrameRate;
+        if(MaxFrameRate > 0 && value > MaxFrameRate) value = MaxFrameRate;
+        return value;
     }
     
     /// <summary>
@@ -520,6 +537,8 @@ public sealed class GameWindow
         
         //Setup frame rate variables and vsync directly bypassing getters and setters to avoid logic errors on startup.
         vsync = windowSettings.Vsync;
+        MinFrameRate = framerateSettings.MinFrameRate;
+        MaxFrameRate = framerateSettings.MaxFrameRate;
         AdaptiveFpsLimiter = new(framerateSettings.AdaptiveFpsLimiterSettings, framerateSettings.MinFrameRate, framerateSettings.MaxFrameRate);
         fpsLimit = framerateSettings.FrameRateLimit;
         UnfocusedFrameRateLimit = framerateSettings.UnfocusedFrameRateLimit;
@@ -534,7 +553,7 @@ public sealed class GameWindow
         {
             TargetFps = newLimit;
         }
-        
+
         switch (windowSettings.WindowBorder)
         {
             case WindowBorder.Resizabled: 

@@ -51,9 +51,9 @@ public readonly struct FramerateSettings
     /// </summary>
     public readonly int FixedFramerate;
 
-    public readonly int MinFrameRate;
-    public readonly int MaxFrameRate;
-    public readonly double MaxDeltaTime;
+    public readonly int MinFrameRate;//sets limits on adaptive fps limiter, fixed framerate (if enabled) and frame rate limit (if enabled)
+    public readonly int MaxFrameRate;//sets limits on adaptive fps limiter, and max framerate when frame rate limit is disabled
+    public readonly double MaxDeltaTime;//implemented
     public readonly int MaxSubsteps;
 
     public static readonly FramerateSettings Default = new
@@ -85,7 +85,7 @@ public readonly struct FramerateSettings
         0,
         0,
         0,
-        500,
+        0,
         30,
         30, 120f,
         AdaptiveFpsLimiter.Settings.Disabled,
@@ -126,7 +126,8 @@ public readonly struct FramerateSettings
         
         if (idleTimeThreshold > 0 && idleFrameRateLimit > 0)
         {
-            IdleFrameRateLimit = ShapeMath.MaxInt(idleFrameRateLimit, MinFrameRate);
+            if(MinFrameRate > 0 && idleFrameRateLimit < MinFrameRate) idleTimeThreshold = MinFrameRate;
+            if(MaxFrameRate > 0 && idleFrameRateLimit > MaxFrameRate) idleFrameRateLimit = MaxFrameRate;
             IdleTimeThreshold = idleTimeThreshold;
         }
         else
@@ -135,9 +136,38 @@ public readonly struct FramerateSettings
             IdleTimeThreshold = 0f;
         }
         
-        FrameRateLimit = frameRateLimit > 0 ? ShapeMath.MaxInt(frameRateLimit, MinFrameRate) : 0;
-        FixedFramerate = fixedFramerate > 0 ? ShapeMath.MaxInt(fixedFramerate, MinFrameRate) : 0;
-        UnfocusedFrameRateLimit = unfocusedFrameRateLimit > 0 ? ShapeMath.MaxInt(unfocusedFrameRateLimit, MinFrameRate) : 0; 
+        if (unfocusedFrameRateLimit > 0)
+        {
+            if(MinFrameRate > 0 && unfocusedFrameRateLimit < MinFrameRate) unfocusedFrameRateLimit = MinFrameRate;
+            if(MaxFrameRate > 0 && unfocusedFrameRateLimit > MaxFrameRate) unfocusedFrameRateLimit = MaxFrameRate;
+            UnfocusedFrameRateLimit = unfocusedFrameRateLimit;
+        }
+        else
+        {
+            UnfocusedFrameRateLimit = 0;
+        }
+
+        if (frameRateLimit > 0)
+        {
+            if(MinFrameRate > 0 && frameRateLimit < MinFrameRate) frameRateLimit = MinFrameRate;
+            if(MaxFrameRate > 0 && frameRateLimit > MaxFrameRate) frameRateLimit = MaxFrameRate;
+            FrameRateLimit = frameRateLimit;
+        }
+        else
+        {
+            FrameRateLimit = MaxFrameRate > 0 ? MaxFrameRate : 0;
+        }
+
+        if (fixedFramerate > 0)
+        {
+            if(MinFrameRate > 0 && FixedFramerate < MinFrameRate) FixedFramerate = MinFrameRate;
+            if(MaxFrameRate > 0 && FixedFramerate > MaxFrameRate) FixedFramerate = MaxFrameRate;
+            FixedFramerate = fixedFramerate;
+        }
+        else
+        {
+            FixedFramerate = 0;
+        }
 
         AdaptiveFpsLimiterSettings = adaptiveFpsLimiterSettings;
         MaxDeltaTime = maxDeltaTime;

@@ -84,7 +84,7 @@ public partial class Game
     public double FixedPhysicsTimestep { get; private set; }
     public bool FixedFramerateEnabled => FixedFramerate > 0;
     
-    public int MinFrameRate { get; private set; }
+
     public double MaxDeltaTime { get; private set; }
     public int MaxSubsteps { get; private set; }
     
@@ -493,8 +493,7 @@ public partial class Game
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
         UpdateGamepadMappings(inputSettings);
-
-        MinFrameRate = framerateSettings.MinFrameRate;
+        
         IdleTimeThreshold = framerateSettings.IdleTimeThreshold;
         IdleFrameRateLimit = framerateSettings.IdleFrameRateLimit;
         MaxDeltaTime = framerateSettings.MaxDeltaTime;
