@@ -514,101 +514,16 @@ namespace ShapeEngine.Core
         /// <param name="game">The screen information for the game area.</param>
         /// <param name="gameUi">The screen information for the game UI area.</param>
         /// <param name="ui">The screen information for the UI area.</param>
-        /// <param name="fixedFramerateMode">If this update is called in the open frame rate or fixed frame rate mode.</param>
-        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, bool fixedFramerateMode)
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            if (fixedFramerateMode)
-            {
-                if (clearAreaActive && HasValidBounds())
-                {
-                    if (!bounds.OverlapShape(clearArea)) clearAreaActive = false;
-                }
-            
-                foreach (var layer in allObjects)
-                {
-                    var objs = allObjects[layer.Key];
-                    if (objs.Count <= 0) continue;
+            drawToGameTextureObjects.Clear();
+            drawToGameUiTextureObjects.Clear();
 
-                    for (int i = objs.Count - 1; i >= 0; i--)
-                    {
-                        var obj = objs[i];
-                    
-                        if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
-                        {
-                            if (clearArea.OverlapShape(obj.GetBoundingBox()))
-                            {
-                                RemoveGameObject(obj);
-                                continue;
-                            }
-                        }
-                    
-                        obj.Update(time, game, gameUi, ui);
-                    }
-                }
-            
-                clearAreaActive = false;
+            if (clearAreaActive && HasValidBounds())
+            {
+                if (!bounds.OverlapShape(clearArea)) clearAreaActive = false;
             }
-            else
-            {
-                drawToGameTextureObjects.Clear();
-                drawToGameUiTextureObjects.Clear();
-
-                if (clearAreaActive && HasValidBounds())
-                {
-                    if (!bounds.OverlapShape(clearArea)) clearAreaActive = false;
-                }
                 
-                foreach (var layer in allObjects)
-                {
-                    var objs = allObjects[layer.Key];
-                    if (objs.Count <= 0) continue;
-
-                    for (int i = objs.Count - 1; i >= 0; i--)
-                    {
-                        var obj = objs[i];
-
-                        if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
-                        {
-                            if (clearArea.OverlapShape(obj.GetBoundingBox()))
-                            {
-                                RemoveGameObject(obj);
-                                continue;
-                            }
-                        }
-
-                        
-                        obj.UpdateParallaxe(ParallaxePosition);
-                        
-                        if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                        if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
-                        
-                        obj.Update(time, game, gameUi, ui);
-
-                        if (obj.IsDead || HasValidBounds() && obj.HasLeftBounds(bounds))
-                        {
-                            RemoveGameObject(obj);
-                        }
-                    }
-                }
-
-                clearAreaActive = false;
-            }
-        }
-
-        #endregion
-        
-        #region Fixed Framerate
-        
-        /// <summary>
-        /// Fixed updates the spawn area and all contained game objects.
-        /// This method is called with fixed time steps.
-        /// </summary>
-        /// <param name="fixedTime">The current fixed game time.</param>
-        /// <param name="game">The screen information for the game area.</param>
-        /// <param name="gameUi">The screen information for the game UI area.</param>
-        /// <param name="ui">The screen information for the UI area.</param>
-        public virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
             foreach (var layer in allObjects)
             {
                 var objs = allObjects[layer.Key];
@@ -618,46 +533,33 @@ namespace ShapeEngine.Core
                 {
                     var obj = objs[i];
 
+                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
+                    {
+                        if (clearArea.OverlapShape(obj.GetBoundingBox()))
+                        {
+                            RemoveGameObject(obj);
+                            continue;
+                        }
+                    }
+
+                        
                     obj.UpdateParallaxe(ParallaxePosition);
-                    
-                    obj.FixedUpdate(fixedTime, game, gameUi, ui);
-                    
+                        
+                    if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
+                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
+                        
+                    obj.Update(time, game, gameUi, ui);
+
                     if (obj.IsDead || HasValidBounds() && obj.HasLeftBounds(bounds))
                     {
                         RemoveGameObject(obj);
                     }
                 }
             }
-        }
-        /// <summary>
-        /// Interpolates and updates the spawn area and all contained game objects.
-        /// This method is called for smooth frame-rate independent rendering.
-        /// </summary>
-        /// <param name="time">The current game time.</param>
-        /// <param name="game">The screen information for the game area.</param>
-        /// <param name="gameUi">The screen information for the game UI area.</param>
-        /// <param name="ui">The screen information for the UI area.</param>
-        /// <param name="f">The interpolation factor.</param>
-        public virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f)
-        {
-            drawToGameTextureObjects.Clear();
-            drawToGameUiTextureObjects.Clear();
-            
-            foreach (var layer in allObjects)
-            {
-                var objs = allObjects[layer.Key];
-                if (objs.Count <= 0) continue;
 
-                for (int i = objs.Count - 1; i >= 0; i--)
-                {
-                    var obj = objs[i];
-                    if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
-                    obj.InterpolateFixedUpdate(time, game, gameUi, ui, f);
-                }
-            }
+            clearAreaActive = false;
         }
-        
+
         #endregion
         
         #region Bounds

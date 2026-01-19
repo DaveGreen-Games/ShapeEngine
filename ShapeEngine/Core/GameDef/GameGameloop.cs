@@ -161,14 +161,8 @@ public partial class Game
 
             UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
 
-            if (FixedPhysicsEnabled)
-            {
-                ResolveUpdate(true);
-                // Use double-precision frameDelta for more accurate fixed-step physics timing
-                AdvanceFixedUpdate(frameDelta);
-            }
-            else ResolveUpdate(false);
-
+            ResolveUpdate();
+            
             DrawToScreen();
 
             ResolveDeferred();
@@ -342,27 +336,27 @@ public partial class Game
         ResolveOnGameTextureResized(w, h);
     }
 
-    private void AdvanceFixedUpdate(double dt)
-    {
-        const double maxFrameTime = 1.0 / 30.0;
-        double frameTime = dt;
-
-        if (frameTime > maxFrameTime) frameTime = maxFrameTime;
-
-        physicsAccumulator += frameTime;
-        while (physicsAccumulator >= FixedPhysicsTimestep)
-        {
-            FixedTime = FixedTime.Tick(FixedPhysicsTimestep);
-            ResolveFixedUpdate();
-            // t += FixedPhysicsTimestep;
-            physicsAccumulator -= FixedPhysicsTimestep;
-        }
-
-        double alpha = physicsAccumulator / FixedPhysicsTimestep;
-        // alpha is computed in double precision for timing accuracy, but interpolation
-        // uses float because ResolveInterpolateFixedUpdate (e.g., via IUpdateable) has
-        // a float-based public API. This precision downgrade is intentional.
-        ResolveInterpolateFixedUpdate((float)alpha);
-    }
+    // private void AdvanceFixedUpdate(double dt)
+    // {
+    //     const double maxFrameTime = 1.0 / 30.0;
+    //     double frameTime = dt;
+    //
+    //     if (frameTime > maxFrameTime) frameTime = maxFrameTime;
+    //
+    //     physicsAccumulator += frameTime;
+    //     while (physicsAccumulator >= FixedPhysicsTimestep)
+    //     {
+    //         FixedTime = FixedTime.Tick(FixedPhysicsTimestep);
+    //         ResolveFixedUpdate();
+    //         // t += FixedPhysicsTimestep;
+    //         physicsAccumulator -= FixedPhysicsTimestep;
+    //     }
+    //
+    //     double alpha = physicsAccumulator / FixedPhysicsTimestep;
+    //     // alpha is computed in double precision for timing accuracy, but interpolation
+    //     // uses float because ResolveInterpolateFixedUpdate (e.g., via IUpdateable) has
+    //     // a float-based public API. This precision downgrade is intentional.
+    //     ResolveInterpolateFixedUpdate((float)alpha);
+    // }
 
 }

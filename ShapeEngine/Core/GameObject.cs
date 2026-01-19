@@ -55,23 +55,6 @@ public abstract class GameObject : IUpdateable, IDrawable
     /// <param name="gameUi">Game UI screen info.</param>
     /// <param name="ui">UI screen info.</param>
     public abstract void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
-    /// <summary>
-    /// Updates this object at a fixed timestep. Override for physics or logic that needs fixed updates.
-    /// </summary>
-    /// <param name="fixedTime">The fixed game time.</param>
-    /// <param name="game">Game screen info.</param>
-    /// <param name="gameUi">Game UI screen info.</param>
-    /// <param name="ui">UI screen info.</param>
-    public virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    /// <summary>
-    /// Interpolates this object between fixed updates for smooth rendering.
-    /// </summary>
-    /// <param name="time">The current game time.</param>
-    /// <param name="game">Game screen info.</param>
-    /// <param name="gameUi">Game UI screen info.</param>
-    /// <param name="ui">UI screen info.</param>
-    /// <param name="f">Interpolation factor (0-1).</param>
-    public virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f) { }
 
     /// <summary>
     /// Draws this object to the game world.

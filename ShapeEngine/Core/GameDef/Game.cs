@@ -33,8 +33,6 @@ namespace ShapeEngine.Core.GameDef;
 /// <item><see cref="LoadContent"/> - Called once.</item>
 /// <item><see cref="BeginRun"/> - Called once.</item>
 /// <item><see cref="Update"/> - Called every frame with variable timing.</item>
-/// <item><see cref="FixedUpdate"/> - Called in a fixed interval with fixed timing.</item>
-/// <item><see cref="InterpolateFixedUpdate"/> - Called every frame with variable timing.</item>
 /// <item><see cref="DrawGame"/> - Called every frame.</item>
 /// <item><see cref="DrawGameUI"/> - Called every frame.</item>
 /// <item><see cref="DrawUI"/> - Called every frame.</item>
@@ -72,47 +70,24 @@ public partial class Game
     public string[] LaunchParams { get; protected set; } = [];
 
     /// <summary>
-    /// Gets whether the fixed physics update system is enabled.
+    /// Gets the target framerate for fixed  updates.
     /// </summary>
-    /// <remarks>
-    /// When true, the fixed update functions will be called at the FixedPhysicsFramerate.
-    /// Fixed Update call order:
-    /// <list type="bullet">
-    /// <item><see cref="Update"/> with variable timing.</item>
-    /// <item><see cref="FixedUpdate"/> with fixed timing.</item>
-    /// <item><see cref="InterpolateFixedUpdate"/> with variable timing.</item>
-    /// <item><see cref="DrawGame"/></item>
-    /// <item><see cref="DrawGameUI"/></item>
-    /// <item><see cref="DrawUI"/></item>
-    /// </list>
-    /// Unlocked Update call order:
-    /// <list type="bullet">
-    /// <item><see cref="Update"/> with variable timing.</item>
-    /// <item><see cref="DrawGame"/></item>
-    /// <item><see cref="DrawGameUI"/></item>
-    /// <item><see cref="DrawUI"/></item>
-    /// </list>
-    /// </remarks>
-    public bool FixedPhysicsEnabled { get; private set; }
+    public int FixedFramerate { get; private set; }
 
     /// <summary>
-    /// Gets the target framerate for fixed physics updates.
+    /// Gets the time interval in seconds between fixed  updates.
     /// </summary>
     /// <remarks>
-    /// This value determines how many physics updates will be performed per second.
-    /// Higher values provide more accurate physics but require more processing power.
-    /// </remarks>
-    public int FixedPhysicsFramerate { get; private set; }
-
-    /// <summary>
-    /// Gets the time interval in seconds between fixed physics updates.
-    /// </summary>
-    /// <remarks>
-    /// This value is calculated as 1.0 / FixedPhysicsFramerate and represents
+    /// This value is calculated as 1.0 / FixedFramerate and represents
     /// the duration of each physics step in seconds.
     /// </remarks>
     public double FixedPhysicsTimestep { get; private set; }
-
+    public bool FixedFramerateEnabled => FixedFramerate > 0;
+    
+    public int MinFrameRate { get; private set; }
+    public double MaxDeltaTime { get; private set; }
+    public int MaxSubsteps { get; private set; }
+    
     /// <summary>
     /// Gets the game time information for the variable update loop.
     /// </summary>
@@ -121,15 +96,6 @@ public partial class Game
     /// for the main game loop that runs at variable framerates.
     /// </remarks>
     public GameTime Time { get; private set; } = new GameTime();
-
-    /// <summary>
-    /// Gets the game time information for the fixed update loop.
-    /// </summary>
-    /// <remarks>
-    /// Contains timing data for the physics update loop that runs at a fixed timestep.
-    /// Only relevant when FixedPhysicsEnabled is true.
-    /// </remarks>
-    public GameTime FixedTime { get; private set; } = new GameTime();
 
     /// <summary>
     /// Gets or sets the background color of the game window.
@@ -392,8 +358,9 @@ public partial class Game
     /// </remarks>
     /// <param name="gameSettings">The settings for the game, including fixed framerate, screen texture mode, and rendering options.</param>
     /// <param name="windowSettings">The settings for the window, including size, position, and display properties.</param>
+    /// <param name="framerateSettings">The settings for framerate control, including fixed timestep and frame rate limits.</param>
     /// <param name="inputSettings">The settings for input devices, including keyboard, mouse, and gamepad configurations.</param>
-    public Game(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings)
+    public Game(GameSettings gameSettings, WindowSettings windowSettings, FramerateSettings framerateSettings,  InputSettings inputSettings)
     {
         if (instance != null) 
             throw new InvalidOperationException("Game instance already exists! You should only create one instance of the game class per application!");
@@ -508,7 +475,7 @@ public partial class Game
         }
         
         // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
-        Window = new(windowSettings);
+        Window = new(windowSettings, framerateSettings);
         Window.OnWindowSizeChanged += ResolveOnWindowSizeChanged;
         Window.OnWindowPositionChanged += ResolveOnWindowPositionChanged;
         Window.OnMonitorChanged += ResolveOnMonitorChanged;
@@ -527,22 +494,19 @@ public partial class Game
 
         UpdateGamepadMappings(inputSettings);
         
+        MinFrameRate = framerateSettings.MinFrameRate;
+        MaxDeltaTime = framerateSettings.MaxDeltaTime;
+        MaxSubsteps = framerateSettings.MaxSubsteps;
+        
+        var fixedFramerate = framerateSettings.FixedFramerate;
+        if (fixedFramerate > 0)
+        {
+            if (fixedFramerate < MinFrameRate && MinFrameRate > 0) fixedFramerate = MinFrameRate;
+            FixedFramerate = fixedFramerate;
+            FixedPhysicsTimestep = 1.0 / FixedFramerate;
+        }
+        
         AudioDevice = new AudioDevice();
-
-        var fixedFramerate = gameSettings.FixedFramerate;
-        if (fixedFramerate <= 0)
-        {
-            FixedPhysicsFramerate = -1;
-            FixedPhysicsTimestep = -1;
-            FixedPhysicsEnabled = false;
-        }
-        else
-        {
-            if (fixedFramerate < 30) fixedFramerate = 30;
-            FixedPhysicsFramerate = fixedFramerate;
-            FixedPhysicsTimestep = 1.0 / FixedPhysicsFramerate;
-            FixedPhysicsEnabled = true;
-        }
         
         curCamera = basicCamera;
         curCamera.Activate();
@@ -583,8 +547,8 @@ public partial class Game
         Input.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
         Input.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
         
-        IdleTimeThreshold = gameSettings.IdleTimeThreshold;
-        IdleFrameRateLimit = gameSettings.IdleFrameRateLimit;
+        IdleTimeThreshold = framerateSettings.IdleTimeThreshold;
+        IdleFrameRateLimit = framerateSettings.IdleFrameRateLimit;
         
     }
 

@@ -617,7 +617,7 @@ public class EndlessSpaceCollision : ExampleScene
         }
         
         spatialHash.SetBounds(universe);
-        CollisionHandler?.Update(time.Delta);
+        // CollisionHandler?.Update(time.Delta);
 
         // var removed = 0;
         for (int i = asteroids.Count - 1; i >= 0; i--)

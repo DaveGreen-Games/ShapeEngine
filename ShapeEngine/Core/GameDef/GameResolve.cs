@@ -39,29 +39,21 @@ public partial class Game
         CurScene.ResolveOnButtonReleased(e);
     }
 
-    private void ResolveUpdate(bool fixedFramerateMode)
+    private void ResolveUpdate()
     {
         TriggerCustomEventsOnUpdate(true, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, fixedFramerateMode);
+        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         TriggerCustomEventsOnUpdate(false, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
-    
-    private void ResolveFixedUpdate()
-    {
-        TriggerCustomEventsOnFixedUpdate(true, FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveFixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        TriggerCustomEventsOnFixedUpdate(false, FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-    }
 
-    private void ResolveInterpolateFixedUpdate(float f)
-    {
-        TriggerCustomEventsOnInterpolateFixedUpdate(true, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        InterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
-        CurScene.ResolveInterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
-        TriggerCustomEventsOnInterpolateFixedUpdate(false, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-    }
+    // private void ResolveInterpolateFixedUpdate(float f)
+    // {
+    //     TriggerCustomEventsOnInterpolateFixedUpdate(true, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+    //     InterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
+    //     CurScene.ResolveInterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
+    //     TriggerCustomEventsOnInterpolateFixedUpdate(false, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+    // }
 
     private void ResolveOnGameTextureResized(int w, int h)
     {

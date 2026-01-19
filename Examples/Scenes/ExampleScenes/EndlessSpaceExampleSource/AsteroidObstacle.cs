@@ -178,10 +178,6 @@ internal class AsteroidObstacle : CollisionObject
         var moved = Transform.Position - prevPosition;
         Triangulation.ChangePosition(moved);
     }
-    public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-        
-    }
     public Polygon GetShape() => collider.GetPolygonShape();
 
     public void Cut(Polygon cutShape)

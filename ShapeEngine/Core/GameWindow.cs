@@ -497,7 +497,8 @@ public sealed class GameWindow
     /// Initializes a new instance of the <see cref="GameWindow"/> class with the specified settings.
     /// </summary>
     /// <param name="windowSettings">The window settings to use.</param>
-    internal GameWindow(WindowSettings windowSettings)
+    /// <param name="framerateSettings">The framerate settings to use.</param>
+    internal GameWindow(WindowSettings windowSettings, FramerateSettings framerateSettings)
     {
         if(windowSettings.Msaa4x) Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
         if(windowSettings.HighDPI) Raylib.SetConfigFlags(ConfigFlags.HighDpiWindow);
@@ -519,9 +520,9 @@ public sealed class GameWindow
         
         //Setup frame rate variables and vsync directly bypassing getters and setters to avoid logic errors on startup.
         vsync = windowSettings.Vsync;
-        AdaptiveFpsLimiter = new(windowSettings.AdaptiveFpsLimiterSettings);
-        fpsLimit = ShapeMath.MaxInt(windowSettings.FrameRateLimit, 0);
-        UnfocusedFrameRateLimit = windowSettings.UnfocusedFrameRateLimit;
+        AdaptiveFpsLimiter = new(framerateSettings.AdaptiveFpsLimiterSettings);
+        fpsLimit = ShapeMath.MaxInt(framerateSettings.FrameRateLimit, 0);
+        UnfocusedFrameRateLimit = framerateSettings.UnfocusedFrameRateLimit;
         
         int newLimit = ComputeTargetFpsFromMode(vsync);
         if (newLimit <= 0)
