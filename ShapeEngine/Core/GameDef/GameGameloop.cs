@@ -70,6 +70,13 @@ public partial class Game
         while (!quit)
         {
             frameDeltaNanoSeconds = frameWatch.ElapsedTicks * nanosecPerTick;
+
+            if (MaxDeltaTime > 0.0)
+            {
+                long maxFrameDeltaNanoSeconds = ShapeMath.SecondsToNanoSeconds(MaxDeltaTime);
+                if(frameDeltaNanoSeconds > maxFrameDeltaNanoSeconds) frameDeltaNanoSeconds = maxFrameDeltaNanoSeconds;
+            }
+            
             frameDelta = frameDeltaNanoSeconds / (double)ShapeMath.NanoSecondsInOneSecond;
             
             // Clamp frameDelta to a small minimum to avoid division by zero or extremely large FPS values
@@ -161,7 +168,9 @@ public partial class Game
 
             UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
 
+            //fixed goes here
             ResolveUpdate();
+            //---
             
             DrawToScreen();
 
