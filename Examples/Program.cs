@@ -1,13 +1,16 @@
-﻿using ShapeEngine.Core;
+﻿using Raylib_cs;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
+using ShapeEngine.Screen;
 
 namespace Examples;
 public static class Program
 {
     public static void Main(string[] args)
     {
-        var gameSettings = GameSettings.StretchMode("Shape Engine Examples");
+        // var gameSettings = GameSettings.StretchMode("Shape Engine Examples");
+        var gameSettings = new GameSettings(Dimensions.GetInvalidDimension(), 60, TextureFilter.Bilinear, ShaderSupportType.Multi, false);
         
         var windowSettings = new WindowSettings
         {
@@ -18,10 +21,10 @@ public static class Program
             WindowMinSize = new(480, 270),
             WindowSize = new(960, 540),
             Monitor = 0,
-            Vsync = VsyncMode.Disabled,
+            Vsync = VsyncMode.Double,
             FrameRateLimit = 60,
             UnfocusedFrameRateLimit = 30,
-            AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Default,
+            AdaptiveFpsLimiterSettings = AdaptiveFpsLimiter.Settings.Disabled,
             WindowOpacity = 1f,
             MouseEnabled = true,
             MouseVisible = false,

@@ -617,7 +617,11 @@ public class EndlessSpaceCollision : ExampleScene
         }
         
         spatialHash.SetBounds(universe);
-        CollisionHandler?.Update(time.Delta);
+        
+        //!!!: Very problematic - collision handler is always updated automatically by the scene (in fixed and open mode)!!!
+        // - currently (even in open mode) the collision handler is updated twice per frame...
+        Console.WriteLine($"Collision Handler Endless Space Update frame: {time.TotalFrames} - time fixed mode: {time.FixedMode} - time fixed steps: {time.FixedStep} - delta: {time.Delta}");
+        CollisionHandler?.Update(time.Delta); 
 
         // var removed = 0;
         for (int i = asteroids.Count - 1; i >= 0; i--)
