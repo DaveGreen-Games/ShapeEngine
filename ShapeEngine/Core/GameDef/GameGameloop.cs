@@ -157,17 +157,11 @@ public partial class Game
                     customScreenTextures[i].Update(dt, Window.CurScreenSize, mousePosUI, Paused);
                 }
             }
-
-            GameScreenInfo = gameTexture.GameScreenInfo;
-            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
-            UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-
+            
             if (!Paused)
             {
                 UpdateFlashes(dt);
             }
-
-            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
             
             if (FixedFramerate > 0)//fixed update loop
             {
@@ -178,7 +172,6 @@ public partial class Game
                     ResolveUpdate();
                     fixedTimestepAccumulator -= FixedTimestep;
                 }
-                
                 FixedFramerateInterpolationFactor = fixedTimestepAccumulator / FixedTimestep;
                 FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
             }
@@ -205,20 +198,28 @@ public partial class Game
                     }
                     else
                     {
+                        FixedFramerateInterpolationFactor = 1.0;
+                        FixedFramerateInterpolationFactorF = 1f;
                         UpdateTime = UpdateTime.Tick(frameDelta, false);
                         ResolveUpdate();
                     }
                 }
                 else
                 {
+                    FixedFramerateInterpolationFactor = 1.0;
+                    FixedFramerateInterpolationFactorF = 1f;
                     UpdateTime = UpdateTime.Tick(frameDelta, false);
                     ResolveUpdate();
                 }
             }
 
-            GameScreenInfo = GameScreenInfo.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
-            GameUiScreenInfo = GameUiScreenInfo.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
-            UIScreenInfo = UIScreenInfo.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
+            gameTexture.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
+            
+            GameScreenInfo = gameTexture.GameScreenInfo;
+            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
+            UIScreenInfo = new ScreenInfo(Window.ScreenArea, mousePosUI, FixedFramerateInterpolationFactor);
+            
+            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
             
             DrawToScreen();
 
