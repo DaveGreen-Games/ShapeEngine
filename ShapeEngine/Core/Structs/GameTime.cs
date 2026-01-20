@@ -66,15 +66,17 @@ public readonly struct GameTime
     /// Advances the game time by the specified time delta.
     /// </summary>
     /// <param name="dt">The time delta in seconds to advance the game time by.</param>
+    /// <param name="fixedDelta">Indicates whether the provided delta time is a fixed timestep.</param>
     /// <returns>A new GameTime instance with updated total seconds, incremented frame count, and the provided delta as elapsed seconds.</returns>
-    public GameTime Tick(double dt) => new(TotalSeconds + dt, TotalFrames + 1, dt, FixedDelta);
+    public GameTime Tick(double dt, bool fixedDelta) => new(TotalSeconds + dt, TotalFrames + 1, dt, fixedDelta);
 
     /// <summary>
     /// Advances the game time by the specified time delta using a float value.
     /// </summary>
     /// <param name="dt">The time delta in seconds (as float) to advance the game time by.</param>
+    /// <param name="fixedDelta">Indicates whether the provided delta time is a fixed timestep.</param>
     /// <returns>A new GameTime instance with updated total seconds, incremented frame count, and the provided delta as elapsed seconds.</returns>
-    public GameTime TickF(float dt) => new(TotalSeconds + dt, TotalFrames + 1, dt, FixedDelta);
+    public GameTime TickF(float dt, bool fixedDelta) => new(TotalSeconds + dt, TotalFrames + 1, dt, fixedDelta);
     #endregion
     
     #region Conversion
