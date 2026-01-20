@@ -32,6 +32,12 @@ public readonly struct ScreenInfo
     public readonly double FixedFramerateInterpolationFactor;
     
     /// <summary>
+    /// Gets the fixed-framerate interpolation factor as a single-precision float.
+    /// This is a convenience accessor that casts <see cref="FixedFramerateInterpolationFactor"/> to <see cref="float"/>.
+    /// </summary>
+    public float FixedFramerateInterpolationFactorF => (float)FixedFramerateInterpolationFactor;
+    
+    /// <summary>
     /// Returns a copy of this <see cref="ScreenInfo"/> with the specified fixed-framerate interpolation factor.
     /// </summary>
     /// <param name="factor">The interpolation factor to use for fixed-framerate rendering.</param>
@@ -63,7 +69,7 @@ public readonly struct ScreenInfo
         MousePos = mousePos;
         FixedFramerateInterpolationFactor = 1f;
     }
-    private ScreenInfo(Rect area, Vector2 mousePos, double fixedFramerateInterpolationFactor)
+    internal ScreenInfo(Rect area, Vector2 mousePos, double fixedFramerateInterpolationFactor)
     {
         Area = area;
         MousePos = mousePos;
