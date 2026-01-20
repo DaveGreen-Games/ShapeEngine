@@ -29,7 +29,7 @@ public readonly struct ScreenInfo
     /// After all fixed update substeps are complete, a certain amount of unused time may remain before the next fixed update is due.
     /// This remaining time is expressed as a fraction of the fixed timestep and provided here as the interpolation factor.
     /// </remarks>
-    public readonly float FixedFramerateInterpolationFactor;
+    public readonly double FixedFramerateInterpolationFactor;
     
     /// <summary>
     /// Returns a copy of this <see cref="ScreenInfo"/> with the specified fixed-framerate interpolation factor.
@@ -39,7 +39,7 @@ public readonly struct ScreenInfo
     /// A new <see cref="ScreenInfo"/> instance with <see cref="FixedFramerateInterpolationFactor"/>
     /// set to <paramref name="factor"/>.
     /// </returns>
-    public ScreenInfo SetFixedFramerateInterpolationFactor(float factor)
+    public ScreenInfo SetFixedFramerateInterpolationFactor(double factor)
     {
         return new ScreenInfo(Area, MousePos, factor);
     }
@@ -63,7 +63,7 @@ public readonly struct ScreenInfo
         MousePos = mousePos;
         FixedFramerateInterpolationFactor = 1f;
     }
-    private ScreenInfo(Rect area, Vector2 mousePos, float fixedFramerateInterpolationFactor)
+    private ScreenInfo(Rect area, Vector2 mousePos, double fixedFramerateInterpolationFactor)
     {
         Area = area;
         MousePos = mousePos;
