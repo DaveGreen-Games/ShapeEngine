@@ -29,6 +29,7 @@ public class PathfinderExample2 : ExampleScene
         private Vector2 chasePosition;
         private int lastTraversableNodeIndex = -1;
         private Triangle hull;
+        private Triangle prevHull;
         private readonly float shipSize;
         private Vector2 pivot;
         private Vector2 movementDir;
@@ -127,9 +128,12 @@ public class PathfinderExample2 : ExampleScene
             }
             angleRad += angleMovement;
             hull = hull.ChangeRotation(angleMovement, pivot);
+            
         }
         public void Update(float dt)
         {
+            prevHull = hull;
+            
             inputActionTree.CurrentGamepad = Game.Instance.Input.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(dt);
             
@@ -214,14 +218,36 @@ public class PathfinderExample2 : ExampleScene
                 obstacles.Enqueue(obstacleRect);
             }
         }
-        public void Draw()
+        public void Draw(ScreenInfo game)
         {
             foreach (var obstacleRect in obstacles)
             {
                 obstacleRect.Draw(new ColorRgba(Color.DarkRed));
                 obstacleRect.DrawLines(8f, new ColorRgba(Color.Crimson));
             }
-            hull.DrawLines(4f, hullColor.ColorRgba);
+            
+            DrawInterpolated(game.FixedFramerateInterpolationFactorF);
+        }
+
+        //example of how to use the interpolation factor to draw smooth movement when using fixed framerate
+        private void DrawInterpolated(float f)
+        {
+            if (f >= 1.0f)
+            {
+                hull.DrawLines(4f, hullColor.ColorRgba);
+            }
+            else if (f <= 0.0f)
+            {
+                prevHull.DrawLines(4f, hullColor.ColorRgba);
+            }
+            else
+            {
+                var a = prevHull.A.Lerp(hull.A, f);
+                var b = prevHull.B.Lerp(hull.B, f);
+                var c = prevHull.C.Lerp(hull.C, f);
+                var interpHull = new Triangle(a, b, c);
+                interpHull.DrawLines(4f, hullColor.ColorRgba); 
+            }
         }
         
         public void FollowStarted()
@@ -1013,7 +1039,7 @@ public class PathfinderExample2 : ExampleScene
         
         
         
-        ship.Draw();
+        ship.Draw(game);
 
         var cutShapeColor = Colors.PcWarm.ColorRgba.SetAlpha(100);//.ChangeBrightness(-0.75f);
         foreach (var cutShape in lastCutShapes)
