@@ -81,21 +81,74 @@ public partial class Game
     /// This value is calculated as 1.0 / FixedFramerate and represents
     /// the duration of each physics step in seconds.
     /// </remarks>
-    public double FixedPhysicsTimestep { get; private set; }
+    public double FixedTimestep { get; private set; }
+    
+    /// <summary>
+    /// Interpolation factor used to blend between the previous and current physics states
+    /// when rendering between fixed physics updates.
+    /// ALso available as float via <see cref="FixedFramerateInterpolationFactorF"/> and in <see cref="ScreenInfo"/> structs.
+    /// </summary>
+    /// <remarks>
+    /// Expected range is 0.0 (use previous physics state) to 1.0 (use current physics state).
+    /// This value is updated each frame when <see cref="FixedFramerateEnabled"/> is true and is useful
+    /// for smooth rendering when physics updates run at a different rate than rendering.
+    /// </remarks>
+    public double FixedFramerateInterpolationFactor { get; private set; }
+    
+    /// <summary>
+    /// Gets the interpolation factor used for blending between previous and current physics states
+    /// as a single-precision float.
+    /// </summary>
+    /// <remarks>
+    /// Returns <see cref="FixedFramerateInterpolationFactor"/> cast to <see cref="float"/>.
+    /// Expected range is between 0.0f (use previous state) and 1.0f (use current state).
+    /// Useful when APIs or shaders require a float instead of a double.
+    /// </remarks>
+    public float FixedFramerateInterpolationFactorF { get; private set; }
+    
+    /// <summary>
+    /// Indicates whether fixed-timestep updates are enabled.
+    /// </summary>
+    /// <remarks>
+    /// Returns true when <see cref="FixedFramerate"/> is greater than zero,
+    /// meaning the engine will perform fixed framerate updates.
+    /// </remarks>
     public bool FixedFramerateEnabled => FixedFramerate > 0;
     
+    /// <summary>
+    /// Threshold factor used by the dynamic substepping logic to determine when
+    /// additional fixed  substeps should be performed for a large frame delta.
+    /// </summary>
+    /// <remarks>
+    /// A value &gt; 0 scales the expected timestep to compute a threshold.
+    /// When the accumulated delta exceeds ExpectedTimestep * (DynamicSubsteppingThresholdFactor + 1)
+    /// the engine may perform extra substeps to improve simulation stability. Typical values are 1.0 (default)
+    /// or higher to allow larger deltas before substepping. Set to 0 to disable dynamic substepping behavior.
+    /// Does not apply when fixed framerate is enabled.
+    /// </remarks>
+    public float DynamicSubsteppingThresholdFactor { get; private set; }
 
+    /// <summary>
+    /// Maximum allowed delta time (in seconds) for a single frame.
+    /// </summary>
+    /// <remarks>
+    /// This value is used to clamp the frame delta to avoid very large time steps
+    /// (which can destabilize physics or cause large logic jumps) when the application
+    /// experiences a hitch or is resumed after being suspended. It is set from the
+    /// framerate/engine settings and can be zero or a positive value.
+    /// Zero means no clamping is applied.
+    /// </remarks>
     public double MaxDeltaTime { get; private set; }
-    public int MaxSubsteps { get; private set; }
+
     
     /// <summary>
     /// Gets the game time information for the variable update loop.
     /// </summary>
     /// <remarks>
     /// Contains timing data such as elapsed time, delta time, and frame count
-    /// for the main game loop that runs at variable framerates.
+    /// for the main game update loop.
     /// </remarks>
-    public GameTime Time { get; private set; } = new GameTime();
+    public GameTime Time { get; private set; }
 
     /// <summary>
     /// Gets or sets the background color of the game window.
@@ -314,7 +367,7 @@ public partial class Game
     private readonly List<ShapeFlash> shapeFlashes = [];
     private readonly List<DeferredInfo> deferred = [];
 
-    private double physicsAccumulator;
+    private double fixedTimestepAccumulator;
 
     private List<ScreenTexture>? customScreenTextures;
     #endregion
@@ -497,14 +550,24 @@ public partial class Game
         IdleTimeThreshold = framerateSettings.IdleTimeThreshold;
         IdleFrameRateLimit = framerateSettings.IdleFrameRateLimit;
         MaxDeltaTime = framerateSettings.MaxDeltaTime;
-        MaxSubsteps = framerateSettings.MaxSubsteps;
+        DynamicSubsteppingThresholdFactor = framerateSettings.DynamicSubsteppingThresholdFactor;
+        // MaxSubsteps = framerateSettings.MaxSubsteps;
         
-        var fixedFramerate = framerateSettings.FixedFramerate;
-        if (fixedFramerate > 0)
+        if (framerateSettings.FixedFramerate > 0)
         {
-            FixedFramerate = fixedFramerate;
-            FixedPhysicsTimestep = 1.0 / FixedFramerate;
+            FixedFramerate = framerateSettings.FixedFramerate;
+            FixedTimestep = 1.0 / FixedFramerate;
         }
+        else
+        {
+            FixedFramerate = 0;
+            FixedTimestep = 0;
+        }
+
+        FixedFramerateInterpolationFactor = 1.0;
+        FixedFramerateInterpolationFactorF = 1f;
+        
+        Time = new GameTime(0,0,0, FixedFramerateEnabled);
         
         AudioDevice = new AudioDevice();
         

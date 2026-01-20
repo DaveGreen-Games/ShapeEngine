@@ -15,6 +15,7 @@ public partial class Game
     private double frameDelta;
     private int fps;
     private long frameDeltaNanoSeconds;
+    private double prevTargetTimestep;
     
     /// <summary>
     /// Gets the current frames per second (FPS) calculated from the latest frame delta.
@@ -93,7 +94,7 @@ public partial class Game
             }
 
             var dt = (float)frameDelta;
-            Time = Time.TickF(dt);
+            // Time = Time.TickF(dt);
 
             Window.Update(dt);
             AudioDevice.Update(dt, curCamera);
@@ -167,10 +168,56 @@ public partial class Game
             }
 
             UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+            
+            if (FixedFramerate > 0)//fixed update loop
+            {
+                fixedTimestepAccumulator += frameDelta;
+                while (fixedTimestepAccumulator >= FixedTimestep)
+                {
+                    Time = Time.Tick(FixedTimestep, true);
+                    ResolveUpdate();
+                    fixedTimestepAccumulator -= FixedTimestep;
+                }
+            
+                FixedFramerateInterpolationFactor = fixedTimestepAccumulator / FixedTimestep;
+                FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
+            }
+            else//open update loop
+            {
+                //Dynamic Substepping
+                if (DynamicSubsteppingThresholdFactor > 0 && prevTargetTimestep > 0)
+                {
+                    double dynamicSubsteppingThreshold = prevTargetTimestep * (DynamicSubsteppingThresholdFactor + 1f);
+                    if (fixedTimestepAccumulator + frameDelta >= dynamicSubsteppingThreshold)
+                    {
+                        fixedTimestepAccumulator += frameDelta;
+                        while (fixedTimestepAccumulator >= prevTargetTimestep)
+                        {
+                            Time = Time.Tick(prevTargetTimestep, true);
+                            ResolveUpdate();
+                            Console.WriteLine($"-----------------Dynamic Substep at t={Time.TotalSeconds:F4}s");
+                            fixedTimestepAccumulator -= prevTargetTimestep;
+                        }
+                        
+                        FixedFramerateInterpolationFactor = fixedTimestepAccumulator / prevTargetTimestep;
+                        FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
+                    }
+                    else
+                    {
+                        Time = Time.Tick(frameDelta, false);
+                        ResolveUpdate();
+                    }
+                }
+                else
+                {
+                    Time = Time.Tick(frameDelta, false);
+                    ResolveUpdate();
+                }
+            }
 
-            //fixed goes here
-            ResolveUpdate();
-            //---
+            GameScreenInfo = GameScreenInfo.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
+            GameUiScreenInfo = GameUiScreenInfo.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
+            UIScreenInfo = UIScreenInfo.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
             
             DrawToScreen();
 
@@ -236,6 +283,8 @@ public partial class Game
                     remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
                 }
             }
+            
+            prevTargetTimestep = 1.0 / targetFps;
         }
     }
 
