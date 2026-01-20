@@ -536,7 +536,6 @@ public class EndlessSpaceCollision : ExampleScene
     }
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
     {
-        
         foreach (var h in starTextureHandlers)
         {
             h.SetCameraRect(game.Area);
