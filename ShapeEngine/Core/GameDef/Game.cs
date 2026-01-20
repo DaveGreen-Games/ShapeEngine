@@ -142,11 +142,24 @@ public partial class Game
 
     
     /// <summary>
-    /// Gets the game time information for the variable update loop.
+    /// Gets the game time information for the update loop.
+    /// This should only be used in Update methods.
+    /// Is affected by a fixed framerate or dynamic substepping.
     /// </summary>
     /// <remarks>
     /// Contains timing data such as elapsed time, delta time, and frame count
     /// for the main game update loop.
+    /// </remarks>
+    public GameTime UpdateTime { get; private set; }
+    
+    /// <summary>
+    /// Time information for the main game loop.
+    /// This should always be used outside of Update methods, for instance in Draw methods.
+    /// </summary>
+    /// <remarks>
+    /// Contains the unmodified timing values (elapsed, delta, frame count) for the main loop.
+    /// This value is not affected by fixed-framerate interpolation or dynamic substepping and
+    /// should be used when raw, real-time timing is required.
     /// </remarks>
     public GameTime Time { get; private set; }
 
@@ -567,7 +580,8 @@ public partial class Game
         FixedFramerateInterpolationFactor = 1.0;
         FixedFramerateInterpolationFactorF = 1f;
         
-        Time = new GameTime(0,0,0, FixedFramerateEnabled);
+        UpdateTime = new GameTime(0,0,0, FixedFramerateEnabled);
+        Time = new GameTime(0,0,0, false);
         
         AudioDevice = new AudioDevice();
         

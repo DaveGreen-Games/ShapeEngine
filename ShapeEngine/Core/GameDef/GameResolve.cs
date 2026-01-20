@@ -41,10 +41,10 @@ public partial class Game
 
     private void ResolveUpdate()
     {
-        TriggerCustomEventsOnUpdate(true, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        TriggerCustomEventsOnUpdate(false, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        TriggerCustomEventsOnUpdate(true, UpdateTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        Update(UpdateTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolveUpdate(UpdateTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        TriggerCustomEventsOnUpdate(false, UpdateTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
     // private void ResolveInterpolateFixedUpdate(float f)

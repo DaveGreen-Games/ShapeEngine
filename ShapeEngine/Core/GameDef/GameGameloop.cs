@@ -93,8 +93,8 @@ public partial class Game
                 continue;
             }
 
+            Time = Time.Tick(frameDelta, false);
             var dt = (float)frameDelta;
-            // Time = Time.TickF(dt);
 
             Window.Update(dt);
             AudioDevice.Update(dt, curCamera);
@@ -174,16 +174,18 @@ public partial class Game
                 fixedTimestepAccumulator += frameDelta;
                 while (fixedTimestepAccumulator >= FixedTimestep)
                 {
-                    Time = Time.Tick(FixedTimestep, true);
+                    UpdateTime = UpdateTime.Tick(FixedTimestep, true);
                     ResolveUpdate();
                     fixedTimestepAccumulator -= FixedTimestep;
                 }
-            
+                
                 FixedFramerateInterpolationFactor = fixedTimestepAccumulator / FixedTimestep;
                 FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
             }
             else//open update loop
             {
+                
+                //TODO: how to avoid spiral of death?
                 //Dynamic Substepping
                 if (DynamicSubsteppingThresholdFactor > 0 && prevTargetTimestep > 0)
                 {
@@ -193,9 +195,8 @@ public partial class Game
                         fixedTimestepAccumulator += frameDelta;
                         while (fixedTimestepAccumulator >= prevTargetTimestep)
                         {
-                            Time = Time.Tick(prevTargetTimestep, true);
+                            UpdateTime = UpdateTime.Tick(prevTargetTimestep, true);
                             ResolveUpdate();
-                            Console.WriteLine($"-----------------Dynamic Substep at t={Time.TotalSeconds:F4}s");
                             fixedTimestepAccumulator -= prevTargetTimestep;
                         }
                         
@@ -204,13 +205,13 @@ public partial class Game
                     }
                     else
                     {
-                        Time = Time.Tick(frameDelta, false);
+                        UpdateTime = UpdateTime.Tick(frameDelta, false);
                         ResolveUpdate();
                     }
                 }
                 else
                 {
-                    Time = Time.Tick(frameDelta, false);
+                    UpdateTime = UpdateTime.Tick(frameDelta, false);
                     ResolveUpdate();
                 }
             }
