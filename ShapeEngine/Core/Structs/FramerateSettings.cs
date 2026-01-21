@@ -2,6 +2,12 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.Structs;
 
+/// <summary>
+/// Represents immutable framerate configuration used by the engine.
+/// Contains global and context-specific frame rate limits (focused, unfocused, idle),
+/// fixed-update framerate, adaptive FPS limiter settings, delta-time constraints and
+/// dynamic substepping parameters. Designed as a value type for inexpensive copies.
+/// </summary>
 public readonly struct FramerateSettings
 {
     /// <summary>
@@ -76,35 +82,16 @@ public readonly struct FramerateSettings
     /// </summary>
     public readonly double MaxDeltaTime;
 
-    // /// <summary>
-    // /// Factor controlling dynamic substepping activation when fixed framerate is disabled.
-    // /// If the current frame delta exceeds expectedTimestep * (this factor + 1), dynamic
-    // /// substepping will be used to split the update into multiple smaller steps to smooth
-    // /// out large frame time spikes.
-    // /// Set to 0 to disable dynamic substepping. This does not apply when fixed framerate is enabled.
-    // /// Value is clamped to be non-negative.
-    // /// </summary>
-    // public readonly float DynamicSubsteppingThresholdFactor;
-
-    
-    /// <summary>
-    /// Maximum allowed target framerate (in frames per second) used when dynamic substepping is active.
-    /// When a large frame delta is split into multiple substeps this value caps the effective
-    /// substepping framerate to avoid excessive CPU work.
-    /// This value paired with <see cref="MaxDeltaTime"/> gives the maximum
-    /// number of substeps that may be performed in a single frame.
-    /// </summary>
-    /// <remarks>
-    /// Clamped to be non-negative in the constructor. Set to 0 to disable the cap (no additional
-    /// limit beyond other framerate constraints).
-    /// </remarks>
-    public readonly int MaxDynamicSubsteppingFramerate;
-
     /// <summary>
     /// Minimum allowed target framerate (in frames per second) used when dynamic substepping is active.
     /// This value constrains how low the effective framerate may go when splitting a large frame delta
     /// into multiple substeps. Clamped to be non-negative in the constructor. Set to 0 to disable the lower bound.
     /// </summary>
+    /// <remarks>
+    /// When dynamic substepping is enabled, this value effectively guarantees the maximum delta the update loop can receive.
+    /// Even when the delta time explodes to very high values, the worst case scenario is 1 substep per frame with a delta of
+    /// 1 / MinDynamicSubsteppingFramerate seconds. 
+    /// </remarks>
     public readonly int MinDynamicSubsteppingFramerate;
 
     /// <summary>
@@ -112,6 +99,10 @@ public readonly struct FramerateSettings
     /// Limits how many smaller update steps the engine may perform in a single frame to smooth out large frame deltas.
     /// Clamped to be non-negative in the constructor; a value of 0 effectively disables dynamic substepping.
     /// </summary>
+    /// <remarks>
+    /// The engine will reduce the allowed substeps every consecutive frame where substepping was performed to avoid spiraling.
+    /// Frames without substepping increase the allowed substeps back up to this maximum.
+    /// </remarks>
     public readonly int MaxDynamicSubsteps;
 
     
@@ -126,22 +117,21 @@ public readonly struct FramerateSettings
     /// - Idle frame rate limit of 30 after 120 seconds of inactivity.
     /// - Adaptive FPS limiter enabled with default settings. <see cref="AdaptiveFpsLimiter.Settings.Default"/>
     /// - Max delta time of 0.25 seconds.
-    /// - Dynamic substepping threshold factor of 4.0f.
+    /// - Dynamic substepping enabled with a minimum framerate of 30 and a maximum of 6 substeps.
     /// </summary>
     /// <remarks>
     /// Immutable convenience instance intended for initialization when no user configuration is provided.
     /// </remarks>
     public static FramerateSettings Default => new
     (
-        350,
-        0,
         60,
-        500,
+        0,
+        30,
+        120,
         30,
         30, 120f,
-        AdaptiveFpsLimiter.Settings.Disabled,
+        AdaptiveFpsLimiter.Settings.Default,
         0.2,
-        60,
         30,
         6
     );
@@ -167,7 +157,6 @@ public readonly struct FramerateSettings
         AdaptiveFpsLimiter.Settings.Disabled,
         0.16,
         0,
-        0,
         0
     );
     
@@ -179,7 +168,7 @@ public readonly struct FramerateSettings
     /// - Unfocused (30Fps) and idle (30Fps/120s) limits remain enabled to reduce background CPU/GPU usage.
     /// - Adaptive FPS limiter disabled.
     /// - Max delta time of 0.25 seconds.
-    /// - Dynamic substepping disabled.
+    /// - Dynamic substepping enabled with a minimum framerate of 30 and a maximum of 6 substeps.
     /// </summary>
     public static FramerateSettings Unlimited => new
     (
@@ -191,7 +180,6 @@ public readonly struct FramerateSettings
         30, 120f,
         AdaptiveFpsLimiter.Settings.Disabled,
         0.2,
-        60,
         30,
         6
     );
@@ -204,7 +192,7 @@ public readonly struct FramerateSettings
     /// - Unfocused (30Fps) and idle (30Fps/120s) limits remain enabled to reduce background CPU/GPU usage.
     /// - Adaptive FPS limiter enabled with default settings.
     /// - Max delta time of 0.25 seconds
-    /// - Dynamic substepping disabled.
+    /// - Dynamic substepping enabled with a minimum framerate of 30 and a maximum of 6 substeps.
     /// </summary>
     public static FramerateSettings UnlimitedAdaptive => new
     (
@@ -216,7 +204,6 @@ public readonly struct FramerateSettings
         30, 120f,
         AdaptiveFpsLimiter.Settings.Default,
         0.2,
-        60,
         30,
         6
     );
@@ -238,9 +225,8 @@ public readonly struct FramerateSettings
     /// 0 or less disables idle detection.</param>
     /// <param name="adaptiveFpsLimiterSettings">Settings for the adaptive FPS limiter.</param>
     /// <param name="maxDeltaTime">Maximum allowed delta time (seconds) for a single frame. Defaults to 0.25.</param>
-    /// <param name="maxDynamicSubsteppingFramerate">Maximum allowed target framerate (in frames per second) used for dynamic substepping. </param>
     /// <param name="minDynamicSubsteppingFramerate">Minimum allowed target framerate (in frames per second) used for dynamic substepping. </param>
-    /// <param name="maxDynamicSubsteps">Maximum number of dynamic substeps allowed when dynamic substepping is active.</param>
+    /// <param name="maxDynamicSubsteps">Maximum number of dynamic substeps allowed when dynamic substepping is active. Setting this to 0 disables dynamic substepping.</param>
     public FramerateSettings(
         int frameRateLimit, 
         int fixedFramerate,
@@ -250,7 +236,6 @@ public readonly struct FramerateSettings
         int idleFrameRateLimit, float idleTimeThreshold,
         AdaptiveFpsLimiter.Settings adaptiveFpsLimiterSettings,
         double maxDeltaTime = 0.2,
-        int maxDynamicSubsteppingFramerate = 60,
         int minDynamicSubsteppingFramerate = 30,
         int maxDynamicSubsteps = 6
         )
@@ -311,19 +296,13 @@ public readonly struct FramerateSettings
         AdaptiveFpsLimiterSettings = adaptiveFpsLimiterSettings;
         MaxDeltaTime = maxDeltaTime;
         
-        if(maxDynamicSubsteps <= 0 || maxDynamicSubsteppingFramerate <= 0 || minDynamicSubsteppingFramerate <= 0)
+        if(maxDynamicSubsteps <= 0 || minDynamicSubsteppingFramerate <= 0)
         {
             MaxDynamicSubsteps = 0;
-            MaxDynamicSubsteppingFramerate = 0;
             MinDynamicSubsteppingFramerate = 0;
         }
         else
         {
-            if (maxDynamicSubsteppingFramerate < minDynamicSubsteppingFramerate)
-            {
-                (minDynamicSubsteppingFramerate, maxDynamicSubsteppingFramerate) = (maxDynamicSubsteppingFramerate, minDynamicSubsteppingFramerate);
-            }
-            MaxDynamicSubsteppingFramerate = maxDynamicSubsteppingFramerate;
             MinDynamicSubsteppingFramerate = minDynamicSubsteppingFramerate;
             MaxDynamicSubsteps = maxDynamicSubsteps;
         }

@@ -15,7 +15,8 @@ public partial class Game
     private double frameDelta;
     private int fps;
     private long frameDeltaNanoSeconds;
-    private double prevDynamicSubsteppingTargetTimestep;
+    private int curDynamicSubsteps;
+    // private double prevDynamicSubsteppingTargetTimestep;
     
     /// <summary>
     /// Gets the current frames per second (FPS) calculated from the latest frame delta.
@@ -180,49 +181,41 @@ public partial class Game
                 //Dynamic Substepping
                 if (DynamicSubsteppingEnabled)
                 {
-                    Console.WriteLine($"Dynamic Substepping Started in Frame: {Time.TotalTicks}, frameDelta: {frameDelta:F6}, prevTargetTimestep: {prevDynamicSubsteppingTargetTimestep:F6}, target fps: {(int)(1.0/prevDynamicSubsteppingTargetTimestep)}");
                     fixedTimestepAccumulator += frameDelta;
                     
-                    if (fixedTimestepAccumulator > prevDynamicSubsteppingTargetTimestep * 2)
+                    if (fixedTimestepAccumulator > MaxDynamicTimestep)
                     {
-                        var substeps = (int)(fixedTimestepAccumulator / prevDynamicSubsteppingTargetTimestep);
-                        if (substeps > MaxDynamicSubsteps)
+                        var substeps = (int)(fixedTimestepAccumulator / MaxDynamicTimestep);
+                        if (substeps > curDynamicSubsteps)
                         {
-                            var temp = prevDynamicSubsteppingTargetTimestep;
-                            prevDynamicSubsteppingTargetTimestep = ShapeMath.Clamp(fixedTimestepAccumulator / MaxDynamicSubsteps, MinDynamicTimestep, MaxDynamicTimestep);
-                            Console.WriteLine($"To many substeps calculated: {substeps}/{MaxDynamicSubsteps}, adjusting prevTargetTimestep from {temp:F6} to {prevDynamicSubsteppingTargetTimestep:F6}");
+                            substeps = curDynamicSubsteps;
                         }
 
-                        var iterations = 0;
-                        while (fixedTimestepAccumulator >= prevDynamicSubsteppingTargetTimestep && iterations < MaxDynamicSubsteps)
+                        for (int i = 0; i < substeps; i++)
                         {
-                            Console.WriteLine($"Substepped with prevTargetTimestep: {prevDynamicSubsteppingTargetTimestep:F6} and accumulator: {fixedTimestepAccumulator:F6}");
-                            UpdateTime = UpdateTime.Tick(prevDynamicSubsteppingTargetTimestep, true);
+                            UpdateTime = UpdateTime.Tick(MaxDynamicTimestep, true);
                             ResolveUpdate();
-                            fixedTimestepAccumulator -= prevDynamicSubsteppingTargetTimestep;
-                            iterations++;
+                            fixedTimestepAccumulator -= MaxDynamicTimestep;
                         }
                         
-                        // If we hit the max iterations, leave a bounded remainder to avoid runaway accumulation.
-                        // This prevents the spiral while preserving some temporal correctness.
-                        if (iterations >= MaxDynamicSubsteps)
-                        {
-                            fixedTimestepAccumulator = Math.Min(fixedTimestepAccumulator, prevDynamicSubsteppingTargetTimestep);
-                        }
-                        
-                        FixedFramerateInterpolationFactor = fixedTimestepAccumulator / prevDynamicSubsteppingTargetTimestep;
+                        FixedFramerateInterpolationFactor = fixedTimestepAccumulator / MaxDynamicTimestep;
                         FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
+                        
+                        curDynamicSubsteps--;
+                        if(curDynamicSubsteps < 1) curDynamicSubsteps = 1;
                     }
                     else
                     {
-                        Console.WriteLine("Update without substep");
                         FixedFramerateInterpolationFactor = 1.0;
                         FixedFramerateInterpolationFactorF = 1f;
                         UpdateTime = UpdateTime.Tick(frameDelta, false);
                         ResolveUpdate();
+
                         fixedTimestepAccumulator -= frameDelta;
+                        
+                        curDynamicSubsteps++;
+                        if(curDynamicSubsteps > MaxDynamicSubsteps) curDynamicSubsteps = MaxDynamicSubsteps;
                     }
-                    Console.WriteLine($"Dynamic Substepping Ended in Frame: {Time.TotalTicks}");
                 }
                 else
                 {
@@ -303,18 +296,6 @@ public partial class Game
                     
                     elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
                     remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
-                }
-            }
-
-            if (DynamicSubsteppingEnabled)
-            {
-                if (targetFps > 0)
-                {
-                    prevDynamicSubsteppingTargetTimestep = ShapeMath.Clamp(1.0 / targetFps, MinDynamicTimestep, MaxDynamicTimestep);
-                }
-                else
-                {
-                    prevDynamicSubsteppingTargetTimestep = MinDynamicTimestep;
                 }
             }
         }
