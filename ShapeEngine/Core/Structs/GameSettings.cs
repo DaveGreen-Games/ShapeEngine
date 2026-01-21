@@ -16,14 +16,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
-    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings StretchMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, 
-        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, 
-            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
+        return new GameSettings(TextureFilter.Bilinear, ShaderSupportType.Multi, 
+            applicationName, saveDirectory);
     }
 
     /// <summary>
@@ -32,14 +29,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
-    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings FixedMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
-        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, 
-            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
+        return new GameSettings(new Dimensions(320, 180), TextureFilter.Point, ShaderSupportType.Multi, false, 
+            applicationName, saveDirectory);
     }
 
     /// <summary>
@@ -48,14 +42,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
-    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings FixedNearestMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
-        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, 
-            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
+        return new GameSettings(new Dimensions(320, 180), TextureFilter.Point, ShaderSupportType.Multi, true, 
+            applicationName, saveDirectory);
     }
 
     /// <summary>
@@ -64,14 +55,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
-    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
     public static GameSettings PixelationMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
-        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, 
-            applicationName, saveDirectory, idleFrameRateLimit, idleTimeThreshold);
+        return new GameSettings(0.25f, TextureFilter.Point, ShaderSupportType.Multi, 
+            applicationName, saveDirectory);
     }
 
     #endregion
@@ -81,19 +69,14 @@ public readonly struct GameSettings
     /// <summary>
     /// Initializes a new instance of the GameSettings struct with the specified fixed framerate, texture filter, and shader support type.
     /// </summary>
-    /// <param name="fixedFramerate">The fixed framerate for the fixed update loop.</param>
     /// <param name="textureFilter">The texture filter to be used.</param>
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
-    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
-    public GameSettings (int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, 
-        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
+    public GameSettings (TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
         ShaderSupportType = shaderSupportType;
         FixedDimensions = Dimensions.GetInvalidDimension();
@@ -101,28 +84,21 @@ public readonly struct GameSettings
         ScreenTextureMode = ScreenTextureMode.Stretch;
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        IdleFrameRateLimit = idleFrameRateLimit;
-        IdleTimeThreshold = idleTimeThreshold;
     }
 
     /// <summary>
     /// Initializes a new instance of the GameSettings struct with the specified fixed dimensions, fixed framerate, texture filter, shader support type, and nearest scaling option.
     /// </summary>
     /// <param name="fixedDimensions">The fixed dimensions for the game window.</param>
-    /// <param name="fixedFramerate">The fixed framerate for the fixed update loop.</param>
     /// <param name="textureFilter">The texture filter to be used.</param>
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="nearestScaling">A value indicating whether the nearest scaling should be used.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
-    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
-    public GameSettings(Dimensions fixedDimensions, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
-        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
+    public GameSettings(Dimensions fixedDimensions, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
+        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
         ShaderSupportType = shaderSupportType;
         PixelationFactor = 1f;
@@ -147,28 +123,20 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        
-        IdleFrameRateLimit = idleFrameRateLimit;
-        IdleTimeThreshold = idleTimeThreshold;
     }
 
     /// <summary>
     /// Initializes a new instance of the GameSettings struct with the specified pixelation factor, fixed framerate, texture filter, and shader support type.
     /// </summary>
     /// <param name="pixelationFactor">The pixelation factor for the game window.</param>
-    /// <param name="fixedFramerate">The fixed framerate for the fixed update loop.</param>
     /// <param name="textureFilter">The texture filter to be used.</param>
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="idleFrameRateLimit">The frame rate limit to apply when the engine goes into idle mode after <c>idleTimeThreshold</c> seconds of no input.</param>
-    /// <param name="idleTimeThreshold">The amount of seconds of no input after which the engine is considered idle.</param>
-    public GameSettings(float pixelationFactor, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData,
-        int idleFrameRateLimit = 30, float idleTimeThreshold = 120f)
+    public GameSettings(float pixelationFactor, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
         ShaderSupportType = shaderSupportType;
         FixedDimensions = Dimensions.GetInvalidDimension();
@@ -185,9 +153,6 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        
-        IdleFrameRateLimit = idleFrameRateLimit;
-        IdleTimeThreshold = idleTimeThreshold;
     }
     
     #endregion
@@ -198,16 +163,6 @@ public readonly struct GameSettings
     /// </summary>
     public readonly ScreenTextureMode ScreenTextureMode;
     
-    /// <summary>
-    /// Gets the fixed framerate used for the fixed update loop.
-    /// <list type="bullet">
-    /// <item>The physics update uses a delta time of <c>1 / FixedFramerate</c>.</item>
-    /// <item>If set to 0 or less, the fixed update loop is disabled and <c>FixedUpdate</c>/<c>InterpolateFixedUpdate</c> will not be called.</item>
-    /// <item>Values greater than 0 but less than 30 are clamped to 30.</item>
-    /// <item>When enabled, the physics update runs after the normal update function.</item>
-    /// </list>
-    /// </summary>
-    public readonly int FixedFramerate;
 
     /// <summary>
     /// Gets the shader support type.
@@ -249,22 +204,6 @@ public readonly struct GameSettings
     /// Choose based on your application's requirements and platform conventions.
     /// </remarks>
     public readonly Environment.SpecialFolder? SaveDirectory = Environment.SpecialFolder.LocalApplicationData;
-
-    /// <summary>
-    /// The target frame rate limit applied when the application is idle (no input detected for <see cref="IdleTimeThreshold"/> seconds).
-    /// Set to 0 or less to disable the idle-specific limit (no change from the normal limit).
-    /// </summary>
-    /// <remarks>
-    /// Use this to reduce CPU/GPU usage while the window does not have focus.
-    /// </remarks>
-    public readonly int IdleFrameRateLimit;
-    
-    /// <summary>
-    /// Time in seconds without input after which the application is considered idle.
-    /// When the idle period is reached the <see cref="IdleFrameRateLimit"/> may be applied.
-    /// Set to 0 or less to disable idle detection.
-    /// </summary>
-    public readonly float IdleTimeThreshold;
     
     // /// <summary>
     // /// Gets the maximum number of savegame backup files to keep.

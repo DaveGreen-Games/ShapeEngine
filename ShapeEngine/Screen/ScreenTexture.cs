@@ -901,7 +901,12 @@ public sealed class ScreenTexture
         var origin = new Vector2(0, 0);
         Raylib.DrawTexturePro(texture, sourceRec, destRect, origin, 0f, Tint.ToRayColor());
     }
-   
+
+    internal void SetFixedFramerateInterpolationFactor(double interpolationFactor)
+    {
+        GameScreenInfo = GameScreenInfo.SetFixedFramerateInterpolationFactor(interpolationFactor);
+        GameUiScreenInfo = GameUiScreenInfo.SetFixedFramerateInterpolationFactor(interpolationFactor);
+    }
     #endregion
     
 }

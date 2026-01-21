@@ -15,6 +15,8 @@ public partial class Game
     private double frameDelta;
     private int fps;
     private long frameDeltaNanoSeconds;
+    private int curDynamicSubsteps;
+    // private double prevDynamicSubsteppingTargetTimestep;
     
     /// <summary>
     /// Gets the current frames per second (FPS) calculated from the latest frame delta.
@@ -70,6 +72,13 @@ public partial class Game
         while (!quit)
         {
             frameDeltaNanoSeconds = frameWatch.ElapsedTicks * nanosecPerTick;
+
+            if (MaxDeltaTime > 0.0)
+            {
+                long maxFrameDeltaNanoSeconds = ShapeMath.SecondsToNanoSeconds(MaxDeltaTime);
+                if(frameDeltaNanoSeconds > maxFrameDeltaNanoSeconds) frameDeltaNanoSeconds = maxFrameDeltaNanoSeconds;
+            }
+            
             frameDelta = frameDeltaNanoSeconds / (double)ShapeMath.NanoSecondsInOneSecond;
             
             // Clamp frameDelta to a small minimum to avoid division by zero or extremely large FPS values
@@ -85,8 +94,8 @@ public partial class Game
                 continue;
             }
 
+            Time = Time.Tick(frameDelta, false);
             var dt = (float)frameDelta;
-            Time = Time.TickF(dt);
 
             Window.Update(dt);
             AudioDevice.Update(dt, curCamera);
@@ -149,26 +158,82 @@ public partial class Game
                     customScreenTextures[i].Update(dt, Window.CurScreenSize, mousePosUI, Paused);
                 }
             }
-
-            GameScreenInfo = gameTexture.GameScreenInfo;
-            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
-            UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-
+            
             if (!Paused)
             {
                 UpdateFlashes(dt);
             }
-
-            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-
-            if (FixedPhysicsEnabled)
+            
+            if (FixedFramerate > 0)//fixed update loop
             {
-                ResolveUpdate(true);
-                // Use double-precision frameDelta for more accurate fixed-step physics timing
-                AdvanceFixedUpdate(frameDelta);
+                fixedTimestepAccumulator += frameDelta;
+                while (fixedTimestepAccumulator >= FixedTimestep)
+                {
+                    UpdateTime = UpdateTime.Tick(FixedTimestep, true);
+                    ResolveUpdate();
+                    fixedTimestepAccumulator -= FixedTimestep;
+                }
+                FixedFramerateInterpolationFactor = fixedTimestepAccumulator / FixedTimestep;
+                FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
             }
-            else ResolveUpdate(false);
+            else//open update loop
+            {
+                //Dynamic Substepping
+                if (DynamicSubsteppingEnabled)
+                {
+                    fixedTimestepAccumulator += frameDelta;
+                    
+                    if (fixedTimestepAccumulator > MaxDynamicTimestep)
+                    {
+                        var substeps = (int)(fixedTimestepAccumulator / MaxDynamicTimestep);
+                        if (substeps > curDynamicSubsteps)
+                        {
+                            substeps = curDynamicSubsteps;
+                        }
 
+                        for (int i = 0; i < substeps; i++)
+                        {
+                            UpdateTime = UpdateTime.Tick(MaxDynamicTimestep, true);
+                            ResolveUpdate();
+                            fixedTimestepAccumulator -= MaxDynamicTimestep;
+                        }
+                        
+                        FixedFramerateInterpolationFactor = fixedTimestepAccumulator / MaxDynamicTimestep;
+                        FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
+                        
+                        curDynamicSubsteps--;
+                        if(curDynamicSubsteps < 1) curDynamicSubsteps = 1;
+                    }
+                    else
+                    {
+                        FixedFramerateInterpolationFactor = 1.0;
+                        FixedFramerateInterpolationFactorF = 1f;
+                        UpdateTime = UpdateTime.Tick(frameDelta, false);
+                        ResolveUpdate();
+
+                        fixedTimestepAccumulator -= frameDelta;
+                        
+                        curDynamicSubsteps++;
+                        if(curDynamicSubsteps > MaxDynamicSubsteps) curDynamicSubsteps = MaxDynamicSubsteps;
+                    }
+                }
+                else
+                {
+                    FixedFramerateInterpolationFactor = 1.0;
+                    FixedFramerateInterpolationFactorF = 1f;
+                    UpdateTime = UpdateTime.Tick(frameDelta, false);
+                    ResolveUpdate();
+                }
+            }
+
+            gameTexture.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
+            
+            GameScreenInfo = gameTexture.GameScreenInfo;
+            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
+            UIScreenInfo = new ScreenInfo(Window.ScreenArea, mousePosUI, FixedFramerateInterpolationFactor);
+            
+            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+            
             DrawToScreen();
 
             ResolveDeferred();
@@ -182,11 +247,10 @@ public partial class Game
             FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
 
             bool idleUnfocusedLimitActive = false;
-            
             if (Window.IsUnfocusedFrameRateLimitActive())
             {
                 int limit = Window.UnfocusedFrameRateLimit;
-                if (limit > 0 && limit < targetFps)
+                if (limit > 0 && (limit < targetFps || targetFps <= 0))
                 {
                     targetFps = limit;
                     idleUnfocusedLimitActive = true;
@@ -342,27 +406,27 @@ public partial class Game
         ResolveOnGameTextureResized(w, h);
     }
 
-    private void AdvanceFixedUpdate(double dt)
-    {
-        const double maxFrameTime = 1.0 / 30.0;
-        double frameTime = dt;
-
-        if (frameTime > maxFrameTime) frameTime = maxFrameTime;
-
-        physicsAccumulator += frameTime;
-        while (physicsAccumulator >= FixedPhysicsTimestep)
-        {
-            FixedTime = FixedTime.Tick(FixedPhysicsTimestep);
-            ResolveFixedUpdate();
-            // t += FixedPhysicsTimestep;
-            physicsAccumulator -= FixedPhysicsTimestep;
-        }
-
-        double alpha = physicsAccumulator / FixedPhysicsTimestep;
-        // alpha is computed in double precision for timing accuracy, but interpolation
-        // uses float because ResolveInterpolateFixedUpdate (e.g., via IUpdateable) has
-        // a float-based public API. This precision downgrade is intentional.
-        ResolveInterpolateFixedUpdate((float)alpha);
-    }
+    // private void AdvanceFixedUpdate(double dt)
+    // {
+    //     const double maxFrameTime = 1.0 / 30.0;
+    //     double frameTime = dt;
+    //
+    //     if (frameTime > maxFrameTime) frameTime = maxFrameTime;
+    //
+    //     physicsAccumulator += frameTime;
+    //     while (physicsAccumulator >= FixedPhysicsTimestep)
+    //     {
+    //         FixedTime = FixedTime.Tick(FixedPhysicsTimestep);
+    //         ResolveFixedUpdate();
+    //         // t += FixedPhysicsTimestep;
+    //         physicsAccumulator -= FixedPhysicsTimestep;
+    //     }
+    //
+    //     double alpha = physicsAccumulator / FixedPhysicsTimestep;
+    //     // alpha is computed in double precision for timing accuracy, but interpolation
+    //     // uses float because ResolveInterpolateFixedUpdate (e.g., via IUpdateable) has
+    //     // a float-based public API. This precision downgrade is intentional.
+    //     ResolveInterpolateFixedUpdate((float)alpha);
+    // }
 
 }

@@ -25,6 +25,7 @@ internal class AsteroidObstacle : CollisionObject
     
     
     private PolygonCollider collider;
+    private readonly Polygon? outsideShape;
     public Triangulation Triangulation;
     private Rect bb;
 
@@ -80,17 +81,20 @@ internal class AsteroidObstacle : CollisionObject
         // collider.OnCollisionEnded += OnColliderCollisionEnded;
         
         AddCollider(collider);
-        var shape = collider.GetPolygonShape();
-        this.bb = shape.GetBoundingBox();
-        this.Triangulation = shape.Triangulate();
-
+        var shape = collider.GetPolygonShape(); 
+        bb = shape.GetBoundingBox();
+        Triangulation = shape.Triangulate();
+        
         if (big)
         {
+            outsideShape = shape.ScaleSizeCopy(1.5f);
             Health = ShapeMath.LerpFloat(300, 650, EndlessSpaceCollision.DifficultyFactor) * Rng.Instance.RandF(0.9f, 1.1f);
             gappedOutlineInfo = BigAsteroidGappedOutlineInfo.ChangeStartOffset(Rng.Instance.RandF());
+            
         }
         else
         {
+            outsideShape = shape.ScaleSizeCopy(1.25f);
             Health = ShapeMath.LerpFloat(25, 100, EndlessSpaceCollision.DifficultyFactor) * Rng.Instance.RandF(0.9f, 1.1f);
             gappedOutlineInfo = SmallAsteroidGappedOutlineInfo.ChangeStartOffset(Rng.Instance.RandF());
         }
@@ -130,6 +134,7 @@ internal class AsteroidObstacle : CollisionObject
         var moved = newPosition - Transform.Position;
         Transform = Transform.SetPosition(newPosition);
         Triangulation.ChangePosition(moved);
+        outsideShape?.ChangePosition(moved);
         // moved = true;
     }
     
@@ -177,10 +182,7 @@ internal class AsteroidObstacle : CollisionObject
 
         var moved = Transform.Position - prevPosition;
         Triangulation.ChangePosition(moved);
-    }
-    public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-        
+        outsideShape?.ChangePosition(moved);
     }
     public Polygon GetShape() => collider.GetPolygonShape();
 
@@ -215,26 +217,20 @@ internal class AsteroidObstacle : CollisionObject
 
         Triangulation.Draw(Colors.PcBackground.ColorRgba);
         
-        if (EndlessSpaceCollision.AsteroidLineThickness > 1)
+        if (EndlessSpaceCollision.AsteroidLineThickness > 1 && outsideShape != null)
         {
-            var shape = collider.GetPolygonShape();
             var c = damageFlashTimer > 0f ? Colors.PcWarm.ColorRgba : Colors.PcHighlight.ColorRgba;
-            shape.DrawLines(EndlessSpaceCollision.AsteroidLineThickness, c);
-            
+            collider.GetPolygonShape().DrawLines(EndlessSpaceCollision.AsteroidLineThickness, c);
             if (Big)
             {
-
-                shape.ScaleSize(1.25f);
-                perimeter = shape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
+                perimeter = outsideShape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
                 gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(Game.Instance.Time.Delta * 0.1f);
             }
             else
             {
-                shape.ScaleSize(1.5f);
-                perimeter = shape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
+                perimeter = outsideShape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
                 gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(Game.Instance.Time.Delta * 0.25f);
             }
-
         }
 
         if (markTimer > 0f)

@@ -29,18 +29,6 @@ public class Effect : EffectObject
     /// <param name="rotRad">The rotation in radians.</param>
     /// <param name="lifeTime">The lifetime of the effect in seconds.</param>
     public Effect(Vector2 pos, Size size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
-
-    /// <summary>
-    /// Performs fixed update logic for the effect.
-    /// </summary>
-    /// <param name="fixedTime">The fixed game time.</param>
-    /// <param name="game">The game screen info.</param>
-    /// <param name="gameUi">The game UI screen info.</param>
-    /// <param name="ui">The UI screen info.</param>
-    public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-        
-    }
     
     /// <summary>
     /// Draws the effect on the game screen.

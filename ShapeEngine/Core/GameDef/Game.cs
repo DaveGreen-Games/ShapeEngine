@@ -33,8 +33,6 @@ namespace ShapeEngine.Core.GameDef;
 /// <item><see cref="LoadContent"/> - Called once.</item>
 /// <item><see cref="BeginRun"/> - Called once.</item>
 /// <item><see cref="Update"/> - Called every frame with variable timing.</item>
-/// <item><see cref="FixedUpdate"/> - Called in a fixed interval with fixed timing.</item>
-/// <item><see cref="InterpolateFixedUpdate"/> - Called every frame with variable timing.</item>
 /// <item><see cref="DrawGame"/> - Called every frame.</item>
 /// <item><see cref="DrawGameUI"/> - Called every frame.</item>
 /// <item><see cref="DrawUI"/> - Called every frame.</item>
@@ -72,64 +70,85 @@ public partial class Game
     public string[] LaunchParams { get; protected set; } = [];
 
     /// <summary>
-    /// Gets whether the fixed physics update system is enabled.
+    /// Gets the target framerate for the fixed update loop.
+    /// Is used for calculating <see cref="FixedTimestep"/>.
     /// </summary>
-    /// <remarks>
-    /// When true, the fixed update functions will be called at the FixedPhysicsFramerate.
-    /// Fixed Update call order:
-    /// <list type="bullet">
-    /// <item><see cref="Update"/> with variable timing.</item>
-    /// <item><see cref="FixedUpdate"/> with fixed timing.</item>
-    /// <item><see cref="InterpolateFixedUpdate"/> with variable timing.</item>
-    /// <item><see cref="DrawGame"/></item>
-    /// <item><see cref="DrawGameUI"/></item>
-    /// <item><see cref="DrawUI"/></item>
-    /// </list>
-    /// Unlocked Update call order:
-    /// <list type="bullet">
-    /// <item><see cref="Update"/> with variable timing.</item>
-    /// <item><see cref="DrawGame"/></item>
-    /// <item><see cref="DrawGameUI"/></item>
-    /// <item><see cref="DrawUI"/></item>
-    /// </list>
-    /// </remarks>
-    public bool FixedPhysicsEnabled { get; private set; }
+    public int FixedFramerate { get; private set; }
 
     /// <summary>
-    /// Gets the target framerate for fixed physics updates.
+    /// Gets the time interval in seconds between fixed substeps in the fixed update loop.
     /// </summary>
     /// <remarks>
-    /// This value determines how many physics updates will be performed per second.
-    /// Higher values provide more accurate physics but require more processing power.
+    /// This value is calculated as <c>1.0 / FixedFramerate</c>.
     /// </remarks>
-    public int FixedPhysicsFramerate { get; private set; }
-
+    public double FixedTimestep { get; private set; }
+    
     /// <summary>
-    /// Gets the time interval in seconds between fixed physics updates.
+    /// Interpolation factor used to blend between the previous and current states
+    /// when rendering between fixed updates.
+    /// Also available as float via <see cref="FixedFramerateInterpolationFactorF"/> and in <see cref="ScreenInfo"/> structs.
     /// </summary>
     /// <remarks>
-    /// This value is calculated as 1.0 / FixedPhysicsFramerate and represents
-    /// the duration of each physics step in seconds.
+    /// Expected range is 0.0 (use previous state) to 1.0 (use current state).
+    /// This value is updated each frame when <see cref="FixedFramerateEnabled"/> is true and is useful
+    /// for smooth rendering when physics updates run at a different rate than rendering.
     /// </remarks>
-    public double FixedPhysicsTimestep { get; private set; }
-
+    public double FixedFramerateInterpolationFactor { get; private set; }
+    
     /// <summary>
-    /// Gets the game time information for the variable update loop.
+    /// Gets the interpolation factor used for blending between previous and current physics states
+    /// as a single-precision float.
+    /// </summary>
+    /// <remarks>
+    /// Returns <see cref="FixedFramerateInterpolationFactor"/> cast to <see cref="float"/>.
+    /// Expected range is between 0.0f (use previous state) and 1.0f (use current state).
+    /// Useful when APIs or shaders require a float instead of a double.
+    /// </remarks>
+    public float FixedFramerateInterpolationFactorF { get; private set; }
+    
+    /// <summary>
+    /// Indicates whether fixed-timestep updates are enabled.
+    /// </summary>
+    /// <remarks>
+    /// Returns true when <see cref="FixedFramerate"/> is greater than zero,
+    /// meaning the engine will perform fixed framerate updates.
+    /// </remarks>
+    public bool FixedFramerateEnabled => FixedFramerate > 0;
+    
+    /// <summary>
+    /// Maximum allowed delta time (in seconds) for a single frame.
+    /// </summary>
+    /// <remarks>
+    /// This value is used to clamp the frame delta to avoid very large time steps
+    /// (which can destabilize physics or cause large logic jumps) when the application
+    /// experiences a hitch or is resumed after being suspended. It is set from the
+    /// framerate/engine settings and can be zero or a positive value.
+    /// Zero means no clamping is applied.
+    /// </remarks>
+    public double MaxDeltaTime { get; private set; }
+
+    
+    /// <summary>
+    /// Gets the game time information for the update loop.
+    /// This should only be used in Update methods.
+    /// Is affected by a fixed framerate or dynamic substepping.
     /// </summary>
     /// <remarks>
     /// Contains timing data such as elapsed time, delta time, and frame count
-    /// for the main game loop that runs at variable framerates.
+    /// for the main game update loop.
     /// </remarks>
-    public GameTime Time { get; private set; } = new GameTime();
-
+    public GameTime UpdateTime { get; private set; }
+    
     /// <summary>
-    /// Gets the game time information for the fixed update loop.
+    /// Time information for the main game loop.
+    /// This should always be used outside of Update methods, for instance in Draw methods.
     /// </summary>
     /// <remarks>
-    /// Contains timing data for the physics update loop that runs at a fixed timestep.
-    /// Only relevant when FixedPhysicsEnabled is true.
+    /// Contains the unmodified timing values (elapsed, delta, frame count) for the main loop.
+    /// This value is not affected by fixed-framerate interpolation or dynamic substepping and
+    /// should be used when raw, real-time timing is required.
     /// </remarks>
-    public GameTime FixedTime { get; private set; } = new GameTime();
+    public GameTime Time { get; private set; }
 
     /// <summary>
     /// Gets or sets the background color of the game window.
@@ -275,6 +294,50 @@ public partial class Game
     
     #endregion
     
+    #region Dynamic Substepping
+
+    /// <summary>
+    /// Indicates whether dynamic substepping is enabled.
+    /// </summary>
+    /// <remarks>
+    /// Returns <c>true</c> when <see cref="MaxDynamicSubsteps"/> is greater than zero.
+    /// When enabled, the engine may split large frame deltas into multiple smaller update steps
+    /// to maintain stable physics and smoother simulation.
+    /// </remarks>
+    public bool DynamicSubsteppingEnabled => MaxDynamicSubsteps > 0;
+    
+    /// <summary>
+    /// Minimum allowed target framerate (in frames per second) used when dynamic substepping is active.
+    /// This value constrains how low the effective framerate may go when splitting a large frame delta
+    /// into multiple substeps.
+    /// </summary>
+    /// <remarks>
+    /// This effectively sets the maximum allowed delta time (or timestep) for each dynamic substep.
+    /// </remarks>
+    public int MinDynamicSubsteppingFramerate { get; private set; }
+
+    /// <summary>
+    /// Maximum number of dynamic substeps allowed when dynamic substepping is active.
+    /// Limits how many smaller update steps the engine may perform in a single frame to smooth out large frame deltas.
+    /// </summary>
+    /// <remarks>
+    /// The effective maximum substeps allowed is decreased by 1 every frame at least 1 substep is performed to a minimum of 1.
+    /// This prevents spiraling and ensures at least one substep per frame with <see cref="MaxDynamicTimestep"/> as delta time.
+    /// </remarks>
+    public int MaxDynamicSubsteps { get; private set; }
+    
+    /// <summary>
+    /// Maximum dynamic timestep used when performing dynamic substepping.
+    /// </summary>
+    /// <remarks>
+    /// Represents the largest allowed duration (in seconds) for an individual
+    /// dynamic substep when splitting a large frame delta into multiple updates.
+    /// Calculated from <see cref="MinDynamicSubsteppingFramerate"/> as
+    /// <c>1.0 / MinDynamicSubsteppingFramerate</c> during construction.
+    /// </remarks>
+    public double MaxDynamicTimestep {get; private set;}
+    #endregion
+    
     #region Idle
 
     /// <summary>
@@ -348,7 +411,7 @@ public partial class Game
     private readonly List<ShapeFlash> shapeFlashes = [];
     private readonly List<DeferredInfo> deferred = [];
 
-    private double physicsAccumulator;
+    private double fixedTimestepAccumulator;
 
     private List<ScreenTexture>? customScreenTextures;
     #endregion
@@ -392,8 +455,9 @@ public partial class Game
     /// </remarks>
     /// <param name="gameSettings">The settings for the game, including fixed framerate, screen texture mode, and rendering options.</param>
     /// <param name="windowSettings">The settings for the window, including size, position, and display properties.</param>
+    /// <param name="framerateSettings">The settings for framerate control, including fixed timestep and frame rate limits.</param>
     /// <param name="inputSettings">The settings for input devices, including keyboard, mouse, and gamepad configurations.</param>
-    public Game(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings)
+    public Game(GameSettings gameSettings, WindowSettings windowSettings, FramerateSettings framerateSettings,  InputSettings inputSettings)
     {
         if (instance != null) 
             throw new InvalidOperationException("Game instance already exists! You should only create one instance of the game class per application!");
@@ -508,7 +572,7 @@ public partial class Game
         }
         
         // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
-        Window = new(windowSettings);
+        Window = new(windowSettings, framerateSettings);
         Window.OnWindowSizeChanged += ResolveOnWindowSizeChanged;
         Window.OnWindowPositionChanged += ResolveOnWindowPositionChanged;
         Window.OnMonitorChanged += ResolveOnMonitorChanged;
@@ -527,22 +591,34 @@ public partial class Game
 
         UpdateGamepadMappings(inputSettings);
         
-        AudioDevice = new AudioDevice();
-
-        var fixedFramerate = gameSettings.FixedFramerate;
-        if (fixedFramerate <= 0)
+        IdleTimeThreshold = framerateSettings.IdleTimeThreshold;
+        IdleFrameRateLimit = framerateSettings.IdleFrameRateLimit;
+        MaxDeltaTime = framerateSettings.MaxDeltaTime;
+        
+        MaxDynamicSubsteps = framerateSettings.MaxDynamicSubsteps;
+        curDynamicSubsteps = MaxDynamicSubsteps;
+        MinDynamicSubsteppingFramerate = framerateSettings.MinDynamicSubsteppingFramerate;
+        MaxDynamicTimestep = 1.0 / MinDynamicSubsteppingFramerate;
+        
+        
+        if (framerateSettings.FixedFramerate > 0)
         {
-            FixedPhysicsFramerate = -1;
-            FixedPhysicsTimestep = -1;
-            FixedPhysicsEnabled = false;
+            FixedFramerate = framerateSettings.FixedFramerate;
+            FixedTimestep = 1.0 / FixedFramerate;
         }
         else
         {
-            if (fixedFramerate < 30) fixedFramerate = 30;
-            FixedPhysicsFramerate = fixedFramerate;
-            FixedPhysicsTimestep = 1.0 / FixedPhysicsFramerate;
-            FixedPhysicsEnabled = true;
+            FixedFramerate = 0;
+            FixedTimestep = 0;
         }
+
+        FixedFramerateInterpolationFactor = 1.0;
+        FixedFramerateInterpolationFactorF = 1f;
+        
+        UpdateTime = new GameTime(0,0,0, FixedFramerateEnabled);
+        Time = new GameTime(0,0,0,false);
+        
+        AudioDevice = new AudioDevice();
         
         curCamera = basicCamera;
         curCamera.Activate();
@@ -582,9 +658,6 @@ public partial class Game
         Input.GamepadManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
         Input.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
         Input.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
-        
-        IdleTimeThreshold = gameSettings.IdleTimeThreshold;
-        IdleFrameRateLimit = gameSettings.IdleFrameRateLimit;
         
     }
 

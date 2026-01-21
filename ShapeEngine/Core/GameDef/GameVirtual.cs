@@ -34,31 +34,6 @@ public partial class Game
     protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
 
     /// <summary>
-    /// Updates the game at a fixed time interval when fixed framerate is enabled. This method
-    /// ensures consistent physics and game logic calculations independent of frame rate.
-    /// </summary>
-    /// <param name="fixedTime">Contains timing information for the fixed update cycle.</param>
-    /// <param name="game">Screen information for the main game area.</param>
-    /// <param name="gameUi">Screen information for the game's UI elements.</param>
-    /// <param name="ui">Screen information for the global UI.</param>
-    protected virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-    }
-
-    /// <summary>
-    /// Interpolates between fixed updates when fixed framerate is enabled. Called every frame
-    /// to provide smooth rendering between physics/logic steps.
-    /// </summary>
-    /// <param name="time">Contains timing information for the current frame.</param>
-    /// <param name="game">Screen information for the main game area.</param>
-    /// <param name="gameUi">Screen information for the game's UI elements.</param>
-    /// <param name="ui">Screen information for the global UI.</param>
-    /// <param name="f">Interpolation factor (0.0 to 1.0) between the current and next fixed update.</param>
-    protected virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f)
-    {
-    }
-
-    /// <summary>
     /// Renders the main game content to the specified screen.
     /// </summary>
     /// <param name="game">The screen information for rendering the game content.</param>

@@ -1,3 +1,4 @@
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.StaticLib;
 
@@ -42,7 +43,7 @@ public sealed class AdaptiveFpsLimiter
         /// Enables the limiter with balanced, general-purpose values suitable for typical desktop scenarios.
         /// </summary>
         public static readonly Settings Default = new(
-            true, 30, 120,
+            true, 
             2.0, 6, 0.5f,
             5, 30, 2,
             1f, 1.25f);
@@ -53,7 +54,7 @@ public sealed class AdaptiveFpsLimiter
         /// increase the cooldown applied before raising FPS again.
         /// </summary>
         public static readonly Settings NoAdditionalCooldown = new(
-            true, 30, 120,
+            true,
             2.0, 6, 0.5f,
             5, 30, 0,
             0f, 1.25f);
@@ -63,13 +64,11 @@ public sealed class AdaptiveFpsLimiter
         /// Enables the adaptive limiter and sets the minimum/maximum FPS and reduction steps
         /// used when the limiter detects normal or critical slowdowns.
         /// </summary>
-        /// <param name="minFps">Minimum allowed FPS. Default is 30.</param>
-        /// <param name="maxFps">Maximum allowed FPS. Default is 120.</param>
         /// <param name="framerateReduction">FPS reduction applied on a normal slowdown. Default is 5.</param>
         /// <param name="criticalFramerateReduction">FPS reduction applied on a critical slowdown. Default is 30.</param>
         /// <returns>A new <see cref="Settings"/> instance configured with the provided values.</returns>
-        public static Settings Simple(int minFps = 30, int maxFps = 120, int framerateReduction = 5, int criticalFramerateReduction = 30) => new(
-            true, minFps, maxFps,
+        public static Settings Simple(int framerateReduction = 5, int criticalFramerateReduction = 30) => new(
+            true,
             2.0, 6, 0.5f,
             framerateReduction, criticalFramerateReduction, 2,
             1f, 1.25f);
@@ -79,8 +78,6 @@ public sealed class AdaptiveFpsLimiter
         /// averaging, reduction steps and tolerances. This overload exposes every tunable value for fine-grained
         /// control of the adaptive FPS limiter's behavior.
         /// </summary>
-        /// <param name="minFps">Minimum allowed FPS (default 30).</param>
-        /// <param name="maxFps">Maximum allowed FPS (default 120).</param>
         /// <param name="raiseFpsCooldownDuration">Base raise-FPS cooldown duration in seconds (default 2.0).</param>
         /// <param name="requiredConsecutiveChecks">Number of consecutive faster/slower checks required to trigger an adjustment (default 6).</param>
         /// <param name="fasterFrameTimeAverageWeight">
@@ -94,11 +91,11 @@ public sealed class AdaptiveFpsLimiter
         /// <param name="additionalCooldown">Additional cooldown duration in seconds added per consecutive slowdowns (default 1f).</param>
         /// <param name="millisecondTolerance">Frame time tolerance in milliseconds (default 1.25f). This is converted to seconds internally.</param>
         /// <returns>A new <see cref="Settings"/> instance configured with the provided advanced values.</returns>
-        public static Settings Advanced(int minFps = 30, int maxFps = 120, double raiseFpsCooldownDuration = 2.0, int requiredConsecutiveChecks = 6, 
+        public static Settings Advanced(double raiseFpsCooldownDuration = 2.0, int requiredConsecutiveChecks = 6, 
             float fasterFrameTimeAverageWeight = 0.5f, int framerateReduction = 5, int criticalFramerateReduction = 30,
             int requiredConsecutiveExtraCooldownChecks = 2, float additionalCooldown = 1f, float millisecondTolerance = 1.25f) => new
             (
-                true, minFps, maxFps,
+                true,
                 raiseFpsCooldownDuration, requiredConsecutiveChecks, fasterFrameTimeAverageWeight,
                 framerateReduction, criticalFramerateReduction,
                 requiredConsecutiveExtraCooldownChecks, additionalCooldown,
@@ -109,14 +106,6 @@ public sealed class AdaptiveFpsLimiter
         /// Whether the adaptive limiter is enabled. When false the limiter is inactive and will not adjust FPS.
         /// </summary>
         public readonly bool Enabled;
-        /// <summary>
-        /// Minimum allowed FPS configured for the limiter. Values are clamped to <see cref="MinFpsLimit"/> by the constructor.
-        /// </summary>
-        public readonly int MinFps;
-        /// <summary>
-        /// Maximum allowed FPS configured for the limiter. Values are clamped to <see cref="MaxFpsLimit"/> by the constructor.
-        /// </summary>
-        public readonly int MaxFps;
         /// <summary>
         /// Base cooldown duration (in seconds) that prevents the limiter from raising FPS too quickly after a slowdown.
         /// </summary>
@@ -156,7 +145,7 @@ public sealed class AdaptiveFpsLimiter
         /// <summary>
         /// Initializes a default <see cref="Settings"/> instance.
         /// Produces a disabled configuration with commonly used defaults:
-        /// Enabled = false, MinFps = 30, MaxFps = 120, RaiseFpsCooldownDuration = 2.0,
+        /// Enabled = false, RaiseFpsCooldownDuration = 2.0,
         /// RequiredConsecutiveChecks = 6, FasterFrameTimeAverageWeight = 0.5f,
         /// FramerateReduction = 5, CriticalFramerateReduction = 30,
         /// RequiredConsecutiveExtraCooldownChecks = 2, RaiseFpsAdditionalCooldownDuration = 1f,
@@ -165,8 +154,6 @@ public sealed class AdaptiveFpsLimiter
         public Settings()
         {
             Enabled = false;
-            MinFps = 30;
-            MaxFps = 120;
             RaiseFpsCooldownDuration = 2.0;
             RequiredConsecutiveChecks = 6;
             FasterFrameTimeAverageWeight = 0.5f;
@@ -176,15 +163,13 @@ public sealed class AdaptiveFpsLimiter
             RaiseFpsAdditionalCooldownDuration = 1f;
             Tolerance = 1.25 / 1000.0;
         }
-        private Settings(bool enabled, int minFps, int maxFps,
+        private Settings(bool enabled,
             double raiseFpsCooldownDuration, int requiredConsecutiveChecks,float fasterFrameTimeAverageWeight, 
             int framerateReduction, int criticalFramerateReduction,
             int requiredConsecutiveExtraCooldownChecks, float raiseFpsAdditionalCooldownDuration, 
             float millisecondTolerance)
         {
             Enabled = enabled;
-            MinFps = minFps;
-            MaxFps = maxFps;
             RaiseFpsCooldownDuration = raiseFpsCooldownDuration;
             RequiredConsecutiveChecks = requiredConsecutiveChecks;
             FasterFrameTimeAverageWeight = fasterFrameTimeAverageWeight;
@@ -221,8 +206,8 @@ public sealed class AdaptiveFpsLimiter
         private set
         {
             limit = value;
-            if (TargetFps < limit.Min) TargetFps = limit.Min;
-            else if (TargetFps > limit.Max) TargetFps = limit.Max;
+            // if (TargetFps < limit.Min) TargetFps = limit.Min;
+            // else if (TargetFps > limit.Max) TargetFps = limit.Max;
         } 
     }
     
@@ -357,9 +342,9 @@ public sealed class AdaptiveFpsLimiter
 
     /// <summary>
     /// Maximum allowed FPS limit used to clamp the limiter's configured maximum.
-    /// Set to <see cref="int.MaxValue"/> to indicate effectively no practical upper bound.
+    /// Set to half of <see cref="int.MaxValue"/> to indicate effectively no practical upper bound.
     /// </summary>
-    public static readonly int MaxFpsLimit = int.MaxValue;
+    public static readonly int MaxFpsLimit = int.MaxValue / 2;
     #endregion
     
     #region Constructor
@@ -368,6 +353,8 @@ public sealed class AdaptiveFpsLimiter
     /// </summary>
     /// <param name="settings">Configuration used to initialize enabled state, allowed FPS range, cooldowns,
     /// averaging weights and reduction steps.</param>
+    /// <param name="minFpsLimit">Minimum allowed FPS limit for the limiter.</param>
+    /// <param name="maxFpsLimit">Maximum allowed FPS limit for the limiter.</param>
     /// <remarks>
     /// The constructor:
     /// - Clamps the configured minimum and maximum FPS to the static bounds (<see cref="MinFpsLimit"/> and <see cref="MaxFpsLimit"/>).
@@ -376,18 +363,18 @@ public sealed class AdaptiveFpsLimiter
     /// - Applies settings to the limiter's public properties. The limiter is not thread-safe and is intended to be used
     ///   from the engine's main/update thread.
     /// </remarks>
-    public AdaptiveFpsLimiter(Settings settings)
+    public AdaptiveFpsLimiter(Settings settings, int minFpsLimit, int maxFpsLimit)
     {
-        int min = settings.MinFps;
-        int max = settings.MaxFps;
+        int min = minFpsLimit;
+        int max = maxFpsLimit;
         if(min < MinFpsLimit) min = MinFpsLimit;
-        if(max > MaxFpsLimit) max = MaxFpsLimit;
+        if(max > MaxFpsLimit || max <= 0) max = MaxFpsLimit;
         if (min > max)
         {
             (min, max) = (max, min);
         }
         
-        Limit = new ValueRangeInt(min, max); //TargetFps will be clamped to new limits in setter
+        Limit = new ValueRangeInt(min, max);
         Enabled = settings.Enabled;
         RaiseFpsCooldownDuration = settings.RaiseFpsCooldownDuration;
         RequiredConsecutiveChecks = settings.RequiredConsecutiveChecks;
@@ -413,6 +400,21 @@ public sealed class AdaptiveFpsLimiter
     /// <returns>The resulting target FPS after applying the adaptive limiter logic.</returns>
     internal int Update(int targetFrameRate, double frameTime, double frameDelta, VsyncMode vsyncMode)
     {
+        //initialize target fps on first update
+        if (TargetFps <= 0)
+        {
+            if (targetFrameRate > 0)
+            {
+                TargetFps = targetFrameRate;
+            }
+            else
+            {
+                TargetFps = frameTime <= 0.0 
+                    ? 30 //safeguard
+                    : (int)(1.0 / frameTime);
+            }
+        }
+        
         if (prevVsyncMode != vsyncMode)
         {
             if (TargetFps != targetFrameRate)
@@ -466,8 +468,18 @@ public sealed class AdaptiveFpsLimiter
             cooldownTimer -= frameDelta;
             if(cooldownTimer < 0.0) cooldownTimer = 0.0;
         }
+
+        if (TargetFps <= 0)
+        {
+            TargetFps = 30;
+            Game.Instance.Logger.LogWarning($"AdaptiveFpsLimiter: TargetFps was <= 0, resetting to {TargetFps} as a safe default. This should never happen.");
+        }
+        else
+        {
+            if(TargetFps < Limit.Min) TargetFps = Limit.Min;
+            if(TargetFps > Limit.Max) TargetFps = Limit.Max;
+        }
         
-        if(TargetFps <= 0) TargetFps = Limit.Min;
         double targetFrameTime = 1.0 / TargetFps;
         
         //reduce fps
@@ -579,16 +591,16 @@ public sealed class AdaptiveFpsLimiter
     /// <returns>True if the settings were applied successfully.</returns>
     public bool ChangeSettings(Settings newSettings)
     {
-        int min = newSettings.MinFps;
-        int max = newSettings.MaxFps;
-        if(min < MinFpsLimit) min = MinFpsLimit;
-        if(max > MaxFpsLimit) max = MaxFpsLimit;
-        if (min > max)
-        {
-            (min, max) = (max, min);
-        }
+        // int min = newSettings.MinFps;
+        // int max = newSettings.MaxFps;
+        // if(min < MinFpsLimit) min = MinFpsLimit;
+        // if(max > MaxFpsLimit) max = MaxFpsLimit;
+        // if (min > max)
+        // {
+        //     (min, max) = (max, min);
+        // }
         
-        Limit = new ValueRangeInt(min, max); //TargetFps will be clamped to new limits in setter
+        // Limit = new ValueRangeInt(min, max); //TargetFps will be clamped to new limits in setter
         
         Enabled = newSettings.Enabled;
         RaiseFpsCooldownDuration = newSettings.RaiseFpsCooldownDuration;

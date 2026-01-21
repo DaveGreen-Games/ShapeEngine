@@ -79,11 +79,6 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
-        }
-
         public override void DrawGame(ScreenInfo game)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
@@ -256,10 +251,6 @@ namespace Examples.Scenes.ExampleScenes
         {
             damagedSegments.Update(time.Delta);
         }
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
-        }
         public override void DrawGame(ScreenInfo game)
         {
             var p = GetPolygon();
@@ -415,10 +406,6 @@ namespace Examples.Scenes.ExampleScenes
                 }
 
             }
-        }
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
         }
         private (Vector2 endPoint, float remainingLength, Vector2 newDir) CastLaser(float dt, Vector2 start, Vector2 dir, float length, float damagePerSecond, CollisionHandler col)
         {

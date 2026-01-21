@@ -5,7 +5,7 @@ namespace ShapeEngine.Core.Structs;
 /// </summary>
 /// <remarks>
 /// GameTime provides timing data for both variable and fixed timestep game loops.
-/// It tracks total elapsed time since application start, frame counts, and time between frames.
+/// It tracks total elapsed time since application start, tick counts, and time between frames.
 /// This struct is immutable and provides various time unit conversions for game timing needs.
 /// </remarks>
 public readonly struct GameTime
@@ -14,15 +14,28 @@ public readonly struct GameTime
     /// Seconds since start of application
     /// </summary>
     public readonly double TotalSeconds;
+
     /// <summary>
-    /// Frames since start of application
+    /// The total number of frames (ticks) processed since the application started.
+    /// This counter is incremented each time <see cref="Tick(double,bool)"/> or <see cref="TickF(float,bool)"/>
+    /// is called and can be used for frame-based logic, diagnostics, or interpolation.
     /// </summary>
-    public readonly int TotalFrames;
+    public readonly int TotalTicks;
     /// <summary>
     /// Seconds since last frame
     /// </summary>
     public readonly double ElapsedSeconds;
 
+    /// <summary>
+    /// Indicates whether this GameTime instance represents a fixed timestep delta.
+    /// </summary>
+    /// <remarks>
+    /// When true, the <see cref="ElapsedSeconds"/> value corresponds to a fixed simulation step
+    /// (useful for deterministic physics or game logic). When false, the delta is the variable
+    /// elapsed time between frames.
+    /// </remarks>
+    public readonly bool FixedDelta;
+    
     /// <summary>
     /// Initializes a new instance of the GameTime struct with default values.
     /// </summary>
@@ -32,36 +45,42 @@ public readonly struct GameTime
     public GameTime()
     {
         TotalSeconds = 0;
-        TotalFrames = 0;
+        TotalTicks = 0;
         ElapsedSeconds = 0;
+        FixedDelta = false;
     }
     /// <summary>
     /// Initializes a new instance of the GameTime struct with specified values.
     /// </summary>
     /// <param name="totalSeconds">The total seconds elapsed since the start of the application.</param>
-    /// <param name="totalFrames">The total number of frames processed since the start of the application.</param>
+    /// <param name="totalTicks">The total number of frames processed since the start of the application.</param>
     /// <param name="elapsedSeconds">The seconds elapsed since the last frame.</param>
-    public GameTime(double totalSeconds, int totalFrames, double elapsedSeconds)
+    /// <param name="fixedDelta">Indicates whether the elapsed time represents a fixed timestep delta.</param>
+    public GameTime(double totalSeconds, int totalTicks, double elapsedSeconds, bool fixedDelta = false)
     {
         this.TotalSeconds = totalSeconds;
-        this.TotalFrames = totalFrames;
+        this.TotalTicks = totalTicks;
         this.ElapsedSeconds = elapsedSeconds;
+        this.FixedDelta = fixedDelta;
     }
-
+    
     #region Tick
+    
     /// <summary>
     /// Advances the game time by the specified time delta.
     /// </summary>
     /// <param name="dt">The time delta in seconds to advance the game time by.</param>
+    /// <param name="fixedDelta">Indicates whether the provided delta time is a fixed timestep.</param>
     /// <returns>A new GameTime instance with updated total seconds, incremented frame count, and the provided delta as elapsed seconds.</returns>
-    public GameTime Tick(double dt) => new(TotalSeconds + dt, TotalFrames + 1, dt);
+    public GameTime Tick(double dt, bool fixedDelta) => new(TotalSeconds + dt, TotalTicks + 1, dt, fixedDelta);
 
     /// <summary>
     /// Advances the game time by the specified time delta using a float value.
     /// </summary>
     /// <param name="dt">The time delta in seconds (as float) to advance the game time by.</param>
+    /// <param name="fixedDelta">Indicates whether the provided delta time is a fixed timestep.</param>
     /// <returns>A new GameTime instance with updated total seconds, incremented frame count, and the provided delta as elapsed seconds.</returns>
-    public GameTime TickF(float dt) => new(TotalSeconds + dt, TotalFrames + 1, dt);
+    public GameTime TickF(float dt, bool fixedDelta) => new(TotalSeconds + dt, TotalTicks + 1, dt, fixedDelta);
     #endregion
     
     #region Conversion

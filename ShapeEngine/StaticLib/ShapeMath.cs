@@ -200,9 +200,40 @@ public static class ShapeMath
     /// <returns>The clamped value.</returns>
     public static float Clamp(float value, float min, float max)
     {
+        if (MathF.Abs(min - max) < 0.000001f) return min;
+        if (min > max)
+        {
+            (min, max) = (max, min);
+        }
+        
         if (value < min) return min;
-        else if (value > max) return max;
-        else return value;
+        if (value > max) return max;
+        return value;
+    }
+    
+    /// <summary>
+    /// Clamps a double-precision value to the specified inclusive range.
+    /// </summary>
+    /// <param name="value">The value to clamp.</param>
+    /// <param name="min">The minimum allowed value.</param>
+    /// <param name="max">The maximum allowed value.</param>
+    /// <returns>
+    /// The clamped value:
+    /// returns <paramref name="min"/> if <paramref name="value"/> &lt; <paramref name="min"/>,
+    /// returns <paramref name="max"/> if <paramref name="value"/> &gt; <paramref name="max"/>,
+    /// otherwise returns <paramref name="value"/>.
+    /// </returns>
+    public static double Clamp(double value, double min, double max)
+    {
+        if (Math.Abs(min - max) < 0.000001) return min;
+        if (min > max)
+        {
+            (min, max) = (max, min);
+        }
+        
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
     }
     /// <summary>
     /// Clamps an integer value to a specified range.
@@ -213,9 +244,16 @@ public static class ShapeMath
     /// <returns>The clamped value.</returns>
     public static int Clamp(int value, int min, int max)
     {
+        if (min == max) return min;
+        
+        if (min > max)
+        {
+            (min, max) = (max, min);
+        }
+        
         if (value < min) return min;
-        else if (value > max) return max;
-        else return value;
+        if (value > max) return max;
+        return value;
     }
     /// <summary>
     /// Clamps a byte value to a specified range.
@@ -226,6 +264,13 @@ public static class ShapeMath
     /// <returns>The clamped value.</returns>
     public static byte Clamp(byte value, byte min, byte max)
     {
+        if (min == max) return min;
+        
+        if (min > max)
+        {
+            (min, max) = (max, min);
+        }
+        
         if (value < min) return min;
         if (value > max) return max;
         return value;

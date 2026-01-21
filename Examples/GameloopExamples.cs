@@ -164,7 +164,7 @@ public class GameloopExamples : Game
     private static GameloopExamples? examplesInstance;
     
     private ContentManager contentManager;
-    public GameloopExamples(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings)
+    public GameloopExamples(GameSettings gameSettings, WindowSettings windowSettings, FramerateSettings framerateSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, framerateSettings, inputSettings)
     {
         //Game.Instance is already checked to never be instantiated twice, so this is safe
         examplesInstance = GetInstanceAs<GameloopExamples>();
