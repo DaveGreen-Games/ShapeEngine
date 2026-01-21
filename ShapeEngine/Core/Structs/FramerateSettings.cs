@@ -47,14 +47,14 @@ public readonly struct FramerateSettings
     public readonly float IdleTimeThreshold;
     
     /// <summary>
-    /// Gets the fixed framerate used for the fixed update loop.
-    /// <list type="bullet">
-    /// <item>The physics update uses a delta time of <c>1 / FixedFramerate</c>.</item>
-    /// <item>If set to 0 or less, the fixed update loop is disabled and <c>FixedUpdate</c>/<c>InterpolateFixedUpdate</c> will not be called.</item>
-    /// <item>Values greater than 0 but less than 30 are clamped to 30.</item>
-    /// <item>When enabled, the physics update runs after the normal update function.</item>
-    /// </list>
+    /// Fixed update framerate (in frames per second) used for a fixed-timestep update loop.
+    /// A value of 0 disables fixed-timestep updates. When enabled the constructor will
+    /// clamp this value to <see cref="MinFrameRate"/> / <see cref="MaxFrameRate"/> if those bounds are active.
     /// </summary>
+    /// <remarks>
+    /// A fixed frame rate guarantees consistent update intervals regardless of rendering performance.
+    /// The fixed framerate is not affected by <see cref="IdleFrameRateLimit"/> or <see cref="UnfocusedFrameRateLimit"/>.
+    /// </remarks>
     public readonly int FixedFramerate;
 
     /// <summary>
