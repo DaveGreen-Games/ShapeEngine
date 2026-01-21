@@ -519,9 +519,9 @@ namespace ShapeEngine.Core
             drawToGameTextureObjects.Clear();
             drawToGameUiTextureObjects.Clear();
 
-            if (clearAreaActive && HasValidBounds())
+            if (clearAreaActive && HasValidBounds() && !bounds.OverlapShape(clearArea))
             {
-                if (!bounds.OverlapShape(clearArea)) clearAreaActive = false;
+                clearAreaActive = false;
             }
                 
             foreach (var layer in allObjects)
@@ -533,15 +533,11 @@ namespace ShapeEngine.Core
                 {
                     var obj = objs[i];
 
-                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
+                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)) && clearArea.OverlapShape(obj.GetBoundingBox()))
                     {
-                        if (clearArea.OverlapShape(obj.GetBoundingBox()))
-                        {
-                            RemoveGameObject(obj);
-                            continue;
-                        }
+                        RemoveGameObject(obj);
+                        continue;
                     }
-
                         
                     obj.UpdateParallaxe(ParallaxePosition);
                         
