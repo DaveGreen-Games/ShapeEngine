@@ -232,7 +232,7 @@ public partial class Game
             GameUiScreenInfo = gameTexture.GameUiScreenInfo;
             UIScreenInfo = new ScreenInfo(Window.ScreenArea, mousePosUI, FixedFramerateInterpolationFactor);
             
-            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);//This might need to move into ResolveUpdate / Fixed,Substep,Open Update loop above!?
+            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
             
             DrawToScreen();
 
