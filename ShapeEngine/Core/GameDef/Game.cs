@@ -116,19 +116,6 @@ public partial class Game
     public bool FixedFramerateEnabled => FixedFramerate > 0;
     
     /// <summary>
-    /// Threshold factor used by the dynamic substepping logic to determine when
-    /// additional fixed  substeps should be performed for a large frame delta.
-    /// </summary>
-    /// <remarks>
-    /// A value &gt; 0 scales the expected timestep to compute a threshold.
-    /// When the accumulated delta exceeds ExpectedTimestep * (DynamicSubsteppingThresholdFactor + 1)
-    /// the engine may perform extra substeps to improve simulation stability. Typical values are 1.0 (default)
-    /// or higher to allow larger deltas before substepping. Set to 0 to disable dynamic substepping behavior.
-    /// Does not apply when fixed framerate is enabled.
-    /// </remarks>
-    public float DynamicSubsteppingThresholdFactor { get; private set; }
-
-    /// <summary>
     /// Maximum allowed delta time (in seconds) for a single frame.
     /// </summary>
     /// <remarks>
@@ -305,6 +292,55 @@ public partial class Game
     /// </summary>
     public readonly InputSystem Input;
     
+    #endregion
+    
+    #region Dynamic Substepping
+    // /// <summary>
+    // /// Threshold factor used by the dynamic substepping logic to determine when
+    // /// additional fixed  substeps should be performed for a large frame delta.
+    // /// </summary>
+    // /// <remarks>
+    // /// A value &gt; 0 scales the expected timestep to compute a threshold.
+    // /// When the accumulated delta exceeds ExpectedTimestep * (DynamicSubsteppingThresholdFactor + 1)
+    // /// the engine may perform extra substeps to improve simulation stability. Typical values are 1.0 (default)
+    // /// or higher to allow larger deltas before substepping. Set to 0 to disable dynamic substepping behavior.
+    // /// Does not apply when fixed framerate is enabled.
+    // /// </remarks>
+    // public float DynamicSubsteppingThresholdFactor { get; private set; }
+
+
+
+    public bool DynamicSubsteppingEnabled => MaxDynamicSubsteps > 0;
+    
+    /// <summary>
+    /// Maximum allowed target framerate (in frames per second) used when dynamic substepping is active.
+    /// When a large frame delta is split into multiple substeps this value caps the effective
+    /// substepping framerate to avoid excessive CPU work.
+    /// This value paired with <see cref="MaxDeltaTime"/> gives the maximum
+    /// number of substeps that may be performed in a single frame.
+    /// </summary>
+    /// <remarks>
+    /// Clamped to be non-negative in the constructor. Set to 0 to disable the cap (no additional
+    /// limit beyond other framerate constraints).
+    /// </remarks>
+    public int MaxDynamicSubsteppingFramerate { get; private set; }
+
+    /// <summary>
+    /// Minimum allowed target framerate (in frames per second) used when dynamic substepping is active.
+    /// This value constrains how low the effective framerate may go when splitting a large frame delta
+    /// into multiple substeps. Clamped to be non-negative in the constructor. Set to 0 to disable the lower bound.
+    /// </summary>
+    public int MinDynamicSubsteppingFramerate { get; private set; }
+
+    /// <summary>
+    /// Maximum number of dynamic substeps allowed when dynamic substepping is active.
+    /// Limits how many smaller update steps the engine may perform in a single frame to smooth out large frame deltas.
+    /// Clamped to be non-negative in the constructor; a value of 0 effectively disables dynamic substepping.
+    /// </summary>
+    public int MaxDynamicSubsteps { get; private set; }
+    
+    public double MinDynamicTimestep {get; private set;}
+    public double MaxDynamicTimestep {get; private set;}
     #endregion
     
     #region Idle
@@ -563,8 +599,13 @@ public partial class Game
         IdleTimeThreshold = framerateSettings.IdleTimeThreshold;
         IdleFrameRateLimit = framerateSettings.IdleFrameRateLimit;
         MaxDeltaTime = framerateSettings.MaxDeltaTime;
-        DynamicSubsteppingThresholdFactor = framerateSettings.DynamicSubsteppingThresholdFactor;
-        // MaxSubsteps = framerateSettings.MaxSubsteps;
+        
+        MaxDynamicSubsteps = framerateSettings.MaxDynamicSubsteps;
+        MaxDynamicSubsteppingFramerate = framerateSettings.MaxDynamicSubsteppingFramerate;
+        MinDynamicSubsteppingFramerate = framerateSettings.MinDynamicSubsteppingFramerate;
+        MinDynamicTimestep = 1.0 / MaxDynamicSubsteppingFramerate;
+        MaxDynamicTimestep = 1.0 / MinDynamicSubsteppingFramerate;
+        
         
         if (framerateSettings.FixedFramerate > 0)
         {
