@@ -21,7 +21,21 @@ public partial class Game
     protected virtual void BeginRun()
     {
     }
-
+    
+    /// <summary>
+    /// Processes input for the current frame.
+    /// Called each frame to handle and dispatch input events before the game update.
+    /// </summary>
+    /// <param name="time">Timing information for the current frame.</param>
+    /// <param name="mousePosGame">Mouse position in game world coordinates.</param>
+    /// <param name="mousePosGameUi">Mouse position in the game's UI coordinate space.</param>
+    /// <param name="mousePosUi">Mouse position in the global UI coordinate space.</param>
+    /// <remarks>
+    /// This method is synchronous with rendering and is not affected by fixed framerate settings.
+    /// Override to implement custom input handling and event dispatch.
+    /// </remarks>
+    protected virtual void HandleInput(GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi) { }
+    
     /// <summary>
     /// Updates game state when the fixed framerate is disabled.
     /// This is the standard update method

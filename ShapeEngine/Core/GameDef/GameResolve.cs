@@ -47,14 +47,14 @@ public partial class Game
         TriggerCustomEventsOnUpdate(false, UpdateTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
-    // private void ResolveInterpolateFixedUpdate(float f)
-    // {
-    //     TriggerCustomEventsOnInterpolateFixedUpdate(true, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-    //     InterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
-    //     CurScene.ResolveInterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
-    //     TriggerCustomEventsOnInterpolateFixedUpdate(false, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-    // }
-
+    private void ResolveHandleInput()
+    {
+        TriggerCustomEventsOnHandleInput(true, Time, GameScreenInfo.MousePos, GameUiScreenInfo.MousePos, UIScreenInfo.MousePos);
+        HandleInput(Time, GameScreenInfo.MousePos, GameUiScreenInfo.MousePos, UIScreenInfo.MousePos);
+        CurScene.ResolveHandleInput(Time, GameScreenInfo.MousePos, GameUiScreenInfo.MousePos, UIScreenInfo.MousePos);
+        TriggerCustomEventsOnHandleInput(false, Time, GameScreenInfo.MousePos, GameUiScreenInfo.MousePos, UIScreenInfo.MousePos);
+    }
+    
     private void ResolveOnGameTextureResized(int w, int h)
     {
         OnGameTextureResized(w, h);

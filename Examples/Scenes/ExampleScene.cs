@@ -65,16 +65,9 @@ namespace Examples.Scenes
                 }
                 
             }
-            // var pausedState = GAMELOOP.InputActionPause.Consume();
-            // if (pausedState is { Consumed: false, Pressed: true })
-            // {
-            //     GAMELOOP.Paused = !GAMELOOP.Paused;
-            // }
-            
 
             if (GameloopExamples.Instance.Paused) return;
-
-
+            
             var resetState = GameloopExamples.Instance.InputActionReset.Consume(out _);
             if (resetState is { Consumed: false, Pressed: true })
             {
@@ -82,26 +75,19 @@ namespace Examples.Scenes
             }
             
             HandleZoom(dt);
-            // float zoomIncrement = 0.05f;
-            // var zoomInState = input.ConsumeAction(GameloopExamples.InputZoomInID);
-            // if (zoomInState is { Consumed: false, Pressed: true })
-            // {
-            //     GAMELOOP.Camera.Zoom(-zoomIncrement);
-            // }
-            //
-            // var zoomOutState = input.ConsumeAction(GameloopExamples.InputZoomOutID);
-            // if (zoomOutState is { Consumed: false, Pressed: true })
-            // {
-            //     GAMELOOP.Camera.Zoom(zoomIncrement);
-            // }
+        }
+
+        protected override void OnHandleInput(GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi)
+        {
+            HandleInput(time.Delta, mousePosGame, mousePosGameUi, mousePosUi);
+
+            if (GameloopExamples.Instance.Paused) return;
+            OnHandleInputExample(time.Delta, mousePosGame, mousePosGameUi, mousePosUi);
         }
 
         protected override void OnUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            HandleInput(time.Delta, game.MousePos, gameUi.MousePos, ui.MousePos);
-
             if (GameloopExamples.Instance.Paused) return;
-            OnHandleInputExample(time.Delta, game.MousePos, gameUi.MousePos, ui.MousePos);
             OnUpdateExample(time, game, gameUi, ui);
         }
         protected override void OnDrawGame(ScreenInfo game)

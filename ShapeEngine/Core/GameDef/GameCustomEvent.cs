@@ -1,3 +1,4 @@
+using System.Numerics;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.GameDef;
@@ -42,90 +43,26 @@ public partial class Game
         }
 
         /// <summary>
-        /// Called before the fixed update step. Override to execute logic before fixed updates.
-        /// </summary>
-        /// <param name="fixedTime">The current fixed game time.</param>
-        /// <param name="gameScreenInfo">Screen info for the game view.</param>
-        /// <param name="gameUiScreenInfo">Screen info for the game UI.</param>
-        /// <param name="uiScreenInfo">Screen info for the general UI.</param>
-        /// <remarks>
-        /// Only called when <see cref="Game.FixedPhysicsEnabled"/> is set to <c>true</c>!
-        /// Fixed Physics call order:
-        /// <list type="bullet">
-        /// <item><see cref="PreUpdate"/></item>
-        /// <item><see cref="PostUpdate"/></item>
-        /// <item><see cref="PreFixedUpdate"/></item>
-        /// <item><see cref="PostFixedUpdate"/></item>
-        /// <item><see cref="PreInterpolateFixedUpdate"/></item>
-        /// <item><see cref="PostInterpolateFixedUpdate"/></item>
-        /// </list>
-        /// </remarks>
-        protected virtual void PreFixedUpdate(GameTime fixedTime, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo) { }
-        
-        /// <summary>
-        /// Called after the fixed update step. Override to execute logic after fixed updates.
-        /// </summary>
-        /// <param name="fixedTime">The current fixed game time.</param>
-        /// <param name="gameScreenInfo">Screen info for the game view.</param>
-        /// <param name="gameUiScreenInfo">Screen info for the game UI.</param>
-        /// <param name="uiScreenInfo">Screen info for the general UI.</param>
-        /// <remarks>
-        /// Only called when <see cref="Game.FixedPhysicsEnabled"/> is set to <c>true</c>!
-        /// Fixed Physics call order:
-        /// <list type="bullet">
-        /// <item><see cref="PreUpdate"/></item>
-        /// <item><see cref="PostUpdate"/></item>
-        /// <item><see cref="PreFixedUpdate"/></item>
-        /// <item><see cref="PostFixedUpdate"/></item>
-        /// <item><see cref="PreInterpolateFixedUpdate"/></item>
-        /// <item><see cref="PostInterpolateFixedUpdate"/></item>
-        /// </list>
-        /// </remarks>
-        protected virtual void PostFixedUpdate(GameTime fixedTime, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo) { }
-        
-        /// <summary>
-        /// Called before interpolating the fixed update. Override to execute logic before interpolation.
+        /// Called before input handling for the current frame or tick.
+        /// Override to perform input-related logic that should run prior to the game's <c>HandleInput</c> method.
         /// </summary>
         /// <param name="time">The current game time.</param>
-        /// <param name="alpha">Interpolation alpha value.</param>
-        /// <param name="gameScreenInfo">Screen info for the game view.</param>
-        /// <param name="gameUiScreenInfo">Screen info for the game UI.</param>
-        /// <param name="uiScreenInfo">Screen info for the general UI.</param>
-        /// <remarks>
-        /// Only called when <see cref="Game.FixedPhysicsEnabled"/> is set to <c>true</c>!
-        /// Fixed Physics call order:
-        /// <list type="bullet">
-        /// <item><see cref="PreUpdate"/></item>
-        /// <item><see cref="PostUpdate"/></item>
-        /// <item><see cref="PreFixedUpdate"/></item>
-        /// <item><see cref="PostFixedUpdate"/></item>
-        /// <item><see cref="PreInterpolateFixedUpdate"/></item>
-        /// <item><see cref="PostInterpolateFixedUpdate"/></item>
-        /// </list>
-        /// </remarks>
-        protected virtual void PreInterpolateFixedUpdate(GameTime time, float alpha, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo) { }
-        
+        /// <param name="mousePosGame">Mouse position in game world coordinates.</param>
+        /// <param name="mousePosGameUi">Mouse position transformed to the in-game UI coordinate space.</param>
+        /// <param name="mousePosUi">Mouse position in general UI/screen coordinates.</param>
+        /// <remarks>Default implementation performs no action.</remarks>
+        protected virtual void PreHandleInput(GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi) { }
+
         /// <summary>
-        /// Called after interpolating the fixed update. Override to execute logic after interpolation.
+        /// Called after input handling for the current frame or tick.
+        /// Override to perform input-related logic that should run after the game's <c>HandleInput</c> method.
         /// </summary>
         /// <param name="time">The current game time.</param>
-        /// <param name="alpha">Interpolation alpha value.</param>
-        /// <param name="gameScreenInfo">Screen info for the game view.</param>
-        /// <param name="gameUiScreenInfo">Screen info for the game UI.</param>
-        /// <param name="uiScreenInfo">Screen info for the general UI.</param>
-        /// <remarks>
-        /// Only called when <see cref="Game.FixedPhysicsEnabled"/> is set to <c>true</c>!
-        /// Fixed Physics call order:
-        /// <list type="bullet">
-        /// <item><see cref="PreUpdate"/></item>
-        /// <item><see cref="PostUpdate"/></item>
-        /// <item><see cref="PreFixedUpdate"/></item>
-        /// <item><see cref="PostFixedUpdate"/></item>
-        /// <item><see cref="PreInterpolateFixedUpdate"/></item>
-        /// <item><see cref="PostInterpolateFixedUpdate"/></item>
-        /// </list>
-        /// </remarks>
-        protected virtual void PostInterpolateFixedUpdate(GameTime time, float alpha, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo) { }
+        /// <param name="mousePosGame">Mouse position in game world coordinates.</param>
+        /// <param name="mousePosGameUi">Mouse position transformed to the in-game UI coordinate space.</param>
+        /// <param name="mousePosUi">Mouse position in general UI/screen coordinates.</param>
+        /// <remarks>Default implementation performs no action.</remarks>
+        protected virtual void PostHandleInput(GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi) { }
 
         /// <summary>
         /// Called before the update step. Override to execute logic before updates.
@@ -134,15 +71,6 @@ public partial class Game
         /// <param name="gameScreenInfo">Screen info for the game view.</param>
         /// <param name="gameUiScreenInfo">Screen info for the game UI.</param>
         /// <param name="uiScreenInfo">Screen info for the general UI.</param>
-        /// <remarks>
-        /// When <see cref="Game.FixedPhysicsEnabled"/> is set to <c>true</c> this function will be called before:
-        /// <list type="bullet">
-        /// <item><see cref="PreFixedUpdate"/></item>
-        /// <item><see cref="PostFixedUpdate"/></item>
-        /// <item><see cref="PreInterpolateFixedUpdate"/></item>
-        /// <item><see cref="PostInterpolateFixedUpdate"/></item>
-        /// </list>
-        /// </remarks>
         protected virtual void PreUpdate(GameTime time, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo) { }
         
         /// <summary>
@@ -152,15 +80,6 @@ public partial class Game
         /// <param name="gameScreenInfo">Screen info for the game view.</param>
         /// <param name="gameUiScreenInfo">Screen info for the game UI.</param>
         /// <param name="uiScreenInfo">Screen info for the general UI.</param>
-        /// <remarks>
-        /// When <see cref="Game.FixedPhysicsEnabled"/> is set to <c>true</c> this function will be called before:
-        /// <list type="bullet">
-        /// <item><see cref="PreFixedUpdate"/></item>
-        /// <item><see cref="PostFixedUpdate"/></item>
-        /// <item><see cref="PreInterpolateFixedUpdate"/></item>
-        /// <item><see cref="PostInterpolateFixedUpdate"/></item>
-        /// </list>
-        /// </remarks>
         protected virtual void PostUpdate(GameTime time, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo) { }
         
         /// <summary>
@@ -200,15 +119,11 @@ public partial class Game
         protected virtual void PostDrawUi(ScreenInfo info) { }
         
         
-        internal void TriggerOnFixedUpdate(bool pre, GameTime fixedTime, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo)
+
+        internal void TriggerOnHandleInput(bool pre, GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi)
         {
-            if(pre) PreFixedUpdate(fixedTime, gameScreenInfo, gameUiScreenInfo, uiScreenInfo);
-            else PostFixedUpdate(fixedTime, gameScreenInfo, gameUiScreenInfo, uiScreenInfo);
-        }
-        internal void TriggerOnInterpolateFixedUpdate(bool pre, GameTime time, float alpha, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo)
-        {
-            if(pre) PreInterpolateFixedUpdate(time, alpha, gameScreenInfo, gameUiScreenInfo, uiScreenInfo);
-            else PostInterpolateFixedUpdate(time, alpha, gameScreenInfo, gameUiScreenInfo, uiScreenInfo);
+            if(pre) PreHandleInput(time, mousePosGame, mousePosGameUi, mousePosUi);
+            else PostHandleInput(time, mousePosGame, mousePosGameUi, mousePosUi);
         }
         internal void TriggerOnUpdate(bool pre, GameTime time, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo)
         {
@@ -291,18 +206,11 @@ public partial class Game
     /// </summary>
     public void ClearCustomEvents() => customEvents.Clear();
     
-    private void TriggerCustomEventsOnFixedUpdate(bool pre, GameTime fixedTime, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo)
+    private void TriggerCustomEventsOnHandleInput(bool pre, GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi)
     {
         foreach (var intervalEvent in customEvents)
         {
-            intervalEvent.TriggerOnFixedUpdate(pre, fixedTime, gameScreenInfo, gameUiScreenInfo, uiScreenInfo);
-        }
-    }
-    private void TriggerCustomEventsOnInterpolateFixedUpdate(bool pre, GameTime time, float alpha, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo)
-    {
-        foreach (var intervalEvent in customEvents)
-        {
-            intervalEvent.TriggerOnInterpolateFixedUpdate(pre, time, alpha, gameScreenInfo, gameUiScreenInfo, uiScreenInfo);
+            intervalEvent.TriggerOnHandleInput(pre, time, mousePosGame, mousePosGameUi, mousePosUi);
         }
     }
     private void TriggerCustomEventsOnUpdate(bool pre, GameTime time, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo)
