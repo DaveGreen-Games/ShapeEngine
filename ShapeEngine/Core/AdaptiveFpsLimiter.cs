@@ -409,14 +409,9 @@ public sealed class AdaptiveFpsLimiter
             }
             else
             {
-                if (frameTime <= 0.0)
-                {
-                    TargetFps = 30; //safeguard
-                }
-                else
-                {
-                    TargetFps = (int)(1.0 / frameTime);
-                }
+                TargetFps = frameTime <= 0.0 
+                    ? 30 //safeguard
+                    : (int)(1.0 / frameTime);
             }
         }
         
@@ -510,7 +505,6 @@ public sealed class AdaptiveFpsLimiter
                 if (vsyncMode == VsyncMode.Disabled || targetFrameRate <= 0)
                 {
                     TargetFps = ShapeMath.MaxInt(Limit.Min, TargetFps - (critical ? CriticalFramerateReductionStep : FramerateReductionStep));
-                    Console.WriteLine($"--------------- Reduced target FPS to {TargetFps} (critical: {critical})");
                 }
                 else
                 {
