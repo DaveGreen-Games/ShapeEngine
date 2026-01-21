@@ -250,8 +250,9 @@ public readonly struct FramerateSettings
         
         if (idleTimeThreshold > 0 && idleFrameRateLimit > 0)
         {
-            if(MinFrameRate > 0 && idleFrameRateLimit < MinFrameRate) idleTimeThreshold = MinFrameRate;
+            if(MinFrameRate > 0 && idleFrameRateLimit < MinFrameRate) idleFrameRateLimit = MinFrameRate;
             if(MaxFrameRate > 0 && idleFrameRateLimit > MaxFrameRate) idleFrameRateLimit = MaxFrameRate;
+            IdleFrameRateLimit = idleFrameRateLimit;
             IdleTimeThreshold = idleTimeThreshold;
         }
         else
