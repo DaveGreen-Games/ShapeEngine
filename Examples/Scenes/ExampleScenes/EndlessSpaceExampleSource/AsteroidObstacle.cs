@@ -25,7 +25,7 @@ internal class AsteroidObstacle : CollisionObject
     
     
     private PolygonCollider collider;
-    private Polygon? outsideShape;
+    private readonly Polygon? outsideShape;
     public Triangulation Triangulation;
     private Rect bb;
 
