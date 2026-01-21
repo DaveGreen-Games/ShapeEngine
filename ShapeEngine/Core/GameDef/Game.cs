@@ -70,26 +70,26 @@ public partial class Game
     public string[] LaunchParams { get; protected set; } = [];
 
     /// <summary>
-    /// Gets the target framerate for fixed  updates.
+    /// Gets the target framerate for the fixed update loop.
+    /// Is used for calculating <see cref="FixedTimestep"/>.
     /// </summary>
     public int FixedFramerate { get; private set; }
 
     /// <summary>
-    /// Gets the time interval in seconds between fixed  updates.
+    /// Gets the time interval in seconds between fixed substeps in the fixed update loop.
     /// </summary>
     /// <remarks>
-    /// This value is calculated as 1.0 / FixedFramerate and represents
-    /// the duration of each physics step in seconds.
+    /// This value is calculated as <c>1.0 / FixedFramerate</c>.
     /// </remarks>
     public double FixedTimestep { get; private set; }
     
     /// <summary>
-    /// Interpolation factor used to blend between the previous and current physics states
-    /// when rendering between fixed physics updates.
-    /// ALso available as float via <see cref="FixedFramerateInterpolationFactorF"/> and in <see cref="ScreenInfo"/> structs.
+    /// Interpolation factor used to blend between the previous and current states
+    /// when rendering between fixed updates.
+    /// Also available as float via <see cref="FixedFramerateInterpolationFactorF"/> and in <see cref="ScreenInfo"/> structs.
     /// </summary>
     /// <remarks>
-    /// Expected range is 0.0 (use previous physics state) to 1.0 (use current physics state).
+    /// Expected range is 0.0 (use previous state) to 1.0 (use current state).
     /// This value is updated each frame when <see cref="FixedFramerateEnabled"/> is true and is useful
     /// for smooth rendering when physics updates run at a different rate than rendering.
     /// </remarks>
@@ -309,34 +309,31 @@ public partial class Game
     /// <summary>
     /// Minimum allowed target framerate (in frames per second) used when dynamic substepping is active.
     /// This value constrains how low the effective framerate may go when splitting a large frame delta
-    /// into multiple substeps. Clamped to be non-negative in the constructor. Set to 0 to disable the lower bound.
+    /// into multiple substeps.
     /// </summary>
     /// <remarks>
-    /// This effectivly sets the maximum allowed delta time (or timestep) for each dynamic substep.
+    /// This effectively sets the maximum allowed delta time (or timestep) for each dynamic substep.
     /// </remarks>
     public int MinDynamicSubsteppingFramerate { get; private set; }
 
     /// <summary>
     /// Maximum number of dynamic substeps allowed when dynamic substepping is active.
     /// Limits how many smaller update steps the engine may perform in a single frame to smooth out large frame deltas.
-    /// Clamped to be non-negative in the constructor; a value of 0  disables dynamic substepping. 
     /// </summary>
     /// <remarks>
     /// The effective maximum substeps allowed is decreased by 1 every frame at least 1 substep is performed to a minimum of 1.
     /// This prevents spiraling and ensures at least one substep per frame with <see cref="MaxDynamicTimestep"/> as delta time.
     /// </remarks>
     public int MaxDynamicSubsteps { get; private set; }
+    
     /// <summary>
     /// Maximum dynamic timestep used when performing dynamic substepping.
     /// </summary>
     /// <remarks>
     /// Represents the largest allowed duration (in seconds) for an individual
     /// dynamic substep when splitting a large frame delta into multiple updates.
-    /// A value of zero or less effectively disables dynamic substepping.
     /// Calculated from <see cref="MinDynamicSubsteppingFramerate"/> as
     /// <c>1.0 / MinDynamicSubsteppingFramerate</c> during construction.
-    /// This value is used to clamp per-substep time so physics and game logic
-    /// remain stable when the frame delta is large.
     /// </remarks>
     public double MaxDynamicTimestep {get; private set;}
     #endregion
@@ -619,7 +616,7 @@ public partial class Game
         FixedFramerateInterpolationFactorF = 1f;
         
         UpdateTime = new GameTime(0,0,0, FixedFramerateEnabled);
-        Time = new GameTime(0,0,0, false);
+        Time = new GameTime(0,0,0,false);
         
         AudioDevice = new AudioDevice();
         
