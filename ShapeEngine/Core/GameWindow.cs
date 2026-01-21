@@ -1,10 +1,8 @@
 using System.Numerics;
-using System.Windows.Markup;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Screen;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core;
 
@@ -337,7 +335,15 @@ public sealed class GameWindow
     /// </remarks>
     public AdaptiveFpsLimiter AdaptiveFpsLimiter { get; private set; }
     
+    /// <summary>
+    /// Gets the minimum frame rate the window should attempt to maintain when applying frame rate limiting.
+    /// A value of 0 indicates that no explicit minimum frame rate constraint is enforced.
+    /// </summary>
     public int MinFrameRate { get; private set; }
+    /// <summary>
+    /// Gets the maximum frame rate the window should not exceed when applying frame rate limiting.
+    /// A value of 0 indicates that no explicit maximum frame rate constraint is enforced.
+    /// </summary>
     public int MaxFrameRate { get; private set; }
     
     /// <summary>
