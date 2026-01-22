@@ -624,7 +624,7 @@ public static class QuadDrawing
             polygonHelper.Add(tl + nD * halfHeight);
             polygonHelper.Add(br + nL * halfWidth);
             polygonHelper.Add(br + nU * halfHeight);
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            polygonHelper.DrawLines(thickness, color, 0);
             return;
         }
         
@@ -663,7 +663,7 @@ public static class QuadDrawing
             polygonHelper.Add(tr + nL * cornerLengthHorizontal);
         }
 
-        polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+        polygonHelper.DrawLines(thickness, color, 0);
     }
     public static void DrawSlantedCornersLines(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {

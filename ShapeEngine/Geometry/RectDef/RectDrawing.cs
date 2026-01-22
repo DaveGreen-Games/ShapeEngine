@@ -868,7 +868,7 @@ public static class RectDrawing
             polygonHelper.Add(tl + new Vector2(0f, halfHeight));
             polygonHelper.Add(br - new Vector2(halfWidth, 0f));
             polygonHelper.Add(br - new Vector2(0f, halfHeight));
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            polygonHelper.DrawLines(thickness, color,0);
             return;
         }
         
@@ -887,7 +887,7 @@ public static class RectDrawing
             polygonHelper.Add(bl + h);
             polygonHelper.Add(br - v);
             polygonHelper.Add(tr + v);
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            polygonHelper.DrawLines(thickness, color, 0);
             
             
         }
@@ -903,7 +903,7 @@ public static class RectDrawing
             polygonHelper.Add(br - h);
             polygonHelper.Add(tr + v);
             polygonHelper.Add(tr - h);
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            polygonHelper.DrawLines(thickness, color, 0);
             
         }
         else
@@ -920,7 +920,7 @@ public static class RectDrawing
             polygonHelper.Add(br - cornerVertical);
             polygonHelper.Add(tr + cornerVertical);
             polygonHelper.Add(tr - cornerHorizontal);
-            polygonHelper.DrawLines(thickness, color, LineCapType.None, 0);
+            polygonHelper.DrawLines(thickness, color, 0);
            
         }
     }
