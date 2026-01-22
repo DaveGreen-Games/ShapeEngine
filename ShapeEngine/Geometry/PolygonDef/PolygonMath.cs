@@ -1,4 +1,5 @@
 using System.Numerics;
+using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.StaticLib;
@@ -304,6 +305,29 @@ public partial class Polygon
     #endregion
     
     #region Transform
+
+    /// <summary>
+    /// Converts this polygon from local coordinates to absolute world coordinates by applying
+    /// the provided <see cref="Transform2D"/>. Vertices are scaled, rotated and translated
+    /// using the transform's scaled size, rotation (in radians) and position.
+    /// </summary>
+    /// <param name="transform">Transform containing Position, RotationRad and ScaledSize to apply.</param>
+    /// <returns>
+    /// A new <see cref="Polygon"/> with transformed (absolute) vertices, or <c>null</c> if this polygon has fewer than three vertices.
+    /// </returns>
+    public Polygon? ToAbsolute(Transform2D transform)
+    {
+        if(Count < 3) return null;
+        var newPolygon = new Polygon(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            var p = transform.Position + (this[i] * transform.ScaledSize.Radius).Rotate(transform.RotationRad);
+            newPolygon.Add(p);
+        }
+        return newPolygon;
+    }
+    
+    
     /// <summary>
     /// Sets the position of the polygon's centroid.
     /// </summary>
