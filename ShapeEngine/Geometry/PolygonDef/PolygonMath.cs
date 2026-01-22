@@ -9,11 +9,25 @@ namespace ShapeEngine.Geometry.PolygonDef;
 
 public partial class Polygon
 {
+    /// <summary>
+    /// Returns the vertex immediately after the vertex at the specified index, wrapping around the polygon.
+    /// </summary>
+    /// <param name="index">Zero-based vertex index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
+    /// <returns>
+    /// The next vertex as a <see cref="Vector2"/>. If the polygon contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
+    /// </returns>
     public Vector2 GetNextVertex(int index)
     {
         return Count <= 0 ? new Vector2() : this[ShapeMath.WrapIndex(Count, index + 1)];
     }
 
+    /// <summary>
+    /// Returns the vertex immediately before the vertex at the specified index, wrapping around the polygon.
+    /// </summary>
+    /// <param name="index">Zero-based vertex index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
+    /// <returns>
+    /// The previous vertex as a <see cref="Vector2"/>. If the polygon contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
+    /// </returns>
     public Vector2 GetPreviousVertex(int index)
     {
         return Count <= 0 ? new Vector2() : this[ShapeMath.WrapIndex(Count, index - 1)];
