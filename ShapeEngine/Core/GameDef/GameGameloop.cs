@@ -164,6 +164,8 @@ public partial class Game
                 UpdateFlashes(dt);
             }
             
+            ResolveHandleInput();
+            
             if (FixedFramerate > 0)//fixed update loop
             {
                 fixedTimestepAccumulator += frameDelta;

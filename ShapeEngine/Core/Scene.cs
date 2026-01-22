@@ -222,6 +222,11 @@ public abstract class Scene
         RemovePathfinder();
         OnClose();
     }
+    
+    internal void ResolveHandleInput(GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi)
+    {
+        OnHandleInput(time, mousePosGame, mousePosGameUi, mousePosUi);
+    }
     internal void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         SpawnArea?.Update(time, game, gameUi, ui);
@@ -381,12 +386,28 @@ public abstract class Scene
     protected virtual void OnGameTextureResized(int w, int h) { }
     
     /// <summary>
-    /// Called every frame. Called before FixedUpdate if fixed framerate is enabled.
+    /// Handle input for the scene. Override to process per-frame input using the provided timing
+    /// information and mouse coordinates in three coordinate spaces.
+    /// Default implementation does nothing.
     /// </summary>
-    /// <param name="time"></param>
-    /// <param name="game"></param>
-    /// <param name="gameUi"></param>
-    /// <param name="ui"></param>
+    /// <param name="time">Frame timing and delta information.</param>
+    /// <param name="mousePosGame">Mouse position in game world coordinates (camera-transformed).</param>
+    /// <param name="mousePosGameUi">Mouse position in the game UI render target coordinates.</param>
+    /// <param name="mousePosUi">Mouse position in the main UI (screen) coordinates.</param>
+    protected virtual void OnHandleInput(GameTime time, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUi) { }
+    
+    /// <summary>
+    /// Called once per frame to update the scene's logic. Override this method to perform
+    /// per-frame updates such as game object state updates, AI, timers, etc.
+    /// The default implementation does nothing.
+    /// </summary>
+    /// <param name="time">Frame timing and delta information.</param>
+    /// <param name="game">Screen information for the game render target (camera-transformed).</param>
+    /// <param name="gameUi">Screen information for the game UI render target (not affected by camera).</param>
+    /// <param name="ui">Screen information for the main UI (screen coordinates).</param>
+    /// <remarks>
+    /// This method is subject to fixed framerate settings and dynamic substepping, if enabled.
+    /// </remarks>
     protected virtual void OnUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     
     /// <summary>
