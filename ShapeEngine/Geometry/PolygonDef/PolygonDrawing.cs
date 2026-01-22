@@ -207,10 +207,9 @@ public static class PolygonDrawing
         poly.Triangulate().Draw(color);
     }
     
-    //TODO: Add Draw with corner points to draw rounded corners?
     #endregion
 
-    
+    //TODO: Add Draw function with corner points and DrawRounded helper function
     
     #region Draw Lines
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0)
@@ -517,6 +516,8 @@ public static class PolygonDrawing
     
     public static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
     {
+        // color = color.SetAlpha(165);//just for debugging right now
+        
         if (poly.Count <= 2) return;
         if (poly.Count == 3)
         {
@@ -677,90 +678,103 @@ public static class PolygonDrawing
         }
     }
     
+    //TODO: Make inside corner side rounded as well?
     private static void DrawLinesRoundedHelper(Polygon poly, float lineThickness, ColorRgba color, int cornerPoints)
     {
-        if (lineThickness <= 0 || poly.Count < 3 || cornerPoints <= 0) return;
+        if (poly.Count < 3 || lineThickness <= 0f || cornerPoints <= 0) return;
 
-        color = color.SetAlpha(165);
-        
         float halfThickness = lineThickness * 1f;
-        int count = poly.Count;
+        var rayColor = color.ToRayColor();
 
-        // Calculate normals for all edges
-        var normals = new Vector2[count];
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < poly.Count; i++)
         {
-            int nextIndex = (i + 1) % count;
-            var edge = poly[nextIndex] - poly[i];
-            normals[i] = Vector2.Normalize(new Vector2(-edge.Y, edge.X));
-        }
+            var p1 = poly.GetPoint(i - 1);
+            var p2 = poly.GetPoint(i);
+            var p3 = poly.GetPoint(i + 1);
+            int nextI = (i + 1) % poly.Count;
+            var p4 = poly.GetPoint(nextI + 1);
 
-        // Calculate inner offset points (sharp)
-        var innerPoints = new Vector2[count];
-        for (int i = 0; i < count; i++)
-        {
-            int prevIndex = (i - 1 + count) % count;
-            innerPoints[i] = CalculateMiterPoint(poly[i], normals[prevIndex], normals[i], halfThickness, false);
-        }
+            var edge1 = p2 - p1;
+            var edge2 = p3 - p2;
+            var edge3 = p4 - p3;
 
-        // Draw each edge and corner
-        for (int i = 0; i < count; i++)
-        {
-            int nextIndex = (i + 1) % count;
+            var n1 = Vector2.Normalize(new(-edge1.Y, edge1.X));
+            var n2 = Vector2.Normalize(new(-edge2.Y, edge2.X));
+            var n3 = Vector2.Normalize(new(-edge3.Y, edge3.X));
 
-            // Calculate outer edge points (simple offset, not mitered for rounded corners)
-            var outerStart = poly[i] + normals[i] * halfThickness;
-            var outerEnd = poly[nextIndex] + normals[i] * halfThickness;
+            var cornerTypeCur = ShapeVec.ClassifyCorner(edge1, edge2);
+            var cornerTypeNext = ShapeVec.ClassifyCorner(edge2, edge3);
 
-            // Draw the straight edge segment
-            DrawEdgeQuad(innerPoints[i], innerPoints[nextIndex], outerStart, outerEnd, color);
+            var inner1 = CalculateMiterPoint(p2, n1, n2, halfThickness, false);
+            var inner2 = CalculateMiterPoint(p3, n2, n3, halfThickness, false);
 
-            // Draw rounded corner at the next vertex
-            DrawOuterCorner(poly[nextIndex], normals[i], normals[nextIndex], innerPoints[nextIndex], halfThickness, color, cornerPoints);
+            Vector2 outer1, outer2;
+
+            if (cornerTypeCur.type > 0) // Convex (CCW)
+            {
+                outer1 = p2 + n2 * halfThickness;
+                DrawCornerFan(p2, n1, n2, inner1, halfThickness, color, cornerPoints, true);
+            }
+            else // Concave or Collinear
+            {
+                outer1 = CalculateMiterPoint(p2, n1, n2, halfThickness, true);
+            }
+
+            if (cornerTypeNext.type > 0) // Convex (CCW)
+            {
+                outer2 = p3 + n2 * halfThickness;
+            }
+            else // Concave or Collinear
+            {
+                outer2 = CalculateMiterPoint(p3, n2, n3, halfThickness, true);
+            }
+            
+            Raylib.DrawTriangle(inner1, outer1, inner2, rayColor);
+            Raylib.DrawTriangle(outer1, outer2, inner2, rayColor);
         }
     }
     private static Vector2 CalculateMiterPoint(Vector2 corner, Vector2 normalPrev, Vector2 normalNext, float halfThickness, bool outer)
     {
-        // Calculate miter direction (average of normals)
         var miterDir = Vector2.Normalize(normalPrev + normalNext);
-        
-        // Calculate miter length based on angle
-        float dot = Vector2.Dot(normalPrev, normalNext);
-        float miterLength = halfThickness / MathF.Sqrt((1f + dot) * 0.5f);
-        
+        float dot = Vector2.Dot(miterDir, normalPrev);
+        if (MathF.Abs(dot) < 0.0001f) return corner + normalPrev * (outer ? halfThickness : -halfThickness);
+        float miterLength = halfThickness / dot;
+
         return corner + miterDir * (outer ? miterLength : -miterLength);
     }
-    private static void DrawEdgeQuad(Vector2 innerStart, Vector2 innerEnd, Vector2 outerStart, Vector2 outerEnd, ColorRgba color)
+    private static void DrawCornerFan(Vector2 corner, Vector2 n1, Vector2 n2, Vector2 innerCorner, float radius, ColorRgba color, int segments, bool isConvex)
     {
-        TriangleDrawing.DrawTriangle(innerStart, outerStart, innerEnd, color);
-        TriangleDrawing.DrawTriangle(outerStart, outerEnd, innerEnd, color);
-    }
-    private static void DrawOuterCorner(Vector2 corner, Vector2 normalPrev, Vector2 normalNext, Vector2 innerCorner, float halfThickness, ColorRgba color, int cornerPoints)
-    {
-        // Calculate angle between normals
-        float anglePrev = MathF.Atan2(normalPrev.Y, normalPrev.X);
-        float angleNext = MathF.Atan2(normalNext.Y, normalNext.X);
-        
-        // Ensure we sweep in the correct direction
-        float angleDiff = angleNext - anglePrev;
-        if (angleDiff > MathF.PI) angleDiff -= 2 * MathF.PI;
-        if (angleDiff < -MathF.PI) angleDiff += 2 * MathF.PI;
+        float startAngle = MathF.Atan2(n1.Y, n1.X);
+        float endAngle = MathF.Atan2(n2.Y, n2.X);
 
-        var prevOuter = corner + normalPrev * halfThickness;
-
-        for (int i = 1; i <= cornerPoints + 1; i++)
+        float angleDiff = endAngle - startAngle;
+        if (isConvex)
         {
-            float t = i / (float)(cornerPoints + 1);
-            float angle = anglePrev + angleDiff * t;
-            var normal = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
-            var curOuter = corner + normal * halfThickness;
+            if (angleDiff <= -MathF.PI) angleDiff += 2 * MathF.PI;
+            if (angleDiff > MathF.PI) angleDiff -= 2 * MathF.PI;
+        }
+        else
+        {
+            if (angleDiff >= MathF.PI) angleDiff -= 2 * MathF.PI;
+            if (angleDiff < -MathF.PI) angleDiff += 2 * MathF.PI;
+        }
+        
+        int numSegments = Math.Max(1, segments);
+        float angleStep = angleDiff / numSegments;
 
-            TriangleDrawing.DrawTriangle(innerCorner, prevOuter, curOuter, color);
+        var p1 = corner + n1 * radius;
 
-            prevOuter = curOuter;
+        for (int i = 1; i <= numSegments; i++)
+        {
+            float angle = startAngle + angleStep * i;
+            var p2 = corner + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
+            Raylib.DrawTriangle(innerCorner, p1, p2, color.ToRayColor());
+            p1 = p2;
         }
     }
+
     
+
     public static bool TryIntersectLines(Vector2 pointA, Vector2 dirA, Vector2 pointB, Vector2 dirB, out Vector2 intersection)
     {
         intersection = default;
