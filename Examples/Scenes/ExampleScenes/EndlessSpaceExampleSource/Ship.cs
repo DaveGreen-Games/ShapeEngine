@@ -282,10 +282,7 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         
         // hull = collider.GetTriangleShape();
     }
-    public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-        
-    }
+
     public void FollowStarted()
     {
         

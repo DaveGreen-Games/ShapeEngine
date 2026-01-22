@@ -42,10 +42,6 @@ namespace Examples.Scenes.ExampleScenes
             Transform += Vel * time.Delta;
             // Pos += Vel * time.Delta;
         }
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
-        }
 
         public override void DrawGame(ScreenInfo game)
         {

@@ -164,7 +164,7 @@ public class GameloopExamples : Game
     private static GameloopExamples? examplesInstance;
     
     private ContentManager contentManager;
-    public GameloopExamples(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings)
+    public GameloopExamples(GameSettings gameSettings, WindowSettings windowSettings, FramerateSettings framerateSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, framerateSettings, inputSettings)
     {
         //Game.Instance is already checked to never be instantiated twice, so this is safe
         examplesInstance = GetInstanceAs<GameloopExamples>();
@@ -404,10 +404,7 @@ public class GameloopExamples : Game
         }
         
         FontDefault = GetFont(FontIDs.JetBrains);
-
-        Window.FpsLimit = 60;
-        Window.VSync = false;
-
+        
         fpsLabel = new(FontDefault, Colors.PcCold, Colors.PcText, Colors.PcHighlight);
         
         paletteInfoBox = new();

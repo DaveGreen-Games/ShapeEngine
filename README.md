@@ -59,7 +59,13 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-	    var game = new MyGameClass(GameSettings.StretchMode("Shape Engine Game"), WindowSettings.Default, InputSettings.Default);
+	    var game = new MyGameClass
+		(
+			GameSettings.StretchMode("Shape Engine Game"),
+			WindowSettings.Default,
+			FramerateSettings.Default,
+			InputSettings.Default
+		);
 	    game.Run();
     }
 }
@@ -70,7 +76,10 @@ public class MyGameClass : Game
     public new static MyGameClass Instance  => myInstance?? throw new NullReferenceException("Instance is not initialized! You need to create a MyGameClass instance before accessing this property!");
     private static MyGameClass? myInstance;
     
-    public MyGameClass(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings) 
+    public MyGameClass(
+		GameSettings gameSettings, WindowSettings windowSettings,
+		FramerateSettings framerateSettings, InputSettings inputSettings)
+		: base(gameSettings, windowSettings, framerateSettings, inputSettings)
     {
         //Game.Instance is already checked to never be instantiated twice, so this is safe
         myInstance = GetInstanceAs<MyGameClass>();

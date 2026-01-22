@@ -18,10 +18,7 @@ public struct WindowSettings
     /// WindowMinSize = new(480, 270),
     /// WindowSize = new(960, 540),
     /// Monitor = 0,
-    /// Vsync = false,
-    /// FrameRateLimit = 60,
-    /// MinFramerate = 30,
-    /// MaxFramerate = 240,
+    /// Vsync = VsyncMode.Disabled,
     /// WindowOpacity = 1f,
     /// MouseEnabled = true,
     /// MouseVisible = true,
@@ -38,10 +35,7 @@ public struct WindowSettings
         WindowMinSize = new(480, 270),
         WindowSize = new(960, 540),
         Monitor = 0,
-        Vsync = false,
-        FrameRateLimit = 60,
-        MinFramerate = 30,
-        MaxFramerate = 240,
+        Vsync = VsyncMode.Disabled,
         WindowOpacity = 1f,
         MouseEnabled = true,
         MouseVisible = true,
@@ -88,24 +82,13 @@ public struct WindowSettings
     public WindowBorder WindowBorder;
     
     /// <summary>
-    /// Determines whether vertical synchronization is enabled.
+    /// Vertical synchronization (VSync) mode for the window.
+    /// Controls whether rendering is synchronized to the display's refresh rate to reduce screen tearing.
     /// </summary>
-    public bool Vsync;
-    
-    /// <summary>
-    /// The target frame rate limit for the application.
-    /// </summary>
-    public int FrameRateLimit;
-    
-    /// <summary>
-    /// The minimum acceptable frame rate for the application.
-    /// </summary>
-    public int MinFramerate;
-    
-    /// <summary>
-    /// The maximum allowed frame rate for the application.
-    /// </summary>
-    public int MaxFramerate;
+    /// <remarks>
+    /// Values are defined by the <see cref="VsyncMode"/> enum.
+    /// </remarks>
+    public VsyncMode Vsync;
     
     /// <summary>
     /// The opacity of the window, ranging from 0.0 (completely transparent) to 1.0 (completely opaque).

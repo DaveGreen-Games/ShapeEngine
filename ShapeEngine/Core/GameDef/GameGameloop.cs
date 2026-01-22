@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Screen;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.GameDef;
 
@@ -9,7 +11,41 @@ public partial class Game
 {
     private List<ScreenTexture>? customScreenTexturesDrawBefore;
     private List<ScreenTexture>? customScreenTexturesDrawAfter;
+
+    private double frameDelta;
+    private int fps;
+    private long frameDeltaNanoSeconds;
+    private int curDynamicSubsteps;
+    // private double prevDynamicSubsteppingTargetTimestep;
     
+    /// <summary>
+    /// Gets the current frames per second (FPS) calculated from the latest frame delta.
+    /// </summary>
+    /// <value>Frames per second as an integer. Updated each frame.</value>
+    public int FramesPerSecond => fps;
+    
+    /// <summary>
+    /// Gets the elapsed time in seconds for the most recent frame.
+    /// </summary>
+    /// <value>Frame delta time in seconds. Updated each frame and used for time-based updates.</value>
+    public double FrameDelta => frameDelta;
+    
+    /// <summary>
+    /// Gets the elapsed time in nanoseconds for the most recent frame.
+    /// </summary>
+    /// <value>Frame delta time in nanoseconds. Updated each frame and useful for high-resolution timing and profiling.</value>
+    public long FrameDeltaNanoSeconds => frameDeltaNanoSeconds;
+    
+    /// <summary>
+    /// Gets the time in seconds that the most recent frame took to complete.
+    /// </summary>
+    /// <remarks>
+    /// This value is updated each frame and represents the elapsed frame duration in
+    /// seconds. Use for profiling or UI display; prefer <see cref="FrameDelta"/> for
+    /// time-step calculations in seconds.
+    /// </remarks>
+    public double FrameTime { get; private set; }
+
     private void StartGameloop()
     {
         Input.Keyboard.OnButtonPressed += KeyboardButtonPressed;
@@ -25,21 +61,47 @@ public partial class Game
 
     private void RunGameloop()
     {
+        Stopwatch frameWatch = new();
+        
+        // Start the stopwatch before the loop to prevent a 0 delta on the first frame.
+        // A 0 delta would cause division by zero in FPS calculation and could break game logic that depends on delta time.
+        frameWatch.Start();
+        long frequency = Stopwatch.Frequency;
+        long nanosecPerTick = ShapeMath.NanoSecondsInOneSecond / frequency;
+        
         while (!quit)
         {
+            frameDeltaNanoSeconds = frameWatch.ElapsedTicks * nanosecPerTick;
+
+            if (MaxDeltaTime > 0.0)
+            {
+                long maxFrameDeltaNanoSeconds = ShapeMath.SecondsToNanoSeconds(MaxDeltaTime);
+                if(frameDeltaNanoSeconds > maxFrameDeltaNanoSeconds) frameDeltaNanoSeconds = maxFrameDeltaNanoSeconds;
+            }
+            
+            frameDelta = frameDeltaNanoSeconds / (double)ShapeMath.NanoSecondsInOneSecond;
+            
+            // Clamp frameDelta to a small minimum to avoid division by zero or extremely large FPS values
+            const double minFrameDelta = 1e-6;
+            double safeFrameDelta = frameDelta < minFrameDelta ? minFrameDelta : frameDelta;
+            fps = (int)Math.Ceiling(1.0 / safeFrameDelta);
+            
+            frameWatch.Restart();
+            
             if (Raylib.WindowShouldClose())
             {
                 Quit();
                 continue;
             }
 
-            var dt = Raylib.GetFrameTime();
-            Time = Time.TickF(dt);
+            Time = Time.Tick(frameDelta, false);
+            var dt = (float)frameDelta;
 
             Window.Update(dt);
             AudioDevice.Update(dt, curCamera);
             Input.Update(dt);
 
+            //Mouse Movement System
             if (Window.MouseOnScreen)
             {
                 if (Input.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
@@ -48,6 +110,44 @@ public partial class Game
                 }
             }
 
+            //Idle Detection System
+            if (IdleTimeThreshold > 0f)
+            {
+                if (Input.InputUsed)
+                {
+                    //reset timer
+                    if (idleTimer > 0f)
+                    {
+                        idleTimer = 0f;
+                    }
+
+                    if (IsIdle)
+                    {
+                        IsIdle = false;
+                        OnIdleChanged?.Invoke(false);
+                    }
+                    
+                }
+                else
+                {
+                    if (idleTimer <= 0f && !IsIdle)
+                    {
+                        idleTimer = IdleTimeThreshold;
+                    }
+                }
+
+                if (idleTimer > 0f)
+                {
+                    idleTimer -= dt;
+                    if (idleTimer <= 0f)
+                    {
+                        IsIdle = true;
+                        OnIdleChanged?.Invoke(true);
+                    }
+                }
+            }
+            else IsIdle = false;
+            
             var mousePosUI = Window.MousePosition;
             gameTexture.Update(dt, Window.CurScreenSize, mousePosUI, Paused);
 
@@ -58,30 +158,148 @@ public partial class Game
                     customScreenTextures[i].Update(dt, Window.CurScreenSize, mousePosUI, Paused);
                 }
             }
-
-            GameScreenInfo = gameTexture.GameScreenInfo;
-            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
-            UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-
+            
             if (!Paused)
             {
                 UpdateFlashes(dt);
             }
-
-            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-
-            if (FixedPhysicsEnabled)
+            
+            ResolveHandleInput();
+            
+            if (FixedFramerate > 0)//fixed update loop
             {
-                ResolveUpdate(true);
-                AdvanceFixedUpdate(dt);
+                fixedTimestepAccumulator += frameDelta;
+                while (fixedTimestepAccumulator >= FixedTimestep)
+                {
+                    UpdateTime = UpdateTime.Tick(FixedTimestep, true);
+                    ResolveUpdate();
+                    fixedTimestepAccumulator -= FixedTimestep;
+                }
+                FixedFramerateInterpolationFactor = fixedTimestepAccumulator / FixedTimestep;
+                FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
             }
-            else ResolveUpdate(false);
+            else//open update loop
+            {
+                //Dynamic Substepping
+                if (DynamicSubsteppingEnabled)
+                {
+                    fixedTimestepAccumulator += frameDelta;
+                    
+                    if (fixedTimestepAccumulator > MaxDynamicTimestep)
+                    {
+                        var substeps = (int)(fixedTimestepAccumulator / MaxDynamicTimestep);
+                        if (substeps > curDynamicSubsteps)
+                        {
+                            substeps = curDynamicSubsteps;
+                        }
 
+                        for (int i = 0; i < substeps; i++)
+                        {
+                            UpdateTime = UpdateTime.Tick(MaxDynamicTimestep, true);
+                            ResolveUpdate();
+                            fixedTimestepAccumulator -= MaxDynamicTimestep;
+                        }
+                        
+                        FixedFramerateInterpolationFactor = fixedTimestepAccumulator / MaxDynamicTimestep;
+                        FixedFramerateInterpolationFactorF = (float)FixedFramerateInterpolationFactor;
+                        
+                        curDynamicSubsteps--;
+                        if(curDynamicSubsteps < 1) curDynamicSubsteps = 1;
+                    }
+                    else
+                    {
+                        FixedFramerateInterpolationFactor = 1.0;
+                        FixedFramerateInterpolationFactorF = 1f;
+                        UpdateTime = UpdateTime.Tick(frameDelta, false);
+                        ResolveUpdate();
+
+                        fixedTimestepAccumulator -= frameDelta;
+                        
+                        curDynamicSubsteps++;
+                        if(curDynamicSubsteps > MaxDynamicSubsteps) curDynamicSubsteps = MaxDynamicSubsteps;
+                    }
+                }
+                else
+                {
+                    FixedFramerateInterpolationFactor = 1.0;
+                    FixedFramerateInterpolationFactorF = 1f;
+                    UpdateTime = UpdateTime.Tick(frameDelta, false);
+                    ResolveUpdate();
+                }
+            }
+
+            gameTexture.SetFixedFramerateInterpolationFactor(FixedFramerateInterpolationFactor);
+            
+            GameScreenInfo = gameTexture.GameScreenInfo;
+            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
+            UIScreenInfo = new ScreenInfo(Window.ScreenArea, mousePosUI, FixedFramerateInterpolationFactor);
+            
+            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+            
             DrawToScreen();
 
             ResolveDeferred();
 
             Input.EndFrame();
+            
+            //Frame Time Management
+            int targetFps = Window.TargetFps;
+            
+            long elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+            FrameTime = ShapeMath.NanoSecondsToSeconds(elapsedNanoSec);
+
+            bool idleUnfocusedLimitActive = false;
+            if (Window.IsUnfocusedFrameRateLimitActive())
+            {
+                int limit = Window.UnfocusedFrameRateLimit;
+                if (limit > 0 && (limit < targetFps || targetFps <= 0))
+                {
+                    targetFps = limit;
+                    idleUnfocusedLimitActive = true;
+                }
+            }
+            
+            if (IsIdleFrameRateLimitActive())
+            {
+                int limit = IdleFrameRateLimit;
+                if (limit > 0 && limit < targetFps)
+                {
+                    targetFps = limit;
+                    idleUnfocusedLimitActive = true;
+                }
+            }
+            
+            if (Window.AdaptiveFpsLimiter.Enabled && !idleUnfocusedLimitActive)
+            {
+                targetFps = Window.AdaptiveFpsLimiter.Update(targetFps, FrameTime, FrameDelta, Window.VSync);
+            }
+            
+            // Wait to maintain target frame rate
+            if (targetFps > 0)
+            {
+                long totalFrameTimeNanoSec = ShapeMath.NanoSecondsInOneSecond / targetFps;
+                long remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                long msToWait = ShapeMath.NanoSecondsToMilliSeconds(remainingNanoSec);
+                if (msToWait > 1)
+                {
+                    // Subtract 1 millisecond to account for OS scheduling imprecision and ensure we don't overshoot the target frame time.
+                    Thread.Sleep((int)(msToWait - 1));
+                }
+                elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                
+                while (remainingNanoSec > 0)
+                {
+                    // Divide by 10_000 to convert nanoseconds to an approximate number of SpinWait iterations.
+                    // This value was empirically determined to balance CPU usage and timing accuracy.
+                    // Needs more testing on other platforms, cpu architectures, and operating systems. (MacOS M2 works well)
+                    Thread.SpinWait((int)(remainingNanoSec / 10_000L));
+                    Thread.Yield();
+                    
+                    elapsedNanoSec = frameWatch.ElapsedTicks * nanosecPerTick;
+                    remainingNanoSec = totalFrameTimeNanoSec - elapsedNanoSec;
+                }
+            }
         }
     }
 
@@ -190,25 +408,27 @@ public partial class Game
         ResolveOnGameTextureResized(w, h);
     }
 
-    private void AdvanceFixedUpdate(float dt)
-    {
-        const float maxFrameTime = 1f / 30f;
-        float frameTime = dt;
-        // var t = 0.0f;
-
-        if (frameTime > maxFrameTime) frameTime = maxFrameTime;
-
-        physicsAccumulator += frameTime;
-        while (physicsAccumulator >= FixedPhysicsTimestep)
-        {
-            FixedTime = FixedTime.TickF(FixedPhysicsFramerate);
-            ResolveFixedUpdate();
-            // t += FixedPhysicsTimestep;
-            physicsAccumulator -= FixedPhysicsTimestep;
-        }
-
-        float alpha = physicsAccumulator / FixedPhysicsTimestep;
-        ResolveInterpolateFixedUpdate(alpha);
-    }
+    // private void AdvanceFixedUpdate(double dt)
+    // {
+    //     const double maxFrameTime = 1.0 / 30.0;
+    //     double frameTime = dt;
+    //
+    //     if (frameTime > maxFrameTime) frameTime = maxFrameTime;
+    //
+    //     physicsAccumulator += frameTime;
+    //     while (physicsAccumulator >= FixedPhysicsTimestep)
+    //     {
+    //         FixedTime = FixedTime.Tick(FixedPhysicsTimestep);
+    //         ResolveFixedUpdate();
+    //         // t += FixedPhysicsTimestep;
+    //         physicsAccumulator -= FixedPhysicsTimestep;
+    //     }
+    //
+    //     double alpha = physicsAccumulator / FixedPhysicsTimestep;
+    //     // alpha is computed in double precision for timing accuracy, but interpolation
+    //     // uses float because ResolveInterpolateFixedUpdate (e.g., via IUpdateable) has
+    //     // a float-based public API. This precision downgrade is intentional.
+    //     ResolveInterpolateFixedUpdate((float)alpha);
+    // }
 
 }

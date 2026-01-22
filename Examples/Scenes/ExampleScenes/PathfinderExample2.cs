@@ -29,6 +29,7 @@ public class PathfinderExample2 : ExampleScene
         private Vector2 chasePosition;
         private int lastTraversableNodeIndex = -1;
         private Triangle hull;
+        private Triangle prevHull;
         private readonly float shipSize;
         private Vector2 pivot;
         private Vector2 movementDir;
@@ -127,9 +128,12 @@ public class PathfinderExample2 : ExampleScene
             }
             angleRad += angleMovement;
             hull = hull.ChangeRotation(angleMovement, pivot);
+            
         }
         public void Update(float dt)
         {
+            prevHull = hull;
+            
             inputActionTree.CurrentGamepad = Game.Instance.Input.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(dt);
             
@@ -214,14 +218,36 @@ public class PathfinderExample2 : ExampleScene
                 obstacles.Enqueue(obstacleRect);
             }
         }
-        public void Draw()
+        public void Draw(ScreenInfo game)
         {
             foreach (var obstacleRect in obstacles)
             {
                 obstacleRect.Draw(new ColorRgba(Color.DarkRed));
                 obstacleRect.DrawLines(8f, new ColorRgba(Color.Crimson));
             }
-            hull.DrawLines(4f, hullColor.ColorRgba);
+            
+            DrawInterpolated(game.FixedFramerateInterpolationFactorF);
+        }
+
+        //example of how to use the interpolation factor to draw smooth movement when using fixed framerate
+        private void DrawInterpolated(float f)
+        {
+            if (f >= 1.0f)
+            {
+                hull.DrawLines(4f, hullColor.ColorRgba);
+            }
+            else if (f <= 0.0f)
+            {
+                prevHull.DrawLines(4f, hullColor.ColorRgba);
+            }
+            else
+            {
+                var a = prevHull.A.Lerp(hull.A, f);
+                var b = prevHull.B.Lerp(hull.B, f);
+                var c = prevHull.C.Lerp(hull.C, f);
+                var interpHull = new Triangle(a, b, c);
+                interpHull.DrawLines(4f, hullColor.ColorRgba); 
+            }
         }
         
         public void FollowStarted()
@@ -252,6 +278,7 @@ public class PathfinderExample2 : ExampleScene
     private class Chaser : IPathfinderAgent
     {
         private Circle body;
+        private Circle prevBody;
         private float speed;
         private bool Predictor => predictionSeconds > 0f;
         private float predictionSeconds;
@@ -272,7 +299,9 @@ public class PathfinderExample2 : ExampleScene
             this.body = new(pos, s);
             this.pathfinder = pathfinder;
             if (Rng.Instance.Chance(0.25f))
+            {
                 predictionSeconds = Rng.Instance.RandF(PredictorSeconds * 0.75f, PredictorSeconds * 1f);
+            }
 
 
             this.speed = speed * (Predictor ? Rng.Instance.RandF(0.4f, 0.5f) : Rng.Instance.RandF(0.25f, 0.35f));
@@ -307,6 +336,7 @@ public class PathfinderExample2 : ExampleScene
         }
         public void Update(float dt)
         {
+            prevBody = body;
             if (pathTimer > 0) pathTimer -= dt;
 
             if (target == null) return;
@@ -361,13 +391,25 @@ public class PathfinderExample2 : ExampleScene
             
         }
 
-        public void Draw(Rect cameraRect)
+        public void Draw(ScreenInfo game)
         {
+            var cameraRect = game.Area;
             if (!body.GetBoundingBox().OverlapShape(cameraRect)) return;
-            // body. DrawLines(body.Radius * 0.25f, Colors.Special);
-            var c = Predictor ? Colors.PcHighlight : Colors.PcSpecial;
-            CircleDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
             
+            DrawInterpolated(game.FixedFramerateInterpolationFactorF);
+        }
+
+        private void DrawInterpolated(float factor)
+        {
+            var c = Predictor ? Colors.PcHighlight : Colors.PcSpecial;
+            if(factor <= 0f) CircleDrawing.DrawCircleFast(prevBody.Center, prevBody.Radius, c.ColorRgba);
+            else if(factor >= 1f) CircleDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
+            else
+            {
+                var interpPos = prevBody.Center.Lerp(body.Center, factor);
+                float interpRadius = ShapeMath.LerpFloat(prevBody.Radius, body.Radius, factor);
+                CircleDrawing.DrawCircleFast(interpPos, interpRadius, c.ColorRgba);
+            }
         }
 
         private Vector2 GetTargetPosition()
@@ -1008,12 +1050,12 @@ public class PathfinderExample2 : ExampleScene
         }
         foreach (var chaser in chasers)
         {
-            chaser.Draw(game.Area);
+            chaser.Draw(game);
         }
         
         
         
-        ship.Draw();
+        ship.Draw(game);
 
         var cutShapeColor = Colors.PcWarm.ColorRgba.SetAlpha(100);//.ChangeBrightness(-0.75f);
         foreach (var cutShape in lastCutShapes)

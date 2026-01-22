@@ -18,10 +18,7 @@ public static class Program
             WindowMinSize = new(480, 270),
             WindowSize = new(960, 540),
             Monitor = 0,
-            Vsync = false,
-            FrameRateLimit = 60,
-            MinFramerate = 30,
-            MaxFramerate = 240,
+            Vsync = VsyncMode.Disabled,
             WindowOpacity = 1f,
             MouseEnabled = true,
             MouseVisible = false,
@@ -29,6 +26,9 @@ public static class Program
             HighDPI = false,
             FramebufferTransparent = false
         };
+
+        var framerateSettings = FramerateSettings.Default;
+
         
         var inputSettings = new InputSettings
         (
@@ -37,7 +37,7 @@ public static class Program
             new InputSettings.GamepadSettings()
         );
         
-        GameloopExamples gameloop = new(gameSettings, windowSettings, inputSettings);
+        GameloopExamples gameloop = new(gameSettings, windowSettings, framerateSettings, inputSettings);
         
         gameloop.Run(args);
     }
