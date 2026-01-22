@@ -689,8 +689,8 @@ public static class ShapeMath
     {
         if (count <= 0) return 0;
         if (index >= count) return index % count;
-        else if (index < 0) return (index % count) + count;
-        else return index;
+        if (index < 0) return (index % count) + count;
+        return index;
     }
     /// <summary>
     /// Wraps a floating-point value to a specified range [min, max).

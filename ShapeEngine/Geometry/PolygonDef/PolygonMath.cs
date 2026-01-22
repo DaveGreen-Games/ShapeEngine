@@ -9,6 +9,16 @@ namespace ShapeEngine.Geometry.PolygonDef;
 
 public partial class Polygon
 {
+    public Vector2 GetNextVertex(int index)
+    {
+        return Count <= 0 ? new Vector2() : this[ShapeMath.WrapIndex(Count, index + 1)];
+    }
+
+    public Vector2 GetPreviousVertex(int index)
+    {
+        return Count <= 0 ? new Vector2() : this[ShapeMath.WrapIndex(Count, index - 1)];
+    }
+    
     #region Math
     /// <summary>
     /// Gets the projected shape points by translating each vertex by a vector.
