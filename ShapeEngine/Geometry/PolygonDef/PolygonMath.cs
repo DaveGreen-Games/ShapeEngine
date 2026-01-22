@@ -33,6 +33,30 @@ public partial class Polygon
         return Count <= 0 ? new Vector2() : this[ShapeMath.WrapIndex(Count, index - 1)];
     }
     
+    /// <summary>
+    /// Returns the next vertex index after <paramref name="index"/>, wrapped into the valid range.
+    /// </summary>
+    /// <param name="index">Zero-based index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
+    /// <returns>
+    /// The next index wrapped into the range [0, Count). If the polygon has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
+    /// </returns>
+    public int GetNextIndex(int index)
+    {
+        return ShapeMath.WrapIndex(Count, index + 1);
+    }
+    
+    /// <summary>
+    /// Returns the previous vertex index before <paramref name="index"/>, wrapped into the valid range.
+    /// </summary>
+    /// <param name="index">Zero-based index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
+    /// <returns>
+    /// The previous index wrapped into the range [0, Count). If the polygon has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
+    /// </returns>
+    public int GetPreviousIndex(int index)
+    {
+        return ShapeMath.WrapIndex(Count, index - 1);
+    }
+    
     #region Math
     /// <summary>
     /// Gets the projected shape points by translating each vertex by a vector.
