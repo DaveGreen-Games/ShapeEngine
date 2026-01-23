@@ -1,6 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.StaticLib;
 
@@ -9,52 +10,87 @@ namespace ShapeEngine.Geometry.PolygonDef;
 
 public partial class Polygon
 {
-    /// <summary>
-    /// Returns the vertex immediately after the vertex at the specified index, wrapping around the polygon.
-    /// </summary>
-    /// <param name="index">Zero-based vertex index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
-    /// <returns>
-    /// The next vertex as a <see cref="Vector2"/>. If the polygon contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
-    /// </returns>
-    public Vector2 GetNextVertex(int index)
-    {
-        return Count <= 0 ? new Vector2() : this[ShapeMath.WrapIndex(Count, index + 1)];
-    }
+
 
     /// <summary>
-    /// Returns the vertex immediately before the vertex at the specified index, wrapping around the polygon.
+    /// Computes an approximate incircle (largest inscribed circle) for the polygon by searching
+    /// for a point inside the polygon that maximizes the distance to the nearest edge.
+    /// The method uses iterative radial sampling (hill-climb) from an initial seed to refine
+    /// the circle center.
     /// </summary>
-    /// <param name="index">Zero-based vertex index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
+    /// <param name="iterations">Number of outer iterations to perform. Higher values increase refinement.</param>
+    /// <param name="samples">Number of radial samples per iteration. Higher values increase angular resolution.</param>
     /// <returns>
-    /// The previous vertex as a <see cref="Vector2"/>. If the polygon contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
+    /// A <see cref="Circle"/> whose center is the found interior point and whose radius is the distance
+    /// from that point to the closest polygon edge. For polygons with fewer than three vertices a
+    /// degenerate circle is returned (zero radius or default center).
     /// </returns>
-    public Vector2 GetPreviousVertex(int index)
+    /// <remarks>
+    /// The algorithm is heuristic and may return a suboptimal incircle for complex or highly concave polygons.
+    /// Default parameters balance performance and accuracy.
+    /// </remarks>
+    public Circle GetIncircle(int iterations = 100, int samples = 100)
     {
-        return Count <= 0 ? new Vector2() : this[ShapeMath.WrapIndex(Count, index - 1)];
-    }
+        if (Count < 3) return new(new Vector2(), 0f);
     
-    /// <summary>
-    /// Returns the next vertex index after <paramref name="index"/>, wrapped into the valid range.
-    /// </summary>
-    /// <param name="index">Zero-based index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
-    /// <returns>
-    /// The next index wrapped into the range [0, Count). If the polygon has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
-    /// </returns>
-    public int GetNextIndex(int index)
-    {
-        return ShapeMath.WrapIndex(Count, index + 1);
-    }
+        var bounds = GetBoundingBox();
+        if (bounds.Size.Width <= 0f || bounds.Size.Height <= 0f)
+        {
+            return new(bounds.Center, 0f);
+        }
     
-    /// <summary>
-    /// Returns the previous vertex index before <paramref name="index"/>, wrapped into the valid range.
-    /// </summary>
-    /// <param name="index">Zero-based index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
-    /// <returns>
-    /// The previous index wrapped into the range [0, Count). If the polygon has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
-    /// </returns>
-    public int GetPreviousIndex(int index)
-    {
-        return ShapeMath.WrapIndex(Count, index - 1);
+        var bestCenter = GetCentroid();
+        if (!ContainsPoint(bestCenter))
+        {
+            // Fallback if centroid is outside (can happen with concave polygons)
+            // Find a point inside the polygon to start.
+            // A simple way is to average the first three vertices.
+            if (Count >= 3)
+            {
+                bestCenter = (this[0] + this[1] + this[2]) / 3.0f;
+                if (!ContainsPoint(bestCenter)) // if that is also outside, fallback to bounds center
+                {
+                    bestCenter = bounds.Center;
+                }
+            }
+            else
+            {
+                bestCenter = bounds.Center;
+            }
+        }
+        
+        GetClosestSegment(bestCenter, out float disSquared);
+    
+        // Iteratively search for a better center point
+        for (int i = 0; i < iterations; i++)
+        {
+            bool foundBetter = false;
+            float searchRadius = bounds.Size.Length * (1.0f / (i + 1)); // Decrease search radius over time
+    
+            for (int j = 0; j < samples; j++)
+            {
+                float angle = (float)j / samples * 2.0f * MathF.PI;
+                Vector2 testPoint = bestCenter + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * searchRadius;
+    
+                if (ContainsPoint(testPoint))
+                {
+                    GetClosestSegment(testPoint, out float newDisSquared);
+                    if (newDisSquared > disSquared)
+                    {
+                        disSquared = newDisSquared;
+                        bestCenter = testPoint;
+                        foundBetter = true;
+                    }
+                }
+            }
+    
+            if (!foundBetter && i > 10) // Early exit if no improvement is found
+            {
+                break;
+            }
+        }
+    
+        return new Circle(bestCenter, MathF.Sqrt(disSquared));
     }
     
     #region Math
