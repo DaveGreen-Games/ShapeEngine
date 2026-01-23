@@ -209,7 +209,12 @@ public static class PolygonDrawing
     
     #endregion
 
+    #region Draw Rounded
     //TODO: Add Draw function with corner points and DrawRounded helper function
+    
+    //Q: Add Draw overload with cornerPoints parameter or add DrawRounded function?
+    
+    #endregion
     
     #region Draw Lines
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0)
@@ -516,8 +521,6 @@ public static class PolygonDrawing
     
     public static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
     {
-        // color = color.SetAlpha(165);//just for debugging right now
-        
         if (poly.Count <= 2) return;
         if (poly.Count == 3)
         {
@@ -534,7 +537,7 @@ public static class PolygonDrawing
         int count = poly.Count;
         if (count < 3 || lineThickness <= 0f) return;
 
-        float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);  //miterLimit >= 0 ? lineThickness * (miterLimit + 1) : -1f;
+        float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);
         var rayColor = color.ToRayColor();
         var prev = poly[^2];
         var cur = poly[^1];
@@ -678,14 +681,13 @@ public static class PolygonDrawing
         }
     }
     
-    //TODO: Make inside corner side rounded as well?
     private static void DrawLinesRoundedHelper(Polygon poly, float lineThickness, ColorRgba color, int cornerPoints)
     {
         if (poly.Count < 3 || lineThickness <= 0f || cornerPoints <= 0) return;
-
+    
         float halfThickness = lineThickness * 1f;
         var rayColor = color.ToRayColor();
-
+    
         for (int i = 0; i < poly.Count; i++)
         {
             var p1 = poly.GetPoint(i - 1);
@@ -693,40 +695,56 @@ public static class PolygonDrawing
             var p3 = poly.GetPoint(i + 1);
             int nextI = (i + 1) % poly.Count;
             var p4 = poly.GetPoint(nextI + 1);
-
+    
             var edge1 = p2 - p1;
             var edge2 = p3 - p2;
             var edge3 = p4 - p3;
-
+    
             var n1 = Vector2.Normalize(new(-edge1.Y, edge1.X));
             var n2 = Vector2.Normalize(new(-edge2.Y, edge2.X));
             var n3 = Vector2.Normalize(new(-edge3.Y, edge3.X));
-
-            var cornerTypeCur = ShapeVec.ClassifyCorner(edge1, edge2);
-            var cornerTypeNext = ShapeVec.ClassifyCorner(edge2, edge3);
-
-            var inner1 = CalculateMiterPoint(p2, n1, n2, halfThickness, false);
-            var inner2 = CalculateMiterPoint(p3, n2, n3, halfThickness, false);
-
-            Vector2 outer1, outer2;
-
+    
+            var cornerTypeCur = edge1.ClassifyCorner(edge2);
+            var cornerTypeNext = edge2.ClassifyCorner(edge3);
+            
+            Vector2 inner1, inner2, outer1, outer2;
+    
             if (cornerTypeCur.type > 0) // Convex (CCW)
             {
+                inner1 = CalculateMiterPoint(p2, n1, n2, halfThickness, false);
                 outer1 = p2 + n2 * halfThickness;
-                DrawCornerFan(p2, n1, n2, inner1, halfThickness, color, cornerPoints, true);
+                DrawCornerFan(p2, n1, n2, inner1, halfThickness, rayColor, cornerPoints, true);
             }
             else // Concave or Collinear
             {
                 outer1 = CalculateMiterPoint(p2, n1, n2, halfThickness, true);
+                if (cornerTypeCur.type < 0)
+                {
+                    inner1 = p2 - n2 * halfThickness;
+                    DrawCornerFan(p2, -n2, -n1, outer1, halfThickness, rayColor, cornerPoints, false);
+                }
+                else
+                {
+                    inner1 = CalculateMiterPoint(p2, n1, n2, halfThickness, false);
+                }
             }
-
+    
             if (cornerTypeNext.type > 0) // Convex (CCW)
             {
+                inner2 = CalculateMiterPoint(p3, n2, n3, halfThickness, false);
                 outer2 = p3 + n2 * halfThickness;
             }
             else // Concave or Collinear
             {
                 outer2 = CalculateMiterPoint(p3, n2, n3, halfThickness, true);
+                if (cornerTypeNext.type < 0)
+                {
+                    inner2 = p3 - n2 * halfThickness;
+                }
+                else
+                {
+                    inner2 = CalculateMiterPoint(p3, n2, n3, halfThickness, false);
+                }
             }
             
             Raylib.DrawTriangle(inner1, outer1, inner2, rayColor);
@@ -739,14 +757,14 @@ public static class PolygonDrawing
         float dot = Vector2.Dot(miterDir, normalPrev);
         if (MathF.Abs(dot) < 0.0001f) return corner + normalPrev * (outer ? halfThickness : -halfThickness);
         float miterLength = halfThickness / dot;
-
+    
         return corner + miterDir * (outer ? miterLength : -miterLength);
     }
-    private static void DrawCornerFan(Vector2 corner, Vector2 n1, Vector2 n2, Vector2 innerCorner, float radius, ColorRgba color, int segments, bool isConvex)
+    private static void DrawCornerFan(Vector2 corner, Vector2 n1, Vector2 n2, Vector2 innerCorner, float radius, Raylib_cs.Color color, int segments, bool isConvex)
     {
         float startAngle = MathF.Atan2(n1.Y, n1.X);
         float endAngle = MathF.Atan2(n2.Y, n2.X);
-
+    
         float angleDiff = endAngle - startAngle;
         if (isConvex)
         {
@@ -761,20 +779,19 @@ public static class PolygonDrawing
         
         int numSegments = Math.Max(1, segments);
         float angleStep = angleDiff / numSegments;
-
+    
         var p1 = corner + n1 * radius;
-
+    
         for (int i = 1; i <= numSegments; i++)
         {
             float angle = startAngle + angleStep * i;
             var p2 = corner + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
-            Raylib.DrawTriangle(innerCorner, p1, p2, color.ToRayColor());
+            Raylib.DrawTriangle(innerCorner, p1, p2, color);
             p1 = p2;
         }
     }
 
     
-
     public static bool TryIntersectLines(Vector2 pointA, Vector2 dirA, Vector2 pointB, Vector2 dirB, out Vector2 intersection)
     {
         intersection = default;
@@ -788,3 +805,9 @@ public static class PolygonDrawing
     }
     #endregion
 }
+
+
+
+
+    
+
