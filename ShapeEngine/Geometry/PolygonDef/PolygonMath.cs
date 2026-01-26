@@ -1,5 +1,6 @@
 using System.Numerics;
 using Raylib_cs;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
@@ -10,8 +11,7 @@ namespace ShapeEngine.Geometry.PolygonDef;
 
 public partial class Polygon
 {
-
-
+    
     /// <summary>
     /// Computes an approximate incircle (largest inscribed circle) for the polygon by searching
     /// for a point inside the polygon that maximizes the distance to the nearest edge.
@@ -713,4 +713,82 @@ public partial class Polygon
     }
 
     #endregion
+    
+    //TODO: Edge normals can be created while iterating points!
+    public Polygon? GenerateRounded(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 35f)
+    {
+        if (cornerPoints <= 0 || Count < 3) return null;
+        cornerStrength = ShapeMath.Clamp(cornerStrength, 0f, 1f);
+
+        var newVertices = new List<Vector2>();
+        var edges = GetEdges();
+        if (edges.Count != Count) return null;
+        
+        for (int i = 0; i < Count; i++)
+        {
+            var p = this[i];
+            
+            var prevP = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var nextP = this[ShapeMath.WrapIndex(Count, i + 1)];
+            
+            if (ShapeVec.IsColinearAngle(prevP, p, nextP, collinearAngleThresholdDeg))
+            {
+                newVertices.Add(p);
+                continue;
+            }
+            
+            var prevEdge = edges[i == 0 ? Count - 1 : i - 1];
+            var curEdge = edges[i];
+
+            var v1 = (prevEdge.Start - p).Normalize();
+            var v2 = (curEdge.End - p).Normalize();
+
+            float angle = MathF.Acos(Vector2.Dot(v1, v2));
+            float cornerRadius = MathF.Min(prevEdge.Length, curEdge.Length) * 0.5f * cornerStrength;
+            
+            float t = cornerRadius / MathF.Tan(angle / 2);
+
+            // Prevent the rounded corner from extending beyond the midpoint of the adjacent edges
+            t = MathF.Min(t, prevEdge.Length * 0.45f);//45 used as a safety margin (from 50)
+            t = MathF.Min(t, curEdge.Length * 0.45f);//45 used as a safety margin (from 50)
+
+            // Recalculate cornerRadius based on the clamped t
+            cornerRadius = t * MathF.Tan(angle / 2);
+            
+            var startPoint = p + v1 * t;
+            var endPoint = p + v2 * t;
+
+            var center = p + (v1 + v2).Normalize() * (cornerRadius / MathF.Sin(angle / 2));
+            
+            //DEBUG
+            // startPoint.Draw(4f, new ColorRgba(System.Drawing.Color.DodgerBlue));
+            // endPoint.Draw(4f, new ColorRgba(System.Drawing.Color.HotPink));
+            center.Draw(4f, new ColorRgba(System.Drawing.Color.Chartreuse));
+            //---
+            
+            var startAngle = (startPoint - center).AngleRad();
+            var endAngle = (endPoint - center).AngleRad();
+            
+            var angleDiff = ShapeMath.GetShortestAngleRad(startAngle, endAngle);
+
+            if (cornerPoints == 1)
+            {
+                newVertices.Add(p + (v1 + v2) * t);
+            }
+            else
+            {
+                for (int j = 0; j < cornerPoints; j++)
+                {
+                    float frac = j / (float)(cornerPoints - 1);
+                    float currentAngle = startAngle + angleDiff * frac;
+                    newVertices.Add(center + new Vector2(MathF.Cos(currentAngle), MathF.Sin(currentAngle)) * cornerRadius);
+                }
+            }
+        }
+
+        var result = new Polygon(newVertices);
+        // result.FixWindingOrder();
+        return result;
+    }
+
 }
