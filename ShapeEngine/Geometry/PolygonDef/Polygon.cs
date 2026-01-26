@@ -512,6 +512,69 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     }
     
     /// <summary>
+    /// Computes and returns the normal vectors for the polygon edges.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="List{Vector2}"/> containing one normal per edge:
+    /// - If the polygon has 0 or 1 vertex an empty list is returned.
+    /// - If the polygon has 2 vertices a single normal for the segment is returned.
+    /// - For 3+ vertices returns normals for every edge (edge from vertex i to i+1).
+    /// </returns>
+    /// <remarks>
+    /// Normals are computed using <see cref="Segment.GetNormal(Vector2, Vector2, bool)"/> with the third parameter set to <c>false</c>.
+    /// If the polygon points are in counter-clockwise (CCW) order the normals will face outward.
+    /// </remarks>
+    public List<Vector2> GetEdgeNormals()
+    {
+        switch (Count)
+        {
+            case <= 1:
+                return [];
+            case 2:
+                return [Segment.GetNormal(this[0], this[1], false)];
+        }
+
+        var normals = new List<Vector2>(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            normals.Add(Segment.GetNormal(this[i], this[(i + 1) % Count], false));
+        }
+        return normals;
+    }
+    
+    /// <summary>
+    /// Appends the edge normal vectors of this polygon to the provided list.
+    /// </summary>
+    /// <param name="normalsRef">A <see cref="List{Vector2}"/> that will receive the computed normals (normals are appended).</param>
+    /// <returns>
+    /// The number of normals added:
+    /// - 0 when the polygon has 0 or 1 vertex (nothing is added).
+    /// - 1 when the polygon has exactly 2 vertices (a single segment normal is added).
+    /// - <c>Count</c> when the polygon has 3 or more vertices (one normal per edge).
+    /// </returns>
+    /// <remarks>
+    /// Normals are computed using <see cref="Segment.GetNormal(Vector2, Vector2, bool)"/> with the third parameter set to <c>false</c>.
+    /// When the polygon vertices are in counter-clockwise (CCW) order the normals will face outward.
+    /// </remarks>
+    public int GetEdgeNormals(ref List<Vector2> normalsRef)
+    {
+        switch (Count)
+        {
+            case <= 1:
+                return 0;
+            case 2:
+                normalsRef.Add(Segment.GetNormal(this[0], this[1], false));
+                return 1;
+        }
+        
+        for (var i = 0; i < Count; i++)
+        {
+            normalsRef.Add(Segment.GetNormal(this[i], this[(i + 1) % Count], false));
+        }
+        return Count;
+    }
+    
+    /// <summary>
     /// Returns a simple (non-minimal) enclosing circle for the polygon.
     /// You should always use <see cref="GetBoundingCircle"/> unless performance is critical.
     /// </summary>
