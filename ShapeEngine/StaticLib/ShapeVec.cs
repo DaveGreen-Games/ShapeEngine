@@ -165,18 +165,39 @@ public static class ShapeVec
         else return -normal;
     }
     /// <summary>
-    /// Determines if three points are colinear (lie on a straight line).
+    /// Determines whether three points (a, b, c) are colinear within a given tolerance.
     /// </summary>
     /// <param name="a">The first point.</param>
-    /// <param name="b">The second point (vertex).</param>
+    /// <param name="b">The middle/vertex point.</param>
     /// <param name="c">The third point.</param>
-    /// <returns>True if the points are colinear, otherwise false.</returns>
-    public static bool IsColinear(Vector2 a, Vector2 b, Vector2 c)
+    /// <param name="epsilon">
+    /// The tolerance used to consider the cross product effectively zero. Smaller values require closer alignment.
+    /// </param>
+    /// <param name="scaledEpsilon">
+    /// If true, the epsilon is scaled by the geometric mean of the squared segment lengths to account for numerical precision
+    /// when points are far apart or segment lengths vary greatly. If false, epsilon is used directly.
+    /// </param>
+    /// <returns>True if the points are colinear or if any segment has zero length (coincident points); otherwise false.</returns>
+    public static bool IsColinear(Vector2 a, Vector2 b, Vector2 c, float epsilon = 1e-6f, bool scaledEpsilon = true)
     {
-        Vector2 prevCur = a - b;
-        Vector2 nextCur = c - b;
+        var prevCur = a - b;
+        var nextCur = c - b;
 
-        return prevCur.Cross(nextCur) == 0f;
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = prevCur.LengthSquared();
+        if(prevLenSq <= 0f) return true;
+        float nextLenSq = nextCur.LengthSquared();
+        if(nextLenSq <= 0f) return true;
+        
+        float cross = prevCur.Cross(nextCur);
+
+        if (!scaledEpsilon) return MathF.Abs(cross) <= epsilon;
+        
+        float lenSqProduct = prevLenSq * nextLenSq;
+            
+        // Compare with a scaled epsilon to account for floating point error
+        return MathF.Abs(cross) <= epsilon * MathF.Sqrt(lenSqProduct);
+
     }
     /// <summary>
     /// Returns the area represented by the vector (X * Y).
