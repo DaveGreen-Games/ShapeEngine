@@ -164,6 +164,7 @@ public static class ShapeVec
         if(IsNormalFacingOutward(normal, outwardDirection)) return normal;
         else return -normal;
     }
+    
     /// <summary>
     /// Determines whether three points (a, b, c) are colinear within a given tolerance.
     /// </summary>
@@ -199,6 +200,95 @@ public static class ShapeVec
         return MathF.Abs(cross) <= epsilon * MathF.Sqrt(lenSqProduct);
 
     }
+    /// <summary>
+    /// Determines whether two direction vectors are colinear within a given tolerance.
+    /// </summary>
+    /// <param name="dir1">The first direction vector.</param>
+    /// <param name="dir2">The second direction vector.</param>
+    /// <param name="epsilon">Tolerance used to consider the 2D cross product effectively zero. Smaller values require closer alignment.</param>
+    /// <param name="scaledEpsilon">
+    /// If true, the epsilon is scaled by the geometric mean of the squared lengths of the vectors to account for numerical precision
+    /// when magnitudes differ or are large; if false, epsilon is used directly.
+    /// </param>
+    /// <returns>
+    /// True if the vectors are colinear or if either vector has zero length (treated as coincident); otherwise false.
+    /// </returns>
+    /// <remarks>
+    /// Uses the 2D cross product and optional scaling to robustly handle floating point error for vectors of varying magnitude.
+    /// </remarks>
+    public static bool IsColinear(Vector2 dir1, Vector2 dir2, float epsilon = 1e-6f, bool scaledEpsilon = true)
+    {
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = dir1.LengthSquared();
+        if(prevLenSq <= 0f) return true;
+        float nextLenSq = dir2.LengthSquared();
+        if(nextLenSq <= 0f) return true;
+        
+        float cross = dir1.Cross(dir2);
+
+        if (!scaledEpsilon) return MathF.Abs(cross) <= epsilon;
+        
+        float lenSqProduct = prevLenSq * nextLenSq;
+            
+        // Compare with a scaled epsilon to account for floating point error
+        return MathF.Abs(cross) <= epsilon * MathF.Sqrt(lenSqProduct);
+
+    }
+    /// <summary>
+    /// Determines whether three points (a, b, c) are colinear within an angle threshold in degrees.
+    /// </summary>
+    /// <param name="a">The first point.</param>
+    /// <param name="b">The middle/vertex point.</param>
+    /// <param name="c">The third point.</param>
+    /// <param name="angleThresholdDeg">Angle threshold in degrees (e.g. 5f).</param>
+    /// <returns>True if the directions differ by less than or equal to the threshold or if any segment has zero length; otherwise false.</returns>
+    public static bool IsColinearAngle(Vector2 a, Vector2 b, Vector2 c, float angleThresholdDeg = 0f)
+    {
+        var prevCur = a - b;
+        var nextCur = c - b;
+
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = prevCur.LengthSquared();
+        if (prevLenSq <= 0f) return true;
+        float nextLenSq = nextCur.LengthSquared();
+        if (nextLenSq <= 0f) return true;
+
+        float angleRad = prevCur.AngleRad(nextCur);
+        float angleDeg = MathF.Abs(angleRad) * ShapeMath.RADTODEG;
+
+        return angleDeg <= angleThresholdDeg;
+    }
+    /// <summary>
+    /// Determines whether two direction vectors are colinear within a specified angular threshold (in degrees).
+    /// </summary>
+    /// <param name="dir1">The first direction vector.</param>
+    /// <param name="dir2">The second direction vector.</param>
+    /// <param name="angleThresholdDeg">
+    /// Angle threshold in degrees. If the absolute angle between <paramref name="dir1"/> and <paramref name="dir2"/>
+    /// is less than or equal to this value the vectors are considered colinear.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if either vector has zero length (coincident) or if the absolute angle between the two vectors
+    /// is less than or equal to <paramref name="angleThresholdDeg"/>; otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    /// Uses <see cref="AngleRad(Vector2, Vector2)"/> to compute the angle in radians and converts to degrees
+    /// using <see cref="ShapeMath.RADTODEG"/>.
+    /// </remarks>
+    public static bool IsColinearAngle(Vector2 dir1, Vector2 dir2, float angleThresholdDeg = 0f)
+    {
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = dir1.LengthSquared();
+        if (prevLenSq <= 0f) return true;
+        float nextLenSq = dir2.LengthSquared();
+        if (nextLenSq <= 0f) return true;
+
+        float angleRad = dir1.AngleRad(dir2);
+        float angleDeg = MathF.Abs(angleRad) * ShapeMath.RADTODEG;
+
+        return angleDeg <= angleThresholdDeg;
+    }
+    
     /// <summary>
     /// Returns the area represented by the vector (X * Y).
     /// </summary>
