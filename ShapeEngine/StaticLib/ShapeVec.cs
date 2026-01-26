@@ -244,7 +244,7 @@ public static class ShapeVec
     /// <returns>True if the directions differ by less than or equal to the threshold or if any segment has zero length; otherwise false.</returns>
     public static bool IsColinearAngle(Vector2 a, Vector2 b, Vector2 c, float angleThresholdDeg = 0f)
     {
-        var prevCur = a - b;
+        var prevCur = b - a;
         var nextCur = c - b;
 
         // If either segment has zero length (coincident points) treat as colinear
@@ -253,10 +253,10 @@ public static class ShapeVec
         float nextLenSq = nextCur.LengthSquared();
         if (nextLenSq <= 0f) return true;
 
-        float angleRad = prevCur.AngleRad(nextCur);
+        float angleRad = prevCur.AngleRadUnsigned(nextCur);
         float angleDeg = MathF.Abs(angleRad) * ShapeMath.RADTODEG;
-
-        return angleDeg <= angleThresholdDeg;
+        
+        return angleDeg <= angleThresholdDeg || angleDeg >= (180f - angleThresholdDeg);
     }
     /// <summary>
     /// Determines whether two direction vectors are colinear within a specified angular threshold (in degrees).
@@ -283,10 +283,10 @@ public static class ShapeVec
         float nextLenSq = dir2.LengthSquared();
         if (nextLenSq <= 0f) return true;
 
-        float angleRad = dir1.AngleRad(dir2);
+        float angleRad = dir1.AngleRadUnsigned(dir2);
         float angleDeg = MathF.Abs(angleRad) * ShapeMath.RADTODEG;
 
-        return angleDeg <= angleThresholdDeg;
+        return angleDeg <= angleThresholdDeg || angleDeg >= (180f - angleThresholdDeg);
     }
     
     /// <summary>
@@ -848,9 +848,6 @@ public static class ShapeVec
     /// <returns>The unsigned angle in radians between <paramref name="v1"/> and <paramref name="v2"/>.</returns>
     public static float AngleRadUnsigned(this Vector2 v1, Vector2 v2)
     {
-        // dirPrev = Vector2.Normalize(dirPrev);
-        // dirNext = Vector2.Normalize(dirNext);
-        
         float cross = v1.X * v2.Y - v1.Y * v2.X;
         float dot = Vector2.Dot(v1, v2);
         return  MathF.Atan2(MathF.Abs(cross), dot); // 0..π
