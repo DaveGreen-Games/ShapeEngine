@@ -185,16 +185,18 @@ public static class PolygonDrawing
     }
     #endregion
     
+    
+    
     #region Draw
     /// <summary>
-    /// Draws the polygon filled with the specified color. Uses triangulation for polygons with more than 3 vertices.
+    /// Draws the polygon filled with the provided color.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="color">The fill color.</param>
+    /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored; triangles are drawn directly.</param>
+    /// <param name="color">Fill color used when rendering the polygon.</param>
     /// <remarks>
-    /// For polygons with exactly 3 vertices, an optimized triangle drawing method is used.
-    /// For polygons with more than 3 vertices, the polygon is triangulated and each triangle is drawn.
-    /// For best performance with static polygons, precompute the triangulation and draw the result directly.
+    /// Caution:This method will triangulate the polygon each call when the polygon contains more than 3 points,
+    /// which can be performance-intensive for complex polygons.
+    /// Precompute triangulation for best performance and then transform/draw the triangulation as needed.
     /// </remarks>
     public static void Draw(this Polygon poly, ColorRgba color)
     {
@@ -210,9 +212,49 @@ public static class PolygonDrawing
     #endregion
 
     #region Draw Rounded
-    //TODO: Add Draw function with corner points and DrawRounded helper function
     
-    //Q: Add Draw overload with cornerPoints parameter or add DrawRounded function?
+    /// <summary>
+    /// Draws the polygon with rounded corners by generating a rounded copy and triangulating it (performance-intensive, see remarks!).
+    /// </summary>
+    /// <param name="poly">The source polygon. Must contain at least 3 points.</param>
+    /// <param name="color">Fill color used to draw the rounded polygon.</param>
+    /// <param name="cornerPoints">Number of interpolated points used for each rounded corner. If &lt;= 0, corners are not rounded.</param>
+    /// <param name="cornerStrength">Controls how far the rounded corner deviates from the original corner. Range is [0-1] where 0 skips drawing and 1 draws max rounded corners; higher values produce larger arcs.</param>
+    /// <param name="collinearAngleThresholdDeg">Angle in degrees below which adjacent edges are considered collinear and corner is not rounded (Corner Vertex is copied as is).</param>
+    /// <param name="distanceThreshold">
+    /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is shorter
+    /// than this threshold the original vertex is preserved. Defaults to 1.0f.
+    /// </param>
+    /// <remarks>
+    /// This method generates a new rounded polygon on each call which can be performance- and memory-intensive for complex polygons
+    /// or high corner point counts. For best performance, precompute the rounded polygon and triangulation. Use <see cref="Polygon.GenerateRoundedCopy"/> to create the rounded polygon,
+    /// and <see cref="Polygon.Triangulate"/> to create the triangulation. Then translate/rotate/scale/draw the triangulation as needed.
+    /// </remarks>
+    public static void DrawRounded(this Polygon poly, ColorRgba color, int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
+    {
+        if (poly.Count < 3) return;
+        if (poly.Count == 3)
+        {
+            if (cornerPoints <= 0)
+            {
+                TriangleDrawing.DrawTriangle(poly[0], poly[1], poly[2], color);
+            }
+            else
+            {
+                TriangleDrawing.DrawTriangleRounded(poly[0], poly[1], poly[2], color, cornerPoints, cornerStrength);
+            }
+            return;
+        }
+
+        if (cornerPoints <= 0)
+        {
+            poly.Triangulate().Draw(color);
+            return;
+        }
+
+        var roundedPoly = poly.GenerateRoundedCopy(cornerPoints, cornerStrength, collinearAngleThresholdDeg, distanceThreshold);
+        roundedPoly?.Triangulate().Draw(color);
+    }
     
     #endregion
     
@@ -519,7 +561,8 @@ public static class PolygonDrawing
     
     #region Helper
     
-    public static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
+    //TODO: Test again, does not seem to work correctly in all cases! (if points are too close together artifacts appear -> corners with a lot of points for instance) 
+    private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
     {
         if (poly.Count <= 2) return;
         if (poly.Count == 3)
