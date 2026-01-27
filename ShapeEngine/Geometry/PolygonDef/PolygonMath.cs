@@ -712,6 +712,31 @@ public partial class Polygon
     #endregion
     
     #region Generate Rounded Corners
+    /// <summary>
+    /// Creates a copy of this polygon with rounded corners.
+    /// </summary>
+    /// <param name="cornerPoints">Number of points to use to approximate each rounded corner. Must be &gt; 0.</param>
+    /// <param name="cornerStrength">
+    /// Relative strength/size of the rounded corner. Expected range [0, 1]. Defaults to 0.5f.
+    /// Larger values produce a larger rounded arc limited by adjacent edge lengths.
+    /// </param>
+    /// <param name="collinearAngleThresholdDeg">
+    /// Angle threshold in degrees below which three consecutive vertices are considered collinear
+    /// and the corner is left unchanged. Defaults to 5 degrees.
+    /// </param>
+    /// <param name="distanceThreshold">
+    /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is shorter
+    /// than this threshold the original vertex is preserved. Defaults to 1.0f.
+    /// </param>
+    /// <returns>
+    /// A new <see cref="Polygon"/> containing the rounded-corner approximation, or <c>null</c> if the
+    /// input parameters are invalid (for example: non-positive cornerPoints or cornerStrength out of range).
+    /// </returns>
+    /// <remarks>
+    /// The implementation clamps corner geometry so rounded arcs do not extend beyond portions of adjacent edges.
+    /// If <paramref name="cornerPoints"/> is 1 a single replacement point is inserted for the rounded corner.
+    /// Complex or highly concave polygons may yield unexpected results since this is a geometric approximation.
+    /// </remarks>
     public Polygon? GenerateRoundedCopy(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
     {
         if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return null;
@@ -784,6 +809,36 @@ public partial class Polygon
 
         return roundedPolygon;
     }
+    
+    /// <summary>
+    /// Creates rounded corners for this polygon in-place by replacing each sharp vertex with
+    /// an approximated arc of points. The method mutates the polygon's vertex list.
+    /// </summary>
+    /// <param name="cornerPoints">
+    /// Number of points used to approximate each rounded corner. Must be greater than 0.
+    /// If set to 1 a single replacement point will be used per corner.
+    /// </param>
+    /// <param name="cornerStrength">
+    /// Relative strength/size of the rounded corner in the range [0, 1]. Larger values produce
+    /// a larger arc limited by adjacent edge lengths. Defaults to 0.5f.
+    /// </param>
+    /// <param name="collinearAngleThresholdDeg">
+    /// Angle threshold in degrees below which three consecutive vertices are considered
+    /// collinear and the corner is left unchanged. Defaults to 5 degrees.
+    /// </param>
+    /// <param name="distanceThreshold">
+    /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is
+    /// shorter than this threshold the original vertex is preserved. Defaults to 1.0f.
+    /// </param>
+    /// <returns>
+    /// True if rounding was applied successfully; otherwise false for invalid parameters or when
+    /// no modification was performed.
+    /// </returns>
+    /// <remarks>
+    /// This is a heuristic geometric approximation and may produce unexpected results on highly
+    /// concave or self-intersecting polygons. Use <see cref="GenerateRoundedCopy"/> for a
+    /// non-mutating alternative.
+    /// </remarks>
     public bool GenerateRounded(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
     {
         if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return false;
