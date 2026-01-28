@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.StaticLib;
 
@@ -8,7 +9,88 @@ namespace ShapeEngine.Geometry.PolygonDef;
 
 public partial class Polygon
 {
+    
     #region Math
+    /// <summary>
+    /// Computes an approximate incircle (largest inscribed circle) for the polygon by searching
+    /// for a point inside the polygon that maximizes the distance to the nearest edge.
+    /// The method uses iterative radial sampling (hill-climb) from an initial seed to refine
+    /// the circle center.
+    /// </summary>
+    /// <param name="iterations">Number of outer iterations to perform. Higher values increase refinement.</param>
+    /// <param name="samples">Number of radial samples per iteration. Higher values increase angular resolution.</param>
+    /// <returns>
+    /// A <see cref="Circle"/> whose center is the found interior point and whose radius is the distance
+    /// from that point to the closest polygon edge. For polygons with fewer than three vertices a
+    /// degenerate circle is returned (zero radius or default center).
+    /// </returns>
+    /// <remarks>
+    /// The algorithm is heuristic and may return a suboptimal incircle for complex or highly concave polygons.
+    /// Default parameters balance performance and accuracy.
+    /// </remarks>
+    public Circle GetIncircle(int iterations = 100, int samples = 100)
+    {
+        if (Count < 3) return new(new Vector2(), 0f);
+    
+        var bounds = GetBoundingBox();
+        if (bounds.Size.Width <= 0f || bounds.Size.Height <= 0f)
+        {
+            return new(bounds.Center, 0f);
+        }
+    
+        var bestCenter = GetCentroid();
+        if (!ContainsPoint(bestCenter))
+        {
+            // Fallback if centroid is outside (can happen with concave polygons)
+            // Find a point inside the polygon to start.
+            // A simple way is to average the first three vertices.
+            if (Count >= 3)
+            {
+                bestCenter = (this[0] + this[1] + this[2]) / 3.0f;
+                if (!ContainsPoint(bestCenter)) // if that is also outside, fallback to bounds center
+                {
+                    bestCenter = bounds.Center;
+                }
+            }
+            else
+            {
+                bestCenter = bounds.Center;
+            }
+        }
+        
+        GetClosestSegment(bestCenter, out float disSquared);
+    
+        // Iteratively search for a better center point
+        for (int i = 0; i < iterations; i++)
+        {
+            bool foundBetter = false;
+            float searchRadius = bounds.Size.Length * (1.0f / (i + 1)); // Decrease search radius over time
+    
+            for (int j = 0; j < samples; j++)
+            {
+                float angle = (float)j / samples * 2.0f * MathF.PI;
+                Vector2 testPoint = bestCenter + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * searchRadius;
+    
+                if (ContainsPoint(testPoint))
+                {
+                    GetClosestSegment(testPoint, out float newDisSquared);
+                    if (newDisSquared > disSquared)
+                    {
+                        disSquared = newDisSquared;
+                        bestCenter = testPoint;
+                        foundBetter = true;
+                    }
+                }
+            }
+    
+            if (!foundBetter && i > 10) // Early exit if no improvement is found
+            {
+                break;
+            }
+        }
+    
+        return new Circle(bestCenter, MathF.Sqrt(disSquared));
+    }
     /// <summary>
     /// Gets the projected shape points by translating each vertex by a vector.
     /// </summary>
@@ -304,6 +386,29 @@ public partial class Polygon
     #endregion
     
     #region Transform
+
+    /// <summary>
+    /// Converts this polygon from local coordinates to absolute world coordinates by applying
+    /// the provided <see cref="Transform2D"/>. Vertices are scaled, rotated and translated
+    /// using the transform's scaled size, rotation (in radians) and position.
+    /// </summary>
+    /// <param name="transform">Transform containing Position, RotationRad and ScaledSize to apply.</param>
+    /// <returns>
+    /// A new <see cref="Polygon"/> with transformed (absolute) vertices, or <c>null</c> if this polygon has fewer than three vertices.
+    /// </returns>
+    public Polygon? ToAbsolute(Transform2D transform)
+    {
+        if(Count < 3) return null;
+        var newPolygon = new Polygon(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            var p = transform.Position + (this[i] * transform.ScaledSize.Radius).Rotate(transform.RotationRad);
+            newPolygon.Add(p);
+        }
+        return newPolygon;
+    }
+    
+    
     /// <summary>
     /// Sets the position of the polygon's centroid.
     /// </summary>
@@ -604,5 +709,213 @@ public partial class Polygon
         return newPolygon;
     }
 
+    #endregion
+    
+    #region Generate Rounded Corners
+    /// <summary>
+    /// Creates a copy of this polygon with rounded corners.
+    /// </summary>
+    /// <param name="cornerPoints">Number of points to use to approximate each rounded corner. Must be &gt; 0.</param>
+    /// <param name="cornerStrength">
+    /// Relative strength/size of the rounded corner. Expected range [0, 1]. Defaults to 0.5f.
+    /// Larger values produce a larger rounded arc limited by adjacent edge lengths.
+    /// </param>
+    /// <param name="collinearAngleThresholdDeg">
+    /// Angle threshold in degrees below which three consecutive vertices are considered collinear
+    /// and the corner is left unchanged. Defaults to 5 degrees.
+    /// </param>
+    /// <param name="distanceThreshold">
+    /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is shorter
+    /// than this threshold the original vertex is preserved. Defaults to 1.0f.
+    /// </param>
+    /// <returns>
+    /// A new <see cref="Polygon"/> containing the rounded-corner approximation, or <c>null</c> if the
+    /// input parameters are invalid (for example: non-positive cornerPoints or cornerStrength out of range).
+    /// </returns>
+    /// <remarks>
+    /// The implementation clamps corner geometry so rounded arcs do not extend beyond portions of adjacent edges.
+    /// If <paramref name="cornerPoints"/> is 1 a single replacement point is inserted for the rounded corner.
+    /// Complex or highly concave polygons may yield unexpected results since this is a geometric approximation.
+    /// </remarks>
+    public Polygon? GenerateRoundedCopy(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
+    {
+        if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return null;
+
+        var roundedPolygon = new Polygon();
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var prevP = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var p = this[i];
+            var nextP = this[ShapeMath.WrapIndex(Count, i + 1)];
+
+            var prevEdge = p - prevP;
+            var curEdge = nextP - p;
+
+            float prevEdgeLength = prevEdge.Length();
+            float curEdgeLength = curEdge.Length();
+
+            if (prevEdgeLength < distanceThreshold || curEdgeLength < distanceThreshold)
+            {
+                roundedPolygon.Add(p);
+                continue;
+            }
+            
+            if (ShapeVec.IsColinearAngle(prevP, p, nextP, collinearAngleThresholdDeg))
+            {
+                roundedPolygon.Add(p);
+                continue;
+            }
+
+            var v1 = (prevP - p).Normalize();
+            var v2 = (nextP - p).Normalize();
+
+            float angle = MathF.Acos(Vector2.Dot(v1, v2));
+            float cornerRadius = MathF.Min(prevEdgeLength, curEdgeLength) * 0.5f * cornerStrength;
+            
+            float t = cornerRadius / MathF.Tan(angle / 2);
+
+            // Prevent the rounded corner from extending beyond the midpoint of the adjacent edges
+            t = MathF.Min(t, prevEdgeLength * 0.45f);//45 used as a safety margin (from 50)
+            t = MathF.Min(t, curEdgeLength * 0.45f);//45 used as a safety margin (from 50)
+
+            // Recalculate cornerRadius based on the clamped t
+            cornerRadius = t * MathF.Tan(angle / 2);
+            
+            var startPoint = p + v1 * t;
+            var endPoint = p + v2 * t;
+
+            var center = p + (v1 + v2).Normalize() * (cornerRadius / MathF.Sin(angle / 2));
+            
+            float startAngle = (startPoint - center).AngleRad();
+            float endAngle = (endPoint - center).AngleRad();
+            
+            float angleDiff = ShapeMath.GetShortestAngleRad(startAngle, endAngle);
+
+            if (cornerPoints == 1)
+            {
+                roundedPolygon.Add(p + (v1 + v2) * t);
+            }
+            else
+            {
+                for (var j = 0; j < cornerPoints; j++)
+                {
+                    float frac = j / (float)(cornerPoints - 1);
+                    float currentAngle = startAngle + angleDiff * frac;
+                    roundedPolygon.Add(center + new Vector2(MathF.Cos(currentAngle), MathF.Sin(currentAngle)) * cornerRadius);
+                }
+            }
+        }
+
+        return roundedPolygon;
+    }
+    
+    /// <summary>
+    /// Creates rounded corners for this polygon in-place by replacing each sharp vertex with
+    /// an approximated arc of points. The method mutates the polygon's vertex list.
+    /// </summary>
+    /// <param name="cornerPoints">
+    /// Number of points used to approximate each rounded corner. Must be greater than 0.
+    /// If set to 1 a single replacement point will be used per corner.
+    /// </param>
+    /// <param name="cornerStrength">
+    /// Relative strength/size of the rounded corner in the range [0, 1]. Larger values produce
+    /// a larger arc limited by adjacent edge lengths. Defaults to 0.5f.
+    /// </param>
+    /// <param name="collinearAngleThresholdDeg">
+    /// Angle threshold in degrees below which three consecutive vertices are considered
+    /// collinear and the corner is left unchanged. Defaults to 5 degrees.
+    /// </param>
+    /// <param name="distanceThreshold">
+    /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is
+    /// shorter than this threshold the original vertex is preserved. Defaults to 1.0f.
+    /// </param>
+    /// <returns>
+    /// True if rounding was applied successfully; otherwise false for invalid parameters or when
+    /// no modification was performed.
+    /// </returns>
+    /// <remarks>
+    /// This is a heuristic geometric approximation and may produce unexpected results on highly
+    /// concave or self-intersecting polygons. Use <see cref="GenerateRoundedCopy"/> for a
+    /// non-mutating alternative.
+    /// </remarks>
+    public bool GenerateRounded(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
+    {
+        if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return false;
+
+        var vertices = new List<Vector2>();
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var prevP = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var p = this[i];
+            var nextP = this[ShapeMath.WrapIndex(Count, i + 1)];
+
+            var prevEdge = p - prevP;
+            var curEdge = nextP - p;
+
+            float prevEdgeLength = prevEdge.Length();
+            float curEdgeLength = curEdge.Length();
+
+            if (prevEdgeLength < distanceThreshold || curEdgeLength < distanceThreshold)
+            {
+                vertices.Add(p);
+                continue;
+            }
+            
+            if (ShapeVec.IsColinearAngle(prevP, p, nextP, collinearAngleThresholdDeg))
+            {
+                vertices.Add(p);
+                continue;
+            }
+
+            var v1 = (prevP - p).Normalize();
+            var v2 = (nextP - p).Normalize();
+
+            float angle = MathF.Acos(Vector2.Dot(v1, v2));
+            float cornerRadius = MathF.Min(prevEdgeLength, curEdgeLength) * 0.5f * cornerStrength;
+            
+            float t = cornerRadius / MathF.Tan(angle / 2);
+
+            // Prevent the rounded corner from extending beyond the midpoint of the adjacent edges
+            t = MathF.Min(t, prevEdgeLength * 0.45f);//45 used as a safety margin (from 50)
+            t = MathF.Min(t, curEdgeLength * 0.45f);//45 used as a safety margin (from 50)
+
+            // Recalculate cornerRadius based on the clamped t
+            cornerRadius = t * MathF.Tan(angle / 2);
+            
+            var startPoint = p + v1 * t;
+            var endPoint = p + v2 * t;
+
+            var center = p + (v1 + v2).Normalize() * (cornerRadius / MathF.Sin(angle / 2));
+            
+            float startAngle = (startPoint - center).AngleRad();
+            float endAngle = (endPoint - center).AngleRad();
+            
+            float angleDiff = ShapeMath.GetShortestAngleRad(startAngle, endAngle);
+
+            if (cornerPoints == 1)
+            {
+                vertices.Add(p + (v1 + v2) * t);
+            }
+            else
+            {
+                for (var j = 0; j < cornerPoints; j++)
+                {
+                    float frac = j / (float)(cornerPoints - 1);
+                    float currentAngle = startAngle + angleDiff * frac;
+                    vertices.Add(center + new Vector2(MathF.Cos(currentAngle), MathF.Sin(currentAngle)) * cornerRadius);
+                }
+            }
+        }
+
+        if (vertices.Count > 3)
+        {
+            Clear();
+            AddRange(vertices);
+        }
+
+        return false;
+    }
     #endregion
 }

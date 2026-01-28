@@ -12,6 +12,30 @@ public readonly partial struct Quad
     #region Math
 
     /// <summary>
+    /// Gets the unit normal vector pointing to the left side of the quad.
+    /// Computed by normalizing the vector from D to A.
+    /// </summary>
+    public Vector2 NormalLeft => DA.Normalize();
+
+    /// <summary>
+    /// Gets the unit normal vector pointing downward along the quad.
+    /// Computed by normalizing the vector from A to B.
+    /// </summary>
+    public Vector2 NormalDown => AB.Normalize();
+
+    /// <summary>
+    /// Gets the unit normal vector pointing to the right side of the quad.
+    /// Computed by normalizing the vector from B to C.
+    /// </summary>
+    public Vector2 NormalRight => BC.Normalize();
+
+    /// <summary>
+    /// Gets the unit normal vector pointing upward along the quad.
+    /// Computed by normalizing the vector from C to D.
+    /// </summary>
+    public Vector2 NormalUp => CD.Normalize();
+    
+    /// <summary>
     /// Gets the projected points of the quad along a given vector.
     /// </summary>
     /// <param name="v">The vector along which to project the quad's vertices.</param>
@@ -133,6 +157,21 @@ public readonly partial struct Quad
         return abc.GetArea() + cda.GetArea();
     }
 
+    /// <summary>
+    /// Gets the approximate size of the quad by measuring the lengths of two orthogonal edges
+    /// originating from corner A: AB as the height and AD as the width.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="Size"/> where Width is the length of vector (B - A) and Height is the length of vector (D - A).
+    /// </returns>
+    public Size GetSize()
+    {
+        var e1 = B - A;
+        var e2 = D - A;
+        float height = e1.Length();
+        float width = e2.Length();
+        return new Size(width, height);
+    }
     #endregion
 
     #region Transform

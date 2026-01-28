@@ -28,6 +28,6 @@ internal class PayloadTargetingSystemBarrage : IPayloadTargetingSystem
 
     public void DrawTargetArea(float f, ColorRgba color)
     {
-        CircleDrawing.DrawCircleLines(curPosition, radius * f, 6f, color);
+        CircleDrawing.DrawCircleLines(curPosition, radius * f, 6f, color, 0f, 8f);
     }
 }

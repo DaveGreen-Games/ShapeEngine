@@ -474,7 +474,11 @@ public readonly partial struct Triangle
     /// <returns>The sum of the lengths of all three sides of the triangle.</returns>
     /// <remarks>The perimeter is useful for calculations involving the triangle's boundary length.</remarks>
     public float GetPerimeter() => SideA.Length() + SideB.Length() + SideC.Length();
-    
+    /// <summary>
+    /// Calculates the semi-perimeter (half of the triangle's perimeter).
+    /// </summary>
+    /// <returns>The semi-perimeter as a float: (sideA + sideB + sideC) / 2.</returns>
+    public float GetSemiPerimeter() => GetPerimeter() * 0.5f;
     /// <summary>
     /// Calculates the squared perimeter of the triangle.
     /// </summary>
@@ -495,6 +499,55 @@ public readonly partial struct Triangle
     /// </remarks>
     public float GetArea() => MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
 
+    /// <summary>
+    /// Calculates the triangle area using Heron's formula (based on side lengths).
+    /// </summary>
+    /// <returns>
+    /// The area of the triangle in square units. Returns 0 for degenerate triangles (invalid or zero-area).
+    /// </returns>
+    /// <remarks>
+    /// Computes side lengths from the triangle's edges and applies:
+    /// area = sqrt(s * (s - a) * (s - b) * (s - c)),
+    /// where s is the semi-perimeter. For numerical stability in many cases, prefer GetArea().
+    /// </remarks>
+    public float GetAreaHeron()
+    {
+        float a = SideA.Length();
+        float b = SideB.Length();
+        float c = SideC.Length();
+        // Calculate semi-perimeter
+        float s = (a + b + c) * 0.5f;
+        return MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+    
+    /// <summary>
+    /// Calculates the inradius (radius of the inscribed circle) of the triangle.
+    /// </summary>
+    /// <returns>
+    /// The inradius as a positive float; returns 0 if the triangle is degenerate or has zero area.
+    /// </returns>
+    /// <remarks>
+    /// Computes side lengths, uses Heron's formula to obtain the area, and applies the
+    /// inradius formula: r = area / s, where s is the semi-perimeter.
+    /// </remarks>
+    public float GetInradius()
+    {
+        float a = SideA.Length();
+        float b = SideB.Length();
+        float c = SideC.Length();
+        
+        // Calculate semi-perimeter
+        float s = (a + b + c) * 0.5f;
+        
+        // Calculate area using Heron's formula
+        float area = MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
+    
+        if (area <= 0f) return 0f;
+        
+        // Inradius formula: r = area / s
+        return area / s;
+    }
+    
     /// <summary>
     /// Determines whether the triangle is narrow (has very small angles) based on cross product analysis.
     /// </summary>

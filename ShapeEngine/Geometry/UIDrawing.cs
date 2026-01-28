@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
@@ -222,7 +223,9 @@ public static class UIDrawing
         f = 1.0f - f;
         Rect.Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
         var progressRect = rect.ApplyMargins(progressMargins); // progressMargins.Apply(rect);
-        rect.Draw(pivot, angleDeg, bgColorRgba);
-        progressRect.Draw(pivot, angleDeg, barColorRgba);
+        var quad = new Quad(rect, angleDeg, pivot);
+        quad.Draw(bgColorRgba);
+        var progressQuad = new Quad(progressRect, angleDeg, pivot);
+        progressQuad.Draw( barColorRgba);
     }
 }

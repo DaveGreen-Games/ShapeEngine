@@ -36,7 +36,11 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     /// </summary>
     public readonly byte A;
     #endregion
-
+    
+    
+    
+    public static ColorRgba CreateKnowColor(KnownColor c) => new(System.Drawing.Color.FromKnownColor(c));
+    
     #region Constructors
 
     /// <summary>

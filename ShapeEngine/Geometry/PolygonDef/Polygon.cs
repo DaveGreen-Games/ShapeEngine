@@ -274,34 +274,75 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// <param name="index">The index of the vertex.</param>
     /// <returns>The vertex at the specified index.</returns>
     public Vector2 GetVertex(int index) => this[ShapeMath.WrapIndex(Count, index)];
+
     /// <summary>
-    /// Removes collinear vertices from the polygon.
+    /// Removes vertices that are approximately collinear with their neighboring vertices.
     /// </summary>
+    /// <param name="angleThresholdDegrees">
+    /// The threshold angle in degrees used to determine collinearity. If the angle between the
+    /// vectors (prev -> cur) and (cur -> next) is smaller than this threshold the current vertex
+    /// is considered collinear and removed.
+    /// </param>
     /// <remarks>
-    /// Collinear vertices are those that lie on a straight line with their neighbors.
+    /// - No action is taken when the polygon has fewer than three vertices.
+    /// - Uses <see cref="ShapeVec.IsColinearAngle(Vector2, Vector2, Vector2, float)"/> to test collinearity.
+    /// - Builds a temporary <see cref="Points"/> result and replaces the polygon's vertices
+    ///   after filtering to preserve iteration stability.
     /// </remarks>
-    public void RemoveColinearVertices()
+    public void RemoveCollinearVertices(float angleThresholdDegrees = 5f)
     {
         if (Count < 3) return;
         Points result = [];
         for (var i = 0; i < Count; i++)
         {
-            var cur = this[i];
             var prev = Game.GetItem(this, i - 1);
+            var cur = this[i];
             var next = Game.GetItem(this, i + 1);
 
-            var prevCur = prev - cur;
-            var nextCur = next - cur;
-            if (prevCur.Cross(nextCur) != 0f) result.Add(cur);
+            if(ShapeVec.IsColinearAngle(prev, cur, next, angleThresholdDegrees)) continue;
+            result.Add(cur);
         }
         Clear();
         AddRange(result);
     }
+    
     /// <summary>
-    /// Removes duplicate vertices from the polygon.
+    /// Creates and returns a new polygon that is a copy of this polygon with vertices
+    /// that are approximately collinear removed.
     /// </summary>
-    /// <param name="toleranceSquared">The squared distance below which two vertices are considered duplicates.
-    /// Default is 0.001.</param>
+    /// <param name="angleThresholdDegrees">
+    /// The threshold angle in degrees used to determine collinearity. If the angle between
+    /// the vectors (prev -> cur) and (cur -> next) is smaller than this threshold the current
+    /// vertex is considered collinear and omitted from the returned polygon. Default is 5 degrees.
+    /// </param>
+    /// <returns>
+    /// A new <see cref="Polygon"/> containing the filtered vertices, or <c>null</c> if this
+    /// polygon has fewer than three vertices (no meaningful polygon can be produced).
+    /// </returns>
+    public Polygon? RemoveCollinearVerticesCopy(float angleThresholdDegrees = 5f)
+    {
+        if (Count < 3) return null;
+        Polygon result = [];
+        for (var i = 0; i < Count; i++)
+        {
+            var prev = Game.GetItem(this, i - 1);
+            var cur = this[i];
+            var next = Game.GetItem(this, i + 1);
+
+            if(ShapeVec.IsColinearAngle(prev, cur, next, angleThresholdDegrees)) continue;
+            result.Add(cur);
+        }
+
+        return result;
+    }
+    
+    /// <summary>
+    /// Removes vertices that are effectively duplicates by comparing each vertex to its next neighbor.
+    /// If the squared distance between two consecutive vertices is less than or equal to
+    /// <paramref name="toleranceSquared"/>, the current vertex is omitted.
+    /// No action is performed when the polygon has fewer than three vertices.
+    /// </summary>
+    /// <param name="toleranceSquared">Squared distance threshold used to detect duplicate vertices (default: 0.001f).</param>
     public void RemoveDuplicates(float toleranceSquared = 0.001f)
     {
         if (Count < 3) return;
@@ -316,6 +357,35 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         Clear();
         AddRange(result);
     }
+    
+    /// <summary>
+    /// Creates and returns a new <see cref="Polygon"/> with consecutive duplicate vertices removed.
+    /// Each vertex is compared to its next neighbor; if the squared distance between them is less than
+    /// or equal to <paramref name="toleranceSquared"/>, the current vertex is omitted from the result.
+    /// </summary>
+    /// <param name="toleranceSquared">
+    /// Squared distance threshold used to detect duplicate vertices. Vertices closer than or equal to
+    /// this threshold are treated as duplicates. Default is <c>0.001f</c>.
+    /// </param>
+    /// <returns>
+    /// A new <see cref="Polygon"/> containing the filtered vertices, or <c>null</c> if this polygon
+    /// has fewer than three vertices (no meaningful polygon can be produced).
+    /// </returns>
+    public Polygon? RemoveDuplicatesCopy(float toleranceSquared = 0.001f)
+    {
+        if (Count < 3) return null;
+        Polygon result = [];
+
+        for (var i = 0; i < Count; i++)
+        {
+            var cur = this[i];
+            var next = Game.GetItem(this, i + 1);
+            if ((cur - next).LengthSquared() > toleranceSquared) result.Add(cur);
+        }
+
+        return result;
+    }
+    
     /// <summary>
     /// Smooths the polygon by moving each vertex towards the average of its neighbors and the centroid.
     /// </summary>
@@ -509,6 +579,69 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
             segments.Add(new(this[i], this[(i + 1) % Count]));
         }
         return segments;
+    }
+    
+    /// <summary>
+    /// Computes and returns the normal vectors for the polygon edges.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="List{Vector2}"/> containing one normal per edge:
+    /// - If the polygon has 0 or 1 vertex an empty list is returned.
+    /// - If the polygon has 2 vertices a single normal for the segment is returned.
+    /// - For 3+ vertices returns normals for every edge (edge from vertex i to i+1).
+    /// </returns>
+    /// <remarks>
+    /// Normals are computed using <see cref="Segment.GetNormal(Vector2, Vector2, bool)"/> with the third parameter set to <c>false</c>.
+    /// If the polygon points are in counter-clockwise (CCW) order the normals will face outward.
+    /// </remarks>
+    public List<Vector2> GetEdgeNormals()
+    {
+        switch (Count)
+        {
+            case <= 1:
+                return [];
+            case 2:
+                return [Segment.GetNormal(this[0], this[1], false)];
+        }
+
+        var normals = new List<Vector2>(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            normals.Add(Segment.GetNormal(this[i], this[(i + 1) % Count], false));
+        }
+        return normals;
+    }
+    
+    /// <summary>
+    /// Appends the edge normal vectors of this polygon to the provided list.
+    /// </summary>
+    /// <param name="normalsRef">A <see cref="List{Vector2}"/> that will receive the computed normals (normals are appended).</param>
+    /// <returns>
+    /// The number of normals added:
+    /// - 0 when the polygon has 0 or 1 vertex (nothing is added).
+    /// - 1 when the polygon has exactly 2 vertices (a single segment normal is added).
+    /// - <c>Count</c> when the polygon has 3 or more vertices (one normal per edge).
+    /// </returns>
+    /// <remarks>
+    /// Normals are computed using <see cref="Segment.GetNormal(Vector2, Vector2, bool)"/> with the third parameter set to <c>false</c>.
+    /// When the polygon vertices are in counter-clockwise (CCW) order the normals will face outward.
+    /// </remarks>
+    public int GetEdgeNormals(ref List<Vector2> normalsRef)
+    {
+        switch (Count)
+        {
+            case <= 1:
+                return 0;
+            case 2:
+                normalsRef.Add(Segment.GetNormal(this[0], this[1], false));
+                return 1;
+        }
+        
+        for (var i = 0; i < Count; i++)
+        {
+            normalsRef.Add(Segment.GetNormal(this[i], this[(i + 1) % Count], false));
+        }
+        return Count;
     }
     
     /// <summary>

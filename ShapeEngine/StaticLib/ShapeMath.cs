@@ -39,6 +39,23 @@ public static class ShapeMath
     /// A small constant value used for floating-point comparisons to account for precision errors (float version).
     /// </summary>
     public const float EpsilonF = 1e-10f;
+
+    /// <summary>
+    /// The radian value equivalent to 360 degrees (one full turn), equal to Tau (2π).
+    /// </summary>
+    public const float Rad360Degrees = Tau;
+    /// <summary>
+    /// The radian value equivalent to 180 degrees (half turn), equal to PI (π).
+    /// </summary>
+    public const float Rad180Degrees = PI;
+    /// <summary>
+    /// The radian value equivalent to 90 degrees (quarter turn), equal to PI * 0.5.
+    /// </summary>
+    public const float Rad90Degrees = PI * 0.5f;
+    /// <summary>
+    /// The radian value equivalent to 45 degrees (eighth turn), equal to PI * 0.25.
+    /// </summary>
+    public const float Rad45Degrees = PI * 0.25f;
     /// <summary>
     /// Number of nanoseconds in one second.
     /// </summary>
@@ -672,8 +689,8 @@ public static class ShapeMath
     {
         if (count <= 0) return 0;
         if (index >= count) return index % count;
-        else if (index < 0) return (index % count) + count;
-        else return index;
+        if (index < 0) return (index % count) + count;
+        return index;
     }
     /// <summary>
     /// Wraps a floating-point value to a specified range [min, max).
@@ -805,7 +822,22 @@ public static class ShapeMath
         else if (dir == 0) dir = 0;
         return dir * amount;
     }
-
+    
+    /// <summary>
+    /// Computes the signed smallest angular difference from angle <paramref name="a0"/> to <paramref name="a1"/> in radians.
+    /// The returned value is the shortest rotation to reach <paramref name="a1"/> from <paramref name="a0"/> (positive = counter-clockwise),
+    /// wrapped to the range [-π, π].
+    /// </summary>
+    /// <param name="a0">Start angle in radians.</param>
+    /// <param name="a1">End angle in radians.</param>
+    /// <returns>Signed angle difference in radians.</returns>
+    public static float AngleDelta(float a0, float a1)
+    {
+        float d = a1 - a0;
+        if (d > MathF.PI) d -= 2f * MathF.PI;
+        if (d < -MathF.PI) d += 2f * MathF.PI;
+        return d;
+    }
     #endregion
 
     #region Coordinates

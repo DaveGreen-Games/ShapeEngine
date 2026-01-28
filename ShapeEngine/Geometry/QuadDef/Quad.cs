@@ -40,6 +40,27 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     #region Getters
 
     /// <summary>
+    /// Gets the top-left vertex of the quad (alias for <c>A</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 TopLeft => A;
+    /// <summary>
+    /// Gets the top-right vertex of the quad (alias for <c>D</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 TopRight => D;
+    /// <summary>
+    /// Gets the bottom-right vertex of the quad (alias for <c>C</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 BottomRight => C;
+    /// <summary>
+    /// Gets the bottom-left vertex of the quad (alias for <c>B</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 BottomLeft => B;
+    
+    /// <summary>
     /// Gets the center point of the quad.
     /// </summary>
     public Vector2 Center => GetPoint(0.5f);
@@ -158,6 +179,24 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
         B = (new Vector2(topLeft.X, bottomRight.Y) - pivotPoint).Rotate(rotRad);
         C = (bottomRight - pivotPoint).Rotate(rotRad);
         D = (new Vector2(bottomRight.X, topLeft.Y) - pivotPoint).Rotate(rotRad);
+    }
+    /// <summary>
+    /// Initializes a new <see cref="Quad"/> from a <see cref="Rect"/>, applying a rotation around the specified pivot.
+    /// The rectangle's corner positions are translated so the pivot is the rotation origin, rotated by <paramref name="rotRad"/>,
+    /// and the resulting corner positions are used as the quad vertices.
+    /// </summary>
+    /// <param name="rect">The rectangle to convert to a quad.</param>
+    /// <param name="rotRad">Rotation angle in radians to apply around <paramref name="pivot"/>.</param>
+    /// <param name="pivot">The point used as the rotation origin.</param>
+    public Quad(Rect rect, float rotRad, Vector2 pivot)
+    {
+        var topLeft = rect.TopLeft;
+        var bottomRight = rect.BottomRight;
+
+        A = (topLeft - pivot).Rotate(rotRad);
+        B = (new Vector2(topLeft.X, bottomRight.Y) - pivot).Rotate(rotRad);
+        C = (bottomRight - pivot).Rotate(rotRad);
+        D = (new Vector2(bottomRight.X, topLeft.Y) - pivot).Rotate(rotRad);
     }
     /// <summary>
     /// Initializes a new <see cref="Quad"/> from a position, size, rotation, and alignment.
