@@ -24,6 +24,8 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public static class PolygonDrawing
 {
+    //TODO: Once all line drawing works in polygon and polyline it could be beneficial to refactor everything to use polyline functions with bool closed parameter?
+    
     
     #region Draw Masked
     /// <summary>
@@ -145,7 +147,7 @@ public static class PolygonDrawing
     
     #region Draw Convex
     /// <summary>
-    /// Draws a convex polygon filled with the specified color, using the polygon's centroid as the center.
+    /// Draws a convex non-intersecting polygon (pentagon, hexagon, etc.) filled with the specified color, using the polygon's centroid as the center.
     /// </summary>
     /// <param name="poly">The polygon to draw.</param>
     /// <param name="color">The fill color.</param>
@@ -157,7 +159,7 @@ public static class PolygonDrawing
     }
 
     /// <summary>
-    /// Draws a convex polygon filled with the specified color, using a custom center point.
+    /// Draws a convex non-intersecting polygon (pentagon, hexagon, etc.) filled with the specified color, using the polygon's centroid as the center.
     /// </summary>
     /// <param name="poly">The polygon to draw.</param>
     /// <param name="center">The center point for triangulation.</param>
@@ -184,8 +186,6 @@ public static class PolygonDrawing
         }
     }
     #endregion
-    
-    
     
     #region Draw
     /// <summary>
@@ -294,8 +294,10 @@ public static class PolygonDrawing
     
     
     #region Draw Lines Perimeter & Percentage
-    //TODO: Implement new helper function
-    //TODO: Update with new helper function 
+    //NOTE: This is essentially a polyline
+    // - Still needs full line drawing info for end caps
+    //TODO: Add a function that returns last vertex index and interpolated point
+    // - Have 1 DrawLinesPerimeter function that calls an internal polyline helper function that will use the new function to get last vertex index and interpolated point
     
     /// <summary>
     /// Draws a certain amount of the polygon's perimeter as an outline.
