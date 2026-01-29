@@ -737,7 +737,7 @@ public partial class Polygon
     /// If <paramref name="cornerPoints"/> is 1 a single replacement point is inserted for the rounded corner.
     /// Complex or highly concave polygons may yield unexpected results since this is a geometric approximation.
     /// </remarks>
-    public Polygon? GenerateRoundedCopy(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
+    public Polygon? RoundCopy(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
     {
         if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return null;
 
@@ -836,10 +836,10 @@ public partial class Polygon
     /// </returns>
     /// <remarks>
     /// This is a heuristic geometric approximation and may produce unexpected results on highly
-    /// concave or self-intersecting polygons. Use <see cref="GenerateRoundedCopy"/> for a
+    /// concave or self-intersecting polygons. Use <see cref="RoundCopy"/> for a
     /// non-mutating alternative.
     /// </remarks>
-    public bool GenerateRounded(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
+    public bool Round(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
     {
         if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return false;
 
