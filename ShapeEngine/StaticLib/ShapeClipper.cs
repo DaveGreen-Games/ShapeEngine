@@ -363,34 +363,117 @@ public static class ShapeClipper
         return result;
     }
 
+    
+    //TODO: Add Inflate function to Polygon with delta value (positive delta uses outwards polygon (first pathsD element), negative delta uses inwards polygon (seconds pathsD element)
+    // - what if there are multiple holes?
     /// <summary>
-    /// Inflates (offsets) a polyline by a specified delta.
+    /// Inflates (offsets) a polyline by the specified delta.
     /// </summary>
-    /// <param name="polyline">The polyline to inflate.</param>
-    /// <param name="delta">The offset distance.</param>
-    /// <param name="joinType">The join type for corners.</param>
-    /// <param name="endType">The end type for open paths.</param>
-    /// <param name="miterLimit">The miter limit for miter joins.</param>
-    /// <param name="precision">The decimal precision for the operation.</param>
-    /// <returns>The inflated paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Inflate(this Polyline polyline, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Square, float miterLimit = 2f, int precision = 2)
+    /// <param name="polyline">The polyline to offset.</param>
+    /// <param name="delta">Offset distance. Positive values expand outward; negative values contract inward.</param>
+    /// <param name="joinType">Type of corner joins to use.
+    /// <list type="bullet">
+    /// <item> JoinType.Miter: Edges are first offset a specified distance away from and parallel to their original (ie starting) edge positions.
+    /// These offset edges are then extended to points where they intersect with adjacent edge offsets.
+    /// However a limit must be imposed on how far mitered vertices can be from their original positions to avoid very convex joins producing unreasonably long and narrow spikes).
+    /// To avoid unsightly spikes, joins will be 'squared' wherever distances between original vertices
+    /// and their calculated offsets exceeds a specified value (expressed as a ratio relative to the offset distance).</item>
+    /// <item> JoinType.Square: Convex joins will be truncated using a 'squaring' edge.
+    /// And the mid-points of these squaring edges will be exactly the offset distance away from their original (or starting) vertices. </item>
+    /// <item> JoinType.Bevel: Bevelled joins are similar to 'squared' joins except that squaring won't occur at a fixed distance.
+    /// While bevelled joins may not be as pretty as squared joins, bevelling is much easier (ie faster) than squaring. </item>
+    /// <item> JoinType.Round: Rounding is applied to all convex joins with the arc radius being the offset distance, and the original join vertex the arc center. </item>
+    /// </list>
+    /// </param>
+    /// <param name="endType">How path ends are handled.
+    /// <list type="bullet">
+    /// <item> Polygon: the path is treated as a polygon </item>
+    /// <item> Joined: ends are joined and the path treated as a polyline </item>
+    /// <item> Square: ends extend the offset amount while being squared off </item>
+    /// <item> Round: ends extend the offset amount while being rounded off </item>
+    /// <item> Butt: ends are squared off without any extension </item>
+    /// </list>
+    /// </param>
+    /// <param name="miterLimit">
+    /// Miter limit applied when <see cref="JoinType.Miter"/> is used.
+    /// This property sets the maximum distance in multiples of delta that vertices can be offset from their original positions before squaring is applied.
+    /// (Squaring truncates a miter by 'cutting it off' at 1 × delta distance from the original vertex.)
+    /// The default value for MiterLimit is 2 (ie twice delta). This is also the smallest MiterLimit that's allowed.
+    /// If mitering was unrestricted (ie without any squaring), then offsets at very acute angles would generate unacceptably long 'spikes'.
+    /// </param>
+    /// <param name="precision">Decimal precision for the operation.</param>
+    /// <param name="arcTolerance">
+    /// Arc approximation tolerance used when rounding joins or ends.
+    /// Ignored when neither <see cref="JoinType.Round"/> nor <see cref="EndType.Round"/> is used.
+    /// ArcTolerance is only relevant when offsetting with JoinType.Round and / or EndType.Round (see ClipperOffset.AddPath and ClipperOffset.AddPaths).
+    /// The Clipper2 library approximates arcs by using series of relatively short straight line segments (see Trigonometry).
+    /// And logically, shorter line segments will produce better arc approximations. But very short segments can degrade performance, usually with little or no discernable improvement in curve quality.
+    /// Very short segments can even detract from curve quality, due to the effects of integer rounding.
+    /// Arc tolerance is user defined since there isn't an optimal number of line segments for any given arc radius (ie that perfectly balances curve approximation with performance).
+    /// Nevertheless, when the user doesn't define an arc tolerance and uses the default value (0.0), a 'default' arc tolerance is calculated (see below) that generally produces visually smooth arc approximations,
+    /// while avoiding excessively small segment lengths.
+    /// The default ArcTolerance is: offset_radius / 500.
+    /// </param>
+    /// <returns>A <see cref="PathsD"/> containing the offset paths.</returns>
+    public static PathsD Inflate(this Polyline polyline, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Square, float miterLimit = 2f, int precision = 2, double arcTolerance = 0.0)
     {
-        return Clipper.InflatePaths(polyline.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+        if (joinType != JoinType.Round && endType != EndType.Round) arcTolerance = 0.0f;
+        return Clipper.InflatePaths(polyline.ToClipperPaths(), delta, joinType, endType, miterLimit, precision, arcTolerance);
     }
 
     /// <summary>
-    /// Inflates (offsets) a polygon by a specified delta.
+    /// Inflates (offsets) a polygon by the specified delta.
     /// </summary>
-    /// <param name="poly">The polygon to inflate.</param>
-    /// <param name="delta">The offset distance.</param>
-    /// <param name="joinType">The join type for corners.</param>
-    /// <param name="endType">The end type for closed paths.</param>
-    /// <param name="miterLimit">The miter limit for miter joins.</param>
-    /// <param name="precision">The decimal precision for the operation.</param>
-    /// <returns>The inflated paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Inflate(this Polygon poly, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
+    /// <param name="poly">The polygon to offset.</param>
+    /// <param name="delta">Offset distance. Positive values expand outward; negative values contract inward.</param>
+    /// <param name="joinType">Type of corner joins to use.
+    /// <list type="bullet">
+    /// <item> JoinType.Miter: Edges are first offset a specified distance away from and parallel to their original (ie starting) edge positions.
+    /// These offset edges are then extended to points where they intersect with adjacent edge offsets.
+    /// However a limit must be imposed on how far mitered vertices can be from their original positions to avoid very convex joins producing unreasonably long and narrow spikes).
+    /// To avoid unsightly spikes, joins will be 'squared' wherever distances between original vertices
+    /// and their calculated offsets exceeds a specified value (expressed as a ratio relative to the offset distance).</item>
+    /// <item> JoinType.Square: Convex joins will be truncated using a 'squaring' edge.
+    /// And the mid-points of these squaring edges will be exactly the offset distance away from their original (or starting) vertices. </item>
+    /// <item> JoinType.Bevel: Bevelled joins are similar to 'squared' joins except that squaring won't occur at a fixed distance.
+    /// While bevelled joins may not be as pretty as squared joins, bevelling is much easier (ie faster) than squaring. </item>
+    /// <item> JoinType.Round: Rounding is applied to all convex joins with the arc radius being the offset distance, and the original join vertex the arc center. </item>
+    /// </list>
+    /// </param>
+    /// <param name="endType">How path ends are handled.
+    /// <list type="bullet">
+    /// <item> Polygon: the path is treated as a polygon </item>
+    /// <item> Joined: ends are joined and the path treated as a polyline </item>
+    /// <item> Square: ends extend the offset amount while being squared off </item>
+    /// <item> Round: ends extend the offset amount while being rounded off </item>
+    /// <item> Butt: ends are squared off without any extension </item>
+    /// </list>
+    /// </param>
+    /// <param name="miterLimit">
+    /// Miter limit applied when <see cref="JoinType.Miter"/> is used.
+    /// This property sets the maximum distance in multiples of delta that vertices can be offset from their original positions before squaring is applied.
+    /// (Squaring truncates a miter by 'cutting it off' at 1 × delta distance from the original vertex.)
+    /// The default value for MiterLimit is 2 (ie twice delta). This is also the smallest MiterLimit that's allowed.
+    /// If mitering was unrestricted (ie without any squaring), then offsets at very acute angles would generate unacceptably long 'spikes'.
+    /// </param>
+    /// <param name="precision">Decimal precision for the operation.</param>
+    /// <param name="arcTolerance">
+    /// Arc approximation tolerance used when rounding joins or ends.
+    /// Ignored when neither <see cref="JoinType.Round"/> nor <see cref="EndType.Round"/> is used.
+    /// ArcTolerance is only relevant when offsetting with JoinType.Round and / or EndType.Round (see ClipperOffset.AddPath and ClipperOffset.AddPaths).
+    /// The Clipper2 library approximates arcs by using series of relatively short straight line segments (see Trigonometry).
+    /// And logically, shorter line segments will produce better arc approximations. But very short segments can degrade performance, usually with little or no discernable improvement in curve quality.
+    /// Very short segments can even detract from curve quality, due to the effects of integer rounding.
+    /// Arc tolerance is user defined since there isn't an optimal number of line segments for any given arc radius (ie that perfectly balances curve approximation with performance).
+    /// Nevertheless, when the user doesn't define an arc tolerance and uses the default value (0.0), a 'default' arc tolerance is calculated (see below) that generally produces visually smooth arc approximations,
+    /// while avoiding excessively small segment lengths.
+    /// The default ArcTolerance is: offset_radius / 500.
+    /// </param>
+    /// <returns>A <see cref="PathsD"/> containing the offset paths.</returns>
+    public static PathsD Inflate(this Polygon poly, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2, double arcTolerance = 0.0)
     {
-        return Clipper.InflatePaths(poly.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+        if (joinType != JoinType.Round && endType != EndType.Round) arcTolerance = 0.0f;
+        return Clipper.InflatePaths(poly.ToClipperPaths(), delta, joinType, endType, miterLimit, precision, arcTolerance);
     }
 
     /// <summary>
