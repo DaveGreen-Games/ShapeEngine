@@ -897,6 +897,38 @@ public static class ShapeVec
     }
     
     /// <summary>
+    /// Classifies a corner based on the direction vectors of the two segments that form it.
+    /// </summary>
+    /// <param name="dir1">Normalized direction vector of the incoming segment.</param>
+    /// <param name="dir2">Normalized direction vector of the outgoing segment.</param>
+    /// <returns>A tuple containing the corner type (1 for convex, -1 for concave, 0 for collinear) and the cross product value.</returns>
+    public static (int type, float cross) ClassifyCorner2(this Vector2 dir1, Vector2 dir2)
+    {
+        // The 2D cross product (dir1.X * dir2.Y - dir1.Y * dir2.X) tells us about the turn.
+        // A positive value means a left turn (convex in a CCW polygon).
+        // A negative value means a right turn (concave in a CCW polygon).
+        // A value near zero means the vectors are collinear.
+        float cross = dir1.X * dir2.Y - dir1.Y * dir2.X;
+    
+        // The dot product tells us if the vectors are pointing in the same or opposite directions.
+        // A value near 1 means they are parallel and in the same direction.
+        // A value near -1 means they are parallel and in opposite directions.
+        float dot = Vector2.Dot(dir1, dir2);
+    
+        // Check for collinearity first, using a small epsilon for floating-point inaccuracies.
+        // If the dot product is close to 1 or -1, the lines are parallel.
+        if (MathF.Abs(dot) > 0.9999f)
+        {
+            return (0, cross); // Collinear
+        }
+    
+        // If not collinear, the sign of the cross product determines the turn direction.
+        if (cross > 0) return (1, cross); // Convex corner (left turn)
+        return (-1, cross); // Concave corner (right turn)
+    }
+    
+    
+    /// <summary>
     /// Calculates the distance between two vectors.
     /// </summary>
     /// <param name="v1">The first vector.</param>
