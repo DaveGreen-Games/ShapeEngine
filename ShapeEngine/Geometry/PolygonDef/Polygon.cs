@@ -408,6 +408,33 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         Clear();
         AddRange(result);
     }
+    
+    /// <summary>
+    /// Creates and returns a smoothed copy of this polygon.
+    /// Each vertex is moved towards the average of its neighboring vertices and towards the polygon centroid
+    /// according to the provided smoothing parameters.
+    /// </summary>
+    /// <param name="amount">Smoothing factor in the range [0,1]. 0 means no change, 1 applies the full computed displacement.</param>
+    /// <param name="baseWeight">Weight applied to the centroid contribution when computing the smoothing direction.</param>
+    /// <returns>
+    /// A new <see cref="Polygon"/> containing the smoothed vertices, or <c>null</c> if this polygon has fewer than three vertices.
+    /// </returns>
+    public Polygon? SmoothCopy(float amount, float baseWeight)
+    {
+        if (Count < 3) return null;
+        Polygon result = [];
+        var centroid = GetCentroid();
+        for (var i = 0; i < Count; i++)
+        {
+            var cur = this[i];
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+            var dir = (prev - cur) + (next - cur) + ((cur - centroid) * baseWeight);
+            result.Add(cur + dir * amount);
+        }
+
+        return result;
+    }
     #endregion
 
     #region Shape
