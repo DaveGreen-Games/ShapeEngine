@@ -1,16 +1,14 @@
-using System.Drawing;
+
 using System.Numerics;
 using Clipper2Lib;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
-using Size = ShapeEngine.Core.Structs.Size;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
@@ -259,6 +257,8 @@ public static class PolygonDrawing
     #endregion
     
     #region Draw Lines
+    //TODO: Add DrawLinesFast methods using the old system
+    
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
         DrawLinesHelper(poly, lineThickness, color, cornerPoints);
@@ -562,8 +562,7 @@ public static class PolygonDrawing
 
     
     #region Helper
-    
-    //TODO: Test again, does not seem to work correctly in all cases! (if points are too close together artifacts appear -> corners with a lot of points for instance) 
+
     private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
     {
         if (poly.Count <= 2) return;
@@ -572,281 +571,32 @@ public static class PolygonDrawing
             TriangleDrawing.DrawTriangleLines(poly[0], poly[1], poly[2], thickness, color, cornerPoints);
             return;
         }
-        
-        if(cornerPoints <= 0) DrawLinesMiteredHelper(poly, thickness, color, miterLimit);
-        else DrawLinesRoundedHelper(poly, thickness, color, cornerPoints);
-    }
-    
-    private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f)
-    {
-        int count = poly.Count;
-        if (count < 3 || lineThickness <= 0f) return;
 
-        float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);
-        var rayColor = color.ToRayColor();
-        var prev = poly[^2];
-        var cur = poly[^1];
-        var next = poly[0];
+        //Q: add jointype parameter?
+        var joinType = cornerPoints <= 0 ? JoinType.Miter : JoinType.Round;
+        double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
+        var result = poly.Inflate(thickness, joinType, EndType.Joined, miterLimit, 2, arcTolerance);
+        if (result.Count <= 0) return;
 
-        var dirPrev = (cur - prev).Normalize();
-        var dirNext = (next - cur).Normalize();
-        var normalPrev = dirPrev.GetPerpendicularRight();
-        var normalNext = dirNext.GetPerpendicularRight();
-
-        Vector2 miterDir;
-        float miterLength;
-        float angleRad;
-        Vector2 prevInside, prevOutside;
-        
-        var corner = dirPrev.ClassifyCorner(dirNext);
-        if (corner.type == 0) //collinear
+        if (result.Count == 1)
         {
-            miterDir = dirNext;
-            miterLength = lineThickness;
-            prevInside = cur - miterDir * miterLength;
-            prevOutside = cur + miterDir * miterLength;
+            var polygon = result[0].ToPolygon();
+            polygon.Draw(color);
         }
         else
         {
-            miterDir = (normalPrev + normalNext).Normalize();
-            angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-            miterLength = lineThickness / MathF.Cos(angleRad);
-            
-            if (totalMiterLengthLimit > 0 && miterLength > totalMiterLengthLimit)
+            var triangulationResult = Clipper.Triangulate(result, 4, out var solution, false);
+            if (triangulationResult == TriangulateResult.success)
             {
-                var bevelDir = corner.type < 0 ? -miterDir : miterDir;
-                var limitPoint = cur + bevelDir * totalMiterLengthLimit;
                 
-                var miterDirPRight = corner.type < 0 ? miterDir.GetPerpendicularLeft() : miterDir.GetPerpendicularRight();
-                var miterDirPLeft = -miterDirPRight;
-                var p2 = next + (corner.type < 0 ? -normalNext : normalNext) * lineThickness;
-                var bevelLeft = TryIntersectLines(limitPoint, miterDirPLeft, p2, -dirNext, out var intersectionLeft)
-                    ? intersectionLeft
-                    : cur + normalNext * lineThickness;
-                
-                var bevelInside = cur - bevelDir * miterLength;
-                
-                if (corner.type < 0) //ccw inwards corner
+                var rayColor = color.ToRayColor();
+                foreach (var path in solution)
                 {
-                    prevOutside = bevelInside;
-                    prevInside = bevelLeft;
+                    if(path.Count < 3) continue;
+                    Raylib.DrawTriangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2(), rayColor);
                 }
-                else
-                {
-                    prevInside = bevelInside;
-                    prevOutside = bevelLeft;
-                }
-            }
-            else
-            {
-                prevInside = cur - miterDir * miterLength;
-                prevOutside = cur + miterDir * miterLength;
             }
         }
-        
-        
-        dirPrev = dirNext;
-        prev = cur;
-        
-        for (var i = 0; i < count; i++)
-        {
-            cur = poly[i];
-            next = poly[(i + 1) % count];
-            
-            dirNext = (next - cur).Normalize();
-            normalPrev = normalNext;
-            normalNext = dirNext.GetPerpendicularRight();
-            corner = dirPrev.ClassifyCorner(dirNext);
-            
-            if (corner.type == 0) //collinear
-            {
-                miterDir = dirNext;
-                miterLength = lineThickness;
-            }
-            else
-            {
-                miterDir = (normalPrev + normalNext).Normalize();
-                angleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-                miterLength = lineThickness / MathF.Cos(angleRad); //right triangle formula for hypotenuse = adjacent / cos(angle) -> angle between adjacent and hypotenuse
-
-                if (totalMiterLengthLimit > 0 && miterLength > totalMiterLengthLimit)
-                {
-                    var bevelDir = corner.type < 0 ? -miterDir : miterDir;
-                    var limitPoint = cur + bevelDir * totalMiterLengthLimit;
-                    
-                    var miterDirPRight = corner.type < 0 ? miterDir.GetPerpendicularLeft() : miterDir.GetPerpendicularRight();
-                    var miterDirPLeft = -miterDirPRight;
-                    var p1 = prev + (corner.type < 0 ? -normalPrev : normalPrev) * lineThickness;
-                    var p2 = next + (corner.type < 0 ? -normalNext : normalNext) * lineThickness;
-                    var bevelRight = TryIntersectLines(limitPoint, miterDirPRight, p1, dirPrev, out var intersectionRight)
-                        ? intersectionRight
-                        : cur + normalPrev * lineThickness;
-                    var bevelLeft = TryIntersectLines(limitPoint, miterDirPLeft, p2, -dirNext, out var intersectionLeft)
-                        ? intersectionLeft
-                        : cur + normalNext * lineThickness;
-                    
-                    var bevelInside = cur - bevelDir * miterLength;
-                    
-
-                    if (corner.type < 0) //ccw inwards corner
-                    {
-                        (bevelLeft, bevelRight) = (bevelRight, bevelLeft);
-                        Raylib.DrawTriangle(bevelInside, bevelLeft, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelInside, prevInside, prevOutside, rayColor);
-                        Raylib.DrawTriangle(bevelInside, bevelRight, bevelLeft, rayColor);
-                        prevOutside = bevelInside;
-                        prevInside = bevelRight;
-                    }
-                    else
-                    {
-                        Raylib.DrawTriangle(bevelRight, prevInside, prevOutside, rayColor);
-                        Raylib.DrawTriangle(bevelRight, bevelInside, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelLeft, bevelInside, bevelRight,  rayColor);
-                        prevInside = bevelInside;
-                        prevOutside = bevelLeft;
-                    }
-                    
-                    dirPrev = dirNext;
-                    prev = cur;
-                    continue;
-                }
-            }
-            
-            var curInside = cur - miterDir * miterLength;
-            var curOutside = cur + miterDir * miterLength;
-            
-            //Draw 2 triangles for the edge quad
-            Raylib.DrawTriangle(curOutside, curInside, prevOutside, rayColor);
-            Raylib.DrawTriangle(curInside, prevInside, prevOutside, rayColor);
-            
-            prevInside = curInside;
-            prevOutside = curOutside;
-            dirPrev = dirNext;
-            prev = cur;
-        }
-    }
-    
-    private static void DrawLinesRoundedHelper(Polygon poly, float lineThickness, ColorRgba color, int cornerPoints)
-    {
-        if (poly.Count < 3 || lineThickness <= 0f || cornerPoints <= 0) return;
-    
-        float halfThickness = lineThickness * 1f;
-        var rayColor = color.ToRayColor();
-    
-        for (int i = 0; i < poly.Count; i++)
-        {
-            var p1 = poly.GetPoint(i - 1);
-            var p2 = poly.GetPoint(i);
-            var p3 = poly.GetPoint(i + 1);
-            int nextI = (i + 1) % poly.Count;
-            var p4 = poly.GetPoint(nextI + 1);
-    
-            var edge1 = p2 - p1;
-            var edge2 = p3 - p2;
-            var edge3 = p4 - p3;
-    
-            var n1 = Vector2.Normalize(new(-edge1.Y, edge1.X));
-            var n2 = Vector2.Normalize(new(-edge2.Y, edge2.X));
-            var n3 = Vector2.Normalize(new(-edge3.Y, edge3.X));
-    
-            var cornerTypeCur = edge1.ClassifyCorner(edge2);
-            var cornerTypeNext = edge2.ClassifyCorner(edge3);
-            
-            Vector2 inner1, inner2, outer1, outer2;
-    
-            if (cornerTypeCur.type > 0) // Convex (CCW)
-            {
-                inner1 = CalculateMiterPoint(p2, n1, n2, halfThickness, false);
-                outer1 = p2 + n2 * halfThickness;
-                DrawCornerFan(p2, n1, n2, inner1, halfThickness, rayColor, cornerPoints, true);
-            }
-            else // Concave or Collinear
-            {
-                outer1 = CalculateMiterPoint(p2, n1, n2, halfThickness, true);
-                if (cornerTypeCur.type < 0)
-                {
-                    inner1 = p2 - n2 * halfThickness;
-                    DrawCornerFan(p2, -n2, -n1, outer1, halfThickness, rayColor, cornerPoints, false);
-                }
-                else
-                {
-                    inner1 = CalculateMiterPoint(p2, n1, n2, halfThickness, false);
-                }
-            }
-    
-            if (cornerTypeNext.type > 0) // Convex (CCW)
-            {
-                inner2 = CalculateMiterPoint(p3, n2, n3, halfThickness, false);
-                outer2 = p3 + n2 * halfThickness;
-            }
-            else // Concave or Collinear
-            {
-                outer2 = CalculateMiterPoint(p3, n2, n3, halfThickness, true);
-                if (cornerTypeNext.type < 0)
-                {
-                    inner2 = p3 - n2 * halfThickness;
-                }
-                else
-                {
-                    inner2 = CalculateMiterPoint(p3, n2, n3, halfThickness, false);
-                }
-            }
-            
-            Raylib.DrawTriangle(inner1, outer1, inner2, rayColor);
-            Raylib.DrawTriangle(outer1, outer2, inner2, rayColor);
-        }
-    }
-    private static Vector2 CalculateMiterPoint(Vector2 corner, Vector2 normalPrev, Vector2 normalNext, float halfThickness, bool outer)
-    {
-        var miterDir = Vector2.Normalize(normalPrev + normalNext);
-        float dot = Vector2.Dot(miterDir, normalPrev);
-        if (MathF.Abs(dot) < 0.0001f) return corner + normalPrev * (outer ? halfThickness : -halfThickness);
-        float miterLength = halfThickness / dot;
-    
-        return corner + miterDir * (outer ? miterLength : -miterLength);
-    }
-    private static void DrawCornerFan(Vector2 corner, Vector2 n1, Vector2 n2, Vector2 innerCorner, float radius, Raylib_cs.Color color, int segments, bool isConvex)
-    {
-        float startAngle = MathF.Atan2(n1.Y, n1.X);
-        float endAngle = MathF.Atan2(n2.Y, n2.X);
-    
-        float angleDiff = endAngle - startAngle;
-        if (isConvex)
-        {
-            if (angleDiff <= -MathF.PI) angleDiff += 2 * MathF.PI;
-            if (angleDiff > MathF.PI) angleDiff -= 2 * MathF.PI;
-        }
-        else
-        {
-            if (angleDiff >= MathF.PI) angleDiff -= 2 * MathF.PI;
-            if (angleDiff < -MathF.PI) angleDiff += 2 * MathF.PI;
-        }
-        
-        int numSegments = Math.Max(1, segments);
-        float angleStep = angleDiff / numSegments;
-    
-        var p1 = corner + n1 * radius;
-    
-        for (int i = 1; i <= numSegments; i++)
-        {
-            float angle = startAngle + angleStep * i;
-            var p2 = corner + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
-            Raylib.DrawTriangle(innerCorner, p1, p2, color);
-            p1 = p2;
-        }
-    }
-
-    
-    public static bool TryIntersectLines(Vector2 pointA, Vector2 dirA, Vector2 pointB, Vector2 dirB, out Vector2 intersection)
-    {
-        intersection = default;
-        float denom = dirA.X * dirB.Y - dirA.Y * dirB.X;
-        if (MathF.Abs(denom) <= float.Epsilon) return false; // parallel
-
-        var diff = pointB - pointA;
-        float t = (diff.X * dirB.Y - diff.Y * dirB.X) / denom;
-        intersection = pointA + dirA * t;
-        return true;
     }
     #endregion
 }
