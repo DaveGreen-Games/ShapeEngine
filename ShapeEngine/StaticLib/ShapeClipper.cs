@@ -810,26 +810,61 @@ public static class ShapeClipper
     #endregion
     
     #region Enum Conversion
+    /// <summary>
+    /// Converts a <see cref="ShapeClipperFillRule"/> to the Clipper <see cref="FillRule"/> enum.
+    /// </summary>
+    /// <param name="fillRule">The ShapeClipper fill rule to convert.</param>
+    /// <returns>The equivalent <see cref="FillRule"/> value.</returns>
     public static FillRule ToFillRule(this ShapeClipperFillRule fillRule)
     {
         return (FillRule)fillRule;
     }
+    
+    /// <summary>
+    /// Converts a <see cref="ShapeClipperJoinType"/> to the Clipper <see cref="JoinType"/> enum.
+    /// </summary>
+    /// <param name="joinType">The ShapeClipper join type to convert.</param>
+    /// <returns>The equivalent <see cref="JoinType"/> value.</returns>
     public static JoinType ToJoinType(this ShapeClipperJoinType joinType)
     {
         return (JoinType)joinType;
     }
+    
+    /// <summary>
+    /// Converts a <see cref="ShapeClipperEndType"/> to the Clipper <see cref="EndType"/> enum.
+    /// </summary>
+    /// <param name="endType">The ShapeClipper end type to convert.</param>
+    /// <returns>The equivalent <see cref="EndType"/> value.</returns>
     public static EndType ToEndType(this ShapeClipperEndType endType)
     {
         return (EndType)endType;
     }
+    
+    /// <summary>
+    /// Converts a Clipper <see cref="FillRule"/> to the local <see cref="ShapeClipperFillRule"/> enum.
+    /// </summary>
+    /// <param name="fillRule">The Clipper fill rule to convert.</param>
+    /// <returns>The equivalent <see cref="ShapeClipperFillRule"/> value.</returns>
     public static ShapeClipperFillRule ToShapeClipperFillRule(this FillRule fillRule)
     {
         return (ShapeClipperFillRule)fillRule;
     }
+    
+    /// <summary>
+    /// Converts a Clipper <see cref="JoinType"/> to the local <see cref="ShapeClipperJoinType"/> enum.
+    /// </summary>
+    /// <param name="joinType">The Clipper join type to convert.</param>
+    /// <returns>The equivalent <see cref="ShapeClipperJoinType"/> value.</returns>
     public static ShapeClipperJoinType ToShapeClipperJoinType(this JoinType joinType)
     {
         return (ShapeClipperJoinType)joinType;
     }
+    
+    /// <summary>
+    /// Converts a Clipper <see cref="EndType"/> to the local <see cref="ShapeClipperEndType"/> enum.
+    /// </summary>
+    /// <param name="endType">The Clipper end type to convert.</param>
+    /// <returns>The equivalent <see cref="ShapeClipperEndType"/> value.</returns>
     public static ShapeClipperEndType ToShapeClipperEndType(this EndType endType)
     {
         return (ShapeClipperEndType)endType;
