@@ -666,25 +666,25 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     {
         if (Count <= 2) return null;
 
-        JoinType joinType;
+        ShapeClipperJoinType joinType;
         if (cornerPoints > 0)
         {
-            joinType = JoinType.Round;
+            joinType = ShapeClipperJoinType.Round;
         }
         else
         {
             if (miterLimit >= 2f)
             {
-                joinType = JoinType.Miter;
+                joinType = ShapeClipperJoinType.Miter;
             }
             else
             {
-                joinType = beveled ? JoinType.Bevel : JoinType.Square;
+                joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
             }
         }
         
         double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
-        var result = this.Inflate(thickness, joinType, EndType.Joined, miterLimit, 2, arcTolerance);
+        var result = this.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
         if (result.Count <= 0) return null;
 
         if (result.Count == 1)
@@ -712,25 +712,25 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     {
         if (Count <= 2) return 0;
 
-        JoinType joinType;
+        ShapeClipperJoinType joinType;
         if (cornerPoints > 0)
         {
-            joinType = JoinType.Round;
+            joinType = ShapeClipperJoinType.Round;
         }
         else
         {
             if (miterLimit >= 2f)
             {
-                joinType = JoinType.Miter;
+                joinType = ShapeClipperJoinType.Miter;
             }
             else
             {
-                joinType = beveled ? JoinType.Bevel : JoinType.Square;
+                joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
             }
         }
         
         double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
-        var inflation = this.Inflate(thickness, joinType, EndType.Joined, miterLimit, 2, arcTolerance);
+        var inflation = this.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
         if (inflation.Count <= 0) return 0;
 
         if (inflation.Count == 1)

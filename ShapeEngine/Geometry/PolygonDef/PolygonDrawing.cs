@@ -694,24 +694,24 @@ public static class PolygonDrawing
             return;
         }
 
-        JoinType joinType;
+        ShapeClipperJoinType joinType;
         if (cornerPoints > 0)
         {
-            joinType = JoinType.Round;
+            joinType = ShapeClipperJoinType.Round;
         }
         else
         {
             if (miterLimit >= 2f)
             {
-                joinType = JoinType.Miter;
+                joinType = ShapeClipperJoinType.Miter;
             }
             else
             {
-                joinType = beveled ? JoinType.Bevel : JoinType.Square;
+                joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
             }
         }
         double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
-        var result = poly.Inflate(thickness, joinType, EndType.Joined, miterLimit, 2, arcTolerance);
+        var result = poly.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
         if (result.Count <= 0) return;
 
         if (result.Count == 1)

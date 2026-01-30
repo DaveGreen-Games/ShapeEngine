@@ -1,4 +1,5 @@
 using System.Numerics;
+using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
@@ -140,6 +141,15 @@ public static class PolylineDrawing
         }
     }
     #endregion
+    
+    
+    //TODO:
+    // - Clean up and remove unused methods (relative polyline for instance)
+    // - Add regions
+    // - Copy structure of PolygonDrawing
+    // - Use PolygonDrawing for functions that need to be overhauled here
+    // - Add DrawFast methods that dont work with alpha color (just draw segments between vertices with endcaps)
+    
     
     /// <summary>
     /// Draws the polyline using a single color and specified thickness.
@@ -563,4 +573,28 @@ public static class PolylineDrawing
             Draw(polyline, currentWidth, currentColor, capType, capPoints);
         }
     }
+    
+    
+    
+    
+    // private static void DrawLinesMiteredHelper(Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f)
+    // {
+    //     
+    //     lineThickness *= 10;
+    //     var result = poly.Inflate(lineThickness, JoinType.Miter, EndType.Square, miterLimit, 2);
+    //     if (result.Count <= 0) return;
+    //
+    //     var holder = new Polygon();
+    //     foreach (var p in result)
+    //     {
+    //         holder.Clear();
+    //         foreach (var v in p)
+    //         {
+    //             holder.Add(v.ToVec2());
+    //         }
+    //         if(holder.IsClockwise()) holder.MakeCounterClockwise();
+    //         holder.Draw(color);
+    //     }
+    // }
 }
+

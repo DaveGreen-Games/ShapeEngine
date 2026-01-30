@@ -42,12 +42,12 @@ public enum ShapeClipperJoinType
 }
 
 /// <summary>
-/// The EndType enumerator controls how the ends of paths are handled when performing
+/// The ShapeClipperEndType enumerator controls how the ends of paths are handled when performing
 /// offset (inflating/shrinking) operations. This enumeration is only required for
 /// offset operations and is not used for polygon clipping.
 /// </summary>
 /// <remarks>
-/// With both EndType.Polygon and EndType.Joined, path closure will occur regardless
+/// With both ShapeClipperEndType.Polygon and ShapeClipperEndType.Joined, path closure will occur regardless
 /// of whether or not the first and last vertices in the path match.
 /// </remarks>
 public enum ShapeClipperEndType
@@ -127,7 +127,6 @@ public enum ShapeClipperFillRule
     Negative
 }
 
-
 /// <summary>
 /// Provides static methods for performing geometric clipping and polygon operations using Clipper2.
 /// </summary>
@@ -158,9 +157,9 @@ public static class ShapeClipper
     /// <param name="other">The collection of polygons to union with.</param>
     /// <param name="fillRule">The fill rule to use.</param>
     /// <returns>The unioned paths as <see cref="PathsD"/>.</returns>
-    public static PathsD UnionMany(this Polygon a, Polygons other, FillRule fillRule = FillRule.NonZero)
+    public static PathsD UnionMany(this Polygon a, Polygons other, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero)
     {
-        return Clipper.Union(a.ToClipperPaths(), other.ToClipperPaths(), fillRule);
+        return Clipper.Union(a.ToClipperPaths(), other.ToClipperPaths(), fillRule.ToClipperFillRule());
     }
 
     /// <summary>
@@ -170,7 +169,10 @@ public static class ShapeClipper
     /// <param name="b">The second polygon.</param>
     /// <param name="fillRule">The fill rule to use.</param>
     /// <returns>The unioned paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Union(this Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(a.ToClipperPaths(), b.ToClipperPaths(), fillRule); }
+    public static PathsD Union(this Polygon a, Polygon b, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero)
+    {
+        return Clipper.Union(a.ToClipperPaths(), b.ToClipperPaths(), fillRule.ToClipperFillRule());
+    }
     #endregion
     
     #region Intersect
@@ -182,9 +184,9 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The intersected paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Intersect(this Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD Intersect(this Polygon subject, Polygon clip, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
-        return Clipper.Intersect(ToClipperPaths(subject), ToClipperPaths(clip), fillRule, precision);
+        return Clipper.Intersect(subject.ToClipperPaths(), clip.ToClipperPaths(), fillRule.ToClipperFillRule(), precision);
     }
 
     /// <summary>
@@ -195,12 +197,13 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The intersected paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Intersect(this Polygon clip, Polygons subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD Intersect(this Polygon clip, Polygons subjects, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
         var result = new PathsD();
+        var clipperFillRule = fillRule.ToClipperFillRule();
         foreach (var subject in subjects)
         {
-            result.AddRange(Clipper.Intersect(subject.ToClipperPaths(), clip.ToClipperPaths(), fillRule, precision));
+            result.AddRange(Clipper.Intersect(subject.ToClipperPaths(), clip.ToClipperPaths(), clipperFillRule, precision));
         }
         return result;
     }
@@ -213,12 +216,13 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The intersected paths as <see cref="PathsD"/>.</returns>
-    public static PathsD IntersectMany(this Polygon subject, Polygons clips, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD IntersectMany(this Polygon subject, Polygons clips, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
         var cur = subject.ToClipperPaths();
+        var clipperFillRule = fillRule.ToClipperFillRule();
         foreach (var clip in clips)
         {
-            cur = Clipper.Intersect(cur, clip.ToClipperPaths(), fillRule, precision);
+            cur = Clipper.Intersect(cur, clip.ToClipperPaths(), clipperFillRule, precision);
         }
         return cur;
     }
@@ -233,9 +237,9 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Difference(this Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD Difference(this Polygon subject, Polygon clip, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
-        return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(clip), fillRule, precision);
+        return Clipper.Difference(subject.ToClipperPaths(), clip.ToClipperPaths(), fillRule.ToClipperFillRule(), precision);
     }
     
     /// <summary>
@@ -246,13 +250,14 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Difference(this Polygon clip, Polygons subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD Difference(this Polygon clip, Polygons subjects, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
         var result = new PathsD();
         var clipPaths = clip.ToClipperPaths();
+        var clipperFillRule = fillRule.ToClipperFillRule();
         foreach (var subject in subjects)
         {
-            result.AddRange(Clipper.Difference(subject.ToClipperPaths(), clipPaths, fillRule, precision));
+            result.AddRange(Clipper.Difference(subject.ToClipperPaths(), clipPaths, clipperFillRule, precision));
         }
         return result;
     }
@@ -265,9 +270,9 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Difference(this Polygon subject, Polyline polyline, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD Difference(this Polygon subject, Polyline polyline, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
-        return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(polyline), fillRule, precision);
+        return Clipper.Difference(subject.ToClipperPaths(), polyline.ToClipperPaths(), fillRule.ToClipperFillRule(), precision);
     }
     
     /// <summary>
@@ -278,9 +283,9 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Difference(this Polygon subject, Segment segment, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD Difference(this Polygon subject, Segment segment, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
-        return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(segment), fillRule, precision);
+        return Clipper.Difference(subject.ToClipperPaths(), segment.ToClipperPaths(), fillRule.ToClipperFillRule(), precision);
     }
     
     /// <summary>
@@ -291,12 +296,13 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD DifferenceMany(this Polygon subject, Polygons clips, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD DifferenceMany(this Polygon subject, Polygons clips, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
         var cur = subject.ToClipperPaths();
+        var clipperFillRule = fillRule.ToClipperFillRule();
         foreach (var clip in clips)
         {
-            cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule, precision);
+            cur = Clipper.Difference(cur, clip.ToClipperPaths(), clipperFillRule, precision);
         }
         return cur;
     }
@@ -309,12 +315,13 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD DifferenceMany(this Polygon subject, Polylines polylines, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD DifferenceMany(this Polygon subject, Polylines polylines, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
         var cur = subject.ToClipperPaths();
+        var clipperFillRule = fillRule.ToClipperFillRule();
         foreach (var clip in polylines)
         {
-            cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule, precision);
+            cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule.ToClipperFillRule(), precision);
         }
         return cur;
     }
@@ -327,12 +334,13 @@ public static class ShapeClipper
     /// <param name="fillRule">The fill rule to use.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD DifferenceMany(this Polygon subject, Segments segments, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    public static PathsD DifferenceMany(this Polygon subject, Segments segments, ShapeClipperFillRule fillRule = ShapeClipperFillRule.NonZero, int precision = 2)
     {
         var cur = subject.ToClipperPaths();
+        var clipperFillRule = fillRule.ToClipperFillRule();
         foreach (var clip in segments)
         {
-            cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule, precision);
+            cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule.ToClipperFillRule(), precision);
         }
         return cur;
     }
@@ -475,16 +483,16 @@ public static class ShapeClipper
     /// <param name="delta">Offset distance. Positive values expand outward; negative values contract inward.</param>
     /// <param name="joinType">Type of corner joins to use.
     /// <list type="bullet">
-    /// <item> JoinType.Miter: Edges are first offset a specified distance away from and parallel to their original (ie starting) edge positions.
+    /// <item> ShapeClipperJoinType.Miter: Edges are first offset a specified distance away from and parallel to their original (ie starting) edge positions.
     /// These offset edges are then extended to points where they intersect with adjacent edge offsets.
     /// However a limit must be imposed on how far mitered vertices can be from their original positions to avoid very convex joins producing unreasonably long and narrow spikes).
     /// To avoid unsightly spikes, joins will be 'squared' wherever distances between original vertices
     /// and their calculated offsets exceeds a specified value (expressed as a ratio relative to the offset distance).</item>
-    /// <item> JoinType.Square: Convex joins will be truncated using a 'squaring' edge.
+    /// <item> ShapeClipperJoinType.Square: Convex joins will be truncated using a 'squaring' edge.
     /// And the mid-points of these squaring edges will be exactly the offset distance away from their original (or starting) vertices. </item>
-    /// <item> JoinType.Bevel: Bevelled joins are similar to 'squared' joins except that squaring won't occur at a fixed distance.
+    /// <item> ShapeClipperJoinType.Bevel: Bevelled joins are similar to 'squared' joins except that squaring won't occur at a fixed distance.
     /// While bevelled joins may not be as pretty as squared joins, bevelling is much easier (ie faster) than squaring. </item>
-    /// <item> JoinType.Round: Rounding is applied to all convex joins with the arc radius being the offset distance, and the original join vertex the arc center. </item>
+    /// <item> ShapeClipperJoinType.Round: Rounding is applied to all convex joins with the arc radius being the offset distance, and the original join vertex the arc center. </item>
     /// </list>
     /// </param>
     /// <param name="endType">How path ends are handled.
@@ -497,7 +505,7 @@ public static class ShapeClipper
     /// </list>
     /// </param>
     /// <param name="miterLimit">
-    /// Miter limit applied when <see cref="JoinType.Miter"/> is used.
+    /// Miter limit applied when <see cref="ShapeClipperJoinType.Miter"/> is used.
     /// This property sets the maximum distance in multiples of delta that vertices can be offset from their original positions before squaring is applied.
     /// (Squaring truncates a miter by 'cutting it off' at 1 × delta distance from the original vertex.)
     /// The default value for MiterLimit is 2 (ie twice delta). This is also the smallest MiterLimit that's allowed.
@@ -506,8 +514,8 @@ public static class ShapeClipper
     /// <param name="precision">Decimal precision for the operation.</param>
     /// <param name="arcTolerance">
     /// Arc approximation tolerance used when rounding joins or ends.
-    /// Ignored when neither <see cref="JoinType.Round"/> nor <see cref="EndType.Round"/> is used.
-    /// ArcTolerance is only relevant when offsetting with JoinType.Round and / or EndType.Round (see ClipperOffset.AddPath and ClipperOffset.AddPaths).
+    /// Ignored when neither <see cref="ShapeClipperJoinType.Round"/> nor <see cref="ShapeClipperEndType.Round"/> is used.
+    /// ArcTolerance is only relevant when offsetting with ShapeClipperJoinType.Round and / or ShapeClipperEndType.Round (see ClipperOffset.AddPath and ClipperOffset.AddPaths).
     /// The Clipper2 library approximates arcs by using series of relatively short straight line segments (see Trigonometry).
     /// And logically, shorter line segments will produce better arc approximations. But very short segments can degrade performance, usually with little or no discernable improvement in curve quality.
     /// Very short segments can even detract from curve quality, due to the effects of integer rounding.
@@ -517,10 +525,10 @@ public static class ShapeClipper
     /// The default ArcTolerance is: offset_radius / 500.
     /// </param>
     /// <returns>A <see cref="PathsD"/> containing the offset paths.</returns>
-    public static PathsD Inflate(this Polyline polyline, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Square, float miterLimit = 2f, int precision = 2, double arcTolerance = 0.0)
+    public static PathsD Inflate(this Polyline polyline, float delta, ShapeClipperJoinType joinType = ShapeClipperJoinType.Square, ShapeClipperEndType endType = ShapeClipperEndType.Square, float miterLimit = 2f, int precision = 2, double arcTolerance = 0.0)
     {
-        if (joinType != JoinType.Round && endType != EndType.Round) arcTolerance = 0.0f;
-        return Clipper.InflatePaths(polyline.ToClipperPaths(), delta, joinType, endType, miterLimit, precision, arcTolerance);
+        if (joinType != ShapeClipperJoinType.Round && endType != ShapeClipperEndType.Round) arcTolerance = 0.0f;
+        return Clipper.InflatePaths(polyline.ToClipperPaths(), delta, joinType.ToClipperJoinType(), endType.ToClipperEndType(), miterLimit, precision, arcTolerance);
     }
 
     /// <summary>
@@ -530,16 +538,16 @@ public static class ShapeClipper
     /// <param name="delta">Offset distance. Positive values expand outward; negative values contract inward.</param>
     /// <param name="joinType">Type of corner joins to use.
     /// <list type="bullet">
-    /// <item> JoinType.Miter: Edges are first offset a specified distance away from and parallel to their original (ie starting) edge positions.
+    /// <item> ShapeClipperJoinType.Miter: Edges are first offset a specified distance away from and parallel to their original (ie starting) edge positions.
     /// These offset edges are then extended to points where they intersect with adjacent edge offsets.
     /// However a limit must be imposed on how far mitered vertices can be from their original positions to avoid very convex joins producing unreasonably long and narrow spikes).
     /// To avoid unsightly spikes, joins will be 'squared' wherever distances between original vertices
     /// and their calculated offsets exceeds a specified value (expressed as a ratio relative to the offset distance).</item>
-    /// <item> JoinType.Square: Convex joins will be truncated using a 'squaring' edge.
+    /// <item> ShapeClipperJoinType.Square: Convex joins will be truncated using a 'squaring' edge.
     /// And the mid-points of these squaring edges will be exactly the offset distance away from their original (or starting) vertices. </item>
-    /// <item> JoinType.Bevel: Bevelled joins are similar to 'squared' joins except that squaring won't occur at a fixed distance.
+    /// <item> ShapeClipperJoinType.Bevel: Bevelled joins are similar to 'squared' joins except that squaring won't occur at a fixed distance.
     /// While bevelled joins may not be as pretty as squared joins, bevelling is much easier (ie faster) than squaring. </item>
-    /// <item> JoinType.Round: Rounding is applied to all convex joins with the arc radius being the offset distance, and the original join vertex the arc center. </item>
+    /// <item> ShapeClipperJoinType.Round: Rounding is applied to all convex joins with the arc radius being the offset distance, and the original join vertex the arc center. </item>
     /// </list>
     /// </param>
     /// <param name="endType">How path ends are handled.
@@ -552,7 +560,7 @@ public static class ShapeClipper
     /// </list>
     /// </param>
     /// <param name="miterLimit">
-    /// Miter limit applied when <see cref="JoinType.Miter"/> is used.
+    /// Miter limit applied when <see cref="ShapeClipperJoinType.Miter"/> is used.
     /// This property sets the maximum distance in multiples of delta that vertices can be offset from their original positions before squaring is applied.
     /// (Squaring truncates a miter by 'cutting it off' at 1 × delta distance from the original vertex.)
     /// The default value for MiterLimit is 2 (ie twice delta). This is also the smallest MiterLimit that's allowed.
@@ -561,8 +569,8 @@ public static class ShapeClipper
     /// <param name="precision">Decimal precision for the operation.</param>
     /// <param name="arcTolerance">
     /// Arc approximation tolerance used when rounding joins or ends.
-    /// Ignored when neither <see cref="JoinType.Round"/> nor <see cref="EndType.Round"/> is used.
-    /// ArcTolerance is only relevant when offsetting with JoinType.Round and / or EndType.Round (see ClipperOffset.AddPath and ClipperOffset.AddPaths).
+    /// Ignored when neither <see cref="ShapeClipperJoinType.Round"/> nor <see cref="ShapeClipperEndType.Round"/> is used.
+    /// ArcTolerance is only relevant when offsetting with ShapeClipperJoinType.Round and / or ShapeClipperEndType.Round (see ClipperOffset.AddPath and ClipperOffset.AddPaths).
     /// The Clipper2 library approximates arcs by using series of relatively short straight line segments (see Trigonometry).
     /// And logically, shorter line segments will produce better arc approximations. But very short segments can degrade performance, usually with little or no discernable improvement in curve quality.
     /// Very short segments can even detract from curve quality, due to the effects of integer rounding.
@@ -572,10 +580,10 @@ public static class ShapeClipper
     /// The default ArcTolerance is: offset_radius / 500.
     /// </param>
     /// <returns>A <see cref="PathsD"/> containing the offset paths.</returns>
-    public static PathsD Inflate(this Polygon poly, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2, double arcTolerance = 0.0)
+    public static PathsD Inflate(this Polygon poly, float delta, ShapeClipperJoinType joinType = ShapeClipperJoinType.Square, ShapeClipperEndType endType = ShapeClipperEndType.Polygon, float miterLimit = 2f, int precision = 2, double arcTolerance = 0.0)
     {
-        if (joinType != JoinType.Round && endType != EndType.Round) arcTolerance = 0.0f;
-        return Clipper.InflatePaths(poly.ToClipperPaths(), delta, joinType, endType, miterLimit, precision, arcTolerance);
+        if (joinType != ShapeClipperJoinType.Round && endType != ShapeClipperEndType.Round) arcTolerance = 0.0f;
+        return Clipper.InflatePaths(poly.ToClipperPaths(), delta, joinType.ToClipperJoinType(), endType.ToClipperEndType(), miterLimit, precision, arcTolerance);
     }
 
     /// <summary>
@@ -588,23 +596,23 @@ public static class ShapeClipper
     /// <param name="miterLimit">The miter limit for miter joins.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The inflated paths as <see cref="PathsD"/>.</returns>
-    public static PathsD InflateMany(this Polygons polygons, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
+    public static PathsD InflateMany(this Polygons polygons, float delta, ShapeClipperJoinType joinType = ShapeClipperJoinType.Square, ShapeClipperEndType endType = ShapeClipperEndType.Polygon, float miterLimit = 2f, int precision = 2)
     {
-        return Clipper.InflatePaths(polygons.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+        return Clipper.InflatePaths(polygons.ToClipperPaths(), delta, joinType.ToClipperJoinType(), endType.ToClipperEndType(), miterLimit, precision);
     }
     /// <summary>
     /// Inflates (offsets) a collection of polylines by the specified delta.
     /// </summary>
     /// <param name="polylines">The collection of polylines to offset.</param>
     /// <param name="delta">Offset distance. Positive values expand outward; negative values contract inward.</param>
-    /// <param name="joinType">Type of corner joins to use (defaults to <see cref="JoinType.Square"/>).</param>
-    /// <param name="endType">How path ends are handled for the closed/open paths (defaults to <see cref="EndType.Polygon"/>).</param>
-    /// <param name="miterLimit">Miter limit applied when <see cref="JoinType.Miter"/> is used (defaults to 2f).</param>
+    /// <param name="joinType">Type of corner joins to use (defaults to <see cref="ShapeClipperJoinType.Square"/>).</param>
+    /// <param name="endType">How path ends are handled for the closed/open paths (defaults to <see cref="ShapeClipperEndType.Polygon"/>).</param>
+    /// <param name="miterLimit">Miter limit applied when <see cref="ShapeClipperJoinType.Miter"/> is used (defaults to 2f).</param>
     /// <param name="precision">Decimal precision for the operation (defaults to 2).</param>
     /// <returns>A <see cref="PathsD"/> containing the offset paths for all input polylines.</returns>
-    public static PathsD InflateMany(this Polylines polylines, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
+    public static PathsD InflateMany(this Polylines polylines, float delta, ShapeClipperJoinType joinType = ShapeClipperJoinType.Square, ShapeClipperEndType endType = ShapeClipperEndType.Polygon, float miterLimit = 2f, int precision = 2)
     {
-        return Clipper.InflatePaths(polylines.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+        return Clipper.InflatePaths(polylines.ToClipperPaths(), delta, joinType.ToClipperJoinType(), endType.ToClipperEndType(), miterLimit, precision);
     }
     #endregion
     
@@ -827,7 +835,7 @@ public static class ShapeClipper
     /// </summary>
     /// <param name="fillRule">The ShapeClipper fill rule to convert.</param>
     /// <returns>The equivalent <see cref="FillRule"/> value.</returns>
-    public static FillRule ToFillRule(this ShapeClipperFillRule fillRule)
+    public static FillRule ToClipperFillRule(this ShapeClipperFillRule fillRule)
     {
         return (FillRule)fillRule;
     }
@@ -837,7 +845,7 @@ public static class ShapeClipper
     /// </summary>
     /// <param name="joinType">The ShapeClipper join type to convert.</param>
     /// <returns>The equivalent <see cref="JoinType"/> value.</returns>
-    public static JoinType ToJoinType(this ShapeClipperJoinType joinType)
+    public static JoinType ToClipperJoinType(this ShapeClipperJoinType joinType)
     {
         return (JoinType)joinType;
     }
@@ -847,7 +855,7 @@ public static class ShapeClipper
     /// </summary>
     /// <param name="endType">The ShapeClipper end type to convert.</param>
     /// <returns>The equivalent <see cref="EndType"/> value.</returns>
-    public static EndType ToEndType(this ShapeClipperEndType endType)
+    public static EndType ToClipperEndType(this ShapeClipperEndType endType)
     {
         return (EndType)endType;
     }

@@ -835,7 +835,7 @@ namespace Examples.Scenes.ExampleScenes
                                 
                             }
                         }
-                        var finalShapes = ShapeClipper.UnionMany(curShape.ToPolygon(), polys, Clipper2Lib.FillRule.NonZero).ToPolygons(true);
+                        var finalShapes = curShape.ToPolygon().UnionMany(polys).ToPolygons(true);
                         if (finalShapes.Count > 0)
                         {
                             foreach (var f in finalShapes)
