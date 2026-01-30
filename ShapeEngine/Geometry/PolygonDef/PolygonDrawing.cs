@@ -1,5 +1,4 @@
 
-using System.Diagnostics;
 using System.Numerics;
 using Clipper2Lib;
 using Raylib_cs;
@@ -436,6 +435,7 @@ public static class PolygonDrawing
     
     
     #region Draw Lines Perimeter & Percentage
+    //!!!: Keep the existing functions and call the fast (no transparency) for now - make performance tests later
     //NOTE: This is essentially a polyline
     // - Still needs full line drawing info for end caps
     //TODO: Add a function that returns last vertex index and interpolated point
