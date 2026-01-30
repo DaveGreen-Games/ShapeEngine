@@ -9,6 +9,126 @@ using ShapeEngine.Geometry.SegmentsDef;
 namespace ShapeEngine.StaticLib;
 
 /// <summary>
+/// Specifies how convex angled joins are handled when offsetting (inflating/shrinking) paths.
+/// This enumeration is only required for offset operations (e.g. ClipperOffset) and is not used
+/// for polygon clipping operations.
+/// </summary>
+public enum ShapeClipperJoinType
+{
+    /// <summary>
+    /// Edges are offset a specified distance and extended to their intersection points.
+    /// A miter limit is enforced to prevent very long spikes at acute angles; when the limit is
+    /// exceeded the join is converted to a squared/bevel form.
+    /// </summary>
+    Miter,
+
+    /// <summary>
+    /// Convex joins are truncated with a squared edge. The midpoint of the squared edge is
+    /// exactly the offset distance from the original vertex.
+    /// </summary>
+    Square,
+
+    /// <summary>
+    /// Bevel joins cut the corner with a straight edge between the offset edges. Beveling is
+    /// typically simpler and faster than squared joins and is common in many graphics formats.
+    /// </summary>
+    Bevel,
+
+    /// <summary>
+    /// Convex joins are rounded using an arc with radius equal to the offset distance and the
+    /// original join vertex as the arc center.
+    /// </summary>
+    Round
+}
+
+/// <summary>
+/// The EndType enumerator controls how the ends of paths are handled when performing
+/// offset (inflating/shrinking) operations. This enumeration is only required for
+/// offset operations and is not used for polygon clipping.
+/// </summary>
+/// <remarks>
+/// With both EndType.Polygon and EndType.Joined, path closure will occur regardless
+/// of whether or not the first and last vertices in the path match.
+/// </remarks>
+public enum ShapeClipperEndType
+{
+    /// <summary>
+    /// The path is treated as a closed polygon; offsets consider the path closed. (Filled)
+    /// </summary>
+    Polygon,
+
+    /// <summary>
+    /// The path is treated as a polyline and its ends are joined during offsetting. (Outline)
+    /// </summary>
+    Joined,
+
+    /// <summary>
+    /// Path ends are squared off without any extension (flat cutoff at ends).
+    /// </summary>
+    Butt,
+
+    /// <summary>
+    /// Path ends are extended by the offset amount and then squared off.
+    /// </summary>
+    Square,
+
+    /// <summary>
+    /// Path ends are extended by the offset amount and rounded (arc) off.
+    /// </summary>
+    Round
+}
+
+/// <summary>
+/// Filling rules determine which sub-regions of complex polygons are considered "inside".
+/// Complex polygons are defined by one or more closed contours; only portions of these contours
+/// may contribute to filled regions, so a filling rule is required to decide which sub-regions
+/// are treated as inside when performing clipping operations.
+/// </summary>
+/// <example>
+/// Example algorithm (winding number):
+/// From a point outside the polygon draw a ray through the polygon. Start with winding number 0.
+/// For each contour crossed, increment the winding number if the crossing goes right-to-left
+/// relative to the ray, otherwise decrement. Each sub-region gets the current winding number.
+/// </example>
+/// <remarks>
+/// The supported fill rules are based on winding numbers derived from the orientation of each path:
+/// <list type="bullet">
+/// <item>Even-Odd: toggles inside/outside each time a contour is crossed.</item>
+/// <item>Non-Zero: considers the sum of winding contributions; non-zero means inside.</item>
+/// <item>Positive / Negative: depend on the sign of the winding number.</item>
+/// </list>
+/// Notes:
+/// <list type="bullet">
+/// <item>The most commonly used rules are Even-Odd and Non-Zero.</item>
+/// <item>Reversing a path reverses its orientation (and the sign of winding numbers) but does not affect parity or whether a winding number is zero.</item>
+/// <item>Filling rules are required only for clipping operations; they do not affect polygon offsetting.</item>
+/// </list>
+/// </remarks>
+public enum ShapeClipperFillRule
+{
+    /// <summary>
+    /// Even-Odd rule: only sub-regions with odd winding parity are filled.
+    /// </summary>
+    EvenOdd,
+
+    /// <summary>
+    /// Non-Zero rule: any sub-region with a non-zero winding number is filled.
+    /// </summary>
+    NonZero,
+
+    /// <summary>
+    /// Positive rule: only sub-regions with winding counts &gt; 0 are filled.
+    /// </summary>
+    Positive,
+
+    /// <summary>
+    /// Negative rule: only sub-regions with winding counts &lt; 0 are filled.
+    /// </summary>
+    Negative
+}
+
+
+/// <summary>
 /// Provides static methods for performing geometric clipping and polygon operations using Clipper2.
 /// </summary>
 /// <remarks>
@@ -16,6 +136,7 @@ namespace ShapeEngine.StaticLib;
 /// </remarks>
 public static class ShapeClipper
 {
+    #region Clip
     /// <summary>
     /// Clips a polygon to a rectangle.
     /// </summary>
@@ -27,7 +148,9 @@ public static class ShapeClipper
     {
         return Clipper.RectClip(rect.ToClipperRect(), poly.ToClipperPath(), precision);
     }
+    #endregion
     
+    #region Union
     /// <summary>
     /// Computes the union of a polygon with multiple other polygons.
     /// </summary>
@@ -47,8 +170,10 @@ public static class ShapeClipper
     /// <param name="b">The second polygon.</param>
     /// <param name="fillRule">The fill rule to use.</param>
     /// <returns>The unioned paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Union(this Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(ToClipperPaths(a), ToClipperPaths(b), fillRule); }
+    public static PathsD Union(this Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(a.ToClipperPaths(), b.ToClipperPaths(), fillRule); }
+    #endregion
     
+    #region Intersect
     /// <summary>
     /// Computes the intersection of two polygons.
     /// </summary>
@@ -97,7 +222,9 @@ public static class ShapeClipper
         }
         return cur;
     }
-
+    #endregion
+    
+    #region Difference
     /// <summary>
     /// Computes the difference between a subject polygon and a clip polygon.
     /// </summary>
@@ -131,6 +258,32 @@ public static class ShapeClipper
     }
 
     /// <summary>
+    /// Computes the difference between a subject polygon and a polyline.
+    /// </summary>
+    /// <param name="subject">The subject polygon.</param>
+    /// <param name="polyline">The polyline to subtract.</param>
+    /// <param name="fillRule">The fill rule to use.</param>
+    /// <param name="precision">The decimal precision for the operation.</param>
+    /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
+    public static PathsD Difference(this Polygon subject, Polyline polyline, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    {
+        return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(polyline), fillRule, precision);
+    }
+    
+    /// <summary>
+    /// Computes the difference between a subject polygon and a segment.
+    /// </summary>
+    /// <param name="subject">The subject polygon.</param>
+    /// <param name="segment">The segment to subtract.</param>
+    /// <param name="fillRule">The fill rule to use.</param>
+    /// <param name="precision">The decimal precision for the operation.</param>
+    /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
+    public static PathsD Difference(this Polygon subject, Segment segment, FillRule fillRule = FillRule.NonZero, int precision = 2)
+    {
+        return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(segment), fillRule, precision);
+    }
+    
+    /// <summary>
     /// Computes the difference between a subject polygon and multiple clip polygons.
     /// </summary>
     /// <param name="subject">The subject polygon.</param>
@@ -146,19 +299,6 @@ public static class ShapeClipper
             cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule, precision);
         }
         return cur;
-    }
-    
-    /// <summary>
-    /// Computes the difference between a subject polygon and a polyline.
-    /// </summary>
-    /// <param name="subject">The subject polygon.</param>
-    /// <param name="polyline">The polyline to subtract.</param>
-    /// <param name="fillRule">The fill rule to use.</param>
-    /// <param name="precision">The decimal precision for the operation.</param>
-    /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Difference(this Polygon subject, Polyline polyline, FillRule fillRule = FillRule.NonZero, int precision = 2)
-    {
-        return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(polyline), fillRule, precision);
     }
     
     /// <summary>
@@ -178,19 +318,6 @@ public static class ShapeClipper
         }
         return cur;
     }
-
-    /// <summary>
-    /// Computes the difference between a subject polygon and a segment.
-    /// </summary>
-    /// <param name="subject">The subject polygon.</param>
-    /// <param name="segment">The segment to subtract.</param>
-    /// <param name="fillRule">The fill rule to use.</param>
-    /// <param name="precision">The decimal precision for the operation.</param>
-    /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Difference(this Polygon subject, Segment segment, FillRule fillRule = FillRule.NonZero, int precision = 2)
-    {
-        return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(segment), fillRule, precision);
-    }
     
     /// <summary>
     /// Computes the difference between a subject polygon and multiple segments.
@@ -209,28 +336,39 @@ public static class ShapeClipper
         }
         return cur;
     }
+    #endregion
 
+    #region Holes
     /// <summary>
     /// Determines if a path is a hole (negative orientation).
     /// </summary>
     /// <param name="path">The path to check.</param>
     /// <returns>True if the path is a hole; otherwise, false.</returns>
-    public static bool IsHole(this PathD path) { return !Clipper.IsPositive(path); }
+    public static bool IsHole(this PathD path)
+    {
+        return !Clipper.IsPositive(path);
+    }
 
     /// <summary>
     /// Determines if a polygon is a hole (negative orientation).
     /// </summary>
     /// <param name="p">The polygon to check.</param>
     /// <returns>True if the polygon is a hole; otherwise, false.</returns>
-    public static bool IsHole(this Polygon p) { return IsHole(p.ToClipperPath()); }
-    
+    public static bool IsHole(this Polygon p)
+    {
+        return p.ToClipperPath().IsHole();
+    }
+
     /// <summary>
     /// Removes all holes from the given paths in-place.
     /// </summary>
     /// <param name="paths">The paths to process.</param>
     /// <returns>The modified <see cref="PathsD"/> with holes removed.</returns>
     /// <remarks>This method modifies the input collection.</remarks>
-    public static PathsD RemoveAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return IsHole(p); }); return paths; }
+    public static PathsD RemoveAllHoles(this PathsD paths)
+    {
+        paths.RemoveAll((p) => p.IsHole()); return paths;
+    }
 
     /// <summary>
     /// Removes all holes from the given polygons in-place.
@@ -238,15 +376,23 @@ public static class ShapeClipper
     /// <param name="polygons">The polygons to process.</param>
     /// <returns>The modified <see cref="Polygons"/> with holes removed.</returns>
     /// <remarks>This method modifies the input collection.</remarks>
-    public static Polygons RemoveAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return IsHole(p); }); return polygons; }
-    
+    public static Polygons RemoveAllHoles(this Polygons polygons)
+    {
+        polygons.RemoveAll((p) => p.IsHole()); 
+        return polygons;
+    }
+
     /// <summary>
     /// Keeps only the holes in the given paths in-place.
     /// </summary>
     /// <param name="paths">The paths to process.</param>
     /// <returns>The modified <see cref="PathsD"/> containing only holes.</returns>
     /// <remarks>This method modifies the input collection.</remarks>
-    public static PathsD GetAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return !IsHole(p); }); return paths; }
+    public static PathsD GetAllHoles(this PathsD paths)
+    {
+        paths.RemoveAll((p) => !p.IsHole()); 
+        return paths;
+    }
 
     /// <summary>
     /// Keeps only the holes in the given polygons in-place.
@@ -254,7 +400,11 @@ public static class ShapeClipper
     /// <param name="polygons">The polygons to process.</param>
     /// <returns>The modified <see cref="Polygons"/> containing only holes.</returns>
     /// <remarks>This method modifies the input collection.</remarks>
-    public static Polygons GetAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return !IsHole(p); }); return polygons; }
+    public static Polygons GetAllHoles(this Polygons polygons)
+    {
+        polygons.RemoveAll((p) => !p.IsHole());
+        return polygons;
+    }
     
     /// <summary>
     /// Returns a copy of the given paths with all holes removed.
@@ -315,10 +465,11 @@ public static class ShapeClipper
         }
         return result;
     }
-
+    #endregion
     
     //TODO: Add Inflate function to Polygon with delta value (positive delta uses outwards polygon (first pathsD element), negative delta uses inwards polygon (seconds pathsD element)
     // - what if there are multiple holes?
+    #region Inflate
     /// <summary>
     /// Inflates (offsets) a polyline by the specified delta.
     /// </summary>
@@ -443,7 +594,9 @@ public static class ShapeClipper
     {
         return Clipper.InflatePaths(polygons.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
     }
+    #endregion
     
+    #region Simplify
     /// <summary>
     /// Simplifies a polygon using the Clipper algorithm.
     /// </summary>
@@ -451,7 +604,10 @@ public static class ShapeClipper
     /// <param name="epsilon">The tolerance for simplification.</param>
     /// <param name="isOpen">Whether the path is open or closed.</param>
     /// <returns>The simplified path as <see cref="PathD"/>.</returns>
-    public static PathD Simplify(this Polygon poly, float epsilon, bool isOpen = false) { return Clipper.SimplifyPath(poly.ToClipperPath(), epsilon, isOpen); }
+    public static PathD Simplify(this Polygon poly, float epsilon, bool isOpen = false)
+    {
+        return Clipper.SimplifyPath(poly.ToClipperPath(), epsilon, isOpen);
+    }
 
     /// <summary>
     /// Simplifies a collection of polygons using the Clipper algorithm.
@@ -460,8 +616,11 @@ public static class ShapeClipper
     /// <param name="epsilon">The tolerance for simplification.</param>
     /// <param name="isOpen">Whether the paths are open or closed.</param>
     /// <returns>The simplified paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Simplify(this Polygons poly, float epsilon, bool isOpen = false) { return Clipper.SimplifyPaths(poly.ToClipperPaths(), epsilon, isOpen); }
-    
+    public static PathsD Simplify(this Polygons poly, float epsilon, bool isOpen = false)
+    {
+        return Clipper.SimplifyPaths(poly.ToClipperPaths(), epsilon, isOpen);
+    }
+
     /// <summary>
     /// Simplifies a polygon using the Ramer-Douglas-Peucker algorithm.
     /// Only works on closed polygons.
@@ -469,7 +628,10 @@ public static class ShapeClipper
     /// <param name="poly">The polygon to simplify.</param>
     /// <param name="epsilon">The tolerance for simplification.</param>
     /// <returns>The simplified path as <see cref="PathD"/>.</returns>
-    public static PathD SimplifyRDP(this Polygon poly, float epsilon) { return Clipper.RamerDouglasPeucker(poly.ToClipperPath(), epsilon); }
+    public static PathD SimplifyRDP(this Polygon poly, float epsilon)
+    {
+        return Clipper.RamerDouglasPeucker(poly.ToClipperPath(), epsilon);
+    }
 
     /// <summary>
     /// Simplifies a collection of polygons using the Ramer-Douglas-Peucker algorithm.
@@ -478,15 +640,23 @@ public static class ShapeClipper
     /// <param name="poly">The polygons to simplify.</param>
     /// <param name="epsilon">The tolerance for simplification.</param>
     /// <returns>The simplified paths as <see cref="PathsD"/>.</returns>
-    public static PathsD SimplifyRDP(this Polygons poly, float epsilon) { return Clipper.SimplifyPaths(poly.ToClipperPaths(), epsilon); }
-
+    public static PathsD SimplifyRDP(this Polygons poly, float epsilon)
+    {
+        return Clipper.SimplifyPaths(poly.ToClipperPaths(), epsilon);
+    }
+    #endregion
+    
+    #region Point Inside
     /// <summary>
     /// Determines if a point is inside a polygon using the Clipper algorithm.
     /// </summary>
     /// <param name="poly">The polygon to test.</param>
     /// <param name="p">The point to check.</param>
     /// <returns>The result as <see cref="PointInPolygonResult"/>.</returns>
-    public static PointInPolygonResult IsPointInsideClipper(this Polygon poly, Vector2 p) { return Clipper.PointInPolygon(p.ToClipperPoint(), poly.ToClipperPath()); }
+    public static PointInPolygonResult IsPointInsideClipper(this Polygon poly, Vector2 p)
+    {
+        return Clipper.PointInPolygon(p.ToClipperPoint(), poly.ToClipperPath());
+    }
 
     /// <summary>
     /// Determines if a point is inside a polygon.
@@ -494,8 +664,13 @@ public static class ShapeClipper
     /// <param name="poly">The polygon to test.</param>
     /// <param name="p">The point to check.</param>
     /// <returns>True if the point is inside; otherwise, false.</returns>
-    public static bool IsPointInside(this Polygon poly, Vector2 p) { return IsPointInsideClipper(poly, p) != PointInPolygonResult.IsOutside; }
-
+    public static bool IsPointInside(this Polygon poly, Vector2 p)
+    {
+        return poly.IsPointInsideClipper(p) != PointInPolygonResult.IsOutside;
+    }
+    #endregion
+    
+    #region Trim Collinear & Strip Duplicates
     /// <summary>
     /// Removes collinear points from a polygon.
     /// </summary>
@@ -503,7 +678,10 @@ public static class ShapeClipper
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <param name="isOpen">Whether the path is open or closed.</param>
     /// <returns>The trimmed path as <see cref="PathD"/>.</returns>
-    public static PathD TrimCollinear(this Polygon poly, int precision, bool isOpen = false) { return Clipper.TrimCollinear(poly.ToClipperPath(), precision, isOpen); }
+    public static PathD TrimCollinear(this Polygon poly, int precision, bool isOpen = false)
+    {
+        return Clipper.TrimCollinear(poly.ToClipperPath(), precision, isOpen);
+    }
 
     /// <summary>
     /// Removes near-duplicate points from a polygon based on minimum edge length squared.
@@ -512,8 +690,25 @@ public static class ShapeClipper
     /// <param name="minEdgeLengthSquared">The minimum squared edge length to consider as unique.</param>
     /// <param name="isOpen">Whether the path is open or closed.</param>
     /// <returns>The processed path as <see cref="PathD"/>.</returns>
-    public static PathD StripDuplicates(this Polygon poly, float minEdgeLengthSquared, bool isOpen = false) { return Clipper.StripNearDuplicates(poly.ToClipperPath(), minEdgeLengthSquared, isOpen); }
-
+    public static PathD StripDuplicates(this Polygon poly, float minEdgeLengthSquared, bool isOpen = false)
+    {
+        return Clipper.StripNearDuplicates(poly.ToClipperPath(), minEdgeLengthSquared, isOpen);
+    }
+    #endregion
+    
+    #region Create Shapes
+    /// <summary>
+    /// Creates an ellipse polygon.
+    /// </summary>
+    /// <param name="center">The center of the ellipse.</param>
+    /// <param name="radiusX">The X radius.</param>
+    /// <param name="radiusY">The Y radius. If zero, uses <paramref name="radiusX"/>.</param>
+    /// <param name="steps">The number of steps (vertices) for the ellipse. If zero, uses default.</param>
+    /// <returns>A polygon representing the ellipse.</returns>
+    public static Polygon CreateEllipse(Vector2 center, float radiusX, float radiusY = 0f, int steps = 0) { return Clipper.Ellipse(center.ToClipperPoint(), radiusX, radiusY, steps).ToPolygon(); }
+    #endregion
+    
+    #region Minkowski
     /// <summary>
     /// Computes the Minkowski difference between two polygons.
     /// </summary>
@@ -521,7 +716,10 @@ public static class ShapeClipper
     /// <param name="path">The path polygon.</param>
     /// <param name="isClosed">Whether the path is closed.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD MinkowskiDiff(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
+    public static PathsD MinkowskiDiff(this Polygon poly, Polygon path, bool isClosed = false)
+    {
+        return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.ToClipperPath(), isClosed);
+    }
 
     /// <summary>
     /// Computes the Minkowski sum of two polygons.
@@ -530,7 +728,10 @@ public static class ShapeClipper
     /// <param name="path">The path polygon.</param>
     /// <param name="isClosed">Whether the path is closed.</param>
     /// <returns>The resulting paths as <see cref="PathsD"/>.</returns>
-    public static PathsD MinkowskiSum(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
+    public static PathsD MinkowskiSum(this Polygon poly, Polygon path, bool isClosed = false)
+    {
+        return Clipper.MinkowskiSum(poly.ToClipperPath(), path.ToClipperPath(), isClosed);
+    }
 
     /// <summary>
     /// Computes the Minkowski difference between a polygon and a path, with the path positioned at the origin.
@@ -559,24 +760,20 @@ public static class ShapeClipper
         if (pathCopy == null) return new();
         return Clipper.MinkowskiSum(poly.ToClipperPath(), pathCopy.ToClipperPath(), isClosed);
     }
-
-    /// <summary>
-    /// Creates an ellipse polygon.
-    /// </summary>
-    /// <param name="center">The center of the ellipse.</param>
-    /// <param name="radiusX">The X radius.</param>
-    /// <param name="radiusY">The Y radius. If zero, uses <paramref name="radiusX"/>.</param>
-    /// <param name="steps">The number of steps (vertices) for the ellipse. If zero, uses default.</param>
-    /// <returns>A polygon representing the ellipse.</returns>
-    public static Polygon CreateEllipse(Vector2 center, float radiusX, float radiusY = 0f, int steps = 0) { return Clipper.Ellipse(center.ToClipperPoint(), radiusX, radiusY, steps).ToPolygon(); }
-
+    #endregion
+    
+    #region Struct Conversion
     /// <summary>
     /// Converts a <see cref="PointD"/> to a <see cref="Vector2"/>.
     /// </summary>
     /// <param name="p">The point to convert.</param>
     /// <returns>The converted <see cref="Vector2"/>.</returns>
     /// <remarks>Y is flipped to match coordinate systems.</remarks>
-    public static Vector2 ToVec2(this PointD p) { return new((float)p.x, -(float)p.y); }//flip of y necessary -> clipper up y is positve - raylib is negative
+    public static Vector2 ToVec2(this PointD p)
+    {
+        //flip of y necessary -> clipper up y is positve - raylib is negative
+        return new((float)p.x, -(float)p.y);
+    }
 
     /// <summary>
     /// Converts a <see cref="Vector2"/> to a <see cref="PointD"/> for Clipper.
@@ -584,7 +781,10 @@ public static class ShapeClipper
     /// <param name="v">The vector to convert.</param>
     /// <returns>The converted <see cref="PointD"/>.</returns>
     /// <remarks>Y is flipped to match coordinate systems.</remarks>
-    public static PointD ToClipperPoint(this Vector2 v) { return new(v.X, -v.Y); }
+    public static PointD ToClipperPoint(this Vector2 v)
+    {
+        return new(v.X, -v.Y);
+    }
 
     /// <summary>
     /// Converts a <see cref="Rect"/> to a <see cref="RectD"/> for Clipper.
@@ -592,7 +792,10 @@ public static class ShapeClipper
     /// <param name="r">The rectangle to convert.</param>
     /// <returns>The converted <see cref="RectD"/>.</returns>
     /// <remarks>Y is flipped to match coordinate systems.</remarks>
-    public static RectD ToClipperRect(this Rect r) { return new RectD(r.X, -r.Y-r.Height, r.X + r.Width, -r.Y); }
+    public static RectD ToClipperRect(this Rect r)
+    {
+        return new RectD(r.X, -r.Y-r.Height, r.X + r.Width, -r.Y);
+    }
 
     /// <summary>
     /// Converts a <see cref="RectD"/> to a <see cref="Rect"/>.
@@ -600,8 +803,40 @@ public static class ShapeClipper
     /// <param name="r">The rectangle to convert.</param>
     /// <returns>The converted <see cref="Rect"/>.</returns>
     /// <remarks>Y is flipped to match coordinate systems.</remarks>
-    public static Rect ToRect(this RectD r) { return new Rect((float)r.left, (float)(-r.top-r.Height), (float)r.Width, (float)r.Height); }
-
+    public static Rect ToRect(this RectD r)
+    {
+        return new Rect((float)r.left, (float)(-r.top-r.Height), (float)r.Width, (float)r.Height);
+    }
+    #endregion
+    
+    #region Enum Conversion
+    public static FillRule ToFillRule(this ShapeClipperFillRule fillRule)
+    {
+        return (FillRule)fillRule;
+    }
+    public static JoinType ToJoinType(this ShapeClipperJoinType joinType)
+    {
+        return (JoinType)joinType;
+    }
+    public static EndType ToEndType(this ShapeClipperEndType endType)
+    {
+        return (EndType)endType;
+    }
+    public static ShapeClipperFillRule ToShapeClipperFillRule(this FillRule fillRule)
+    {
+        return (ShapeClipperFillRule)fillRule;
+    }
+    public static ShapeClipperJoinType ToShapeClipperJoinType(this JoinType joinType)
+    {
+        return (ShapeClipperJoinType)joinType;
+    }
+    public static ShapeClipperEndType ToShapeClipperEndType(this EndType endType)
+    {
+        return (ShapeClipperEndType)endType;
+    }
+    #endregion
+    
+    #region Class Conversion
     /// <summary>
     /// Converts a <see cref="PathD"/> to a <see cref="Polygon"/>.
     /// </summary>
@@ -616,7 +851,7 @@ public static class ShapeClipper
         }
         return poly;
     }
-
+    
     /// <summary>
     /// Converts a <see cref="PathsD"/> to <see cref="Polygons"/>.
     /// </summary>
@@ -669,14 +904,14 @@ public static class ShapeClipper
     /// </summary>
     /// <param name="segment">The segment to convert.</param>
     /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this Segment segment){ return new PathsD() { segment.ToClipperPath() }; }
+    public static PathsD ToClipperPaths(this Segment segment){ return [segment.ToClipperPath()]; }
 
     /// <summary>
     /// Converts a <see cref="Polygon"/> to <see cref="PathsD"/>.
     /// </summary>
     /// <param name="poly">The polygon to convert.</param>
     /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this Polygon poly) { return new PathsD() { poly.ToClipperPath() }; }
+    public static PathsD ToClipperPaths(this Polygon poly) { return [poly.ToClipperPath()]; }
 
     /// <summary>
     /// Converts an array of <see cref="Polygon"/> to <see cref="PathsD"/>.
@@ -754,7 +989,7 @@ public static class ShapeClipper
     /// </summary>
     /// <param name="polyline">The polyline to convert.</param>
     /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this Polyline polyline) { return new PathsD() { polyline.ToClipperPath() }; }
+    public static PathsD ToClipperPaths(this Polyline polyline) { return [polyline.ToClipperPath()]; }
 
     /// <summary>
     /// Converts an array of <see cref="Polyline"/> to <see cref="PathsD"/>.
@@ -777,4 +1012,6 @@ public static class ShapeClipper
         }
         return result;
     }
+    
+    #endregion
 }
