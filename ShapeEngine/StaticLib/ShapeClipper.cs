@@ -467,8 +467,6 @@ public static class ShapeClipper
     }
     #endregion
     
-    //TODO: Add Inflate function to Polygon with delta value (positive delta uses outwards polygon (first pathsD element), negative delta uses inwards polygon (seconds pathsD element)
-    // - what if there are multiple holes?
     #region Inflate
     /// <summary>
     /// Inflates (offsets) a polyline by the specified delta.
@@ -590,9 +588,23 @@ public static class ShapeClipper
     /// <param name="miterLimit">The miter limit for miter joins.</param>
     /// <param name="precision">The decimal precision for the operation.</param>
     /// <returns>The inflated paths as <see cref="PathsD"/>.</returns>
-    public static PathsD Inflate(this Polygons polygons, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
+    public static PathsD InflateMany(this Polygons polygons, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
     {
         return Clipper.InflatePaths(polygons.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+    }
+    /// <summary>
+    /// Inflates (offsets) a collection of polylines by the specified delta.
+    /// </summary>
+    /// <param name="polylines">The collection of polylines to offset.</param>
+    /// <param name="delta">Offset distance. Positive values expand outward; negative values contract inward.</param>
+    /// <param name="joinType">Type of corner joins to use (defaults to <see cref="JoinType.Square"/>).</param>
+    /// <param name="endType">How path ends are handled for the closed/open paths (defaults to <see cref="EndType.Polygon"/>).</param>
+    /// <param name="miterLimit">Miter limit applied when <see cref="JoinType.Miter"/> is used (defaults to 2f).</param>
+    /// <param name="precision">Decimal precision for the operation (defaults to 2).</param>
+    /// <returns>A <see cref="PathsD"/> containing the offset paths for all input polylines.</returns>
+    public static PathsD InflateMany(this Polylines polylines, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
+    {
+        return Clipper.InflatePaths(polylines.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
     }
     #endregion
     
