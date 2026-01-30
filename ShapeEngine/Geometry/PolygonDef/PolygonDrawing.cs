@@ -22,9 +22,6 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public static class PolygonDrawing
 {
-    //TODO: Once all line drawing works in polygon and polyline it could be beneficial to refactor everything to use polyline functions with bool closed parameter?
-    
-    
     #region Draw Masked
     /// <summary>
     /// Draws the polygon's edges while applying a triangular mask to each segment.
@@ -146,6 +143,7 @@ public static class PolygonDrawing
     #region Draw Convex
     /// <summary>
     /// Draws a convex non-intersecting polygon (pentagon, hexagon, etc.) filled with the specified color, using the polygon's centroid as the center.
+    /// This function should be used when Polygon is known to be convex.
     /// </summary>
     /// <param name="poly">The polygon to draw.</param>
     /// <param name="color">The fill color.</param>
@@ -158,6 +156,7 @@ public static class PolygonDrawing
 
     /// <summary>
     /// Draws a convex non-intersecting polygon (pentagon, hexagon, etc.) filled with the specified color, using the polygon's centroid as the center.
+    /// This function should be used when Polygon is known to be convex.
     /// </summary>
     /// <param name="poly">The polygon to draw.</param>
     /// <param name="center">The center point for triangulation.</param>
@@ -226,7 +225,7 @@ public static class PolygonDrawing
     /// <remarks>
     /// This method generates a new rounded polygon on each call which can be performance- and memory-intensive for complex polygons
     /// or high corner point counts. For best performance, precompute the rounded polygon and triangulation. Use <see cref="Polygon.RoundCopy"/> to create the rounded polygon,
-    /// and <see cref="Polygon.Triangulate"/> to create the triangulation. Then translate/rotate/scale/draw the triangulation as needed.
+    /// and <see cref="Polygon.Triangulate()"/> to create the triangulation. Then translate/rotate/scale/draw the triangulation as needed.
     /// </remarks>
     public static void DrawRounded(this Polygon poly, ColorRgba color, int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
     {
@@ -309,6 +308,11 @@ public static class PolygonDrawing
     
     /// <summary>
     /// Draws the polygon outline with configurable thickness and corner style.
+    /// <list type="bullet">
+    /// <item>If <paramref name="drawFastForOpaque"/> is true and the color is fully opaque (alpha = 255) <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> is used instead.</item>
+    /// <item>This function uses two complex functions (inflate, triangulate) to generate the outline (every call) for any type of polygon, which comes with performance costs and memory allocations downsides.</item>
+    /// <item>Use <see cref="Polygon.GenerateOutlineTriangulation(float, int, float, bool, bool)"/> to generate the outline triangulation once and then translate/rotate/scale the triangulation as needed and draw it instead.</item>
+    /// </list>
     /// </summary>
     /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored.</param>
     /// <param name="lineThickness">Thickness of the outline in world units.</param>
@@ -324,13 +328,27 @@ public static class PolygonDrawing
     /// This property sets the maximum distance in multiples of <paramref name="lineThickness"/> that vertices can be offset from their original positions before squaring is applied.
     /// Very acute angles can produce excessively long miters which may not be visually desirable. This limit helps control that.
     /// </param>
-    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
+    /// <param name="drawFastForOpaque">
+    /// When true (default) and the supplied color is fully opaque (alpha == 255),
+    /// the method will use the optimized, non‑transparent renderer <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> for better performance.
+    /// </param>
+    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool drawFastForOpaque = true)
     {
+        if (drawFastForOpaque && color.A >= 255)
+        {
+            poly.DrawLinesFast(lineThickness, color, LineCapType.CappedExtended, cornerPoints);
+            return;
+        }
         DrawLinesHelper(poly, lineThickness, color, cornerPoints, miterLimit, true);
     }
     
     /// <summary>
-    /// Draws the polygon outline with configurable thickness and corner style.
+    /// Draws the polygon outline with configurable LineDrawingInfo and miterLimit.
+    /// <list type="bullet">
+    /// <item>If <paramref name="drawFastForOpaque"/> is true and the color is fully opaque (alpha = 255) <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> is used instead.</item>
+    /// <item>This function uses two complex functions (inflate, triangulate) to generate the outline (every call) for any type of polygon, which comes with performance costs and memory allocations downsides.</item>
+    /// <item>Use <see cref="Polygon.GenerateOutlineTriangulation(float, int, float, bool, bool)"/> to generate the outline triangulation once and then translate/rotate/scale the triangulation as needed and draw it instead.</item>
+    /// </list>
     /// </summary>
     /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored.</param>
     /// <param name="lineInfo">The <see cref="LineDrawingInfo"/> containing line drawing parameters.
@@ -344,57 +362,18 @@ public static class PolygonDrawing
     /// This property sets the maximum distance in multiples of <paramref name="lineInfo.Thickness"/> that vertices can be offset from their original positions before squaring is applied.
     /// Very acute angles can produce excessively long miters which may not be visually desirable. This limit helps control that.
     /// </param>
-    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f)
+    /// <param name="drawFastForOpaque">
+    /// When true (default) and the supplied color is fully opaque (alpha == 255),
+    /// the method will use the optimized, non‑transparent renderer <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> for better performance.
+    /// </param>
+    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool drawFastForOpaque = true)
     {
+        if (drawFastForOpaque && lineInfo.Color.A >= 255)
+        {
+            poly.DrawLinesFast(lineInfo);
+            return;
+        }
         DrawLinesHelper(poly, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints, miterLimit, true);
-    }
-    
-    /// <summary>
-    /// Draws the polygon outline using beveled joins (no rounded/mitered/squared corners).
-    /// </summary>
-    /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored.</param>
-    /// <param name="lineThickness">Outline thickness in world units.</param>
-    /// <param name="color">Color used to draw the outline.</param>
-    public static void DrawLinesBeveled(this Polygon poly, float lineThickness, ColorRgba color)
-    {
-        DrawLinesHelper(poly, lineThickness, color, 0, 0, true);
-    }
-    /// <summary>
-    /// Draws the polygon outline using beveled joins (no rounded/mitered/squared corners).
-    /// </summary>
-    /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored.</param>
-    /// <param name="lineInfo">
-    /// The <see cref="LineDrawingInfo"/> containing line drawing parameters. Only thickness and color are used.
-    /// </param>
-    public static void DrawLinesBeveled(this Polygon poly, LineDrawingInfo lineInfo)
-    {
-        DrawLinesHelper(poly, lineInfo.Thickness, lineInfo.Color, 0, 0, true);
-    }
-    
-    /// <summary>
-    /// Draws the polygon outline using squared joins with the specified line thickness and color.
-    /// Polygons with fewer than 3 points are ignored.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="lineThickness">Outline thickness in world units.</param>
-    /// <param name="color">Color used to draw the outline.</param>
-    public static void DrawLinesSquared(this Polygon poly, float lineThickness, ColorRgba color)
-    {
-        DrawLinesHelper(poly, lineThickness, color, 0, 0, false);
-    }
-    
-    /// <summary>
-    /// Draws the polygon outline using squared joins (no rounded/mitered/beveled corners).
-    /// Uses parameters from <see cref="LineDrawingInfo"/> to determine thickness and color.
-    /// Polygons with fewer than 3 points are ignored.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="lineInfo">
-    /// The <see cref="LineDrawingInfo"/> containing line drawing parameters. Only thickness and color are used.
-    /// </param>
-    public static void DrawLinesSquared(this Polygon poly, LineDrawingInfo lineInfo)
-    {
-        DrawLinesHelper(poly, lineInfo.Thickness, lineInfo.Color, 0, 0, false);
     }
     
     #endregion
@@ -702,6 +681,8 @@ public static class PolygonDrawing
     }
     #endregion
 
+
+    
     
     #region Helper
     private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false)
@@ -729,7 +710,6 @@ public static class PolygonDrawing
                 joinType = beveled ? JoinType.Bevel : JoinType.Square;
             }
         }
-        
         double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
         var result = poly.Inflate(thickness, joinType, EndType.Joined, miterLimit, 2, arcTolerance);
         if (result.Count <= 0) return;
