@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core;
+using Clipper2Lib;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
@@ -517,23 +517,22 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// <param name="margin">Optional margin to expand the bounding triangle. Default is 3.</param>
     /// <returns>The bounding triangle.</returns>
     public Triangle GetBoundingTriangle(float margin = 3f) => Polygon.GetBoundingTriangle(this, margin);
-    /// <summary>
-    /// Triangulates the polygon into a set of triangles.
-    /// </summary>
-    /// <returns>A <see cref="Triangulation"/> containing the triangles.</returns>
-    /// <remarks>
-    /// Uses an ear-clipping algorithm. The polygon must be simple (non-self-intersecting).
-    /// </remarks>
+    
+    private static readonly List<Vector2> triangulateTempVertices = [];
+    private static readonly List<int> triangulateTempValidIndices = [];
+    private static readonly Polygon triangulateTempPolygon = [];
+
+    //TODO: Add docs
     public Triangulation Triangulate()
     {
-        if (Count < 3) return new();
-        if (Count == 3) return new() { new(this[0], this[1], this[2]) };
+        if (Count < 3) return [];
+        if (Count == 3) return [new(this[0], this[1], this[2])];
 
-        Triangulation triangles = new();
-        List<Vector2> vertices = new();
+        Triangulation triangles = [];
+        List<Vector2> vertices = [];
         vertices.AddRange(this);
-        List<int> validIndices = new();
-        for (int i = 0; i < vertices.Count; i++)
+        List<int> validIndices = [];
+        for (var i = 0; i < vertices.Count; i++)
         {
             validIndices.Add(i);
         }
@@ -558,7 +557,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
             Triangle t = new(a, b, c);
 
-            bool isValid = true;
+            var isValid = true;
             foreach (var p in this)
             {
                 if (p == a || p == b || p == c) continue;
@@ -589,6 +588,179 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
         return triangles;
     }
+    
+    //optimized to produce least allocations
+    public int Triangulate(ref Triangulation result)
+    {
+        if (Count < 3) return 0;
+        if (Count == 3)
+        {
+            result.Add(new Triangle(this[0], this[1], this[2]));
+            return 1;
+        }
+
+        triangulateTempVertices.Clear();
+        triangulateTempValidIndices.Clear();
+        
+        triangulateTempVertices.AddRange(this);
+        int count = 0;
+        for (var i = 0; i < triangulateTempVertices.Count; i++)
+        {
+            triangulateTempValidIndices.Add(i);
+        }
+        while (triangulateTempVertices.Count > 3)
+        {
+            if (triangulateTempValidIndices.Count <= 0) 
+                break;
+
+            int i = triangulateTempValidIndices[Rng.Instance.RandI(0, triangulateTempValidIndices.Count)];
+            var a = triangulateTempVertices[i];
+            var b = Game.GetItem(triangulateTempVertices, i + 1);
+            var c = Game.GetItem(triangulateTempVertices, i - 1);
+
+            var ba = b - a;
+            var ca = c - a;
+            float cross = ba.Cross(ca);
+            if (cross >= 0f)//makes sure that ear is not self intersecting
+            {
+                triangulateTempValidIndices.Remove(i);
+                continue;
+            }
+
+            Triangle t = new(a, b, c);
+
+            var isValid = true;
+            foreach (var p in this)
+            {
+                if (p == a || p == b || p == c) continue;
+                if (t.ContainsPoint(p))
+                {
+                    isValid = false;
+                    break;
+                }
+            }
+
+            if (isValid)
+            {
+                result.Add(t);
+                count++;
+                
+                triangulateTempVertices.RemoveAt(i);
+
+                triangulateTempValidIndices.Clear();
+                for (int j = 0; j < triangulateTempVertices.Count; j++)
+                {
+                    triangulateTempValidIndices.Add(j);
+                }
+            }
+        }
+
+
+        result.Add(new(triangulateTempVertices[0], triangulateTempVertices[1], triangulateTempVertices[2]));
+        count++;
+
+        return count;
+    }
+    
+    public Triangulation? GenerateOutlineTriangulation(float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (Count <= 2) return null;
+
+        JoinType joinType;
+        if (cornerPoints > 0)
+        {
+            joinType = JoinType.Round;
+        }
+        else
+        {
+            if (miterLimit >= 2f)
+            {
+                joinType = JoinType.Miter;
+            }
+            else
+            {
+                joinType = beveled ? JoinType.Bevel : JoinType.Square;
+            }
+        }
+        
+        double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
+        var result = this.Inflate(thickness, joinType, EndType.Joined, miterLimit, 2, arcTolerance);
+        if (result.Count <= 0) return null;
+
+        if (result.Count == 1)
+        {
+            if(result[0].Count < 3) return null;
+            var polygon = result[0].ToPolygon();
+            return polygon.Triangulate();
+        }
+        
+        var triangulationResult = Clipper.Triangulate(result, 4, out var solution, useDelaunay);
+        if (triangulationResult == TriangulateResult.success)
+        {
+            var triangulation = new Triangulation();
+            foreach (var path in solution)
+            {
+                if(path.Count < 3) continue;
+                triangulation.Add(new Triangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2()));
+            }
+            return triangulation;
+        }
+
+        return null;
+    }
+    public int GenerateOutlineTriangulation(ref Triangulation result, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (Count <= 2) return 0;
+
+        JoinType joinType;
+        if (cornerPoints > 0)
+        {
+            joinType = JoinType.Round;
+        }
+        else
+        {
+            if (miterLimit >= 2f)
+            {
+                joinType = JoinType.Miter;
+            }
+            else
+            {
+                joinType = beveled ? JoinType.Bevel : JoinType.Square;
+            }
+        }
+        
+        double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
+        var inflation = this.Inflate(thickness, joinType, EndType.Joined, miterLimit, 2, arcTolerance);
+        if (inflation.Count <= 0) return 0;
+
+        if (inflation.Count == 1)
+        {
+            if(inflation[0].Count < 3) return 0;
+            triangulateTempPolygon.Clear();
+            foreach (var vertex in inflation[0])
+            {
+                triangulateTempPolygon.Add(vertex.ToVec2());
+            }
+            return triangulateTempPolygon.Triangulate(ref result);
+        }
+        
+        var triangulationResult = Clipper.Triangulate(inflation, 4, out var solution, useDelaunay);
+        if (triangulationResult == TriangulateResult.success)
+        {
+            int count = 0;
+            foreach (var path in solution)
+            {
+                if(path.Count < 3) continue;
+                result.Add(new Triangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2()));
+                count++;
+            }
+            return count;
+        }
+
+        return 0;
+    }
+    
+    
     /// <summary>
     /// Returns the edges (segments) of the polygon.
     /// </summary>
