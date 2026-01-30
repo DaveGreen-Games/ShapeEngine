@@ -27,6 +27,7 @@ internal class AsteroidObstacle : CollisionObject
     private PolygonCollider collider;
     private readonly Polygon? outsideShape;
     public Triangulation Triangulation;
+    public Triangulation OutlineTriangulation;
     private Rect bb;
 
     private float damageFlashTimer = 0f;
@@ -84,6 +85,7 @@ internal class AsteroidObstacle : CollisionObject
         var shape = collider.GetPolygonShape(); 
         bb = shape.GetBoundingBox();
         Triangulation = shape.Triangulate();
+        OutlineTriangulation = shape.GenerateOutlineTriangulation(EndlessSpaceCollision.AsteroidLineThickness, 0, 2f, false, false)?? [];
         
         if (big)
         {
@@ -134,6 +136,7 @@ internal class AsteroidObstacle : CollisionObject
         var moved = newPosition - Transform.Position;
         Transform = Transform.SetPosition(newPosition);
         Triangulation.ChangePosition(moved);
+        OutlineTriangulation.ChangePosition(moved);
         outsideShape?.ChangePosition(moved);
         // moved = true;
     }
@@ -182,6 +185,7 @@ internal class AsteroidObstacle : CollisionObject
 
         var moved = Transform.Position - prevPosition;
         Triangulation.ChangePosition(moved);
+        OutlineTriangulation.ChangePosition(moved);
         outsideShape?.ChangePosition(moved);
     }
     public Polygon GetShape() => collider.GetPolygonShape();
@@ -220,7 +224,8 @@ internal class AsteroidObstacle : CollisionObject
         if (EndlessSpaceCollision.AsteroidLineThickness > 1 && outsideShape != null)
         {
             var c = damageFlashTimer > 0f ? Colors.PcWarm.ColorRgba : Colors.PcHighlight.ColorRgba;
-            collider.GetPolygonShape().DrawLines(EndlessSpaceCollision.AsteroidLineThickness, c);
+            OutlineTriangulation.Draw(c);//this works with transparent colors as well
+            // collider.GetPolygonShape().DrawLines(EndlessSpaceCollision.AsteroidLineThickness, c);
             if (Big)
             {
                 perimeter = outsideShape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
