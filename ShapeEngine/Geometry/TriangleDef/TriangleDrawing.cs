@@ -584,6 +584,8 @@ public static class TriangleDrawing
     
     #region Helper
 
+    //TODO: Mitered variants do not use miter limits which causes triangles with very sharp angles to produce artifacts.
+    
     private static void DrawTriangleRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, ColorRgba color, int cornerPoints, float cornerStrength)
     {
         if (cornerPoints <= 0 || cornerStrength >= 1f)
