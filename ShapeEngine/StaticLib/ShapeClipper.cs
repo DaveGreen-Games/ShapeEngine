@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Clipper2Lib;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
@@ -893,6 +894,26 @@ public static class ShapeClipper
     
     #region Class Conversion
     /// <summary>
+    /// Converts a <see cref="Segment"/> to a <see cref="PathD"/>.
+    /// </summary>
+    /// <param name="segment">The segment to convert.</param>
+    /// <returns>The converted <see cref="PathD"/>.</returns>
+    public static PathD ToClipperPath(this Segment segment)
+    {
+        var path = new PathD();
+        path.Add(segment.Start.ToClipperPoint());
+        path.Add(segment.End.ToClipperPoint());
+        return path;
+    }
+
+    /// <summary>
+    /// Converts a <see cref="Segment"/> to <see cref="PathsD"/>.
+    /// </summary>
+    /// <param name="segment">The segment to convert.</param>
+    /// <returns>The converted <see cref="PathsD"/>.</returns>
+    public static PathsD ToClipperPaths(this Segment segment){ return [segment.ToClipperPath()]; }
+    
+    /// <summary>
     /// Converts a <see cref="PathD"/> to a <see cref="Polygon"/>.
     /// </summary>
     /// <param name="path">The path to convert.</param>
@@ -924,70 +945,6 @@ public static class ShapeClipper
             }
         }
         return polygons;
-    }
-
-    /// <summary>
-    /// Converts a <see cref="Polygon"/> to a <see cref="PathD"/>.
-    /// </summary>
-    /// <param name="poly">The polygon to convert.</param>
-    /// <returns>The converted <see cref="PathD"/>.</returns>
-    public static PathD ToClipperPath(this Polygon poly)
-    {
-        var path = new PathD();
-        foreach (var vertex in poly)
-        {
-            path.Add(vertex.ToClipperPoint());
-        }
-        return path;
-    }
-
-    /// <summary>
-    /// Converts a <see cref="Segment"/> to a <see cref="PathD"/>.
-    /// </summary>
-    /// <param name="segment">The segment to convert.</param>
-    /// <returns>The converted <see cref="PathD"/>.</returns>
-    public static PathD ToClipperPath(this Segment segment)
-    {
-        var path = new PathD();
-        path.Add(segment.Start.ToClipperPoint());
-        path.Add(segment.End.ToClipperPoint());
-        return path;
-    }
-
-    /// <summary>
-    /// Converts a <see cref="Segment"/> to <see cref="PathsD"/>.
-    /// </summary>
-    /// <param name="segment">The segment to convert.</param>
-    /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this Segment segment){ return [segment.ToClipperPath()]; }
-
-    /// <summary>
-    /// Converts a <see cref="Polygon"/> to <see cref="PathsD"/>.
-    /// </summary>
-    /// <param name="poly">The polygon to convert.</param>
-    /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this Polygon poly) { return [poly.ToClipperPath()]; }
-
-    /// <summary>
-    /// Converts an array of <see cref="Polygon"/> to <see cref="PathsD"/>.
-    /// </summary>
-    /// <param name="polygons">The polygons to convert.</param>
-    /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(params Polygon[] polygons) { return polygons.ToClipperPaths(); }
-
-    /// <summary>
-    /// Converts an enumerable of <see cref="Polygon"/> to <see cref="PathsD"/>.
-    /// </summary>
-    /// <param name="polygons">The polygons to convert.</param>
-    /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this IEnumerable<Polygon> polygons)
-    {
-        var result = new PathsD();
-        foreach(var polygon in polygons)
-        {
-            result.Add(polygon.ToClipperPath());
-        }
-        return result;
     }
 
     /// <summary>
@@ -1023,55 +980,59 @@ public static class ShapeClipper
         }
         return polylines;
     }
-
-    /// <summary>
-    /// Converts a <see cref="Polyline"/> to a <see cref="PathD"/>.
-    /// </summary>
-    /// <param name="polyline">The polyline to convert.</param>
-    /// <returns>The converted <see cref="PathD"/>.</returns>
-    public static PathD ToClipperPath(this Polyline polyline)
+    
+    
+    
+    //TODO: Add xml summaries
+    public static PathD ToClipperPath(this Points poly)
     {
         var path = new PathD();
-        foreach (var vertex in polyline)
+        foreach (var vertex in poly)
         {
             path.Add(vertex.ToClipperPoint());
         }
         return path;
     }
-
-    /// <summary>
-    /// Converts a <see cref="Polyline"/> to <see cref="PathsD"/>.
-    /// </summary>
-    /// <param name="polyline">The polyline to convert.</param>
-    /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this Polyline polyline) { return [polyline.ToClipperPath()]; }
-
-    /// <summary>
-    /// Converts an array of <see cref="Polyline"/> to <see cref="PathsD"/>.
-    /// </summary>
-    /// <param name="polylines">The polylines to convert.</param>
-    /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(params Polyline[] polylines) { return polylines.ToClipperPaths(); }
-
-    /// <summary>
-    /// Converts an enumerable of <see cref="Polyline"/> to <see cref="PathsD"/>.
-    /// </summary>
-    /// <param name="polylines">The polylines to convert.</param>
-    /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this IEnumerable<Polyline> polylines)
+    
+    public static PathsD ToClipperPaths(this Points poly) { return [poly.ToClipperPath()]; }
+    
+    public static PathsD ToClipperPaths(params Points[] polygons) { return polygons.ToClipperPaths(); }
+    
+    public static PathsD ToClipperPaths(this IEnumerable<Points> polygons)
     {
         var result = new PathsD();
-        foreach (var polyline in polylines)
+        foreach(var polygon in polygons)
         {
-            result.Add(polyline.ToClipperPath());
+            result.Add(polygon.ToClipperPath());
         }
         return result;
     }
+
     
     #endregion
     
+    //TODO: Add xml summaries
     #region Class Conversion Ref
-
+    public static int ToClipperPath(this Segment segment, ref PathD path)
+    {
+        path.Add(segment.Start.ToClipperPoint());
+        path.Add(segment.End.ToClipperPoint());
+        return 2;
+    }
+    public static int ToClipperPaths(this Segment segment, ref PathsD paths)
+    {
+        if (paths.Count <= 0)
+        {
+            paths.Add(segment.ToClipperPath());
+            return 2;
+        }
+        
+        var path = paths[0];
+        path.Clear();
+        return segment.ToClipperPath(ref path);
+    }
+    
+    
     public static int ToPolygon(this PathD path, ref Polygon polygon)
     {
         var count = 0;
@@ -1082,7 +1043,6 @@ public static class ShapeClipper
         }
         return count;
     }
-    
     public static int ToPolygons(this PathsD paths, ref Polygons polygons, bool removeHoles = false)
     {
         var count = 0;
@@ -1110,104 +1070,6 @@ public static class ShapeClipper
         return count;
     }
     
-    public static int ToClipperPath(this Polygon poly, ref PathD path)
-    {
-        var count = 0;
-        foreach (var vertex in poly)
-        {
-            path.Add(vertex.ToClipperPoint());
-            count++;
-        }
-        return count;
-    }
-
-    public static int ToClipperPath(this Segment segment, ref PathD path)
-    {
-        path.Add(segment.Start.ToClipperPoint());
-        path.Add(segment.End.ToClipperPoint());
-        return 2;
-    }
-
-    public static int ToClipperPaths(this Segment segment, ref PathsD paths)
-    {
-        if (paths.Count <= 0)
-        {
-            paths.Add(segment.ToClipperPath());
-            return 2;
-        }
-        
-        var path = paths[0];
-        path.Clear();
-        return segment.ToClipperPath(ref path);
-    }
-
-    public static int ToClipperPaths(this Polygon poly, ref PathsD paths)
-    {
-        if (paths.Count <= 0)
-        {
-            var newPath = new PathD();
-            int count = poly.ToClipperPath(ref newPath);
-            paths.Add(newPath);
-            return count;
-        }
-        var path = paths[0];
-        path.Clear();
-        return poly.ToClipperPath(ref path);
-    }
-
-    public static int ToClipperPaths(ref PathsD paths, params Polygon[] polygons)
-    {
-        var count = 0;
-        
-        for (int i = 0; i < polygons.Length; i++)
-        {
-            var poly = polygons[i];
-            
-            if (paths.Count > i)
-            {
-                var path = paths[i];
-                path.Clear();
-                int verticesAdded = poly.ToClipperPath(ref path);
-                count += verticesAdded;
-            }
-            else
-            {
-                var newPath = new PathD();
-                int verticesAdded = poly.ToClipperPath(ref newPath);
-                paths.Add(newPath);
-                count += verticesAdded;
-            }
-        }
-
-        return count;
-    }
-    
-    public static int ToClipperPaths(this IEnumerable<Polygon> polygons, ref PathsD paths)
-    {
-        var count = 0;
-        var i = 0;
-        foreach (var poly in polygons)
-        {
-            if (paths.Count > i)
-            {
-                var path = paths[i];
-                path.Clear();
-                int verticesAdded = poly.ToClipperPath(ref path);
-                count += verticesAdded;
-            }
-            else
-            {
-                var newPath = new PathD();
-                int verticesAdded = poly.ToClipperPath(ref newPath);
-                paths.Add(newPath);
-                count += verticesAdded;
-            }
-
-            i++;
-        }
-
-        return count;
-    }
     
     public static int ToPolyline(this PathD path, ref Polyline polyline)
     {
@@ -1219,7 +1081,6 @@ public static class ShapeClipper
         }
         return count;
     }
-
     public static int ToPolylines(this PathsD paths, ref Polylines polylines, bool removeHoles = false)
     {
         var count = 0;
@@ -1247,38 +1108,37 @@ public static class ShapeClipper
         return count;
     }
     
-    public static int ToClipperPath(this Polyline polyline, ref PathD path)
+    
+    public static int ToClipperPath(this Points points, ref PathD path)
     {
         var count = 0;
-        foreach (var vertex in polyline)
+        foreach (var vertex in points)
         {
             path.Add(vertex.ToClipperPoint());
             count++;
         }
         return count;
     }
-
-    public static int ToClipperPaths(this Polyline polyline, ref PathsD paths)
+    public static int ToClipperPaths(this Points points, ref PathsD paths)
     {
         if (paths.Count <= 0)
         {
             var newPath = new PathD();
-            int count = polyline.ToClipperPath(ref newPath);
+            int count = points.ToClipperPath(ref newPath);
             paths.Add(newPath);
             return count;
         }
         var path = paths[0];
         path.Clear();
-        return polyline.ToClipperPath(ref path);
+        return points.ToClipperPath(ref path);
     }
-
-    public static int ToClipperPaths(ref PathsD paths, params Polyline[] polylines)
-    { 
+    public static int ToClipperPaths(ref PathsD paths, params Points[] pointsArray)
+    {
         var count = 0;
         
-        for (int i = 0; i < polylines.Length; i++)
+        for (int i = 0; i < pointsArray.Length; i++)
         {
-            var poly = polylines[i];
+            var poly = pointsArray[i];
             
             if (paths.Count > i)
             {
@@ -1298,12 +1158,11 @@ public static class ShapeClipper
 
         return count;
     }
-    
-    public static int ToClipperPaths(this IEnumerable<Polyline> polylines, ref PathsD paths)
+    public static int ToClipperPaths(this IEnumerable<Points> pointsEnumerable, ref PathsD paths)
     {
         var count = 0;
         var i = 0;
-        foreach (var poly in polylines)
+        foreach (var poly in pointsEnumerable)
         {
             if (paths.Count > i)
             {
