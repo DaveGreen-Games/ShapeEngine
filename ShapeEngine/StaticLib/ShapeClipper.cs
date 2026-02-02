@@ -900,9 +900,11 @@ public static class ShapeClipper
     /// <returns>The converted <see cref="PathD"/>.</returns>
     public static PathD ToClipperPath(this Segment segment)
     {
-        var path = new PathD();
-        path.Add(segment.Start.ToClipperPoint());
-        path.Add(segment.End.ToClipperPoint());
+        var path = new PathD
+        {
+            segment.Start.ToClipperPoint(),
+            segment.End.ToClipperPoint()
+        };
         return path;
     }
 
@@ -911,7 +913,16 @@ public static class ShapeClipper
     /// </summary>
     /// <param name="segment">The segment to convert.</param>
     /// <returns>The converted <see cref="PathsD"/>.</returns>
-    public static PathsD ToClipperPaths(this Segment segment){ return [segment.ToClipperPath()]; }
+    public static PathsD ToClipperPaths(this Segment segment)
+    {
+        var path = new PathD
+        {
+            segment.Start.ToClipperPoint(),
+            segment.End.ToClipperPoint()
+        };
+        var paths = new PathsD { path };
+        return paths;
+    }
     
     /// <summary>
     /// Converts a <see cref="PathD"/> to a <see cref="Polygon"/>.
@@ -939,10 +950,8 @@ public static class ShapeClipper
         var polygons = new Polygons();
         foreach (var path in paths)
         {
-            if (!removeHoles || !IsHole(path))
-            {
-                polygons.Add(path.ToPolygon());
-            }
+            if (removeHoles && path.IsHole()) continue;
+            polygons.Add(path.ToPolygon());
         }
         return polygons;
     }
@@ -973,35 +982,71 @@ public static class ShapeClipper
         var polylines = new Polylines();
         foreach (var path in paths)
         {
-            if (!removeHoles || !IsHole(path))
-            {
-                polylines.Add(path.ToPolyline());
-            }
+            if (removeHoles && path.IsHole()) continue;
+            polylines.Add(path.ToPolyline());
         }
         return polylines;
     }
     
     
-    
-    //TODO: Add xml summaries
-    public static PathD ToClipperPath(this Points poly)
+    /// <summary>
+    /// Converts a <see cref="Points"/> collection to a Clipper <see cref="PathD"/>.
+    /// </summary>
+    /// <param name="points">The source collection of vertices to convert. Each vertex is transformed to a Clipper-compatible <see cref="PointD"/>.</param>
+    /// <returns>A new <see cref="PathD"/> containing the converted points.</returns>
+    public static PathD ToClipperPath(this Points points)
     {
         var path = new PathD();
-        foreach (var vertex in poly)
+        foreach (var vertex in points)
         {
             path.Add(vertex.ToClipperPoint());
         }
         return path;
     }
+
+    /// <summary>
+    /// Converts a <see cref="Points"/> collection to a Clipper <see cref="PathsD"/>.
+    /// </summary>
+    /// <param name="points">The source collection of vertices to convert.</param>
+    /// <returns>
+    /// A new <see cref="PathsD"/> containing a single <see cref="PathD"/> produced from <paramref name="points"/>.
+    /// </returns>
+    public static PathsD ToClipperPaths(this Points points)
+    {
+        var path = points.ToClipperPath();
+        var paths = new PathsD { path };
+        return paths;
+    }
+
+    /// <summary>
+    /// Converts an array of <see cref="Points"/> to a Clipper <see cref="PathsD"/>.
+    /// This is a convenience overload that forwards to the enumerable-based
+    /// <see cref="ToClipperPaths(IEnumerable{Points})"/> extension.
+    /// </summary>
+    /// <param name="pointsArray">Array of point collections to convert.</param>
+    /// <returns>A new <see cref="PathsD"/> containing a path for each input <see cref="Points"/>.</returns>
+    public static PathsD ToClipperPaths(params Points[] pointsArray)
+    {
+        return pointsArray.ToClipperPaths();
+    }
     
-    public static PathsD ToClipperPaths(this Points poly) { return [poly.ToClipperPath()]; }
-    
-    public static PathsD ToClipperPaths(params Points[] polygons) { return polygons.ToClipperPaths(); }
-    
-    public static PathsD ToClipperPaths(this IEnumerable<Points> polygons)
+    /// <summary>
+    /// Converts an enumerable of <see cref="Points"/> collections into a Clipper <see cref="PathsD"/>.
+    /// Each <see cref="Points"/> instance is converted to a single <see cref="PathD"/> and added
+    /// to the returned <see cref="PathsD"/> in the same order as the input enumeration.
+    /// </summary>
+    /// <param name="pointsEnumerable">An enumerable of <see cref="Points"/> to convert. Must not be null.</param>
+    /// <returns>
+    /// A new <see cref="PathsD"/> containing one <see cref="PathD"/> per input <see cref="Points"/>.
+    /// </returns>
+    /// <remarks>
+    /// Enumerating a null <paramref name="pointsEnumerable"/> will result in an exception.
+    /// This method does not remove holes or alter individual paths; use other helpers if post-processing is needed.
+    /// </remarks>
+    public static PathsD ToClipperPaths(this IEnumerable<Points> pointsEnumerable)
     {
         var result = new PathsD();
-        foreach(var polygon in polygons)
+        foreach(var polygon in pointsEnumerable)
         {
             result.Add(polygon.ToClipperPath());
         }
@@ -1011,14 +1056,41 @@ public static class ShapeClipper
     
     #endregion
     
-    //TODO: Add xml summaries
     #region Class Conversion Ref
+    
+    /// <summary>
+    /// Converts a <see cref="Segment"/> into a Clipper <see cref="PathD"/> by writing the segment's start and end points
+    /// into the provided <paramref name="path"/>. The supplied <paramref name="path"/> is cleared before use so no new
+    /// allocation is required when reusing an existing <see cref="PathD"/> instance.
+    /// </summary>
+    /// <param name="segment">The segment to convert.</param>
+    /// <param name="path">Reference to the <see cref="PathD"/> that will be cleared and populated with the segment's points.</param>
+    /// <returns>The number of points written to <paramref name="path"/> (expected to be 2 for a valid segment, or 0 if none were added).</returns>
     public static int ToClipperPath(this Segment segment, ref PathD path)
     {
+        path.Clear();
         path.Add(segment.Start.ToClipperPoint());
         path.Add(segment.End.ToClipperPoint());
         return 2;
     }
+    /// <summary>
+    /// Converts a <see cref="Segment"/> into a Clipper <see cref="PathsD"/> by writing the segment's
+    /// start and end points into the provided <paramref name="paths"/> collection.
+    /// </summary>
+    /// <param name="segment">The segment to convert.</param>
+    /// <param name="paths">
+    /// Reference to the <see cref="PathsD"/> that will be cleared and populated with a single <see cref="PathD"/>
+    /// representing the segment. After the call, <paramref name="paths"/> will contain exactly one path.
+    /// </param>
+    /// <returns>
+    /// The number of points written to the produced path (expected to be 2 for a valid segment).
+    /// </returns>
+    /// <remarks>
+    /// This method attempts to reuse the first <see cref="PathD"/> in <paramref name="paths"/> when present:
+    /// it clears that path, clears the collection, writes the segment's points into the reused path,
+    /// and then adds it back to <paramref name="paths"/>. If <paramref name="paths"/> is initially empty,
+    /// the method falls back to creating and adding a new path via the non-ref overload.
+    /// </remarks>
     public static int ToClipperPaths(this Segment segment, ref PathsD paths)
     {
         if (paths.Count <= 0)
@@ -1029,13 +1101,26 @@ public static class ShapeClipper
         
         var path = paths[0];
         path.Clear();
-        return segment.ToClipperPath(ref path);
+        paths.Clear();
+        int verticesAdded = segment.ToClipperPath(ref path);
+        paths.Add(path);
+        return verticesAdded;
     }
     
-    
+    /// <summary>
+    /// Converts a Clipper <see cref="PathD"/> into the provided <see cref="Polygon"/> instance.
+    /// The target <paramref name="polygon"/> is cleared and populated with converted points.
+    /// </summary>
+    /// <param name="path">Source Clipper path to convert.</param>
+    /// <param name="polygon">Reference to the destination <see cref="Polygon"/> which will be cleared and filled.</param>
+    /// <returns>The number of vertices written to <paramref name="polygon"/> (0 if <paramref name="path"/> is empty).</returns>
     public static int ToPolygon(this PathD path, ref Polygon polygon)
     {
+        if(path.Count <= 0) return 0;
+        
         var count = 0;
+        polygon.Clear();
+        
         foreach (var point in path)
         {
             polygon.Add(point.ToVec2());
@@ -1043,37 +1128,69 @@ public static class ShapeClipper
         }
         return count;
     }
+    /// <summary>
+    /// Converts a Clipper <see cref="PathsD"/> into the supplied <see cref="Polygons"/> instance.
+    /// The destination <paramref name="polygons"/> is cleared and populated with one <see cref="Polygon"/>
+    /// per path in <paramref name="paths"/>.
+    /// </summary>
+    /// <param name="paths">Source Clipper paths to convert.</param>
+    /// <param name="polygons">Reference to the destination <see cref="Polygons"/> which will be cleared and filled.</param>
+    /// <param name="removeHoles">If true, paths identified as holes (negative orientation) are skipped.</param>
+    /// <returns>The number of polygons written to <paramref name="polygons"/>.</returns>
+    /// <remarks>
+    /// This method attempts to reuse existing <see cref="Polygon"/> instances in <paramref name="polygons"/>
+    /// when possible, clearing and repopulating them with converted points from <paramref name="paths"/>.
+    /// If there are more paths than existing polygons, new <see cref="Polygon"/> instances are created and added.
+    /// After processing, any excess polygons in <paramref name="polygons"/> beyond the number of converted paths are removed.
+    /// </remarks>
     public static int ToPolygons(this PathsD paths, ref Polygons polygons, bool removeHoles = false)
     {
-        var count = 0;
+        if (paths.Count <= 0) return 0;
+        var outIndex = 0;
 
         for (var i = 0; i < paths.Count; i++)
         {
             var path = paths[i];
-            if (removeHoles & path.IsHole()) continue;
+            if (path.Count <= 0 || (removeHoles && path.IsHole())) continue;
 
-            if (polygons.Count > i)
+            if (polygons.Count > outIndex)
             {
-                var poly = polygons[i];
+                var poly = polygons[outIndex];
                 poly.Clear();
-                int verticesAdded = path.ToPolygon(ref poly);
-                polygons.Add(poly);
-                count += verticesAdded;
+                path.ToPolygon(ref poly);
             }
             else
             {
                 var poly = path.ToPolygon();
                 polygons.Add(poly);
-                count+= poly.Count;
             }
+
+            outIndex++;
         }
-        return count;
+
+        if (outIndex <= 0) return 0;
+        if (outIndex >= polygons.Count) return outIndex;
+
+        int remove = polygons.Count - outIndex;
+        if (remove > 0) polygons.RemoveRange(outIndex, remove);
+
+        return outIndex;
     }
     
-    
+    /// <summary>
+    /// Converts the provided Clipper <see cref="PathD"/> into the given <see cref="Polyline"/> instance.
+    /// The destination <paramref name="polyline"/> is cleared before being populated with converted points.
+    /// </summary>
+    /// <param name="path">Source Clipper path to convert.</param>
+    /// <param name="polyline">Reference to the destination <see cref="Polyline"/> which will be cleared and filled.</param>
+    /// <returns>The number of vertices written to <paramref name="polyline"/> (0 if <paramref name="path"/> is empty).</returns>
     public static int ToPolyline(this PathD path, ref Polyline polyline)
     {
+        if(path.Count <= 0) return 0;
+        
         var count = 0;
+        polyline.Clear();
+        
         foreach (var point in path)
         {
             polyline.Add(point.ToVec2());
@@ -1081,36 +1198,68 @@ public static class ShapeClipper
         }
         return count;
     }
+    
+    /// <summary>
+    /// Converts the provided Clipper <see cref="PathsD"/> into the supplied <see cref="Polylines"/> instance.
+    /// The destination <paramref name="polylines"/> is cleared and populated with one <see cref="Polyline"/> per path in <paramref name="paths"/>.
+    /// This method attempts to reuse existing <see cref="Polyline"/> instances when possible.
+    /// </summary>
+    /// <param name="paths">Source Clipper paths to convert.</param>
+    /// <param name="polylines">Reference to the destination <see cref="Polylines"/> which will be cleared and filled.</param>
+    /// <param name="removeHoles">If true, paths identified as holes (negative orientation) are skipped.</param>
+    /// <returns>The number of polylines written to <paramref name="polylines"/>.</returns>
+    /// <remarks>
+    /// This method attempts to reuse existing <see cref="Polyline"/> instances in <paramref name="polylines"/>
+    /// when possible, clearing and repopulating them with converted points from <paramref name="paths"/>.
+    /// If there are more paths than existing polylines, new <see cref="Polyline"/> instances are created and added.
+    /// After processing, any excess polylines in <paramref name="polylines"/> beyond the number of converted paths are removed.
+    /// </remarks>
     public static int ToPolylines(this PathsD paths, ref Polylines polylines, bool removeHoles = false)
     {
-        var count = 0;
+        if (paths.Count <= 0) return 0;
+        var outIndex = 0;
 
         for (var i = 0; i < paths.Count; i++)
         {
             var path = paths[i];
-            if (removeHoles & path.IsHole()) continue;
+            if (path.Count <= 0 || (removeHoles && path.IsHole())) continue;
 
-            if (polylines.Count > i)
+            if (polylines.Count > outIndex)
             {
-                var poly = polylines[i];
+                var poly = polylines[outIndex];
                 poly.Clear();
-                int verticesAdded = path.ToPolyline(ref poly);
-                polylines.Add(poly);
-                count += verticesAdded;
+                path.ToPolyline(ref poly);
             }
             else
             {
                 var poly = path.ToPolyline();
                 polylines.Add(poly);
-                count+= poly.Count;
             }
+
+            outIndex++;
         }
-        return count;
+
+        if (outIndex <= 0) return 0;
+        if (outIndex >= polylines.Count) return outIndex;
+
+        int remove = polylines.Count - outIndex;
+        if (remove > 0) polylines.RemoveRange(outIndex, remove);
+
+        return outIndex;
     }
     
-    
+    /// <summary>
+    /// Writes the vertices from a <see cref="Points"/> collection into the supplied Clipper <see cref="PathD"/>.
+    /// The destination <paramref name="path"/> is cleared before use so the caller can reuse an existing
+    /// <see cref="PathD"/> instance and avoid allocations.
+    /// </summary>
+    /// <param name="points">Source collection of vertices. Each vertex is converted using the project's <c>ToClipperPoint</c> conversion.</param>
+    /// <param name="path">Reference to the destination <see cref="PathD"/> which will be cleared and populated.</param>
+    /// <returns>The number of points written to <paramref name="path"/>.</returns>
     public static int ToClipperPath(this Points points, ref PathD path)
     {
+        if(points.Count <= 0) return 0;
+        path.Clear();
         var count = 0;
         foreach (var vertex in points)
         {
@@ -1119,8 +1268,19 @@ public static class ShapeClipper
         }
         return count;
     }
+    /// <summary>
+    /// Writes the vertices from a <see cref="Points"/> collection into the supplied Clipper <see cref="PathsD"/>.
+    /// The destination <paramref name="paths"/> is cleared and populated with a single <see cref="PathD"/>
+    /// representing the input <paramref name="points"/>. This overload is intended for reuse scenarios to avoid
+    /// unnecessary allocations by reusing the provided <paramref name="paths"/> instance.
+    /// </summary>
+    /// <param name="points">Source collection of vertices to convert.</param>
+    /// <param name="paths">Reference to the destination <see cref="PathsD"/> which will be cleared and filled.</param>
+    /// <returns>The number of points written to the produced path (0 if <paramref name="points"/> is empty).</returns>
     public static int ToClipperPaths(this Points points, ref PathsD paths)
     {
+        if(points.Count <= 0) return 0;
+        
         if (paths.Count <= 0)
         {
             var newPath = new PathD();
@@ -1128,61 +1288,98 @@ public static class ShapeClipper
             paths.Add(newPath);
             return count;
         }
+        
         var path = paths[0];
         path.Clear();
-        return points.ToClipperPath(ref path);
+        paths.Clear();
+        
+        int verticesAdded = points.ToClipperPath(ref path);
+        paths.Add(path);
+        return verticesAdded;
     }
+    /// <summary>
+    /// Writes multiple <see cref="Points"/> collections into the supplied Clipper <see cref="PathsD"/> instance.
+    /// The destination <paramref name="paths"/> is cleared and populated with one <see cref="PathD"/> per provided
+    /// <see cref="Points"/>. This overload accepts a params array for convenience and forwards to the enumerable-based
+    /// <see cref="ToClipperPaths(IEnumerable{Points})"/> implementation.
+    /// </summary>
+    /// <param name="paths">Reference to the destination <see cref="PathsD"/> which will be cleared and filled.</param>
+    /// <param name="pointsArray">An array of <see cref="Points"/> collections to convert. May be empty but must not be null.</param>
+    /// <returns>The total number of points written to the produced paths (sum of points across all input collections).</returns>
     public static int ToClipperPaths(ref PathsD paths, params Points[] pointsArray)
     {
-        var count = 0;
-        
-        for (int i = 0; i < pointsArray.Length; i++)
+        if (pointsArray.Length <= 0) return 0;
+        var outIndex = 0;
+
+        for (var i = 0; i < pointsArray.Length; i++)
         {
-            var poly = pointsArray[i];
-            
-            if (paths.Count > i)
+            var points = pointsArray[i];
+            if (points.Count <= 0) continue;
+
+            if (paths.Count > outIndex)
             {
-                var path = paths[i];
+                var path = paths[outIndex];
                 path.Clear();
-                int verticesAdded = poly.ToClipperPath(ref path);
-                count += verticesAdded;
+                points.ToClipperPath(ref path);
             }
             else
             {
-                var newPath = new PathD();
-                int verticesAdded = poly.ToClipperPath(ref newPath);
-                paths.Add(newPath);
-                count += verticesAdded;
+                var path = points.ToClipperPath();
+                paths.Add(path);
             }
+
+            outIndex++;
         }
 
-        return count;
+        if (outIndex <= 0) return 0;
+        if (outIndex >= paths.Count) return outIndex;
+
+        int remove = paths.Count - outIndex;
+        if (remove > 0) paths.RemoveRange(outIndex, remove);
+
+        return outIndex;
     }
+    /// <summary>
+    /// Writes multiple <see cref="Points"/> collections into the supplied Clipper <see cref="PathsD"/> instance.
+    /// The destination <paramref name="paths"/> is cleared and populated with one <see cref="PathD"/> per provided
+    /// <see cref="Points"/>. This method attempts to reuse existing <see cref="PathD"/> instances when possible
+    /// to avoid unnecessary allocations.
+    /// </summary>
+    /// <param name="pointsEnumerable">An enumerable of <see cref="Points"/> to convert. Must not be null.</param>
+    /// <param name="paths">Reference to the destination <see cref="PathsD"/> which will be cleared and filled.</param>
+    /// <returns>
+    /// The total number of points written to the produced paths (sum of points across all input collections).
+    /// Returns 0 if no points were written.
+    /// </returns>
     public static int ToClipperPaths(this IEnumerable<Points> pointsEnumerable, ref PathsD paths)
     {
-        var count = 0;
-        var i = 0;
-        foreach (var poly in pointsEnumerable)
+        var outIndex = 0;
+        foreach (var points in pointsEnumerable)
         {
-            if (paths.Count > i)
+            if (points.Count <= 0) continue;
+
+            if (paths.Count > outIndex)
             {
-                var path = paths[i];
+                var path = paths[outIndex];
                 path.Clear();
-                int verticesAdded = poly.ToClipperPath(ref path);
-                count += verticesAdded;
+                points.ToClipperPath(ref path);
             }
             else
             {
-                var newPath = new PathD();
-                int verticesAdded = poly.ToClipperPath(ref newPath);
-                paths.Add(newPath);
-                count += verticesAdded;
+                var path = points.ToClipperPath();
+                paths.Add(path);
             }
 
-            i++;
+            outIndex++;
         }
 
-        return count;
+        if (outIndex <= 0) return 0;
+        if (outIndex >= paths.Count) return outIndex;
+
+        int remove = paths.Count - outIndex;
+        if (remove > 0) paths.RemoveRange(outIndex, remove);
+
+        return outIndex;
     }
     
     #endregion
