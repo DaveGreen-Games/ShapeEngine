@@ -696,6 +696,9 @@ public static class CircleDrawing
     #endregion
     
     #region Circle Sector
+    //TODO: Add old version of DrawSectorLines closed for opaque colors (new version that supports alpha might need to use Inflate + Triangulation which is way more expensive!)
+    //TODO: Add functions that generates a triangulation for closed circle sector outline (return value and ref parameter versions)
+    
     /// <summary>
     /// Draws a filled sector of a circle using the specified <see cref="Circle"/> instance, start and end angles, segment count, and color.
     /// </summary>
@@ -1067,6 +1070,8 @@ public static class CircleDrawing
         }
     }
     
+    //TODO: Test performance of the open version vs the old version that just draws segments
+    // - if performance difference is big I might have to add the old versions back in as a fast opaque only alternative
     private static void DrawCircleSectorLinesOpenInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, 
         int sides, float lineThickness, ColorRgba color)
     {
