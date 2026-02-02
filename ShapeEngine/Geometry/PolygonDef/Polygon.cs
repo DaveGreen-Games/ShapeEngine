@@ -41,7 +41,15 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper Members
     private static IntersectionPoints intersectionPointsReference = new(4);
+    private Polygon? compoundHelperPolygon = null;
+    private static readonly List<Vector2> triangulateTempVertices = [];
+    private static readonly List<int> triangulateTempValidIndices = [];
+    private static readonly Polygon triangulateTempPolygon = [];
+    #endregion
+    
+    #region Getters
     /// <summary>
     /// Creates a deep copy of the current polygon.
     /// </summary>
@@ -76,8 +84,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// Gets the diameter (maximum distance between any two vertices) of the polygon.
     /// </summary>
     public float Diameter => GetDiameter();
-    
-    private Polygon? compoundHelperPolygon = null;
+    #endregion
     
     #region Constructors
     /// <summary>
@@ -518,11 +525,23 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// <returns>The bounding triangle.</returns>
     public Triangle GetBoundingTriangle(float margin = 3f) => Polygon.GetBoundingTriangle(this, margin);
     
-    private static readonly List<Vector2> triangulateTempVertices = [];
-    private static readonly List<int> triangulateTempValidIndices = [];
-    private static readonly Polygon triangulateTempPolygon = [];
-
-    //TODO: Add docs
+    
+    //TODO: optimize triangulation to O(n log n) using Delaunay or other advanced methods
+    // - Use clipper triangulation ?
+    
+    /// <summary>
+    /// Triangulates the polygon using an ear-clipping approach with randomized ear selection.
+    /// Produces a set of non-overlapping triangles that cover the polygon interior.
+    /// </summary>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item><description>Returns an empty triangulation when the polygon has fewer than 3 vertices.</description></item>
+    /// <item><description>Returns a single triangle when the polygon has exactly 3 vertices.</description></item>
+    /// <item><description>The implementation selects candidate ears at random; repeated calls may yield different valid triangulations.</description></item>
+    /// <item><description>Typical runtime is O\(n^2\) in practice due to repeated ear validity checks.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <returns>A <see cref="Triangulation"/> containing the resulting triangles.</returns>
     public Triangulation Triangulate()
     {
         if (Count < 3) return [];
@@ -581,15 +600,30 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
                 //break;
             }
         }
-
-
+        
         triangles.Add(new(vertices[0], vertices[1], vertices[2]));
-
-
+        
         return triangles;
     }
     
-    //optimized to produce least allocations
+    /// <summary>
+    /// Triangulates this polygon and appends the resulting triangles into the provided <see cref="Triangulation"/>.
+    /// This function aims to minimize memory allocations by reusing internal buffers and filling the provided collection instead of creating a new one.
+    /// </summary>
+    /// <param name="result">
+    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles.
+    /// The method appends triangles to this collection; it does not clear it.
+    /// </param>
+    /// <returns>
+    /// The number of triangles added to <paramref name="result"/>.
+    /// Returns 0 if the polygon has fewer than 3 vertices.
+    /// </returns>
+    /// <remarks>
+    /// This method implements an ear-clipping style triangulation optimized for minimal allocations
+    /// by reusing internal temporary buffers. When the polygon has exactly 3 vertices a single
+    /// triangle is added and 1 is returned. The algorithm uses randomized ear selection so
+    /// repeated calls may produce different valid triangulations.
+    /// </remarks>
     public int Triangulate(ref Triangulation result)
     {
         if (Count < 3) return 0;
@@ -662,6 +696,33 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         return count;
     }
     
+    /// <summary>
+    /// Generates a triangulation for the polygon's outline when the polygon is inflated by a given <paramref name="thickness"/>.
+    /// The outline is produced by inflating the polygon (using round, miter, bevel or square joins depending on parameters)
+    /// and then triangulating the resulting shape(s).
+    /// </summary>
+    /// <param name="thickness">The amount to inflate the polygon edges by (outline half-width).</param>
+    /// <param name="cornerPoints">
+    /// Number of points to approximate rounded corners. If &lt;= 0 rounded corners are not used.
+    /// </param>
+    /// <param name="miterLimit">
+    /// The miter limit applied when using miter joins. Values &gt;= 2 favour miter joins; smaller values may produce bevel/square joins.
+    /// </param>
+    /// <param name="beveled">
+    /// When <c>true</c> and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
+    /// </param>
+    /// <param name="useDelaunay">
+    /// If <c>true</c> request Delaunay post-processing from the Clipper triangulation step (when supported).
+    /// </param>
+    /// <returns>
+    /// A <see cref="Triangulation"/> containing triangles that cover the inflated outline, or <c>null</c> if a valid triangulation
+    /// could not be produced (for example when the polygon has insufficient vertices or inflation fails).
+    /// </returns>
+    /// <remarks>
+    /// This method will return <c>null</c> for polygons with fewer than 3 vertices. When the inflation produces multiple disjoint
+    /// paths the function attempts to triangulate each resulting region. Uses the polygon's Inflate helper and the Clipper library
+    /// for triangulation when applicable.
+    /// </remarks>
     public Triangulation? GenerateOutlineTriangulation(float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
         if (Count <= 2) return null;
@@ -708,6 +769,37 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
         return null;
     }
+    
+    /// <summary>
+    /// Generates a triangulation for the polygon's inflated outline and appends the resulting triangles
+    /// into the provided <see cref="Triangulation"/> instance.
+    /// This function aims to minimize memory allocations by reusing internal buffers and filling the provided collection instead of creating a new one.
+    /// </summary>
+    /// <param name="result">
+    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles.
+    /// The method appends triangles to this collection; it does not clear it.
+    /// </param>
+    /// <param name="thickness">Inflation half-width applied to polygon edges.</param>
+    /// <param name="cornerPoints">
+    /// Number of points to approximate rounded corners. If &lt;= 0 rounded corners are not used.
+    /// </param>
+    /// <param name="miterLimit">
+    /// Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins; smaller values may produce bevel/square joins.
+    /// </param>
+    /// <param name="beveled">
+    /// When <c>true</c> and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
+    /// </param>
+    /// <param name="useDelaunay">
+    /// If <c>true</c> request Delaunay post-processing from the Clipper triangulation step (when supported).
+    /// </param>
+    /// <returns>
+    /// The number of triangles added to <paramref name="result"/>. Returns 0 if the polygon has insufficient vertices
+    /// or if triangulation/inflation fails.
+    /// </returns>
+    /// <remarks>
+    /// This overload minimizes allocations by filling the provided collection. For a standalone triangulation use
+    /// the overload that returns a new <see cref="Triangulation"/> instance.
+    /// </remarks>
     public int GenerateOutlineTriangulation(ref Triangulation result, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
         if (Count <= 2) return 0;
