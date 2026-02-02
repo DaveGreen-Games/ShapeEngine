@@ -255,6 +255,7 @@ public static class PolygonDrawing
     
     #endregion
     
+    //TODO: Rename to DrawLines
     #region Draw Lines Fast
     
     /// <summary>
@@ -304,6 +305,10 @@ public static class PolygonDrawing
     }
     #endregion
     
+    //TODO:
+    // - Rename to DrawLinesTransparent
+    // - Remove the drawFastForOpaque parameter
+    // - Update docs!
     #region Draw Lines
     
     /// <summary>
@@ -334,6 +339,7 @@ public static class PolygonDrawing
     /// </param>
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool drawFastForOpaque = true)
     {
+        //TODO: Remove
         if (drawFastForOpaque && color.A >= 255)
         {
             poly.DrawLinesFast(lineThickness, color, LineCapType.CappedExtended, cornerPoints);
@@ -368,6 +374,7 @@ public static class PolygonDrawing
     /// </param>
     public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool drawFastForOpaque = true)
     {
+        //Todo: Remove
         if (drawFastForOpaque && lineInfo.Color.A >= 255)
         {
             poly.DrawLinesFast(lineInfo);
