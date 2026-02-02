@@ -742,6 +742,48 @@ public partial class Polygon
         if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return null;
 
         var roundedPolygon = new Polygon();
+
+        if (RoundCopy(ref roundedPolygon, cornerPoints, cornerStrength, collinearAngleThresholdDeg, distanceThreshold))
+        {
+            return roundedPolygon;
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Attempts to produce a rounded-corner copy of this polygon and write it into <paramref name="copy"/>.
+    /// </summary>
+    /// <param name="copy">
+    /// Reference to a <see cref="Polygon"/> that will be cleared and populated with the rounded polygon
+    /// when the operation succeeds.
+    /// </param>
+    /// <param name="cornerPoints">Number of points to use to approximate each rounded corner. Must be &gt; 0.</param>
+    /// <param name="cornerStrength">
+    /// Relative strength/size of the rounded corner. Expected range (0,1]. Larger values produce larger arcs.
+    /// Defaults to 0.5f.
+    /// </param>
+    /// <param name="collinearAngleThresholdDeg">
+    /// Angle threshold in degrees under which three consecutive vertices are considered collinear and left unchanged.
+    /// Defaults to 5f.
+    /// </param>
+    /// <param name="distanceThreshold">
+    /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is shorter than this value
+    /// the original vertex is preserved. Defaults to 1f.
+    /// </param>
+    /// <returns>
+    /// True if rounding was applied successfully and <paramref name="copy"/> contains the rounded polygon;
+    /// otherwise false for invalid parameters or when no modification was performed.
+    /// </returns>
+    /// <remarks>
+    /// This method is a non-mutating operation with respect to the source polygon (it writes results into
+    /// <paramref name="copy"/>). The method performs parameter validation and will clear <paramref name="copy"/>
+    /// before populating it when processing occurs.
+    /// </remarks>
+    public bool RoundCopy(ref Polygon copy, int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
+    {
+        if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return false;
+
+        copy.Clear();
         
         for (var i = 0; i < Count; i++)
         {
@@ -757,13 +799,13 @@ public partial class Polygon
 
             if (prevEdgeLength < distanceThreshold || curEdgeLength < distanceThreshold)
             {
-                roundedPolygon.Add(p);
+                copy.Add(p);
                 continue;
             }
             
             if (ShapeVec.IsColinearAngle(prevP, p, nextP, collinearAngleThresholdDeg))
             {
-                roundedPolygon.Add(p);
+                copy.Add(p);
                 continue;
             }
 
@@ -794,7 +836,7 @@ public partial class Polygon
 
             if (cornerPoints == 1)
             {
-                roundedPolygon.Add(p + (v1 + v2) * t);
+                copy.Add(p + (v1 + v2) * t);
             }
             else
             {
@@ -802,12 +844,12 @@ public partial class Polygon
                 {
                     float frac = j / (float)(cornerPoints - 1);
                     float currentAngle = startAngle + angleDiff * frac;
-                    roundedPolygon.Add(center + new Vector2(MathF.Cos(currentAngle), MathF.Sin(currentAngle)) * cornerRadius);
+                    copy.Add(center + new Vector2(MathF.Cos(currentAngle), MathF.Sin(currentAngle)) * cornerRadius);
                 }
             }
         }
 
-        return roundedPolygon;
+        return true;
     }
     
     /// <summary>
@@ -836,7 +878,7 @@ public partial class Polygon
     /// </returns>
     /// <remarks>
     /// This is a heuristic geometric approximation and may produce unexpected results on highly
-    /// concave or self-intersecting polygons. Use <see cref="RoundCopy"/> for a
+    /// concave or self-intersecting polygons. Use <see cref="RoundCopy(int, float, float, float)"/> for a
     /// non-mutating alternative.
     /// </remarks>
     public bool Round(int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
