@@ -1069,4 +1069,262 @@ public static class ShapeClipper
     }
     
     #endregion
+    
+    #region Class Conversion Ref
+
+    public static int ToPolygon(this PathD path, ref Polygon polygon)
+    {
+        var count = 0;
+        foreach (var point in path)
+        {
+            polygon.Add(point.ToVec2());
+            count++;
+        }
+        return count;
+    }
+    
+    public static int ToPolygons(this PathsD paths, ref Polygons polygons, bool removeHoles = false)
+    {
+        var count = 0;
+
+        for (var i = 0; i < paths.Count; i++)
+        {
+            var path = paths[i];
+            if (removeHoles & path.IsHole()) continue;
+
+            if (polygons.Count > i)
+            {
+                var poly = polygons[i];
+                poly.Clear();
+                int verticesAdded = path.ToPolygon(ref poly);
+                polygons.Add(poly);
+                count += verticesAdded;
+            }
+            else
+            {
+                var poly = path.ToPolygon();
+                polygons.Add(poly);
+                count+= poly.Count;
+            }
+        }
+        return count;
+    }
+    
+    public static int ToClipperPath(this Polygon poly, ref PathD path)
+    {
+        var count = 0;
+        foreach (var vertex in poly)
+        {
+            path.Add(vertex.ToClipperPoint());
+            count++;
+        }
+        return count;
+    }
+
+    public static int ToClipperPath(this Segment segment, ref PathD path)
+    {
+        path.Add(segment.Start.ToClipperPoint());
+        path.Add(segment.End.ToClipperPoint());
+        return 2;
+    }
+
+    public static int ToClipperPaths(this Segment segment, ref PathsD paths)
+    {
+        if (paths.Count <= 0)
+        {
+            paths.Add(segment.ToClipperPath());
+            return 2;
+        }
+        
+        var path = paths[0];
+        path.Clear();
+        return segment.ToClipperPath(ref path);
+    }
+
+    public static int ToClipperPaths(this Polygon poly, ref PathsD paths)
+    {
+        if (paths.Count <= 0)
+        {
+            var newPath = new PathD();
+            int count = poly.ToClipperPath(ref newPath);
+            paths.Add(newPath);
+            return count;
+        }
+        var path = paths[0];
+        path.Clear();
+        return poly.ToClipperPath(ref path);
+    }
+
+    public static int ToClipperPaths(ref PathsD paths, params Polygon[] polygons)
+    {
+        var count = 0;
+        
+        for (int i = 0; i < polygons.Length; i++)
+        {
+            var poly = polygons[i];
+            
+            if (paths.Count > i)
+            {
+                var path = paths[i];
+                path.Clear();
+                int verticesAdded = poly.ToClipperPath(ref path);
+                count += verticesAdded;
+            }
+            else
+            {
+                var newPath = new PathD();
+                int verticesAdded = poly.ToClipperPath(ref newPath);
+                paths.Add(newPath);
+                count += verticesAdded;
+            }
+        }
+
+        return count;
+    }
+    
+    public static int ToClipperPaths(this IEnumerable<Polygon> polygons, ref PathsD paths)
+    {
+        var count = 0;
+        var i = 0;
+        foreach (var poly in polygons)
+        {
+            if (paths.Count > i)
+            {
+                var path = paths[i];
+                path.Clear();
+                int verticesAdded = poly.ToClipperPath(ref path);
+                count += verticesAdded;
+            }
+            else
+            {
+                var newPath = new PathD();
+                int verticesAdded = poly.ToClipperPath(ref newPath);
+                paths.Add(newPath);
+                count += verticesAdded;
+            }
+
+            i++;
+        }
+
+        return count;
+    }
+    
+    public static int ToPolyline(this PathD path, ref Polyline polyline)
+    {
+        var count = 0;
+        foreach (var point in path)
+        {
+            polyline.Add(point.ToVec2());
+            count++;
+        }
+        return count;
+    }
+
+    public static int ToPolylines(this PathsD paths, ref Polylines polylines, bool removeHoles = false)
+    {
+        var count = 0;
+
+        for (var i = 0; i < paths.Count; i++)
+        {
+            var path = paths[i];
+            if (removeHoles & path.IsHole()) continue;
+
+            if (polylines.Count > i)
+            {
+                var poly = polylines[i];
+                poly.Clear();
+                int verticesAdded = path.ToPolyline(ref poly);
+                polylines.Add(poly);
+                count += verticesAdded;
+            }
+            else
+            {
+                var poly = path.ToPolyline();
+                polylines.Add(poly);
+                count+= poly.Count;
+            }
+        }
+        return count;
+    }
+    
+    public static int ToClipperPath(this Polyline polyline, ref PathD path)
+    {
+        var count = 0;
+        foreach (var vertex in polyline)
+        {
+            path.Add(vertex.ToClipperPoint());
+            count++;
+        }
+        return count;
+    }
+
+    public static int ToClipperPaths(this Polyline polyline, ref PathsD paths)
+    {
+        if (paths.Count <= 0)
+        {
+            var newPath = new PathD();
+            int count = polyline.ToClipperPath(ref newPath);
+            paths.Add(newPath);
+            return count;
+        }
+        var path = paths[0];
+        path.Clear();
+        return polyline.ToClipperPath(ref path);
+    }
+
+    public static int ToClipperPaths(ref PathsD paths, params Polyline[] polylines)
+    { 
+        var count = 0;
+        
+        for (int i = 0; i < polylines.Length; i++)
+        {
+            var poly = polylines[i];
+            
+            if (paths.Count > i)
+            {
+                var path = paths[i];
+                path.Clear();
+                int verticesAdded = poly.ToClipperPath(ref path);
+                count += verticesAdded;
+            }
+            else
+            {
+                var newPath = new PathD();
+                int verticesAdded = poly.ToClipperPath(ref newPath);
+                paths.Add(newPath);
+                count += verticesAdded;
+            }
+        }
+
+        return count;
+    }
+    
+    public static int ToClipperPaths(this IEnumerable<Polyline> polylines, ref PathsD paths)
+    {
+        var count = 0;
+        var i = 0;
+        foreach (var poly in polylines)
+        {
+            if (paths.Count > i)
+            {
+                var path = paths[i];
+                path.Clear();
+                int verticesAdded = poly.ToClipperPath(ref path);
+                count += verticesAdded;
+            }
+            else
+            {
+                var newPath = new PathD();
+                int verticesAdded = poly.ToClipperPath(ref newPath);
+                paths.Add(newPath);
+                count += verticesAdded;
+            }
+
+            i++;
+        }
+
+        return count;
+    }
+    
+    #endregion
 }
