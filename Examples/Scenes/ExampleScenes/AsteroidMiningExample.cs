@@ -81,10 +81,13 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void DrawGame(ScreenInfo game)
         {
-            //SDrawing.DrawCircleFast(pos, 4f, RED);
-            var c = this.color.ColorRgba.ChangeAlpha((byte)(255 * lifetimeF));
-            //color = this.color;
-            shape.DrawLines(2f * lifetimeF, c);
+            var alpha = (int)(400 * lifetimeF);
+            if(alpha > 255) alpha = 255;
+            var c = color.ColorRgba.SetAlpha((byte)alpha);
+            
+            // shape.DrawLines(2f * lifetimeF, c);
+            
+            shape.Draw(c);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)
