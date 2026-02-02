@@ -226,7 +226,7 @@ namespace Examples.Scenes.ExampleScenes
                 inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
                 foreach (var polygon in inflatedPolygons)
                 {
-                    polygon.DrawLinesFast(relativeSize, Colors.Special);
+                    polygon.DrawLines(relativeSize, Colors.Special);
                 }
             }
 
