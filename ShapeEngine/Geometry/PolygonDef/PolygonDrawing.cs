@@ -8,6 +8,7 @@ using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolygonDef;
@@ -22,6 +23,11 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public static class PolygonDrawing
 {
+    #region Helper Members
+    private static Triangulation drawHelperTriangulation = [];
+    private static Polygon drawRoundedHelperPolygon = [];
+    #endregion
+    
     #region Draw Masked
     /// <summary>
     /// Draws the polygon's edges while applying a triangular mask to each segment.
@@ -190,12 +196,14 @@ public static class PolygonDrawing
     /// </summary>
     /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored; triangles are drawn directly.</param>
     /// <param name="color">Fill color used when rendering the polygon.</param>
+    /// <param name="multiThreaded">If true, the method avoids shared helper collections and uses local allocations (calls that return new triangulations).
+    /// This makes the call safe for concurrent threads but increases temporary allocations and CPU work.</param>
     /// <remarks>
     /// Caution:This method will triangulate the polygon each call when the polygon contains more than 3 points,
     /// which can be performance-intensive for complex polygons.
     /// Precompute triangulation for best performance and then transform/draw the triangulation as needed.
     /// </remarks>
-    public static void Draw(this Polygon poly, ColorRgba color)
+    public static void Draw(this Polygon poly, ColorRgba color, bool multiThreaded = false)
     {
         if (poly.Count < 3) return;
         if (poly.Count == 3)
@@ -203,9 +211,18 @@ public static class PolygonDrawing
             TriangleDrawing.DrawTriangle(poly[0], poly[1], poly[2], color);
             return;
         }
-        poly.Triangulate().Draw(color);
+
+        if (multiThreaded)
+        {
+            poly.Triangulate().Draw(color);
+        }
+        else
+        {
+            drawHelperTriangulation.Clear();
+            poly.Triangulate(ref drawHelperTriangulation);
+            drawHelperTriangulation.Draw(color);
+        }
     }
-    
     #endregion
 
     #region Draw Rounded
@@ -222,12 +239,14 @@ public static class PolygonDrawing
     /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is shorter
     /// than this threshold the original vertex is preserved. Defaults to 1.0f.
     /// </param>
+    /// <param name="multiThreaded">If true, the method avoids shared helper collections and uses local allocations (calls that return new triangulations).
+    /// This makes the call safe for concurrent threads but increases temporary allocations and CPU work.</param>
     /// <remarks>
     /// This method generates a new rounded polygon on each call which can be performance- and memory-intensive for complex polygons
-    /// or high corner point counts. For best performance, precompute the rounded polygon and triangulation. Use <see cref="Polygon.RoundCopy"/> to create the rounded polygon,
+    /// or high corner point counts. For best performance, precompute the rounded polygon and triangulation. Use <see cref="Polygon.RoundCopy(int, float, float, float)"/> to create the rounded polygon,
     /// and <see cref="Polygon.Triangulate()"/> to create the triangulation. Then translate/rotate/scale/draw the triangulation as needed.
     /// </remarks>
-    public static void DrawRounded(this Polygon poly, ColorRgba color, int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f)
+    public static void DrawRounded(this Polygon poly, ColorRgba color, int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f, float distanceThreshold = 1f, bool multiThreaded = false)
     {
         if (poly.Count < 3) return;
         if (poly.Count == 3)
@@ -245,18 +264,38 @@ public static class PolygonDrawing
 
         if (cornerPoints <= 0)
         {
-            poly.Triangulate().Draw(color);
+            if (multiThreaded)
+            {
+                poly.Triangulate().Draw(color);
+            }
+            else
+            {
+                drawHelperTriangulation.Clear();
+                poly.Triangulate(ref drawHelperTriangulation);
+                drawHelperTriangulation.Draw(color);
+            }
             return;
         }
 
-        var roundedPoly = poly.RoundCopy(cornerPoints, cornerStrength, collinearAngleThresholdDeg, distanceThreshold);
-        roundedPoly?.Triangulate().Draw(color);
+        if (multiThreaded)
+        {
+            var success = poly.RoundCopy(ref drawRoundedHelperPolygon, cornerPoints, cornerStrength, collinearAngleThresholdDeg, distanceThreshold);
+            if (!success) return;
+        
+            drawHelperTriangulation.Clear();
+            drawRoundedHelperPolygon.Triangulate(ref drawHelperTriangulation);
+            drawHelperTriangulation.Draw(color);
+        }
+        else
+        {
+            var roundedPoly = poly.RoundCopy(cornerPoints, cornerStrength, collinearAngleThresholdDeg, distanceThreshold);
+            roundedPoly?.Triangulate().Draw(color);
+        }
     }
     
     #endregion
     
-    //TODO: Rename to DrawLines
-    #region Draw Lines Fast
+    #region Draw Lines
     
     /// <summary>
     /// Draws each edge of the polygon using a fast segment renderer.
@@ -268,7 +307,7 @@ public static class PolygonDrawing
     /// <param name="color">Color used to draw the lines. Alpha channel will be set to 255 internally.</param>
     /// <param name="capType">Specifies the style of the line caps (start/end).</param>
     /// <param name="capPoints">Number of points used to tessellate the caps.</param>
-    public static void DrawLinesFast(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3) return;
 
@@ -289,7 +328,7 @@ public static class PolygonDrawing
     /// </summary>
     /// <param name="poly">The polygon whose edges will be drawn. Polygons with fewer than 3 points are ignored.</param>
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.). Alpha will be forced to 255 internally because this renderer does not support transparency.</param>
-    public static void DrawLinesFast(this Polygon poly, LineDrawingInfo lineInfo)
+    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo)
     {
         if (poly.Count < 3) return;
         
@@ -305,16 +344,11 @@ public static class PolygonDrawing
     }
     #endregion
     
-    //TODO:
-    // - Rename to DrawLinesTransparent
-    // - Remove the drawFastForOpaque parameter
-    // - Update docs!
-    #region Draw Lines
+    #region Draw Lines Transparent
     
     /// <summary>
     /// Draws the polygon outline with configurable thickness and corner style.
     /// <list type="bullet">
-    /// <item>If <paramref name="drawFastForOpaque"/> is true and the color is fully opaque (alpha = 255) <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> is used instead.</item>
     /// <item>This function uses two complex functions (inflate, triangulate) to generate the outline (every call) for any type of polygon, which comes with performance costs and memory allocations downsides.</item>
     /// <item>Use <see cref="Polygon.GenerateOutlineTriangulation(float, int, float, bool, bool)"/> to generate the outline triangulation once and then translate/rotate/scale the triangulation as needed and draw it instead.</item>
     /// </list>
@@ -333,25 +367,14 @@ public static class PolygonDrawing
     /// This property sets the maximum distance in multiples of <paramref name="lineThickness"/> that vertices can be offset from their original positions before squaring is applied.
     /// Very acute angles can produce excessively long miters which may not be visually desirable. This limit helps control that.
     /// </param>
-    /// <param name="drawFastForOpaque">
-    /// When true (default) and the supplied color is fully opaque (alpha == 255),
-    /// the method will use the optimized, non‑transparent renderer <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> for better performance.
-    /// </param>
-    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool drawFastForOpaque = true)
+    public static void DrawLinesTransparent(this Polygon poly, float lineThickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f)
     {
-        //TODO: Remove
-        if (drawFastForOpaque && color.A >= 255)
-        {
-            poly.DrawLinesFast(lineThickness, color, LineCapType.CappedExtended, cornerPoints);
-            return;
-        }
         DrawLinesHelper(poly, lineThickness, color, cornerPoints, miterLimit, true);
     }
     
     /// <summary>
     /// Draws the polygon outline with configurable LineDrawingInfo and miterLimit.
     /// <list type="bullet">
-    /// <item>If <paramref name="drawFastForOpaque"/> is true and the color is fully opaque (alpha = 255) <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> is used instead.</item>
     /// <item>This function uses two complex functions (inflate, triangulate) to generate the outline (every call) for any type of polygon, which comes with performance costs and memory allocations downsides.</item>
     /// <item>Use <see cref="Polygon.GenerateOutlineTriangulation(float, int, float, bool, bool)"/> to generate the outline triangulation once and then translate/rotate/scale the triangulation as needed and draw it instead.</item>
     /// </list>
@@ -368,56 +391,12 @@ public static class PolygonDrawing
     /// This property sets the maximum distance in multiples of <paramref name="lineInfo.Thickness"/> that vertices can be offset from their original positions before squaring is applied.
     /// Very acute angles can produce excessively long miters which may not be visually desirable. This limit helps control that.
     /// </param>
-    /// <param name="drawFastForOpaque">
-    /// When true (default) and the supplied color is fully opaque (alpha == 255),
-    /// the method will use the optimized, non‑transparent renderer <see cref="DrawLinesFast(Polygon, float, ColorRgba, LineCapType, int)"/> for better performance.
-    /// </param>
-    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool drawFastForOpaque = true)
+    public static void DrawLinesTransparent(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f)
     {
-        //Todo: Remove
-        if (drawFastForOpaque && lineInfo.Color.A >= 255)
-        {
-            poly.DrawLinesFast(lineInfo);
-            return;
-        }
         DrawLinesHelper(poly, lineInfo.Thickness, lineInfo.Color, lineInfo.CapPoints, miterLimit, true);
     }
     
     #endregion
-    
-    #region Draw Lines Glow
-    /// <summary>
-    /// Draws a stacked set of outlines around the polygon to create a glow/halo effect.
-    /// Each step interpolates width and color from the inner (width / color) to the outer (endWidth / endColorRgba) outline.
-    /// </summary>
-    /// <param name="polygon">The polygon to render the glow for. Nothing is drawn when the polygon has fewer than 3 points.</param>
-    /// <param name="width">Starting thickness for the innermost outline.</param>
-    /// <param name="endWidth">Ending thickness for the outermost outline.</param>
-    /// <param name="color">Starting color for the innermost outline.</param>
-    /// <param name="endColorRgba">Ending color for the outermost outline.</param>
-    /// <param name="steps">Number of interpolation steps. If &lt;= 0 no drawing occurs; if 1 a single outline is drawn using <paramref name="width"/> and <paramref name="color"/>.</param>
-    /// <param name="cornerPoints">Number of points used to tessellate rounded corners when drawing each outline. When &gt; 0 rounded joins are used.</param>
-    /// <param name="miterLimit">Miter limit passed to the line drawing routine to control mitered joins.</param>
-    public static void DrawLinesGlow(this Polygon polygon, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, int cornerPoints = 0, float miterLimit = 2f)
-    {
-        if (polygon.Count < 3 || steps <= 0) return;
-
-        if (steps == 1)
-        {
-            polygon.DrawLines(width, color, cornerPoints);
-            return;
-        }
-    
-        for (var s = 0; s < steps; s++)
-        {
-            float f = s / (float)(steps - 1);
-            float currentWidth = ShapeMath.LerpFloat(width, endWidth, f);
-            var currentColor = color.Lerp(endColorRgba, f);
-            polygon.DrawLines(currentWidth, currentColor, cornerPoints, miterLimit);
-        }
-    }
-    #endregion
-    
     
     
     #region Draw Lines Perimeter & Percentage
@@ -687,9 +666,6 @@ public static class PolygonDrawing
         
     }
     #endregion
-
-
-    
     
     #region Helper
     private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false)

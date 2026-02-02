@@ -16,7 +16,7 @@ namespace ShapeEngine.Geometry.TriangleDef;
 /// Provides static methods for drawing triangles and collections of triangles with various styles and options.
 /// </summary>
 /// <remarks>
-/// This class contains extension methods for drawing <see cref="Triangle"/> and <see cref="Triangulation"/> objects,
+/// This class contains extension methods for drawing <see cref="Triangle"/> objects,
 /// as well as static methods for drawing triangles using raw vertex data. Supports filled, outlined, partial, and scaled outlines.
 /// </remarks>
 public static class TriangleDrawing
@@ -142,15 +142,7 @@ public static class TriangleDrawing
         Raylib.DrawTriangle(t.A, t.B, t.C, color.ToRayColor());
     }
 
-    /// <summary>
-    /// Draws a collection of triangles filled with the specified color.
-    /// </summary>
-    /// <param name="triangles">The collection of triangles to draw.</param>
-    /// <param name="color">The color to fill each triangle with.</param>
-    public static void Draw(this Triangulation triangles, ColorRgba color)
-    {
-        foreach (var t in triangles) t.Draw(color);
-    }
+
     
    
     #endregion
@@ -194,26 +186,7 @@ public static class TriangleDrawing
     {
         DrawTriangleRoundedHelper(t.A, t.B, t.C, color, cornerPoints, cornerStrength);
     }
-    /// <summary>
-    /// Draws all triangles in the given <see cref="Triangulation"/> using rounded outer corners.
-    /// This is a convenience extension that iterates the collection and draws each triangle
-    /// using the same rounding parameters.
-    /// </summary>
-    /// <param name="triangles">The collection of triangles to draw.</param>
-    /// <param name="color">The fill color applied to each rounded triangle.</param>
-    /// <param name="cornerPoints">
-    /// Number of extra points used to approximate each rounded corner.
-    /// 0 = sharp corners (no rounding). Higher values produce smoother rounded corners. Default: 5.
-    /// </param>
-    /// <param name="cornerStrength">
-    /// Controls the strength (radius) of the corner rounding:
-    /// 0 = maximum roundness, 1 = no roundness (sharp corners).
-    /// Values between 0 and 1 interpolate between fully rounded and sharp corners. Default: 0.5.
-    /// </param>
-    public static void DrawRounded(this Triangulation triangles, ColorRgba color, int cornerPoints = 5, float cornerStrength = 0.5f)
-    {
-        foreach (var t in triangles) t.DrawRounded(color, cornerPoints, cornerStrength);
-    }
+
     
     #endregion
     
@@ -321,31 +294,7 @@ public static class TriangleDrawing
     }
     #endregion
 
-    #region Draw Triangles
 
-    /// <summary>
-    /// Draws the outlines of a collection of triangles with specified line thickness and style.
-    /// </summary>
-    /// <param name="triangles">The collection of triangles to draw.</param>
-    /// <param name="lineThickness">The thickness of the outlines.</param>
-    /// <param name="color">The color of the outlines.</param>
-    /// <param name="cornerPoints"> How many extra points should be used for the outside edges of the outline.</param>
-    public static void DrawLines(this Triangulation triangles, float lineThickness, ColorRgba color, int cornerPoints = 0)
-    {
-        foreach (var t in triangles) t.DrawLines(lineThickness, color, cornerPoints);
-    }
-
-    /// <summary>
-    /// Draws the outlines of a collection of triangles using a <see cref="LineDrawingInfo"/> object for style.
-    /// </summary>
-    /// <param name="triangles">The collection of triangles to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawLines(this Triangulation triangles, LineDrawingInfo lineInfo)
-    {
-        foreach (var t in triangles) t.DrawLines(lineInfo);
-    }
-    
-    #endregion
     
     #region Draw Vertices
     /// <summary>
@@ -581,6 +530,9 @@ public static class TriangleDrawing
         SegmentDrawing.DrawSegment(t.C, t.A, lineInfo, sideScaleFactor, sideScaleOrigin);
     }
     #endregion
+    
+    
+    //NOTE: After finishing check triangulation drawing as well (for extra parameters to add, etc.)
     
     #region Helper
 
