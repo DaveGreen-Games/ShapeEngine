@@ -28,6 +28,26 @@ public static class PolygonDrawing
     private static Polygon drawRoundedHelperPolygon = [];
     #endregion
     
+    #region Draw Vertices
+    /// <summary>
+    /// Draws a circle at each vertex of the polygon.
+    /// </summary>
+    /// <param name="poly">The polygon whose vertices to draw.</param>
+    /// <param name="vertexRadius">The radius of each vertex circle.</param>
+    /// <param name="color">The color of the vertex circles.</param>
+    /// <param name="circleSegments">The number of segments for each circle.</param>
+    /// <remarks>
+    /// Useful for debugging or highlighting polygon vertices.
+    /// </remarks>
+    public static void DrawVertices(this Polygon poly, float vertexRadius, ColorRgba color, int circleSegments)
+    {
+        foreach (var p in poly)
+        {
+            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
+        }
+    }
+    #endregion
+    
     #region Draw Masked
     /// <summary>
     /// Draws the polygon's edges while applying a triangular mask to each segment.
@@ -295,6 +315,9 @@ public static class PolygonDrawing
     
     #endregion
     
+    
+    
+    //TODO: use ShapeDrawing functions here and turn these functions into wrappers
     #region Draw Lines
     
     /// <summary>
@@ -344,6 +367,8 @@ public static class PolygonDrawing
     }
     #endregion
     
+    
+    //TODO: Move to ShapeDrawing and add wrappers here
     #region Draw Lines Transparent
     
     /// <summary>
@@ -400,11 +425,6 @@ public static class PolygonDrawing
     
     
     #region Draw Lines Perimeter & Percentage
-    //!!!: Keep the existing functions and call the fast (no transparency) for now - make performance tests later
-    //NOTE: This is essentially a polyline
-    // - Still needs full line drawing info for end caps
-    //TODO: Add a function that returns last vertex index and interpolated point
-    // - Have 1 DrawLinesPerimeter function that calls an internal polyline helper function that will use the new function to get last vertex index and interpolated point
     
     /// <summary>
     /// Draws a certain amount of the polygon's perimeter as an outline.
@@ -415,15 +435,17 @@ public static class PolygonDrawing
     /// </param>
     /// <param name="startIndex">The index of the vertex at which to start drawing.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
+    /// <param name="color">The color of the outline. Only fully opaque colors are supported. Alpha is set 255.</param>
     /// <param name="capType">The type of line cap to use.</param>
     /// <param name="capPoints">The number of points for the cap.</param>
     /// <remarks>
     /// Useful for animating outlines or drawing partial polygons.
+    /// Use <see cref="Polygon.GenerateOutlinePerimeterTriangulation"/> to create a triangulation that can be draw with transparent colors.
     /// </remarks>
     public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        ShapeDrawing.DrawOutlinePerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, capType, capPoints);
+        color = color.SetAlpha(255);
+        poly.DrawOutlinePerimeter(perimeterToDraw, startIndex, lineThickness, color, capType, capPoints);
     }
     
     /// <summary>
@@ -441,15 +463,17 @@ public static class PolygonDrawing
     /// </list>
     /// </param>
     /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
+    /// <param name="color">The color of the outline. Only fully opaque colors a supported. Sets alpha to 255. </param>
     /// <param name="capType">The type of line cap to use.</param>
     /// <param name="capPoints">The number of points for the cap.</param>
     /// <remarks>
     /// Useful for progress indicators or animated outlines.
+    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation"/> to create a triangulation that can be draw with transparent colors.
     /// </remarks>
     public static void DrawLinesPercentage(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        ShapeDrawing.DrawOutlinePercentage(poly, f, lineThickness, color, capType, capPoints);
+        color = color.SetAlpha(255);
+        poly.DrawOutlinePercentage(f, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -466,14 +490,25 @@ public static class PolygonDrawing
     /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
     /// </list>
     /// </param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).
+    /// Only fully opaque colors are supported. Alpha is set to 255 internally.
+    /// </param>
+    /// <remarks>
+    /// Useful for progress indicators or animated outlines.
+    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation"/> to create a triangulation that can be draw with transparent colors.
+    /// </remarks>
     public static void DrawLinesPercentage(this Polygon poly, float f, LineDrawingInfo lineInfo)
     {
-        ShapeDrawing.DrawOutlinePercentage(poly, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        lineInfo = lineInfo.ChangeColor(lineInfo.Color.SetAlpha(255));
+        poly.DrawOutlinePercentage(f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
+    
     #endregion
     
+    
     #region Draw Cornered
+    //TODO: Call ShapeDrawing functions here and implement transparent version in ShapeDrawing + a wrapper here
+    
     //TODO: Use this version and call it fast (supports no transparency)
     //TODO: Make new version that supports transparency
     
@@ -581,7 +616,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, float cornerLength)
     {
-        DrawCornered(poly, lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
+        poly.DrawCornered(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
     }
 
     /// <summary>
@@ -595,33 +630,13 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerLengths)
     {
-        DrawCornered(poly, lineInfo.Thickness, lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+        poly.DrawCornered(lineInfo.Thickness, lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
     }
 
     #endregion
-
     
     
-    #region Draw Vertices
-    /// <summary>
-    /// Draws a circle at each vertex of the polygon.
-    /// </summary>
-    /// <param name="poly">The polygon whose vertices to draw.</param>
-    /// <param name="vertexRadius">The radius of each vertex circle.</param>
-    /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="circleSegments">The number of segments for each circle.</param>
-    /// <remarks>
-    /// Useful for debugging or highlighting polygon vertices.
-    /// </remarks>
-    public static void DrawVertices(this Polygon poly, float vertexRadius, ColorRgba color, int circleSegments)
-    {
-        foreach (var p in poly)
-        {
-            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
-        }
-    }
-    #endregion
-    
+    //TODO: Use ShapeDrawing functions here and turn this to a wrapper
     #region Draw Lines Scaled
     /// <summary>
     /// Draws a polygon where each side can be scaled towards the origin of the side.
@@ -666,6 +681,9 @@ public static class PolygonDrawing
         
     }
     #endregion
+    
+    
+    
     
     #region Helper
     private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false)
