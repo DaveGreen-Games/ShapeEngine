@@ -15,6 +15,7 @@ namespace ShapeEngine.Geometry;
 /// </remarks>
 public static class ShapeDrawing
 {
+    #region Draw Outline
     /// <summary>
     /// Draws the outline of a polygon with a color gradient between the start and end colors.
     /// </summary>
@@ -149,8 +150,10 @@ public static class ShapeDrawing
     /// <param name="size">The scale factor for the polygon.</param>
     /// <param name="rotDeg">The rotation in degrees.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawOutline(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo) 
-        => DrawOutline(relativePoints, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawOutline(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo)
+    {
+        DrawOutline(relativePoints, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
 
     /// <summary>
     /// Draws the outline of a polygon using a <see cref="LineDrawingInfo"/> and a <see cref="Transform2D"/>.
@@ -158,9 +161,15 @@ public static class ShapeDrawing
     /// <param name="relativePoints">The list of relative points defining the polygon.</param>
     /// <param name="transform">The transformation to apply (position, scale, rotation).</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawOutline(this List<Vector2> relativePoints, Transform2D transform, LineDrawingInfo lineInfo) 
-        => DrawOutline(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawOutline(this List<Vector2> relativePoints, Transform2D transform, LineDrawingInfo lineInfo)
+    {
+        DrawOutline(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color,
+            lineInfo.CapType, lineInfo.CapPoints);
+    }
 
+    #endregion
+    
+    #region Draw Outline Perimeter & Percentage
     /// <summary>
     /// Draws a specified amount of the polygon's perimeter as an outline.
     /// </summary>
@@ -264,7 +273,9 @@ public static class ShapeDrawing
 
         DrawOutlinePerimeter(shapePoints, perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
     }
-
+    #endregion
+    
+    #region Draw Lines Scaled
     /// <summary>
     /// Draws the polygon as a series of lines, scaling each side towards its origin by a specified factor.
     /// </summary>
@@ -367,7 +378,9 @@ public static class ShapeDrawing
         DrawLinesScaled(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo, sideScaleFactor, sideScaleOrigin);
 
     }
-
+    #endregion
+    
+    #region Draw Outline Cornered
     /// <summary>
     /// Draws cornered outlines for a polygon, using absolute corner lengths.
     /// </summary>
@@ -393,7 +406,94 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
+    
+    /// <summary>
+    /// Draws cornered outlines for a polygon using absolute corner lengths and <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <param name="cornerLengths">A list of lengths for each corner.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
+    public static void DrawOutlineCornered(this List<Vector2> points, List<float> cornerLengths, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            float cornerLength = cornerLengths[i%cornerLengths.Count];
+            var prev = points[(i - 1) % points.Count];
+            var cur = points[i];
+            var next = points[(i + 1) % points.Count];
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+        }
+    }
+    
+    /// <summary>
+    /// Draws cornered outlines for a polygon, using a uniform corner length.
+    /// </summary>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="cornerLength">The length for each corner.</param>
+    /// <param name="capType">The type of line cap to use at the ends of each segment.</param>
+    /// <param name="capPoints">The number of points used for the cap.</param>
+    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
+    public static void DrawOutlineCornered(this List<Vector2> points, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            var prev = points[(i-1)%points.Count];
+            var cur = points[i];
+            var next = points[(i+1)%points.Count];
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+        }
+    }
+    
+    /// <summary>
+    /// Draws cornered outlines for a polygon, using a uniform corner length and <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <param name="cornerLength">The length for each corner.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
+    public static void DrawOutlineCornered(this List<Vector2> points, float cornerLength, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            var prev = points[(i-1)%points.Count];
+            var cur = points[i];
+            var next = points[(i+1)%points.Count];
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+        }
+    }
+    
+    /// <summary>
+    /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a uniform corner length.
+    /// </summary>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="cornerLength">The length for each corner.</param>
+    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
+    public static void DrawOutlineCornered(this List<Vector2> points, LineDrawingInfo lineInfo, float cornerLength)
+    {
+        DrawOutlineCornered(points, lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
+    }
 
+    /// <summary>
+    /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a list of corner lengths.
+    /// </summary>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="cornerLengths">A list of lengths for each corner.</param>
+    public static void DrawOutlineCornered(this List<Vector2> points, LineDrawingInfo lineInfo, List<float> cornerLengths)
+    {
+        DrawOutlineCornered(points, lineInfo.Thickness, lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    
+    #endregion
+    
+    #region Draw Outline Cornered Relative
     /// <summary>
     /// Draws cornered outlines for a polygon, using relative corner factors.
     /// </summary>
@@ -425,27 +525,6 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
-
-    /// <summary>
-    /// Draws cornered outlines for a polygon using absolute corner lengths and <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="points">The list of points defining the polygon.</param>
-    /// <param name="cornerLengths">A list of lengths for each corner.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
-    public static void DrawOutlineCornered(this List<Vector2> points, List<float> cornerLengths, LineDrawingInfo lineInfo)
-    {
-        for (var i = 0; i < points.Count; i++)
-        {
-            float cornerLength = cornerLengths[i%cornerLengths.Count];
-            var prev = points[(i - 1) % points.Count];
-            var cur = points[i];
-            var next = points[(i + 1) % points.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
-        }
-    }
-
     /// <summary>
     /// Draws cornered outlines for a polygon using relative corner factors and <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -471,29 +550,6 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
-
-    /// <summary>
-    /// Draws cornered outlines for a polygon, using a uniform corner length.
-    /// </summary>
-    /// <param name="points">The list of points defining the polygon.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="cornerLength">The length for each corner.</param>
-    /// <param name="capType">The type of line cap to use at the ends of each segment.</param>
-    /// <param name="capPoints">The number of points used for the cap.</param>
-    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
-    public static void DrawOutlineCornered(this List<Vector2> points, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        for (var i = 0; i < points.Count; i++)
-        {
-            var prev = points[(i-1)%points.Count];
-            var cur = points[i];
-            var next = points[(i+1)%points.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-        }
-    }
-
     /// <summary>
     /// Draws cornered outlines for a polygon, using a uniform relative corner factor.
     /// </summary>
@@ -521,26 +577,6 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
-
-    /// <summary>
-    /// Draws cornered outlines for a polygon, using a uniform corner length and <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="points">The list of points defining the polygon.</param>
-    /// <param name="cornerLength">The length for each corner.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
-    public static void DrawOutlineCornered(this List<Vector2> points, float cornerLength, LineDrawingInfo lineInfo)
-    {
-        for (var i = 0; i < points.Count; i++)
-        {
-            var prev = points[(i-1)%points.Count];
-            var cur = points[i];
-            var next = points[(i+1)%points.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
-        }
-    }
-
     /// <summary>
     /// Draws cornered outlines for a polygon, using a uniform relative corner factor and <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -565,26 +601,6 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
-
-    /// <summary>
-    /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a uniform corner length.
-    /// </summary>
-    /// <param name="points">The list of points defining the polygon.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="cornerLength">The length for each corner.</param>
-    /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
-    public static void DrawOutlineCornered(this List<Vector2> points, LineDrawingInfo lineInfo, float cornerLength) 
-        => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
-
-    /// <summary>
-    /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a list of corner lengths.
-    /// </summary>
-    /// <param name="points">The list of points defining the polygon.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="cornerLengths">A list of lengths for each corner.</param>
-    public static void DrawOutlineCornered(this List<Vector2> points, LineDrawingInfo lineInfo, List<float> cornerLengths) 
-        => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
-
     /// <summary>
     /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a uniform relative corner factor.
     /// </summary>
@@ -598,9 +614,10 @@ public static class ShapeDrawing
     /// </list>
     /// </param>
     /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
-    public static void DrawOutlineCorneredRelative(this List<Vector2> points, LineDrawingInfo lineInfo, float cornerF) 
-        => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerF, lineInfo.CapType, lineInfo.CapPoints);
-
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, LineDrawingInfo lineInfo, float cornerF)
+    {
+        DrawOutlineCornered(points, lineInfo.Thickness, lineInfo.Color, cornerF, lineInfo.CapType, lineInfo.CapPoints);
+    }
     /// <summary>
     /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a list of relative corner factors.
     /// </summary>
@@ -614,9 +631,13 @@ public static class ShapeDrawing
     /// </list>
     /// </param>
     /// <remarks>A corner is drawn from the <c>previous point [i-1]</c> to the <c>current point [i]</c> to the <c>next point [i+1]</c></remarks>
-    public static void DrawOutlineCorneredRelative(this List<Vector2> points, LineDrawingInfo lineInfo, List<float> cornerFactors) 
-        => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerFactors, lineInfo.CapType, lineInfo.CapPoints);
-
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, LineDrawingInfo lineInfo, List<float> cornerFactors)
+    {
+        DrawOutlineCornered(points, lineInfo.Thickness, lineInfo.Color, cornerFactors, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    #endregion
+    
+    #region Draw Vertices
     /// <summary>
     /// Draws circles at each vertex of the polygon.
     /// </summary>
@@ -634,4 +655,5 @@ public static class ShapeDrawing
             CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
         }
     }
+    #endregion
 }
