@@ -99,74 +99,9 @@ public static class ShapeDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     public static void DrawOutline(this List<Vector2> shapePoints, LineDrawingInfo lineInfo)
     {
-        DrawOutline(shapePoints, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        shapePoints.DrawOutline(lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
-
-    /// <summary>
-    /// Draws the outline of a polygon transformed by position, size, and rotation.
-    /// </summary>
-    /// <param name="relativePoints">The list of relative points defining the polygon.</param>
-    /// <param name="pos">The position of the polygon's center.</param>
-    /// <param name="size">The scale factor for the polygon.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The type of line cap to use at the ends of each segment.</param>
-    /// <param name="capPoints">The number of points used for the cap.</param>
-    /// <remarks>
-    /// Each point is transformed by the specified position, size, and rotation before drawing.
-    /// </remarks>
-    public static void DrawOutline(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        if (relativePoints.Count < 3) return;
-
-        for (var i = 0; i < relativePoints.Count; i++)
-        {
-            var start = pos + (relativePoints[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            var end = pos + (relativePoints[(i + 1) % relativePoints.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
-        }
-    }
-
-    /// <summary>
-    /// Draws the outline of a polygon using a <see cref="Transform2D"/> for transformation.
-    /// </summary>
-    /// <param name="relativePoints">The list of relative points defining the polygon.</param>
-    /// <param name="transform">The transformation to apply (position, scale, rotation).</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The type of line cap to use at the ends of each segment.</param>
-    /// <param name="capPoints">The number of points used for the cap.</param>
-    public static void DrawOutline(this List<Vector2> relativePoints, Transform2D transform, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        DrawOutline(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineThickness, color, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws the outline of a polygon using a <see cref="LineDrawingInfo"/> and transformation parameters.
-    /// </summary>
-    /// <param name="relativePoints">The list of relative points defining the polygon.</param>
-    /// <param name="pos">The position of the polygon's center.</param>
-    /// <param name="size">The scale factor for the polygon.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawOutline(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo)
-    {
-        DrawOutline(relativePoints, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-
-    /// <summary>
-    /// Draws the outline of a polygon using a <see cref="LineDrawingInfo"/> and a <see cref="Transform2D"/>.
-    /// </summary>
-    /// <param name="relativePoints">The list of relative points defining the polygon.</param>
-    /// <param name="transform">The transformation to apply (position, scale, rotation).</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawOutline(this List<Vector2> relativePoints, Transform2D transform, LineDrawingInfo lineInfo)
-    {
-        DrawOutline(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color,
-            lineInfo.CapType, lineInfo.CapPoints);
-    }
-
+    
     #endregion
     
     #region Draw Outline Perimeter & Percentage
@@ -216,8 +151,6 @@ public static class ShapeDrawing
             }
 
         }
-
-
     }
 
     /// <summary>
@@ -258,7 +191,7 @@ public static class ShapeDrawing
         }
         if (percentage >= 1)
         {
-            DrawOutline(shapePoints, lineThickness, color, capType, capPoints);
+            shapePoints.DrawOutline(lineThickness, color, capType, capPoints);
             return;
         }
 
@@ -271,7 +204,7 @@ public static class ShapeDrawing
             perimeter += l;
         }
 
-        DrawOutlinePerimeter(shapePoints, perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
+        shapePoints.DrawOutlinePerimeter(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
     }
     #endregion
     
@@ -314,70 +247,7 @@ public static class ShapeDrawing
         }
 
     }
-
-    /// <summary>
-    /// Draws the polygon as a series of lines, scaling each side towards its origin by a specified factor, with transformation.
-    /// </summary>
-    /// <param name="relativePoints">The list of relative points defining the polygon.</param>
-    /// <param name="pos">The position of the polygon's center.</param>
-    /// <param name="size">The scale factor for the polygon.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="sideScaleFactor">
-    /// The scale factor for each side:
-    /// <list type="bullet">
-    /// <item><description>0: no polygon is drawn</description></item>
-    /// <item><description>1: the normal polygon is drawn</description></item>
-    /// <item><description>0.5: each side is half as long</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="sideScaleOrigin">
-    /// The point along the line to scale from, in both directions. 
-    /// Default is 0.5 (midpoint).
-    /// </param>
-    public static void DrawLinesScaled(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
-    {
-        if (relativePoints.Count < 3) return;
-        if (sideScaleFactor <= 0) return;
-
-        if (sideScaleFactor >= 1)
-        {
-            relativePoints.DrawOutline(pos, size, rotDeg, lineInfo);
-            return;
-        }
-
-        for (var i = 0; i < relativePoints.Count; i++)
-        {
-            var start = pos + (relativePoints[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            var end = pos + (relativePoints[(i + 1) % relativePoints.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
-        }
-
-    }
-
-    /// <summary>
-    /// Draws the polygon as a series of lines, scaling each side towards its origin by a specified factor, using a <see cref="Transform2D"/>.
-    /// </summary>
-    /// <param name="relativePoints">The list of relative points defining the polygon.</param>
-    /// <param name="transform">The transformation to apply (position, scale, rotation).</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="sideScaleFactor">
-    /// The scale factor for each side:
-    /// <list type="bullet">
-    /// <item><description>0: no polygon is drawn</description></item>
-    /// <item><description>1: the normal polygon is drawn</description></item>
-    /// <item><description>0.5: each side is half as long</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="sideScaleOrigin">
-    /// The point along the line to scale from, in both directions. 
-    /// Default is 0.5 (midpoint).
-    /// </param>
-    public static void DrawLinesScaled(this List<Vector2> relativePoints, Transform2D transform, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
-    {
-        DrawLinesScaled(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo, sideScaleFactor, sideScaleOrigin);
-
-    }
+    
     #endregion
     
     #region Draw Outline Cornered
@@ -525,6 +395,7 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
+    
     /// <summary>
     /// Draws cornered outlines for a polygon using relative corner factors and <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -550,6 +421,7 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
+    
     /// <summary>
     /// Draws cornered outlines for a polygon, using a uniform relative corner factor.
     /// </summary>
@@ -577,6 +449,7 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
+    
     /// <summary>
     /// Draws cornered outlines for a polygon, using a uniform relative corner factor and <see cref="LineDrawingInfo"/>.
     /// </summary>
@@ -601,6 +474,7 @@ public static class ShapeDrawing
             SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
+    
     /// <summary>
     /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a uniform relative corner factor.
     /// </summary>
@@ -618,6 +492,7 @@ public static class ShapeDrawing
     {
         DrawOutlineCornered(points, lineInfo.Thickness, lineInfo.Color, cornerF, lineInfo.CapType, lineInfo.CapPoints);
     }
+    
     /// <summary>
     /// Draws cornered outlines for a polygon using <see cref="LineDrawingInfo"/> and a list of relative corner factors.
     /// </summary>
