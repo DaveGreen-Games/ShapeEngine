@@ -1,6 +1,7 @@
 using System.Numerics;
-using ShapeEngine.Core;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.StaticLib;
@@ -370,5 +371,19 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return true;
     }
     #endregion
+    
+    /// <summary>
+    /// Draws a circle at each vertex in this collection using the provided radius, color and segment count.
+    /// </summary>
+    /// <param name="vertexRadius">Radius of the drawn circle for each vertex (in world units).</param>
+    /// <param name="color">Color of the vertex circles.</param>
+    /// <param name="circleSegments">Number of segments to approximate each circle; higher values produce smoother circles.</param>
+    public void DrawVertices(float vertexRadius, ColorRgba color, int circleSegments)
+    {
+        foreach (var p in this)
+        {
+            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
+        }
+    }
 }
 
