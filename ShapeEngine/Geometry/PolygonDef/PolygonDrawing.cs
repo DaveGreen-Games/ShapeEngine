@@ -438,7 +438,17 @@ public static class PolygonDrawing
     #endregion
     
     #region Draw Lines
-    public static void DrawOutline(this Polygon polygon, float lineThickness, ColorRgba color, float sideLengthFactor,  LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    /// <summary>
+    /// Draws each edge of the polygon using a fast segment renderer with an adjustable side length factor.
+    /// This renderer forces fully opaque colors (alpha is set to 255 internally) and ignores polygons with fewer than 3 points.
+    /// </summary>
+    /// <param name="polygon">The polygon whose edges will be drawn.</param>
+    /// <param name="lineThickness">Thickness of the line in world units.</param>
+    /// <param name="color">Color used to draw the lines. Alpha channel will be forced to 255 internally.</param>
+    /// <param name="sideLengthFactor">Scale factor applied to each side's length (0 = no line, 1 = full side length).</param>
+    /// <param name="capType">Specifies the style of the line caps (start/end).</param>
+    /// <param name="capPoints">Number of points used to tessellate the caps.</param>
+    public static void DrawLines(this Polygon polygon, float lineThickness, ColorRgba color, float sideLengthFactor,  LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (polygon.Count < 3) return;
         
@@ -452,7 +462,18 @@ public static class PolygonDrawing
             SegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
         }
     }
-    public static void DrawOutline(this Polygon polygon, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+   
+    /// <summary>
+    /// Draws each edge of the polygon using a fast segment renderer with a color gradient from <paramref name="startColorRgba"/> to <paramref name="endColorRgba"/>.
+    /// The colors are interpolated per edge across the polygon's perimeter. Polygons with fewer than 3 points are ignored.
+    /// </summary>
+    /// <param name="polygon">The polygon whose edges will be drawn.</param>
+    /// <param name="lineThickness">Thickness of the line in world units.</param>
+    /// <param name="startColorRgba">Color used for the first edge. The renderer forces the alpha channel to fully opaque (255).</param>
+    /// <param name="endColorRgba">Color used for the last edge. The renderer forces the alpha channel to fully opaque (255).</param>
+    /// <param name="capType">Specifies the style of the line caps (start/end).</param>
+    /// <param name="capPoints">Number of points used to tessellate the caps.</param>
+    public static void DrawLines(this Polygon polygon, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (polygon.Count < 3) return;
 
