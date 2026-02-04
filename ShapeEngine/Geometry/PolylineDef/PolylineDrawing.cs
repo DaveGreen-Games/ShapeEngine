@@ -515,24 +515,7 @@ public static class PolylineDrawing
     {
         DrawLinesScaled(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo, sideScaleFactor, sideScaleOrigin);
     }
-
-    /// <summary>
-    /// Draws circles at each vertex of the polyline.
-    /// </summary>
-    /// <param name="polyline">The polyline whose vertices to draw.</param>
-    /// <param name="vertexRadius">The radius of each vertex circle.</param>
-    /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="circleSegments">The number of segments to use for each circle.</param>
-    /// <remarks>
-    /// Useful for debugging or highlighting polyline vertices.
-    /// </remarks>
-    public static void DrawVertices(this Polyline polyline, float vertexRadius, ColorRgba color, int circleSegments)
-    {
-        foreach (var p in polyline)
-        {
-            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
-        }
-    }
+    
 
     /// <summary>
     /// Draws the polyline with a glow effect, interpolating width and color along each segment.
