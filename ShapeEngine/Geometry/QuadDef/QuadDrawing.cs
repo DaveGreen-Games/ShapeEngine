@@ -443,7 +443,7 @@ public static class QuadDrawing
     #endregion
     
     #region Draw Slanted Corners
-    
+    //TODO: All functions that use polygonHelper should be looked at (because they are not transparent version anymore because polygon drawing with transparent colors is way more complicated)
     public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float cornerLength)
     {
         DrawSlantedCorners(quad, color, cornerLength, cornerLength);
@@ -624,7 +624,7 @@ public static class QuadDrawing
             polygonHelper.Add(tl + nD * halfHeight);
             polygonHelper.Add(br + nL * halfWidth);
             polygonHelper.Add(br + nU * halfHeight);
-            polygonHelper.DrawLines(thickness, color, 0);
+            polygonHelper.DrawLines(thickness, color);
             return;
         }
         
@@ -663,7 +663,7 @@ public static class QuadDrawing
             polygonHelper.Add(tr + nL * cornerLengthHorizontal);
         }
 
-        polygonHelper.DrawLines(thickness, color, 0);
+        polygonHelper.DrawLines(thickness, color);
     }
     public static void DrawSlantedCornersLines(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {

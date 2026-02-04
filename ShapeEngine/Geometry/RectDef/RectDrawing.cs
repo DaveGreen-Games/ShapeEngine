@@ -592,6 +592,8 @@ public static class RectDrawing
     #endregion
 
     #region Draw Slanted Corners
+    //TODO: All functions that use polygonHelper should be looked at (because they are not transparent version anymore because polygon drawing with transparent colors is way more complicated)
+    
     
     /// <summary>
     /// Draws a filled rectangle with identical slanted corners on all four corners.
@@ -868,7 +870,7 @@ public static class RectDrawing
             polygonHelper.Add(tl + new Vector2(0f, halfHeight));
             polygonHelper.Add(br - new Vector2(halfWidth, 0f));
             polygonHelper.Add(br - new Vector2(0f, halfHeight));
-            polygonHelper.DrawLines(thickness, color,0);
+            polygonHelper.DrawLines(thickness, color);
             return;
         }
         
@@ -887,7 +889,7 @@ public static class RectDrawing
             polygonHelper.Add(bl + h);
             polygonHelper.Add(br - v);
             polygonHelper.Add(tr + v);
-            polygonHelper.DrawLines(thickness, color, 0);
+            polygonHelper.DrawLines(thickness, color);
             
             
         }
@@ -903,7 +905,7 @@ public static class RectDrawing
             polygonHelper.Add(br - h);
             polygonHelper.Add(tr + v);
             polygonHelper.Add(tr - h);
-            polygonHelper.DrawLines(thickness, color, 0);
+            polygonHelper.DrawLines(thickness, color);
             
         }
         else
@@ -920,7 +922,7 @@ public static class RectDrawing
             polygonHelper.Add(br - cornerVertical);
             polygonHelper.Add(tr + cornerVertical);
             polygonHelper.Add(tr - cornerHorizontal);
-            polygonHelper.DrawLines(thickness, color, 0);
+            polygonHelper.DrawLines(thickness, color);
            
         }
     }
