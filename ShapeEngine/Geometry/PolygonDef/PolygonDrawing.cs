@@ -28,26 +28,6 @@ public static class PolygonDrawing
     private static Polygon drawRoundedHelperPolygon = [];
     #endregion
     
-    #region Draw Vertices
-    /// <summary>
-    /// Draws a circle at each vertex of the polygon.
-    /// </summary>
-    /// <param name="poly">The polygon whose vertices to draw.</param>
-    /// <param name="vertexRadius">The radius of each vertex circle.</param>
-    /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="circleSegments">The number of segments for each circle.</param>
-    /// <remarks>
-    /// Useful for debugging or highlighting polygon vertices.
-    /// </remarks>
-    public static void DrawVertices(this Polygon poly, float vertexRadius, ColorRgba color, int circleSegments)
-    {
-        foreach (var p in poly)
-        {
-            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
-        }
-    }
-    #endregion
-    
     #region Draw Masked
     /// <summary>
     /// Draws the polygon's edges while applying a triangular mask to each segment.
@@ -315,10 +295,189 @@ public static class PolygonDrawing
     
     #endregion
     
+    #region Draw Lines Perimeter & Percentage
     
+    /// <summary>
+    /// Draws a certain amount of the polygon's perimeter as an outline.
+    /// This method is primarily optimized for performance and forces fully opaque colors
+    /// (alpha is set to 255 before drawing).
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="perimeterToDraw">
+    /// The length of the perimeter to draw. If negative, draws in clockwise direction.
+    /// </param>
+    /// <param name="startIndex">The index of the vertex at which to start drawing.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline. Only fully opaque colors are supported. Alpha is set 255.</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <remarks>
+    /// Useful for animating outlines or drawing partial polygons.
+    /// Use <see cref="Polygon.GenerateOutlinePerimeterTriangulation(float, int, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
+    /// </remarks>
+    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (poly.Count < 3 || perimeterToDraw == 0) return;
+
+        color = color.SetAlpha(255);
+        
+        int currentIndex = ShapeMath.Clamp(startIndex, 0, poly.Count - 1);
+
+        bool reverse = perimeterToDraw < 0;
+        if (reverse) perimeterToDraw *= -1;
+
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[currentIndex];
+            if (reverse) currentIndex = ShapeMath.WrapIndex(poly.Count, currentIndex - 1);
+            else currentIndex = (currentIndex + 1) % poly.Count;
+            var end = poly[currentIndex];
+            var l = (end - start).Length();
+            if (l <= perimeterToDraw)
+            {
+                perimeterToDraw -= l;
+                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            }
+            else
+            {
+                float f = perimeterToDraw / l;
+                end = start.Lerp(end, f);
+                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+                return;
+            }
+
+        }
+    }
     
-    //TODO: use ShapeDrawing functions here and turn these functions into wrappers
+    /// <summary>
+    /// Draws a certain percentage of the polygon's outline.
+    /// This method is primarily optimized for performance and forces fully opaque colors
+    /// (alpha is set to 255 before drawing).
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="f">
+    /// Specifies the starting corner and the percentage of the outline to draw.
+    /// <list type="bullet">
+    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
+    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
+    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
+    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
+    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline. Only fully opaque colors a supported. Sets alpha to 255. </param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <remarks>
+    /// Useful for progress indicators or animated outlines.
+    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation(float, float, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
+    /// </remarks>
+    public static void DrawLinesPercentage(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (poly.Count < 3 || f == 0f) return;
+
+        bool negative = false;
+        if (f < 0)
+        {
+            negative = true;
+            f *= -1;
+        }
+        int startIndex = (int)f;
+        float percentage = f - startIndex;
+        if (percentage <= 0)
+        {
+            return;
+        }
+        if (percentage >= 1)
+        {
+            poly.DrawLines(lineThickness, color, capType, capPoints);
+            return;
+        }
+
+        float perimeter = 0f;
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var l = (end - start).Length();
+            perimeter += l;
+        }
+
+        poly.DrawLinesPerimeter(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
+    }
+
+    /// <summary>
+    /// Draws a certain percentage of the polygon's outline using <see cref="LineDrawingInfo"/>.
+    /// This method is primarily optimized for performance and forces fully opaque colors
+    /// (alpha is set to 255 before drawing).
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="f">
+    /// Specifies the starting corner and the percentage of the outline to draw.
+    /// <list type="bullet">
+    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
+    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
+    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
+    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
+    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).
+    /// Only fully opaque colors are supported. Alpha is set to 255 internally.
+    /// </param>
+    /// <remarks>
+    /// Useful for progress indicators or animated outlines.
+    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation(float, float, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
+    /// </remarks>
+    public static void DrawLinesPercentage(this Polygon poly, float f, LineDrawingInfo lineInfo)
+    {
+        poly.DrawLinesPercentage(f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    
+    #endregion
+    
     #region Draw Lines
+    public static void DrawOutline(this Polygon polygon, float lineThickness, ColorRgba color, float sideLengthFactor,  LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (polygon.Count < 3) return;
+        
+        //Does not support transparent colors! Therefore, alpha is set to 255 for safety
+        color = color.SetAlpha(255);
+        
+        for (var i = 0; i < polygon.Count; i++)
+        {
+            var start = polygon[i];
+            var end = polygon[(i + 1) % polygon.Count];
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
+        }
+    }
+    public static void DrawOutline(this Polygon polygon, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (polygon.Count < 3) return;
+
+        //Does not support transparent colors! Therefore, alpha is set to 255 for safety
+        startColorRgba = startColorRgba.SetAlpha(255);
+        endColorRgba = endColorRgba.SetAlpha(255);
+        
+        int redStep = (endColorRgba.R - startColorRgba.R) / polygon.Count;
+        int greenStep = (endColorRgba.G - startColorRgba.G) / polygon.Count;
+        int blueStep = (endColorRgba.B - startColorRgba.B) / polygon.Count;
+        int alphaStep = (endColorRgba.A - startColorRgba.A) / polygon.Count;
+        for (var i = 0; i < polygon.Count; i++)
+        {
+            var start = polygon[i];
+            var end = polygon[(i + 1) % polygon.Count];
+            ColorRgba finalColorRgba = new
+            (
+                startColorRgba.R + redStep * i,
+                startColorRgba.G + greenStep * i,
+                startColorRgba.B + blueStep * i,
+                startColorRgba.A + alphaStep * i
+            );
+            SegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
+        }
+    }
     
     /// <summary>
     /// Draws each edge of the polygon using a fast segment renderer.
@@ -332,8 +491,9 @@ public static class PolygonDrawing
     /// <param name="capPoints">Number of points used to tessellate the caps.</param>
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        
         if (poly.Count < 3) return;
-
+        
         //Does not support transparent colors! Therefore, alpha is set to 255 for safety
         color = color.SetAlpha(255);
         
@@ -353,6 +513,7 @@ public static class PolygonDrawing
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.). Alpha will be forced to 255 internally because this renderer does not support transparency.</param>
     public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo)
     {
+        
         if (poly.Count < 3) return;
         
         //Does not support transparent colors! Therefore, alpha is set to 255 for safety
@@ -367,8 +528,6 @@ public static class PolygonDrawing
     }
     #endregion
     
-    
-    //TODO: Move to ShapeDrawing and add wrappers here
     #region Draw Lines Transparent
     
     /// <summary>
@@ -423,94 +582,56 @@ public static class PolygonDrawing
     
     #endregion
     
-    
-    #region Draw Lines Perimeter & Percentage
-    
+    #region Draw Lines Scaled
     /// <summary>
-    /// Draws a certain amount of the polygon's perimeter as an outline.
+    /// Draws a polygon where each side can be scaled towards the origin of the side.
     /// </summary>
     /// <param name="poly">The polygon to draw.</param>
-    /// <param name="perimeterToDraw">
-    /// The length of the perimeter to draw. If negative, draws in clockwise direction.
-    /// </param>
-    /// <param name="startIndex">The index of the vertex at which to start drawing.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline. Only fully opaque colors are supported. Alpha is set 255.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    /// <remarks>
-    /// Useful for animating outlines or drawing partial polygons.
-    /// Use <see cref="Polygon.GenerateOutlinePerimeterTriangulation"/> to create a triangulation that can be draw with transparent colors.
-    /// </remarks>
-    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        color = color.SetAlpha(255);
-        poly.DrawOutlinePerimeter(perimeterToDraw, startIndex, lineThickness, color, capType, capPoints);
-    }
-    
-    /// <summary>
-    /// Draws a certain percentage of the polygon's outline.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="f">
-    /// Specifies the starting corner and the percentage of the outline to draw.
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="sideScaleFactor">
+    /// <para>The scale factor for each side.</para>
     /// <list type="bullet">
-    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
-    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
-    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
-    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
-    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
+    /// <item><description>0: No polyline is drawn.</description></item>
+    /// <item><description>1: The normal polyline is drawn.</description></item>
+    /// <item><description>0.5: Each side is half as long.</description></item>
     /// </list>
     /// </param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline. Only fully opaque colors a supported. Sets alpha to 255. </param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    /// <remarks>
-    /// Useful for progress indicators or animated outlines.
-    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation"/> to create a triangulation that can be draw with transparent colors.
-    /// </remarks>
-    public static void DrawLinesPercentage(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        color = color.SetAlpha(255);
-        poly.DrawOutlinePercentage(f, lineThickness, color, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws a certain percentage of the polygon's outline using <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="f">
-    /// Specifies the starting corner and the percentage of the outline to draw.
+    /// <param name="sideScaleOrigin">
+    /// The point along the line to scale from, in both directions (0 to 1).
     /// <list type="bullet">
-    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
-    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
-    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
-    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
-    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
+    /// <item><description>0: Start of Segment</description></item>
+    /// <item><description>0.5: Center of Segment</description></item>
+    /// <item><description>1: End of Segment</description></item>
     /// </list>
     /// </param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).
-    /// Only fully opaque colors are supported. Alpha is set to 255 internally.
-    /// </param>
     /// <remarks>
-    /// Useful for progress indicators or animated outlines.
-    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation"/> to create a triangulation that can be draw with transparent colors.
+    /// Useful for creating stylized or animated polygon outlines.
     /// </remarks>
-    public static void DrawLinesPercentage(this Polygon poly, float f, LineDrawingInfo lineInfo)
+    public static void DrawLinesScaled(this Polygon poly, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
-        lineInfo = lineInfo.ChangeColor(lineInfo.Color.SetAlpha(255));
-        poly.DrawOutlinePercentage(f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        if (poly.Count < 3) return;
+        if (sideScaleFactor <= 0) return;
+        
+        if (sideScaleFactor >= 1)
+        {
+            poly.DrawLines(lineInfo);
+            return;
+        }
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+        }
+        
     }
-    
     #endregion
     
-    
-    #region Draw Cornered
+    //NOTE: Essentially draws 2 segmens of a triangle for each corner -> so triangle drawing with transparency can be used for adding new transparency functions in ShapeDrawing
     //TODO: Call ShapeDrawing functions here and implement transparent version in ShapeDrawing + a wrapper here
-    
     //TODO: Use this version and call it fast (supports no transparency)
     //TODO: Make new version that supports transparency
+    #region Draw Cornered
     
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with custom lengths for each corner.
@@ -634,56 +755,6 @@ public static class PolygonDrawing
     }
 
     #endregion
-    
-    
-    //TODO: Use ShapeDrawing functions here and turn this to a wrapper
-    #region Draw Lines Scaled
-    /// <summary>
-    /// Draws a polygon where each side can be scaled towards the origin of the side.
-    /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="sideScaleFactor">
-    /// <para>The scale factor for each side.</para>
-    /// <list type="bullet">
-    /// <item><description>0: No polyline is drawn.</description></item>
-    /// <item><description>1: The normal polyline is drawn.</description></item>
-    /// <item><description>0.5: Each side is half as long.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="sideScaleOrigin">
-    /// The point along the line to scale from, in both directions (0 to 1).
-    /// <list type="bullet">
-    /// <item><description>0: Start of Segment</description></item>
-    /// <item><description>0.5: Center of Segment</description></item>
-    /// <item><description>1: End of Segment</description></item>
-    /// </list>
-    /// </param>
-    /// <remarks>
-    /// Useful for creating stylized or animated polygon outlines.
-    /// </remarks>
-    public static void DrawLinesScaled(this Polygon poly, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
-    {
-        if (poly.Count < 3) return;
-        if (sideScaleFactor <= 0) return;
-        
-        if (sideScaleFactor >= 1)
-        {
-            poly.DrawLines(lineInfo);
-            return;
-        }
-        for (var i = 0; i < poly.Count; i++)
-        {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
-        }
-        
-    }
-    #endregion
-    
-    
-    
     
     #region Helper
     private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false)
