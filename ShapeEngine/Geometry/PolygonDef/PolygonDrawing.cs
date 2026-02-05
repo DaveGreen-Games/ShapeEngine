@@ -549,6 +549,13 @@ public static class PolygonDrawing
         }
     }
     #endregion
+
+    //TODO: Add Draw Lines functions for convex polygons that do not use Inflate + Triangulation!
+    #region Draw Lines Convex
+
+    
+
+    #endregion
     
     #region Draw Lines Transparent
     
@@ -649,6 +656,8 @@ public static class PolygonDrawing
     }
     #endregion
     
+    //TODO: Test Performance to see if old functions can be removed.
+    //TODO: Add cornerFactor functions
     #region Draw Cornered Transparent
     
     private static void DrawCornerAbsolute(Vector2 prev, Vector2 corner, Vector2 next, float cornerLength, float lineThickness, ColorRgba color, LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
@@ -660,6 +669,9 @@ public static class PolygonDrawing
         float lsNext = wNext.LengthSquared();
         if(lsPrev <= 0 || lsNext <= 0) return;
 
+        float extension = capType is LineCapType.Extended or LineCapType.CappedExtended ? lineThickness : 0f;
+        cornerLength += extension;
+        
         float minLs = MathF.Min(lsPrev, lsNext);
         if (cornerLength * cornerLength > minLs)
         {
@@ -748,6 +760,13 @@ public static class PolygonDrawing
                 
             Raylib.DrawTriangle(cornerInner, cornerOuterPrev, cornerOuterNext, rayColor);
         }
+
+        if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
+        {
+            SegmentDrawing.DrawRoundCap(prev, -dirPrev, lineThickness, capPoints, color);
+            SegmentDrawing.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
+        }
+        
     }
     private static void DrawCornerRelative(Vector2 prev, Vector2 corner, Vector2 next, float cornerFactor, float lineThickness, ColorRgba color, LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
     {
@@ -760,7 +779,8 @@ public static class PolygonDrawing
         float lNext = wNext.Length();
         if(lPrev <= 0 || lNext <= 0) return;
 
-        float minCornerLength = MathF.Min(lPrev, lNext) * cornerFactor;
+        float extension = capType is LineCapType.Extended or LineCapType.CappedExtended ? lineThickness : 0f;
+        float minCornerLength = (MathF.Min(lPrev, lNext) * cornerFactor) + extension;
         lineThickness = MathF.Min(lineThickness, minCornerLength * 0.5f);
         
         var dirPrev = wPrev.Normalize();
@@ -843,6 +863,12 @@ public static class PolygonDrawing
             Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
                 
             Raylib.DrawTriangle(cornerInner, cornerOuterPrev, cornerOuterNext, rayColor);
+        }
+        
+        if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
+        {
+            SegmentDrawing.DrawRoundCap(prev, -dirPrev, lineThickness, capPoints, color);
+            SegmentDrawing.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
         }
     }
    
