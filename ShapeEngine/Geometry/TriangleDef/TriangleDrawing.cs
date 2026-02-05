@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -7,7 +6,6 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
-using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.TriangleDef;
@@ -532,11 +530,40 @@ public static class TriangleDrawing
     #endregion
     
     
-    //NOTE: After finishing check triangulation drawing as well (for extra parameters to add, etc.)
+    
+    
+    
+    //!!! DELETE AGAIN - JUST FOR TESTING BELOW !!!
+    public static void DrawLines2(this Triangle triangle, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        var a = triangle.A;
+        var b = triangle.B;
+        var c = triangle.C;
+
+        SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, a, lineThickness, color, capType, capPoints);
+    }
+    public static void DrawLines2(this Triangle triangle, LineDrawingInfo lineInfo)
+    {
+        var a = triangle.A;
+        var b = triangle.B;
+        var c = triangle.C;
+        
+        SegmentDrawing.DrawSegment(a, b, lineInfo);
+        SegmentDrawing.DrawSegment(b, c, lineInfo);
+        SegmentDrawing.DrawSegment(c, a, lineInfo);
+    }
+    //!!! -------------------------------------------
+    
+    
+    
+    
     
     #region Helper
 
     //TODO: Mitered variants do not use miter limits which causes triangles with very sharp angles to produce artifacts.
+    //NOTE: After finishing check triangulation drawing as well (for extra parameters to add, etc.)
     
     private static void DrawTriangleRoundedHelper(Vector2 p1, Vector2 p2, Vector2 p3, ColorRgba color, int cornerPoints, float cornerStrength)
     {
@@ -606,7 +633,6 @@ public static class TriangleDrawing
             DrawTriangleLinesPercentageHelperCapped(p1, p2, p3, percentage, ccw, lineThickness, color, capPoints);
         }
     }
-    
     private static void DrawTriangleLinesPercentageHelperMitered(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color)
     {
         if (lineThickness <= 0 || percentage <= 0 || percentage >= 1) return;
@@ -848,6 +874,7 @@ public static class TriangleDrawing
         }
     }
     
+    //TODO: Rework to have correct miter calculations and use miter limits
     private static void DrawTriangleLinesHelper(Vector2 p1, Vector2 p2, Vector2 p3, float lineThickness, ColorRgba color, int cornerPoints = 0)
     {
         if (lineThickness <= 0) return;
@@ -948,6 +975,7 @@ public static class TriangleDrawing
             prevOuter = curOuter;
         }
     }
+    
     
     private static float CalculateMaxLineThickness(Vector2 p1, Vector2 p2, Vector2 p3)
     {
