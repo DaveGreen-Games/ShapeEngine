@@ -137,7 +137,21 @@ public sealed class ContentPack
     public byte[]? GetFileData(string filePath)
     {
         if(!IsLoaded) return null;
-        if(!HasFile(filePath)) return null;
+
+        if (!HasFile(filePath))
+        {
+            string alternativePath = filePath.Contains('\\') ? filePath.Replace('\\', '/') : filePath.Replace('/', '\\');
+            if (HasFile(alternativePath))
+            {
+                Game.Instance.Logger.LogWarning($"File path '{filePath}' not found, but alternative path '{alternativePath}' exists. Returning data for alternative path.");
+                filePath = alternativePath;
+            }
+            else
+            {
+                Game.Instance.Logger.LogError($"Pack does not contain file: {filePath}.");
+                return null;
+            }
+        }
         
         if(CurrentUnpackMode == UnpackMode.Memory) return cache[filePath];
         
