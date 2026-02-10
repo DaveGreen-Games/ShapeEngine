@@ -297,6 +297,8 @@ public static class PolygonDrawing
     
     #endregion
     
+    
+    //TODO: Implement transparent version
     #region Draw Lines Perimeter & Percentage
     
     /// <summary>
@@ -438,6 +440,7 @@ public static class PolygonDrawing
     }
     
     #endregion
+
     
     #region Draw Lines
     /// <summary>
@@ -551,6 +554,7 @@ public static class PolygonDrawing
     }
     #endregion
 
+    
     //TODO: Add Draw Lines functions for convex polygons that do not use Inflate + Triangulation!
     #region Draw Lines Convex
 
@@ -560,7 +564,7 @@ public static class PolygonDrawing
     
     #region Draw Lines Transparent
     
-    //Todo: Try to use DrawCornered algorithm to replace inflate + triangulate here
+    //Todo: Try to use DrawCornerAbsoluteTransparent algorithm to replace inflate + triangulate here
     // - Generating outline triangulation will still be available!
     
     /// <summary>
@@ -661,39 +665,14 @@ public static class PolygonDrawing
     #endregion
     
     
-    //TODO: Test Performance
+    //TODO: Add xml summaries
     #region Draw Cornered Absolute Transparent
-    //TODO: This algorithm should be able to draw polygon outlines as well -> ends just have to be connected!
-    private static void DrawCornerAbsolute(Vector2 prev, Vector2 corner, Vector2 next, float cornerLength, float lineThickness, ColorRgba color, LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
+    private static void DrawCornerAbsoluteTransparent(Vector2 prev, Vector2 corner, Vector2 next, float cornerLength, float lineThickness, ColorRgba color, 
+        LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
     {
         var wPrev = corner - prev;
         var wNext = next - corner;
-
-        float lsPrev = wPrev.LengthSquared();
-        float lsNext = wNext.LengthSquared();
-        if(lsPrev <= 0 || lsNext <= 0) return;
         
-        float minLength = MathF.Sqrt(MathF.Min(lsPrev, lsNext));
-        lineThickness = MathF.Min(lineThickness, MathF.Min(cornerLength * 0.5f, minLength * 0.25f));
-        if (capType is LineCapType.None)
-        {
-            cornerLength = MathF.Min(cornerLength, minLength * 0.5f);
-        }
-        else if (capType is LineCapType.Extended)
-        {
-            cornerLength = MathF.Min(cornerLength + lineThickness, minLength * 0.5f);
-            
-        }
-        else if (capType is LineCapType.Capped)
-        {
-            cornerLength = MathF.Min(cornerLength - lineThickness, minLength * 0.5f - lineThickness);
-        }
-        else //Capped Extended
-        {
-            cornerLength = MathF.Min(cornerLength, minLength * 0.5f - lineThickness);
-        }
-        
-        if(cornerLength <= 0) return;
         var dirPrev = wPrev.Normalize();
         var dirNext = wNext.Normalize();
         
@@ -711,10 +690,8 @@ public static class PolygonDrawing
             normalNext = dirNext.GetPerpendicularLeft();
         }
         
-        
         prev = corner - dirPrev * cornerLength;
         next = corner + dirNext * cornerLength;
-        
         
         if (cornerType.type == 0)//collinear
         {
@@ -726,7 +703,7 @@ public static class PolygonDrawing
         float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);
         var miterDir = (normalPrev + normalNext).Normalize();
         float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-        var miterLength = lineThickness / MathF.Cos(miterAngleRad);
+        float miterLength = lineThickness / MathF.Cos(miterAngleRad);
         
         if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
         {
@@ -816,161 +793,271 @@ public static class PolygonDrawing
             SegmentDrawing.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
         }
     }
-
-    private static bool CalculateDrawCornerParameters(this Polygon poly, float cornerLength, float lineThickness, LineCapType capType,
+    
+    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
+        float miterLimit = 2f, bool beveled = false)
+    {
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
+            var cur = poly[i];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if(lsPrev <= 0 || lsNext <= 0) return;
+        
+            float minLength = MathF.Sqrt(MathF.Min(lsPrev, lsNext));
+            float newLineThickness = MathF.Min(lineThickness, MathF.Min(cornerLength * 0.5f, minLength * 0.25f));
+            float newCornerLength;
+            
+            if (capType is LineCapType.None)
+            {
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f);
+            }
+            else if (capType is LineCapType.Extended)
+            {
+                newCornerLength = MathF.Min(cornerLength + newLineThickness, minLength * 0.5f);
+            
+            }
+            else if (capType is LineCapType.Capped)
+            {
+                newCornerLength = MathF.Min(cornerLength - newLineThickness, minLength * 0.5f - newLineThickness);
+            }
+            else //Capped Extended
+            {
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f - newLineThickness);
+            }
+        
+            if(newCornerLength <= 0) continue;
+            
+            DrawCornerAbsoluteTransparent(prev, cur, next, newCornerLength, newLineThickness, color, capType, capPoints, miterLimit, beveled);
+        }
+    }
+    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        poly.DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+    }
+   
+    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
+        float miterLimit = 2f, bool beveled = false)
+    {
+        if (cornerLengths.Count <= 0) return;
+        for (var i = 0; i < poly.Count; i++)
+        {
+            float cornerLength = cornerLengths[i % cornerLengths.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
+            var cur = poly[i];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if(lsPrev <= 0 || lsNext <= 0) return;
+        
+            float minLength = MathF.Sqrt(MathF.Min(lsPrev, lsNext));
+            float newLineThickness = MathF.Min(lineThickness, MathF.Min(cornerLength * 0.5f, minLength * 0.25f));
+            float newCornerLength;
+            
+            if (capType is LineCapType.None)
+            {
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f);
+            }
+            else if (capType is LineCapType.Extended)
+            {
+                newCornerLength = MathF.Min(cornerLength + newLineThickness, minLength * 0.5f);
+            
+            }
+            else if (capType is LineCapType.Capped)
+            {
+                newCornerLength = MathF.Min(cornerLength - newLineThickness, minLength * 0.5f - newLineThickness);
+            }
+            else //Capped Extended
+            {
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f - newLineThickness);
+            }
+        
+            if(newCornerLength <= 0) continue;
+            
+            DrawCornerAbsoluteTransparent(prev, cur, next, newCornerLength, newLineThickness, color, capType, capPoints, miterLimit, beveled);
+        }
+    }
+    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, List<float> cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        poly.DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+    }
+    
+    
+    public static bool CaluclateDrawCornerAbsoluteParameters(this Polygon poly, float cornerLength, float lineThickness, LineCapType capType, 
         out float newCornerLength, out float newLineThickness)
     {
-        newCornerLength = cornerLength;
-        newLineThickness = lineThickness;
-        return true;
-    }
-    
-    public static void DrawCorneredTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
+        newCornerLength = -1f;
+        newLineThickness = -1f;
+        
         for (var i = 0; i < poly.Count; i++)
         {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)]; // poly[(i-1)%poly.Count];
             var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)]; //poly[(i+1)%poly.Count];
-
-            DrawCornerAbsolute(prev, cur, next, cornerLength, lineThickness, color, capType, capPoints);
-        }
-    }
-    public static void DrawCorneredTransparent(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
-    {
-        poly.DrawCorneredTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
-    }
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
     
+            var wNext = next - cur;
     
-    public static void DrawCorneredTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        for (var i = 0; i < poly.Count; i++)
-        {
-            float cornerLength = cornerLengths[i%cornerLengths.Count];
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];// poly[(i-1)%poly.Count];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];//poly[(i+1)%poly.Count];
-            DrawCornerAbsolute(prev, cur, next, cornerLength, lineThickness, color, capType, capPoints);
+            float lsNext = wNext.LengthSquared();
+            if (lsNext <= 0)
+            {
+                newCornerLength = 0f;
+                newLineThickness = 0f;
+                return false;
+            }
+        
+            float minLength = MathF.Sqrt(lsNext);
+            float curLineThickness = MathF.Min(lineThickness, MathF.Min(cornerLength * 0.5f, minLength * 0.25f));
+            float curCornerLength;
+            if (capType is LineCapType.None)
+            {
+                curCornerLength = MathF.Min(cornerLength, minLength * 0.5f);
+            }
+            else if (capType is LineCapType.Extended)
+            {
+                curCornerLength = MathF.Min(cornerLength + curLineThickness, minLength * 0.5f);
+            
+            }
+            else if (capType is LineCapType.Capped)
+            {
+                curCornerLength = MathF.Min(cornerLength - curLineThickness, minLength * 0.5f - curLineThickness);
+            }
+            else //Capped Extended
+            {
+                curCornerLength = MathF.Min(cornerLength, minLength * 0.5f - curLineThickness);
+            }
+            
+            if(curCornerLength <= 0 || curLineThickness <= 0)
+            {
+                newCornerLength = 0f;
+                newLineThickness = 0f;
+                return false;
+            }
+            
+            if(curCornerLength < newCornerLength || newCornerLength < 0f) newCornerLength = curCornerLength;
+            if(curLineThickness < newLineThickness || newLineThickness < 0f) newLineThickness = curLineThickness;
         }
-    }
-    public static void DrawCorneredTransparent(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
-    {
-       poly.DrawCorneredTransparent(lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+        
+        if (newCornerLength > 0 && newLineThickness > 0) return true;
+        
+        newCornerLength = 0;
+        newLineThickness = 0;
+        return false;
     }
     #endregion
     
-    
-    //TODO: Test Performance
+    //TODO: Add xml summaries
     #region Draw Cornered Relative Transparent
-    //TODO: Add cornerFactor functions
-    //TODO: Fix with new versions (see above - DrawCornerAbsolute())
-    private static void DrawCornerRelative(Vector2 prev, Vector2 corner, Vector2 next, float cornerFactor, float lineThickness, ColorRgba color, LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
+
+    public static void DrawCorneredRelativeTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
+        float miterLimit = 2f, bool beveled = false)
     {
-        cornerFactor = ShapeMath.Clamp(cornerFactor, 0f, 1f);
         
-        var wPrev = corner - prev;
-        var wNext = next - corner;
-
-        float lPrev = wPrev.Length();
-        float lNext = wNext.Length();
-        if(lPrev <= 0 || lNext <= 0) return;
-
-        float extension = capType is LineCapType.Extended or LineCapType.CappedExtended ? lineThickness : 0f;
-        float minCornerLength = (MathF.Min(lPrev, lNext) * cornerFactor) + extension;
-        lineThickness = MathF.Min(lineThickness, minCornerLength * 0.5f);
+        cornerLengthFactor = ShapeMath.Clamp(cornerLengthFactor, 0f, 1f);
         
-        var dirPrev = wPrev.Normalize();
-        var dirNext = wNext.Normalize();
-        var normalPrev = dirPrev.GetPerpendicularRight();
-        var normalNext = dirNext.GetPerpendicularRight();
-        
-        prev = corner - dirPrev * lPrev * cornerFactor;
-        next = corner + dirNext * lNext * cornerFactor;
-        
-        float angleRad = MathF.Abs(normalPrev.AngleRad(normalNext));
-        bool collinear = angleRad <= 0.001f || Math.Abs(angleRad - float.Tau) < 0.001f || Math.Abs(angleRad - float.Pi) < 0.001f;
-        if (collinear)
+        for (var i = 0; i < poly.Count; i++)
         {
-            SegmentDrawing.DrawSegment(prev, next, lineThickness, color, capType, capPoints);
-            return;
-        }
-
-        var rayColor = color.ToRayColor();
-        float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);
-        var miterDir = (normalPrev + normalNext).Normalize();
-        float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-        var miterLength = lineThickness / MathF.Cos(miterAngleRad);
-        
-        if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
-        {
-            var cornerOuter = corner + miterDir * miterLimit;
-            var prevOuter = prev + normalPrev * lineThickness;
-            var prevInner = prev - normalPrev * lineThickness;
-            var nextOuter = next + normalNext * lineThickness;
-            var nextInner = next - normalNext * lineThickness;
-            var intersection = Ray.IntersectRayRay(prevInner, dirPrev, nextInner, -dirNext);
-            var cornerInner = intersection.Valid ? intersection.Point : corner - miterDir * miterLimit;
-            Raylib.DrawTriangle(cornerInner, prevInner, prevOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, prevOuter, cornerOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, cornerOuter, nextOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
-        }
-        else
-        {
-            miterLimit = totalMiterLengthLimit;
-            Vector2 cornerOuterPrev, cornerOuterNext;
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
+            var cur = poly[i];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
             
-            var prevOuter = prev + normalPrev * lineThickness;
-            var prevInner = prev - normalPrev * lineThickness;
-            var nextOuter = next + normalNext * lineThickness;
-            var nextInner = next - normalNext * lineThickness;
-            var intersection = Ray.IntersectRayRay(prevInner, dirPrev, nextInner, -dirNext);
-            var cornerInner = intersection.Valid ? intersection.Point : corner - miterDir * miterLimit;
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if(lsPrev <= 0 || lsNext <= 0) return;
+        
+            float minLength = MathF.Sqrt(MathF.Min(lsPrev, lsNext));
+            float cornerLength = minLength * cornerLengthFactor;
+            float newLineThickness = MathF.Min(lineThickness, MathF.Min(cornerLength * 0.5f, minLength * 0.25f));
+            float newCornerLength;
             
-            if (beveled)
+            if (capType is LineCapType.None)
             {
-                cornerOuterPrev = corner + normalPrev * lineThickness;
-                cornerOuterNext = corner + normalNext * lineThickness;
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f);
             }
-            else
+            else if (capType is LineCapType.Extended)
             {
-                
-                var cornerOuter = corner + miterDir * miterLimit;
-                var miterPerpRight = miterDir.GetPerpendicularRight();
-                intersection = Ray.IntersectRayRay(prevOuter, dirPrev, cornerOuter, miterPerpRight);
-                if (intersection.Valid)
-                {
-                    cornerOuterPrev = intersection.Point;
-                    float l = (cornerOuter - intersection.Point).Length();
-                    cornerOuterNext = cornerOuter - miterPerpRight * l;
-                }
-                else //bevel fallback
-                {
-                    cornerOuterPrev = corner + normalPrev * lineThickness;
-                    cornerOuterNext = corner + normalNext * lineThickness;
-                }
-                
-            }
+                newCornerLength = MathF.Min(cornerLength + newLineThickness, minLength * 0.5f);
             
-            Raylib.DrawTriangle(cornerInner, prevInner, prevOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, prevOuter, cornerOuterPrev, rayColor);
-                
-            Raylib.DrawTriangle(cornerInner, cornerOuterNext, nextOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
-                
-            Raylib.DrawTriangle(cornerInner, cornerOuterPrev, cornerOuterNext, rayColor);
-        }
+            }
+            else if (capType is LineCapType.Capped)
+            {
+                newCornerLength = MathF.Min(cornerLength - newLineThickness, minLength * 0.5f - newLineThickness);
+            }
+            else //Capped Extended
+            {
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f - newLineThickness);
+            }
         
-        if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
-        {
-            SegmentDrawing.DrawRoundCap(prev, -dirPrev, lineThickness, capPoints, color);
-            SegmentDrawing.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
+            if(newCornerLength <= 0) continue;
+            
+            DrawCornerAbsoluteTransparent(prev, cur, next, newCornerLength, newLineThickness, color, capType, capPoints, miterLimit, beveled);
         }
     }
+    public static void DrawCorneredRelativeTransparent(this Polygon poly, float cornerLengthFactor, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        poly.DrawCorneredRelativeTransparent(lineInfo.Thickness, lineInfo.Color, cornerLengthFactor, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+    }
     
+    public static void DrawCorneredRelativeTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengthFactors, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
+        float miterLimit = 2f, bool beveled = false)
+    {
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            float cornerLengthFactor = cornerLengthFactors[i % cornerLengthFactors.Count];
+            cornerLengthFactor = ShapeMath.Clamp(cornerLengthFactor, 0f, 1f);
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
+            var cur = poly[i];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if(lsPrev <= 0 || lsNext <= 0) return;
+        
+            float minLength = MathF.Sqrt(MathF.Min(lsPrev, lsNext));
+            float cornerLength = minLength * cornerLengthFactor;
+            float newLineThickness = MathF.Min(lineThickness, MathF.Min(cornerLength * 0.5f, minLength * 0.25f));
+            float newCornerLength;
+            
+            if (capType is LineCapType.None)
+            {
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f);
+            }
+            else if (capType is LineCapType.Extended)
+            {
+                newCornerLength = MathF.Min(cornerLength + newLineThickness, minLength * 0.5f);
+            
+            }
+            else if (capType is LineCapType.Capped)
+            {
+                newCornerLength = MathF.Min(cornerLength - newLineThickness, minLength * 0.5f - newLineThickness);
+            }
+            else //Capped Extended
+            {
+                newCornerLength = MathF.Min(cornerLength, minLength * 0.5f - newLineThickness);
+            }
+        
+            if(newCornerLength <= 0) continue;
+            
+            DrawCornerAbsoluteTransparent(prev, cur, next, newCornerLength, newLineThickness, color, capType, capPoints, miterLimit, beveled);
+        }
+    }
+    public static void DrawCorneredRelativeTransparent(this Polygon poly, List<float> cornerLengthFactors, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        poly.DrawCorneredRelativeTransparent(lineInfo.Thickness, lineInfo.Color, cornerLengthFactors, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+    }
     #endregion
     
-    //TODO: Test Performance
     #region Draw Cornered
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with a uniform length for all corners.
