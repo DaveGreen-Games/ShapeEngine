@@ -1,4 +1,5 @@
 
+using System.Drawing;
 using System.Numerics;
 using Clipper2Lib;
 using Raylib_cs;
@@ -559,6 +560,9 @@ public static class PolygonDrawing
     
     #region Draw Lines Transparent
     
+    //Todo: Try to use DrawCornered algorithm to replace inflate + triangulate here
+    // - Generating outline triangulation will still be available!
+    
     /// <summary>
     /// Draws the polygon outline with configurable thickness and corner style.
     /// <list type="bullet">
@@ -656,10 +660,10 @@ public static class PolygonDrawing
     }
     #endregion
     
-    //TODO: Test Performance to see if old functions can be removed.
-    //TODO: Add cornerFactor functions
-    #region Draw Cornered Transparent
     
+    //TODO: Test Performance
+    #region Draw Cornered Absolute Transparent
+    //TODO: This algorithm should be able to draw polygon outlines as well -> ends just have to be connected!
     private static void DrawCornerAbsolute(Vector2 prev, Vector2 corner, Vector2 next, float cornerLength, float lineThickness, ColorRgba color, LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
     {
         var wPrev = corner - prev;
@@ -668,31 +672,54 @@ public static class PolygonDrawing
         float lsPrev = wPrev.LengthSquared();
         float lsNext = wNext.LengthSquared();
         if(lsPrev <= 0 || lsNext <= 0) return;
-
-        float extension = capType is LineCapType.Extended or LineCapType.CappedExtended ? lineThickness : 0f;
-        cornerLength += extension;
         
-        float minLs = MathF.Min(lsPrev, lsNext);
-        if (cornerLength * cornerLength > minLs)
+        float minLength = MathF.Sqrt(MathF.Min(lsPrev, lsNext));
+        lineThickness = MathF.Min(lineThickness, MathF.Min(cornerLength * 0.5f, minLength * 0.25f));
+        if (capType is LineCapType.None)
         {
-            cornerLength = MathF.Sqrt(minLs);
+            cornerLength = MathF.Min(cornerLength, minLength * 0.5f);
+        }
+        else if (capType is LineCapType.Extended)
+        {
+            cornerLength = MathF.Min(cornerLength + lineThickness, minLength * 0.5f);
+            
+        }
+        else if (capType is LineCapType.Capped)
+        {
+            cornerLength = MathF.Min(cornerLength - lineThickness, minLength * 0.5f - lineThickness);
+        }
+        else //Capped Extended
+        {
+            cornerLength = MathF.Min(cornerLength, minLength * 0.5f - lineThickness);
         }
         
+        if(cornerLength <= 0) return;
         var dirPrev = wPrev.Normalize();
         var dirNext = wNext.Normalize();
-        var normalPrev = dirPrev.GetPerpendicularRight();
-        var normalNext = dirNext.GetPerpendicularRight();
+        
+        //flip based on corner type
+        var cornerType = dirPrev.ClassifyCorner(dirNext);
+        Vector2 normalPrev, normalNext;
+        if (cornerType.type >= 0)
+        {
+            normalPrev = dirPrev.GetPerpendicularRight();
+            normalNext = dirNext.GetPerpendicularRight();
+        }
+        else
+        {
+            normalPrev = dirPrev.GetPerpendicularLeft();
+            normalNext = dirNext.GetPerpendicularLeft();
+        }
+        
         
         prev = corner - dirPrev * cornerLength;
         next = corner + dirNext * cornerLength;
-        lineThickness = MathF.Min(lineThickness, cornerLength * 0.5f);
         
-        float angleRad = MathF.Abs(normalPrev.AngleRad(normalNext));
-        bool collinear = angleRad <= 0.001f || Math.Abs(angleRad - float.Tau) < 0.001f || Math.Abs(angleRad - float.Pi) < 0.001f;
-        if (collinear)
+        
+        if (cornerType.type == 0)//collinear
         {
             SegmentDrawing.DrawSegment(prev, next, lineThickness, color, capType, capPoints);
-            return;
+            return ;
         }
 
         var rayColor = color.ToRayColor();
@@ -710,10 +737,22 @@ public static class PolygonDrawing
             var nextInner = next - normalNext * lineThickness;
             var intersection = Ray.IntersectRayRay(prevInner, dirPrev, nextInner, -dirNext);
             var cornerInner = intersection.Valid ? intersection.Point : corner - miterDir * miterLimit;
-            Raylib.DrawTriangle(cornerInner, prevInner, prevOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, prevOuter, cornerOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, cornerOuter, nextOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
+
+            if (cornerType.type >= 0)
+            {
+                Raylib.DrawTriangle(cornerInner, prevInner, prevOuter, rayColor);
+                Raylib.DrawTriangle(cornerInner, prevOuter, cornerOuter, rayColor);
+                Raylib.DrawTriangle(cornerInner, cornerOuter, nextOuter, rayColor);
+                Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle(prevInner,cornerInner, prevOuter, rayColor);
+                Raylib.DrawTriangle(prevOuter,cornerInner, cornerOuter, rayColor);
+                Raylib.DrawTriangle(cornerOuter,cornerInner, nextOuter, rayColor);
+                Raylib.DrawTriangle(nextOuter,cornerInner, nextInner, rayColor);
+            }
+            
         }
         else
         {
@@ -736,7 +775,7 @@ public static class PolygonDrawing
             {
                 
                 var cornerOuter = corner + miterDir * miterLimit;
-                var miterPerpRight = miterDir.GetPerpendicularRight();
+                var miterPerpRight = cornerType.type >= 0 ? miterDir.GetPerpendicularRight() : miterDir.GetPerpendicularLeft();
                 intersection = Ray.IntersectRayRay(prevOuter, dirPrev, cornerOuter, miterPerpRight);
                 if (intersection.Valid)
                 {
@@ -751,14 +790,24 @@ public static class PolygonDrawing
                 }
                 
             }
+
+            if (cornerType.type >= 0)
+            {
+                Raylib.DrawTriangle(cornerInner, prevInner, prevOuter, rayColor);
+                Raylib.DrawTriangle(cornerInner, prevOuter, cornerOuterPrev, rayColor);
+                Raylib.DrawTriangle(cornerInner, cornerOuterNext, nextOuter, rayColor);
+                Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
+                Raylib.DrawTriangle(cornerInner, cornerOuterPrev, cornerOuterNext, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle(prevInner,cornerInner, prevOuter, rayColor);
+                Raylib.DrawTriangle(prevOuter,cornerInner, cornerOuterPrev, rayColor);
+                Raylib.DrawTriangle(cornerOuterNext,cornerInner, nextOuter, rayColor);
+                Raylib.DrawTriangle(nextOuter,cornerInner, nextInner, rayColor);
+                Raylib.DrawTriangle(cornerOuterPrev,cornerInner, cornerOuterNext, rayColor);
+            }
             
-            Raylib.DrawTriangle(cornerInner, prevInner, prevOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, prevOuter, cornerOuterPrev, rayColor);
-                
-            Raylib.DrawTriangle(cornerInner, cornerOuterNext, nextOuter, rayColor);
-            Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
-                
-            Raylib.DrawTriangle(cornerInner, cornerOuterPrev, cornerOuterNext, rayColor);
         }
 
         if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
@@ -766,8 +815,55 @@ public static class PolygonDrawing
             SegmentDrawing.DrawRoundCap(prev, -dirPrev, lineThickness, capPoints, color);
             SegmentDrawing.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
         }
-        
     }
+
+    private static bool CalculateDrawCornerParameters(this Polygon poly, float cornerLength, float lineThickness, LineCapType capType,
+        out float newCornerLength, out float newLineThickness)
+    {
+        newCornerLength = cornerLength;
+        newLineThickness = lineThickness;
+        return true;
+    }
+    
+    public static void DrawCorneredTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)]; // poly[(i-1)%poly.Count];
+            var cur = poly[i];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)]; //poly[(i+1)%poly.Count];
+
+            DrawCornerAbsolute(prev, cur, next, cornerLength, lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawCorneredTransparent(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
+    {
+        poly.DrawCorneredTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    
+    
+    public static void DrawCorneredTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < poly.Count; i++)
+        {
+            float cornerLength = cornerLengths[i%cornerLengths.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];// poly[(i-1)%poly.Count];
+            var cur = poly[i];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];//poly[(i+1)%poly.Count];
+            DrawCornerAbsolute(prev, cur, next, cornerLength, lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawCorneredTransparent(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
+    {
+       poly.DrawCorneredTransparent(lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    #endregion
+    
+    
+    //TODO: Test Performance
+    #region Draw Cornered Relative Transparent
+    //TODO: Add cornerFactor functions
+    //TODO: Fix with new versions (see above - DrawCornerAbsolute())
     private static void DrawCornerRelative(Vector2 prev, Vector2 corner, Vector2 next, float cornerFactor, float lineThickness, ColorRgba color, LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
     {
         cornerFactor = ShapeMath.Clamp(cornerFactor, 0f, 1f);
@@ -871,42 +967,10 @@ public static class PolygonDrawing
             SegmentDrawing.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
         }
     }
-   
     
-    public static void DrawCorneredTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        for (var i = 0; i < poly.Count; i++)
-        {
-            var prev = poly[(i-1)%poly.Count];
-            var cur = poly[i];
-            var next = poly[(i+1)%poly.Count];
-            
-            DrawCornerAbsolute(prev, cur, next, cornerLength, lineThickness, color, capType, capPoints);
-        }
-    }
-    public static void DrawCorneredTransparent(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
-    {
-        poly.DrawCorneredTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
-    }
-    
-    
-    public static void DrawCorneredTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        for (var i = 0; i < poly.Count; i++)
-        {
-            float cornerLength = cornerLengths[i%cornerLengths.Count];
-            var prev = poly[(i - 1) % poly.Count];
-            var cur = poly[i];
-            var next = poly[(i + 1) % poly.Count];
-            DrawCornerAbsolute(prev, cur, next, cornerLength, lineThickness, color, capType, capPoints);
-        }
-    }
-    public static void DrawCorneredTransparent(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
-    {
-       poly.DrawCorneredTransparent(lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
-    }
     #endregion
     
+    //TODO: Test Performance
     #region Draw Cornered
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with a uniform length for all corners.
@@ -924,11 +988,11 @@ public static class PolygonDrawing
     {
         for (var i = 0; i < poly.Count; i++)
         {
-            var prev = poly[(i-1)%poly.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];// poly[(i-1)%poly.Count];
             var cur = poly[i];
-            var next = poly[(i+1)%poly.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];//poly[(i+1)%poly.Count];
+            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
     /// <summary>
@@ -944,11 +1008,11 @@ public static class PolygonDrawing
     {
         for (var i = 0; i < poly.Count; i++)
         {
-            var prev = poly[(i-1)%poly.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];// poly[(i-1)%poly.Count];
             var cur = poly[i];
-            var next = poly[(i+1)%poly.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];//poly[(i+1)%poly.Count];
+            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
         }
     }
     
@@ -974,8 +1038,8 @@ public static class PolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
     /// <summary>
@@ -995,8 +1059,8 @@ public static class PolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
         }
     }
     #endregion
