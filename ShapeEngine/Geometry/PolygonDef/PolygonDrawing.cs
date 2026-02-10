@@ -443,30 +443,6 @@ public static class PolygonDrawing
 
     
     #region Draw Lines
-    /// <summary>
-    /// Draws each edge of the polygon using a fast segment renderer with an adjustable side length factor.
-    /// This renderer forces fully opaque colors (alpha is set to 255 internally) and ignores polygons with fewer than 3 points.
-    /// </summary>
-    /// <param name="polygon">The polygon whose edges will be drawn.</param>
-    /// <param name="lineThickness">Thickness of the line in world units.</param>
-    /// <param name="color">Color used to draw the lines. Alpha channel will be forced to 255 internally.</param>
-    /// <param name="sideLengthFactor">Scale factor applied to each side's length (0 = no line, 1 = full side length).</param>
-    /// <param name="capType">Specifies the style of the line caps (start/end).</param>
-    /// <param name="capPoints">Number of points used to tessellate the caps.</param>
-    public static void DrawLines(this Polygon polygon, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        if (polygon.Count < 3) return;
-        
-        //Does not support transparent colors! Therefore, alpha is set to 255 for safety
-        color = color.SetAlpha(255);
-        
-        for (var i = 0; i < polygon.Count; i++)
-        {
-            var start = polygon[i];
-            var end = polygon[(i + 1) % polygon.Count];
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
-        }
-    }
    
     /// <summary>
     /// Draws each edge of the polygon using a fast segment renderer with a color gradient from <paramref name="startColorRgba"/> to <paramref name="endColorRgba"/>.
@@ -481,15 +457,11 @@ public static class PolygonDrawing
     public static void DrawLines(this Polygon polygon, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (polygon.Count < 3) return;
-
-        //Does not support transparent colors! Therefore, alpha is set to 255 for safety
-        startColorRgba = startColorRgba.SetAlpha(255);
-        endColorRgba = endColorRgba.SetAlpha(255);
         
         int redStep = (endColorRgba.R - startColorRgba.R) / polygon.Count;
         int greenStep = (endColorRgba.G - startColorRgba.G) / polygon.Count;
         int blueStep = (endColorRgba.B - startColorRgba.B) / polygon.Count;
-        int alphaStep = (endColorRgba.A - startColorRgba.A) / polygon.Count;
+        
         for (var i = 0; i < polygon.Count; i++)
         {
             var start = polygon[i];
@@ -499,7 +471,7 @@ public static class PolygonDrawing
                 startColorRgba.R + redStep * i,
                 startColorRgba.G + greenStep * i,
                 startColorRgba.B + blueStep * i,
-                startColorRgba.A + alphaStep * i
+                255
             );
             SegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
         }
@@ -555,10 +527,170 @@ public static class PolygonDrawing
     #endregion
 
     
-    //TODO: Add Draw Lines functions for convex polygons that do not use Inflate + Triangulation!
     #region Draw Lines Convex
 
+    /// <summary>
+    /// Calculates the maximum line thickness that can be applied to a convex polygon's outline
+    /// before the inward offset overlaps at the center.
+    /// </summary>
+    /// <param name="poly">The convex polygon.</param>
+    /// <returns>The maximum safe thickness for inward offset, or 0 if the polygon is invalid.</returns>
+    public static float GetMaxInwardThickness(this Polygon poly)
+    {
+        if (poly.Count < 3) return 0f;
+
+        var centroid = poly.GetCentroid();
+        var minDisSquared = float.MaxValue;
+
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            var segment = new Segment(start, end);
+
+            // Get perpendicular distance from centroid to this edge
+            var result =segment.GetClosestPoint(centroid, out float disSquared);
+            if (!result.Valid || disSquared <= 0) continue;
+            if (disSquared < minDisSquared)
+            {
+                minDisSquared = disSquared;
+            }
+        }
+
+        return MathF.Sqrt(minDisSquared);
+    }
+
+    public static void DrawLinesConvex(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
+    {
+        if (poly.Count < 3) return;
+        float maxThickness = poly.GetMaxInwardThickness();
+        if (lineThickness > maxThickness)
+        {
+            lineThickness = maxThickness;
+        }
+
+        Vector2 outsidePrev = Vector2.Zero, insidePrev = Vector2.Zero;
+        bool initialized = false;
+        for (var i = 0; i <= poly.Count; i++)
+        {
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
+            var cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if(lsPrev <= 0 || lsNext <= 0) continue;
+            
+            var dirPrev = wPrev.Normalize();
+            var dirNext = wNext.Normalize();
+            
+            var normalPrev = dirPrev.GetPerpendicularRight();
+            var normalNext = dirNext.GetPerpendicularRight();
+            
+            var rayColor = color.ToRayColor();
+            float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);
+            var miterDir = (normalPrev + normalNext).Normalize();
+            float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
+            float miterLength = lineThickness / MathF.Cos(miterAngleRad);
+
+            if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
+            {
+                if (!initialized)
+                {
+                    insidePrev = cur - miterDir * miterLength;
+                    outsidePrev = cur + miterDir * miterLength;
+                    initialized = true;
+                    continue;
+                }
+                
+                var insideCur = cur - miterDir * miterLength;
+                var outsideCur = cur + miterDir * miterLength;
+                Raylib.DrawTriangle(outsidePrev, outsideCur, insideCur, rayColor);
+                Raylib.DrawTriangle(outsidePrev, insideCur, insidePrev, rayColor);
+                outsidePrev = outsideCur;
+                insidePrev = insideCur;
+            }
+            else
+            {
+                
+                //TODO: Fix
+                miterLength = totalMiterLengthLimit;
+                
+                var insideCur = cur - miterDir * miterLength;
+                
+                Vector2 outsideLeftCur, outsideRightCur;
+                
+                if (beveled)
+                {
+                    outsideLeftCur = cur + normalNext * lineThickness * 0.5f;
+                    
+                    if (!initialized)
+                    {
+                        insidePrev = insideCur;
+                        outsidePrev = outsideLeftCur;
+                        initialized = true;
+                        continue;
+                    }
+                    
+                    outsideRightCur = cur + normalPrev * lineThickness * 0.5f;
+                }
+                else
+                {
+                    var p = cur + miterDir * miterLength;
+                    var dir = (p - cur).Normalize();
+                    var perp = dir.GetPerpendicularRight();
+                    
+                    var start = next + normalNext * lineThickness * 0.5f;
+                    var intersection = Ray.IntersectRayRay(start, -dirNext, p, -perp);
+                    if (intersection.Valid)
+                    {
+                        outsideLeftCur = intersection.Point;
+                        
+                    }
+                    else//fallback bevel
+                    {
+                        outsideLeftCur = cur + normalNext * lineThickness * 0.5f;
+                    }
+                    
+                    if (!initialized)
+                    {
+                        insidePrev = insideCur;
+                        outsidePrev = outsideLeftCur;
+                        initialized = true;
+                        continue;
+                    }
+                    
+                    start = prev + normalPrev * lineThickness * 0.5f;
+                    intersection = Ray.IntersectRayRay(start, dirPrev, p, perp);
+                    if (intersection.Valid)
+                    {
+                        outsideRightCur = intersection.Point;
+                        
+                    }
+                    else//fallback bevel
+                    {
+                        outsideRightCur = cur + normalPrev * lineThickness * 0.5f;
+                    }
+                }
+                
+                Raylib.DrawTriangle(outsidePrev, outsideRightCur, insideCur, rayColor);
+                Raylib.DrawTriangle(outsidePrev, insideCur, insidePrev, rayColor);
+                Raylib.DrawTriangle(outsideRightCur, outsideLeftCur, insideCur, rayColor);
+                
+                insidePrev = insideCur;
+                outsidePrev = outsideLeftCur;
+            }
+        }
+    }
     
+
+    public static void DrawLinesConvex(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        if (poly.Count < 3) return;
+        poly.DrawLinesConvex(lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
+    }
 
     #endregion
     
@@ -707,13 +839,13 @@ public static class PolygonDrawing
         
         if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
         {
-            var cornerOuter = corner + miterDir * miterLimit;
+            var cornerOuter = corner + miterDir * miterLength;
             var prevOuter = prev + normalPrev * lineThickness;
             var prevInner = prev - normalPrev * lineThickness;
             var nextOuter = next + normalNext * lineThickness;
             var nextInner = next - normalNext * lineThickness;
             var intersection = Ray.IntersectRayRay(prevInner, dirPrev, nextInner, -dirNext);
-            var cornerInner = intersection.Valid ? intersection.Point : corner - miterDir * miterLimit;
+            var cornerInner = intersection.Valid ? intersection.Point : corner - miterDir * miterLength;
 
             if (cornerType.type >= 0)
             {
@@ -733,7 +865,7 @@ public static class PolygonDrawing
         }
         else
         {
-            miterLimit = totalMiterLengthLimit;
+            miterLength = totalMiterLengthLimit;
             Vector2 cornerOuterPrev, cornerOuterNext;
             
             var prevOuter = prev + normalPrev * lineThickness;
@@ -741,7 +873,7 @@ public static class PolygonDrawing
             var nextOuter = next + normalNext * lineThickness;
             var nextInner = next - normalNext * lineThickness;
             var intersection = Ray.IntersectRayRay(prevInner, dirPrev, nextInner, -dirNext);
-            var cornerInner = intersection.Valid ? intersection.Point : corner - miterDir * miterLimit;
+            var cornerInner = intersection.Valid ? intersection.Point : corner - miterDir * miterLength;
             
             if (beveled)
             {
@@ -751,7 +883,7 @@ public static class PolygonDrawing
             else
             {
                 
-                var cornerOuter = corner + miterDir * miterLimit;
+                var cornerOuter = corner + miterDir * miterLength;
                 var miterPerpRight = cornerType.type >= 0 ? miterDir.GetPerpendicularRight() : miterDir.GetPerpendicularLeft();
                 intersection = Ray.IntersectRayRay(prevOuter, dirPrev, cornerOuter, miterPerpRight);
                 if (intersection.Valid)
