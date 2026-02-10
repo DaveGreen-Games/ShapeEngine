@@ -1073,11 +1073,12 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        color = color.SetAlpha(255);
         for (var i = 0; i < poly.Count; i++)
         {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];// poly[(i-1)%poly.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
             var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];//poly[(i+1)%poly.Count];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
             SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
             SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
@@ -1093,11 +1094,12 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
     {
+        lineInfo = lineInfo.ChangeColor(lineInfo.Color.SetAlpha(255));
         for (var i = 0; i < poly.Count; i++)
         {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];// poly[(i-1)%poly.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
             var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];//poly[(i+1)%poly.Count];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
             SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
             SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
         }
@@ -1119,12 +1121,13 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
+        color = color.SetAlpha(255);
         for (var i = 0; i < poly.Count; i++)
         {
-            float cornerLength = cornerLengths[i%cornerLengths.Count];
-            var prev = poly[(i - 1) % poly.Count];
+            float cornerLength = cornerLengths[i % cornerLengths.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
             var cur = poly[i];
-            var next = poly[(i + 1) % poly.Count];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
             SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
             SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
@@ -1140,12 +1143,13 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
     {
+        lineInfo = lineInfo.ChangeColor(lineInfo.Color.SetAlpha(255));
         for (var i = 0; i < poly.Count; i++)
         {
-            float cornerLength = cornerLengths[i%cornerLengths.Count];
-            var prev = poly[(i - 1) % poly.Count];
+            float cornerLength = cornerLengths[i % cornerLengths.Count];
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
             var cur = poly[i];
-            var next = poly[(i + 1) % poly.Count];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
             SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
             SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
         }
