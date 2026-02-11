@@ -526,7 +526,7 @@ public static class PolygonDrawing
     }
     #endregion
 
-    
+    //TODO: Add xml summaries
     #region Draw Lines Convex
 
     /// <summary>
@@ -534,12 +534,12 @@ public static class PolygonDrawing
     /// before the inward offset overlaps at the center.
     /// </summary>
     /// <param name="poly">The convex polygon.</param>
+    /// <param name="centroid">The centroid of the polygon, used as the reference point for distance calculations.</param>
     /// <returns>The maximum safe thickness for inward offset, or 0 if the polygon is invalid.</returns>
-    public static float GetMaxInwardThickness(this Polygon poly)
+    public static float GetConvexPolygonMaxLineThickness(this Polygon poly, Vector2 centroid)
     {
         if (poly.Count < 3) return 0f;
 
-        var centroid = poly.GetCentroid();
         var minDisSquared = float.MaxValue;
 
         for (var i = 0; i < poly.Count; i++)
@@ -557,20 +557,20 @@ public static class PolygonDrawing
             }
         }
 
-        return MathF.Sqrt(minDisSquared);
+        // return MathF.Sqrt(minDisSquared) * 0.66f;
+        return MathF.Sqrt(minDisSquared) * 0.5f;
     }
 
     public static void DrawLinesConvex(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3) return;
-        float maxThickness = poly.GetMaxInwardThickness();
-        if (lineThickness > maxThickness)
-        {
-            lineThickness = maxThickness;
-        }
-
+        
         Vector2 outsidePrev = Vector2.Zero, insidePrev = Vector2.Zero;
         bool initialized = false;
+        
+        var rayColor = color.ToRayColor();
+        float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);
+        
         for (var i = 0; i <= poly.Count; i++)
         {
             var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
@@ -589,8 +589,6 @@ public static class PolygonDrawing
             var normalPrev = dirPrev.GetPerpendicularRight();
             var normalNext = dirNext.GetPerpendicularRight();
             
-            var rayColor = color.ToRayColor();
-            float totalMiterLengthLimit = (lineThickness * 0.5f) * MathF.Max(2f, miterLimit);
             var miterDir = (normalPrev + normalNext).Normalize();
             float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
             float miterLength = lineThickness / MathF.Cos(miterAngleRad);
@@ -605,17 +603,17 @@ public static class PolygonDrawing
                     continue;
                 }
                 
-                var insideCur = cur - miterDir * miterLength;
                 var outsideCur = cur + miterDir * miterLength;
+                var insideCur = cur - miterDir * miterLength;
+                
                 Raylib.DrawTriangle(outsidePrev, outsideCur, insideCur, rayColor);
                 Raylib.DrawTriangle(outsidePrev, insideCur, insidePrev, rayColor);
+                
                 outsidePrev = outsideCur;
                 insidePrev = insideCur;
             }
             else
             {
-                
-                //TODO: Fix
                 miterLength = totalMiterLengthLimit;
                 
                 var insideCur = cur - miterDir * miterLength;
@@ -624,7 +622,7 @@ public static class PolygonDrawing
                 
                 if (beveled)
                 {
-                    outsideLeftCur = cur + normalNext * lineThickness * 0.5f;
+                    outsideLeftCur = cur + normalNext * lineThickness;
                     
                     if (!initialized)
                     {
@@ -634,7 +632,7 @@ public static class PolygonDrawing
                         continue;
                     }
                     
-                    outsideRightCur = cur + normalPrev * lineThickness * 0.5f;
+                    outsideRightCur = cur + normalPrev * lineThickness;
                 }
                 else
                 {
@@ -642,7 +640,7 @@ public static class PolygonDrawing
                     var dir = (p - cur).Normalize();
                     var perp = dir.GetPerpendicularRight();
                     
-                    var start = next + normalNext * lineThickness * 0.5f;
+                    var start = next + normalNext * lineThickness;
                     var intersection = Ray.IntersectRayRay(start, -dirNext, p, -perp);
                     if (intersection.Valid)
                     {
@@ -651,7 +649,7 @@ public static class PolygonDrawing
                     }
                     else//fallback bevel
                     {
-                        outsideLeftCur = cur + normalNext * lineThickness * 0.5f;
+                        outsideLeftCur = cur + normalNext * lineThickness;
                     }
                     
                     if (!initialized)
@@ -662,7 +660,7 @@ public static class PolygonDrawing
                         continue;
                     }
                     
-                    start = prev + normalPrev * lineThickness * 0.5f;
+                    start = prev + normalPrev * lineThickness;
                     intersection = Ray.IntersectRayRay(start, dirPrev, p, perp);
                     if (intersection.Valid)
                     {
@@ -671,7 +669,7 @@ public static class PolygonDrawing
                     }
                     else//fallback bevel
                     {
-                        outsideRightCur = cur + normalPrev * lineThickness * 0.5f;
+                        outsideRightCur = cur + normalPrev * lineThickness;
                     }
                 }
                 
@@ -685,7 +683,6 @@ public static class PolygonDrawing
         }
     }
     
-
     public static void DrawLinesConvex(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3) return;
