@@ -442,6 +442,7 @@ public static class PolygonDrawing
     #endregion
 
     
+    
     #region Draw Lines
    
     /// <summary>
@@ -525,42 +526,87 @@ public static class PolygonDrawing
         }
     }
     #endregion
-
-    //TODO: Add xml summaries
+    
     #region Draw Lines Convex
 
     /// <summary>
-    /// Calculates the maximum line thickness that can be applied to a convex polygon's outline
-    /// before the inward offset overlaps at the center.
+    /// Calculates the maximum line thickness that can be safely used to draw the outline of a convex polygon
+    /// without causing self-intersections or rendering artifacts. The result is scaled by the given safety margin factor.
     /// </summary>
-    /// <param name="poly">The convex polygon.</param>
-    /// <param name="centroid">The centroid of the polygon, used as the reference point for distance calculations.</param>
-    /// <returns>The maximum safe thickness for inward offset, or 0 if the polygon is invalid.</returns>
-    public static float GetConvexPolygonMaxLineThickness(this Polygon poly, Vector2 centroid)
+    /// <param name="poly">The convex polygon to analyze.</param>
+    /// <param name="safetyMarginFactor">
+    /// A factor (0-1) to reduce the maximum thickness for safety. Default is 0.95 (5% margin).
+    /// </param>
+    /// <returns>The maximum safe line thickness for the polygon, or 0 if the polygon is invalid.</returns>
+    public static float GetConvexPolygonMaxLineThickness(this Polygon poly, float safetyMarginFactor = 0.95f)
     {
         if (poly.Count < 3) return 0f;
 
         var minDisSquared = float.MaxValue;
 
-        for (var i = 0; i < poly.Count; i++)
+        Vector2 lastPoint = Vector2.Zero, lastDir = Vector2.Zero;
+        for (var i = 0; i <= poly.Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
-            var segment = new Segment(start, end);
-
-            // Get perpendicular distance from centroid to this edge
-            var result =segment.GetClosestPoint(centroid, out float disSquared);
-            if (!result.Valid || disSquared <= 0) continue;
-            if (disSquared < minDisSquared)
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
+            var cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if(lsPrev <= 0 || lsNext <= 0) continue;
+            
+            var dirPrev = wPrev.Normalize();
+            var dirNext = wNext.Normalize();
+            
+            var normalPrev = dirPrev.GetPerpendicularRight();
+            var normalNext = dirNext.GetPerpendicularRight();
+            
+            var miterDir = (normalPrev + normalNext).Normalize();
+            if (lastDir == Vector2.Zero)
             {
-                minDisSquared = disSquared;
+                lastPoint = cur;
+                lastDir = miterDir;
+                continue;
             }
+            
+            var intersection = Ray.IntersectRayRay(lastPoint, -lastDir, cur, -miterDir);
+            if (intersection.Valid)
+            {
+                float curLsSquared = (intersection.Point - cur).LengthSquared();
+                float prevLsSquared = (intersection.Point - lastPoint).LengthSquared();
+                if (curLsSquared > 0 && prevLsSquared > 0)
+                {
+                    float min = MathF.Min(curLsSquared, prevLsSquared);
+                    if (min < minDisSquared)
+                    {
+                        minDisSquared = min;
+                    }
+                }
+            }
+
+            lastPoint = cur;
+            lastDir = miterDir;
         }
 
-        // return MathF.Sqrt(minDisSquared) * 0.66f;
-        return MathF.Sqrt(minDisSquared) * 0.5f;
+        return MathF.Sqrt(minDisSquared) * safetyMarginFactor;
     }
 
+    /// <summary>
+    /// Draws the outline of a convex polygon with the specified line thickness and color.
+    /// This method is optimized for convex polygons and supports miter and beveled joins.
+    /// </summary>
+    /// <param name="poly">The convex polygon to draw. Must have at least 3 points.</param>
+    /// <param name="lineThickness">The thickness of the outline in world units.</param>
+    /// <param name="color">The color of the outline. Alpha is set to 255 (fully opaque).</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
+    /// Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
+    /// </param>
     public static void DrawLinesConvex(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3) return;
@@ -682,7 +728,20 @@ public static class PolygonDrawing
             }
         }
     }
-    
+  
+    /// <summary>
+    /// Draws the outline of a convex polygon using the specified <see cref="LineDrawingInfo"/>.
+    /// This method is optimized for convex polygons and supports miter and beveled joins.
+    /// </summary>
+    /// <param name="poly">The convex polygon to draw. Must have at least 3 points.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
+    /// Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
+    /// </param>
     public static void DrawLinesConvex(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3) return;
