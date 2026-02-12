@@ -302,6 +302,7 @@ public static class PolygonDrawing
     #endregion
 
 
+    //TODO: Move to polygon math or similar
     /// <summary>
     /// Calculates the maximum line thickness that can be safely used to draw the outline of a polygon
     /// without causing self-intersections or rendering artifacts. The result is scaled by the given safety margin factor.
@@ -507,6 +508,7 @@ public static class PolygonDrawing
 
     #endregion
 
+    //TODO: Remove -> rename DrawLinesTransparent to DrawLines
 
     #region Draw Lines
 
@@ -554,6 +556,12 @@ public static class PolygonDrawing
     /// <param name="color">Color used to draw the lines. Alpha channel will be set to 255 internally.</param>
     /// <param name="capType">Specifies the style of the line caps (start/end).</param>
     /// <param name="capPoints">Number of points used to tessellate the caps.</param>
+    /// <remarks>
+    /// <see cref="DrawLinesTransparent(Polygon, LineDrawingInfo, float, bool)"/> and
+    /// <see cref="DrawLinesConvex(Polygon, LineDrawingInfo, float, bool)"/> are more robust, faster alternatives for drawing outlines with transparent colors,
+    /// and also support miter and beveled joins. Use those instead when possible.
+    /// The only advantage of this function is that it can draw more rounded corners with high <paramref name="capPoints"/> values at the cost of performance.
+    /// </remarks>
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3) return;
@@ -600,7 +608,7 @@ public static class PolygonDrawing
     /// </summary>
     /// <param name="poly">The convex polygon to draw. Must have at least 3 points.</param>
     /// <param name="lineThickness">The thickness of the outline in world units.</param>
-    /// <param name="color">The color of the outline. Alpha is set to 255 (fully opaque).</param>
+    /// <param name="color">The color of the outline..</param>
     /// <param name="miterLimit">
     /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
     /// Default is 2.0f.
@@ -690,9 +698,13 @@ public static class PolygonDrawing
                     var start = next + normalNext * lineThickness;
                     var intersection = Ray.IntersectRayRay(start, -dirNext, p, -perp);
                     if (intersection.Valid)
+                    {
                         outsideLeftCur = intersection.Point;
+                    }
                     else //fallback bevel
+                    {
                         outsideLeftCur = cur + normalNext * lineThickness;
+                    }
 
                     if (!initialized)
                     {
@@ -705,9 +717,13 @@ public static class PolygonDrawing
                     start = prev + normalPrev * lineThickness;
                     intersection = Ray.IntersectRayRay(start, dirPrev, p, perp);
                     if (intersection.Valid)
+                    {
                         outsideRightCur = intersection.Point;
+                    }
                     else //fallback bevel
+                    {
                         outsideRightCur = cur + normalPrev * lineThickness;
+                    }
                 }
 
                 Raylib.DrawTriangle(outsidePrev, outsideRightCur, insideCur, rayColor);
@@ -743,6 +759,20 @@ public static class PolygonDrawing
 
     #region Draw Lines Transparent
 
+    /// <summary>
+    /// Draws the outline of a polygon with transparent color support.
+    /// This method handles miter and beveled joins and allows for custom miter limits.
+    /// </summary>
+    /// <param name="poly">The polygon whose outline will be drawn.</param>
+    /// <param name="lineThickness">The thickness of the outline in world units.</param>
+    /// <param name="color">The color of the outline, including alpha for transparency.</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
+    /// Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
+    /// </param>
     public static void DrawLinesTransparent(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         Vector2 lastOuter = Vector2.Zero, lastInner = Vector2.Zero;
@@ -855,21 +885,23 @@ public static class PolygonDrawing
             }
             else
             {
-                //TODO: Implement
                 miterLength = totalMiterLengthLimit;
                 Vector2 cornerOuterPrev, cornerOuterNext;
 
                 var prevOuter = prev + normalPrev * lineThickness;
                 var prevInner = prev - normalPrev * lineThickness;
-                var nextOuter = next + normalNext * lineThickness;
                 var nextInner = next - normalNext * lineThickness;
                 var intersection = Ray.IntersectRayRay(prevInner, dirPrev, nextInner, -dirNext);
                 var cornerInner = intersection.Valid ? intersection.Point : cur - miterDir * miterLength;
+
 
                 if (beveled)
                 {
                     cornerOuterPrev = cur + normalPrev * lineThickness;
                     cornerOuterNext = cur + normalNext * lineThickness;
+
+                    // cornerOuterPrev.Draw(2, new ColorRgba(System.Drawing.Color.Orange));
+                    // cornerOuterNext.Draw(2, new ColorRgba(System.Drawing.Color.Orange));
                 }
                 else
                 {
@@ -889,26 +921,67 @@ public static class PolygonDrawing
                     }
                 }
 
+                if (!initialized)
+                {
+                    lastInner = cornerInner;
+                    lastOuter = cornerOuterNext;
+                    lastCornerType = cornerType.type;
+                    initialized = true;
+                    continue;
+                }
+
+
                 if (cornerType.type >= 0)
                 {
-                    Raylib.DrawTriangle(cornerInner, prevInner, prevOuter, rayColor);
-                    Raylib.DrawTriangle(cornerInner, prevOuter, cornerOuterPrev, rayColor);
-                    Raylib.DrawTriangle(cornerInner, cornerOuterNext, nextOuter, rayColor);
-                    Raylib.DrawTriangle(cornerInner, nextOuter, nextInner, rayColor);
-                    Raylib.DrawTriangle(cornerInner, cornerOuterPrev, cornerOuterNext, rayColor);
+                    if (lastCornerType >= 0)
+                    {
+                        Raylib.DrawTriangle(cornerInner, lastInner, lastOuter, rayColor);
+                        Raylib.DrawTriangle(cornerInner, lastOuter, cornerOuterPrev, rayColor);
+                    }
+                    else
+                    {
+                        Raylib.DrawTriangle(cornerInner, lastOuter, lastInner, rayColor);
+                        Raylib.DrawTriangle(cornerInner, lastInner, cornerOuterPrev, rayColor);
+                    }
+
+                    Raylib.DrawTriangle(cornerOuterPrev, cornerOuterNext, cornerInner, rayColor);
                 }
                 else
                 {
-                    Raylib.DrawTriangle(prevInner, cornerInner, prevOuter, rayColor);
-                    Raylib.DrawTriangle(prevOuter, cornerInner, cornerOuterPrev, rayColor);
-                    Raylib.DrawTriangle(cornerOuterNext, cornerInner, nextOuter, rayColor);
-                    Raylib.DrawTriangle(nextOuter, cornerInner, nextInner, rayColor);
-                    Raylib.DrawTriangle(cornerOuterPrev, cornerInner, cornerOuterNext, rayColor);
+                    if (lastCornerType >= 0)
+                    {
+                        Raylib.DrawTriangle(cornerInner, lastInner, lastOuter, rayColor);
+                        Raylib.DrawTriangle(cornerInner, cornerOuterPrev, lastInner, rayColor);
+                    }
+                    else
+                    {
+                        Raylib.DrawTriangle(cornerInner, lastOuter, lastInner, rayColor);
+                        Raylib.DrawTriangle(cornerInner, cornerOuterPrev, lastOuter, rayColor);
+                    }
+
+                    Raylib.DrawTriangle(cornerOuterNext, cornerOuterPrev, cornerInner, rayColor);
                 }
+
+                lastInner = cornerInner;
+                lastOuter = cornerOuterNext;
+                lastCornerType = cornerType.type;
             }
         }
     }
 
+    /// <summary>
+    /// Draws the outline of a polygon with transparent color support using the specified <see cref="LineDrawingInfo"/>.
+    /// Handles miter and beveled joins, and allows for custom miter limits.
+    /// </summary>
+    /// <param name="poly">The polygon whose outline will be drawn.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
+    /// Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
+    /// </param>
     public static void DrawLinesTransparent(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
         poly.DrawLinesTransparent(lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
@@ -963,11 +1036,22 @@ public static class PolygonDrawing
 
     #endregion
 
-
-    //TODO: Add xml summaries
-
     #region Draw Cornered Absolute Transparent
 
+    /// <summary>
+    /// Draws a polygon corner based on an absolute <paramref name="cornerLength"/>, handling miter/bevel joins, custom cap types and transparent colors are supported.
+    /// </summary>
+    /// <param name="prev">The previous vertex of the polygon.</param>
+    /// <param name="corner">The current corner vertex.</param>
+    /// <param name="next">The next vertex of the polygon.</param>
+    /// <param name="cornerLength">The length of the corner segment to render.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color used for rendering, including alpha for transparency.</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// Beveling is faster and simpler but does not look as good.</param>
     private static void DrawCornerAbsoluteTransparent(Vector2 prev, Vector2 corner, Vector2 next, float cornerLength, float lineThickness, ColorRgba color,
         LineCapType capType, int capPoints, float miterLimit = 2f, bool beveled = false)
     {
@@ -1091,6 +1175,18 @@ public static class PolygonDrawing
         }
     }
 
+    /// <summary>
+    /// Draws each corner of the polygon with an absolute <paramref name="cornerLength"/>, handling miter/bevel joins, custom cap types and transparent colors are supported.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color used for rendering, including alpha for transparency.</param>
+    /// <param name="cornerLength">The length of the corner segment to render.</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
@@ -1126,12 +1222,34 @@ public static class PolygonDrawing
         }
     }
 
+    /// <summary>
+    /// Draws each corner of the polygon with an absolute <paramref name="cornerLength"/>, handling miter/bevel joins, custom cap types, and transparent colors.
+    /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="cornerLength">The length of the corner segment to render.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
         poly.DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
     }
 
+    /// <summary>
+    /// Draws each corner of the polygon with an absolute length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color used for rendering, including alpha for transparency.</param>
+    /// <param name="cornerLengths">A list of corner segment lengths to render for each corner.</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
@@ -1169,13 +1287,32 @@ public static class PolygonDrawing
         }
     }
 
+    /// <summary>
+    /// Draws each corner of the polygon with an absolute length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
+    /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="cornerLength">A list of corner segment lengths to render for each corner.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredAbsoluteTransparent(this Polygon poly, List<float> cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
         poly.DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
     }
 
-
+    /// <summary>
+    /// Calculates parameters for drawing a polygon corner with an absolute <paramref name="cornerLength"/> and <paramref name="lineThickness"/>.
+    /// Returns true if parameters are valid for drawing, otherwise false.
+    /// </summary>
+    /// <param name="poly">The polygon whose corner parameters will be calculated.</param>
+    /// <param name="cornerLength">The length of the corner segment to render.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="newCornerLength">The calculated corner length to use for drawing.</param>
+    /// <param name="newLineThickness">The calculated line thickness to use for drawing.</param>
     public static bool CaluclateDrawCornerAbsoluteParameters(this Polygon poly, float cornerLength, float lineThickness, LineCapType capType,
         out float newCornerLength, out float newLineThickness)
     {
@@ -1229,10 +1366,24 @@ public static class PolygonDrawing
 
     #endregion
 
-    //TODO: Add xml summaries
-
     #region Draw Cornered Relative Transparent
 
+    /// <summary>
+    /// Draws each corner of the polygon with a relative length based on <paramref name="cornerLengthFactor"/>, handling miter/bevel joins, custom cap types, and transparent colors.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color used for rendering, including alpha for transparency.</param>
+    /// <param name="cornerLengthFactor">
+    /// The factor (0-1) that determines the relative length of each corner segment to render.
+    /// 0: No corner is drawn.
+    /// 1: Maximum relative length.
+    /// </param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredRelativeTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLengthFactor,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
@@ -1271,12 +1422,36 @@ public static class PolygonDrawing
         }
     }
 
+    /// <summary>
+    /// Draws each corner of the polygon with a relative length based on <paramref name="cornerLengthFactor"/>, handling miter/bevel joins, custom cap types, and transparent colors.
+    /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="cornerLengthFactor">
+    /// The factor (0-1) that determines the relative length of each corner segment to render.
+    /// 0: No corner is drawn.
+    /// 1: Maximum relative length.
+    /// </param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depending on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded. Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredRelativeTransparent(this Polygon poly, float cornerLengthFactor, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
         poly.DrawCorneredRelativeTransparent(lineInfo.Thickness, lineInfo.Color, cornerLengthFactor, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
     }
 
+    /// <summary>
+    /// Draws each corner of the polygon with a relative length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color used for rendering, including alpha for transparency.</param>
+    /// <param name="cornerLengthFactors">A list of relative corner length factors (0-1) for each corner.</param>
+    /// <param name="capType">The type of line cap to use.</param>
+    /// <param name="capPoints">The number of points for the cap.</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depending on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded. Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredRelativeTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengthFactors,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
@@ -1315,6 +1490,15 @@ public static class PolygonDrawing
         }
     }
 
+    /// <summary>
+    /// Draws each corner of the polygon with a relative length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
+    /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
+    /// </summary>
+    /// <param name="poly">The polygon whose corners will be drawn.</param>
+    /// <param name="cornerLengthFactors">A list of relative corner length factors (0-1) for each corner.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depending on <paramref name="beveled"/>.</param>
+    /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded. Beveling is faster and simpler but does not look as good.</param>
     public static void DrawCorneredRelativeTransparent(this Polygon poly, List<float> cornerLengthFactors, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
@@ -1423,56 +1607,6 @@ public static class PolygonDrawing
             var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
             SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
             SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
-        }
-    }
-
-    #endregion
-
-    #region Helper
-
-    private static void DrawLinesHelper(Polygon poly, float thickness, ColorRgba color, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false)
-    {
-        if (poly.Count <= 2) return;
-        if (poly.Count == 3)
-        {
-            TriangleDrawing.DrawTriangleLines(poly[0], poly[1], poly[2], thickness, color, cornerPoints);
-            return;
-        }
-
-        ShapeClipperJoinType joinType;
-        if (cornerPoints > 0)
-        {
-            joinType = ShapeClipperJoinType.Round;
-        }
-        else
-        {
-            if (miterLimit >= 2f)
-                joinType = ShapeClipperJoinType.Miter;
-            else
-                joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
-        }
-
-        double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
-        var result = poly.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
-        if (result.Count <= 0) return;
-
-        if (result.Count == 1)
-        {
-            var polygon = result[0].ToPolygon();
-            polygon.Draw(color);
-        }
-        else
-        {
-            var triangulationResult = Clipper.Triangulate(result, 4, out var solution, false);
-            if (triangulationResult == TriangulateResult.success)
-            {
-                var rayColor = color.ToRayColor();
-                foreach (var path in solution)
-                {
-                    if (path.Count < 3) continue;
-                    Raylib.DrawTriangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2(), rayColor);
-                }
-            }
         }
     }
 
