@@ -303,6 +303,63 @@ public static class PolygonDrawing
 
     #region Draw Lines Perimeter & Percentage
 
+    public static void DrawLinesPerimeterTransparent(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (poly.Count < 3 || perimeterToDraw == 0) return;
+        //TODO: Implement
+    }
+
+    //TODO: Add xml summary
+    public static void DrawLinesPerimeterTransparent(this Polygon poly, float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo)
+    {
+        poly.DrawLinesPerimeterTransparent(perimeterToDraw, startIndex,  lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    
+    //TODO: Add xml summary
+    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (poly.Count < 3 || f == 0f) return;
+        
+        var negative = false;
+        if (f < 0)
+        {
+            negative = true;
+            f *= -1;
+        }
+
+        var startIndex = (int)f;
+        float percentage = f - startIndex;
+        if (percentage <= 0) return;
+        if (percentage >= 1)
+        {
+            poly.DrawLines(lineThickness, color);
+            return;
+        }
+
+        var perimeter = 0f;
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            float l = (end - start).Length();
+            perimeter += l;
+        }
+
+        poly.DrawLinesPerimeterTransparent(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
+    }
+    
+    //TODO: Add xml summary
+    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, LineDrawingInfo lineInfo)
+    {
+        poly.DrawLinesPercentageTransparent(f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    #endregion
+    
+    
+    //TODO: Test performance vs transparent methods
+    // - if transparent methods are faster remove these functions and rename transparent versions to DrawLinesPerimeter and DrawLinesPercentage
+    #region Draw Lines Perimeter & Percentage
+
     /// <summary>
     /// Draws a certain amount of the polygon's perimeter as an outline.
     /// This method is primarily optimized for performance and forces fully opaque colors
@@ -321,8 +378,7 @@ public static class PolygonDrawing
     /// Useful for animating outlines or drawing partial polygons.
     /// Use <see cref="Polygon.GenerateOutlinePerimeterTriangulation(float, int, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
     /// </remarks>
-    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color,
-        LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3 || perimeterToDraw == 0) return;
 
@@ -379,8 +435,7 @@ public static class PolygonDrawing
     /// Useful for progress indicators or animated outlines.
     /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation(float, float, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
     /// </remarks>
-    public static void DrawLinesPercentage(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended,
-        int capPoints = 2)
+    public static void DrawLinesPercentage(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3 || f == 0f) return;
 
