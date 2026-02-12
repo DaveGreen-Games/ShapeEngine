@@ -4,6 +4,7 @@ using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
+using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Random;
@@ -11,11 +12,10 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
-
 public partial class Polygon
 {
-    
     #region Math
+
     /// <summary>
     /// Computes an approximate incircle (largest inscribed circle) for the polygon by searching
     /// for a point inside the polygon that maximizes the distance to the nearest edge.
@@ -36,13 +36,13 @@ public partial class Polygon
     public Circle GetIncircle(int iterations = 100, int samples = 100)
     {
         if (Count < 3) return new(new Vector2(), 0f);
-    
+
         var bounds = GetBoundingBox();
         if (bounds.Size.Width <= 0f || bounds.Size.Height <= 0f)
         {
             return new(bounds.Center, 0f);
         }
-    
+
         var bestCenter = GetCentroid();
         if (!ContainsPoint(bestCenter))
         {
@@ -62,20 +62,20 @@ public partial class Polygon
                 bestCenter = bounds.Center;
             }
         }
-        
+
         GetClosestSegment(bestCenter, out float disSquared);
-    
+
         // Iteratively search for a better center point
         for (int i = 0; i < iterations; i++)
         {
             bool foundBetter = false;
             float searchRadius = bounds.Size.Length * (1.0f / (i + 1)); // Decrease search radius over time
-    
+
             for (int j = 0; j < samples; j++)
             {
                 float angle = (float)j / samples * 2.0f * MathF.PI;
                 Vector2 testPoint = bestCenter + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * searchRadius;
-    
+
                 if (ContainsPoint(testPoint))
                 {
                     GetClosestSegment(testPoint, out float newDisSquared);
@@ -87,15 +87,16 @@ public partial class Polygon
                     }
                 }
             }
-    
+
             if (!foundBetter && i > 10) // Early exit if no improvement is found
             {
                 break;
             }
         }
-    
+
         return new Circle(bestCenter, MathF.Sqrt(disSquared));
     }
+
     /// <summary>
     /// Gets the projected shape points by translating each vertex by a vector.
     /// </summary>
@@ -114,6 +115,7 @@ public partial class Polygon
 
         return points;
     }
+
     /// <summary>
     /// Projects the polygon along a vector and returns the convex hull of the result.
     /// </summary>
@@ -133,6 +135,7 @@ public partial class Polygon
 
         return FindConvexHull(points);
     }
+
     /// <summary>
     /// Calculates the centroid (center of mass) of the polygon.
     /// </summary>
@@ -174,6 +177,7 @@ public partial class Polygon
 
         // return result * (1f / (GetArea() * 6f));
     }
+
     /// <summary>
     /// Calculates the perimeter (total edge length) of the polygon.
     /// </summary>
@@ -190,6 +194,7 @@ public partial class Polygon
 
         return length;
     }
+
     /// <summary>
     /// Calculates the squared perimeter of the polygon.
     /// </summary>
@@ -206,6 +211,7 @@ public partial class Polygon
 
         return lengthSq;
     }
+
     /// <summary>
     /// Calculates the squared diameter (maximum distance from centroid to a vertex).
     /// </summary>
@@ -227,6 +233,7 @@ public partial class Polygon
 
         return maxDisSquared;
     }
+
     /// <summary>
     /// Calculates the diameter (maximum distance from centroid to a vertex).
     /// </summary>
@@ -236,6 +243,7 @@ public partial class Polygon
         if (Count <= 2) return 0;
         return MathF.Sqrt(GetDiameterSquared());
     }
+
     /// <summary>
     /// Calculates the signed area of the polygon.
     /// </summary>
@@ -255,6 +263,7 @@ public partial class Polygon
 
         return area / 2f;
     }
+
     /// <summary>
     /// Determines if the polygon's winding order is clockwise.
     /// </summary>
@@ -283,19 +292,19 @@ public partial class Polygon
     {
         int num = Count;
         if (num < 3) return false;
-        
+
         bool? sign = null;
         for (var i = 0; i < num; i++)
         {
-            int prev = (i + num - 1) % num;//wraps around to last index if i is 0
+            int prev = (i + num - 1) % num; //wraps around to last index if i is 0
             int next = (i + 1) % num; //wraps around to 0 if i is last index
             var d0 = this[i] - this[prev];
             var d1 = this[next] - this[i];
             float cross = d0.Cross(d1);
-        
+
             //Ignores collinear points and only sets the reference sign on the first valid cross product.
             if (cross == 0f) continue;
-        
+
             //Checks if the current sign of the cross-product is the same as the last
             //If it is not, the polygon is self-intersecting
             bool currentSign = cross > 0f;
@@ -304,11 +313,11 @@ public partial class Polygon
             else if (sign != currentSign)
                 return false;
         }
-        
+
         //all cross-product signs were either collinear or the same.
         return true;
     }
-    
+
     /// <summary>
     /// Determines if a polygon defined by a list of vertices is convex.
     /// </summary>
@@ -329,19 +338,19 @@ public partial class Polygon
     {
         int num = vertices.Count;
         if (num < 3) return false;
-        
+
         bool? sign = null;
         for (var i = 0; i < num; i++)
         {
-            int prev = (i + num - 1) % num;//wraps around to last index if i is 0
+            int prev = (i + num - 1) % num; //wraps around to last index if i is 0
             int next = (i + 1) % num; //wraps around to 0 if i is last index
             var d0 = vertices[i] - vertices[prev];
             var d1 = vertices[next] - vertices[i];
             float cross = d0.Cross(d1);
-        
+
             //Ignores collinear points and only sets the reference sign on the first valid cross-product.
             if (cross == 0f) continue;
-        
+
             //Checks if the current sign of the cross-product is the same as the last
             //If it is not, the polygon is self-intersecting (concave)
             bool currentSign = cross > 0f;
@@ -350,12 +359,11 @@ public partial class Polygon
             else if (sign != currentSign)
                 return false;
         }
-        
+
         //all cross-product signs were either collinear or the same.
         return true;
     }
-   
-    
+
     /// <summary>
     /// Converts the polygon to a <see cref="Points"/> collection.
     /// </summary>
@@ -364,6 +372,7 @@ public partial class Polygon
     {
         return new(this);
     }
+
     /// <summary>
     /// Calculates the mean centroid (average of all vertices).
     /// </summary>
@@ -382,14 +391,76 @@ public partial class Polygon
 
         return total / Count;
     }
+
     /// <summary>
     /// Computes the length of this polygon's apothem. Only valid for regular polygons.
     /// </summary>
     /// <returns>The length of the apothem.</returns>
     /// <remarks>More info: http://en.wikipedia.org/wiki/Apothem</remarks>
     public float GetApothem() => (this.GetCentroid() - (this[0].Lerp(this[1], 0.5f))).Length();
+
+    /// <summary>
+    /// Calculates the maximum line thickness that can be safely used to draw the outline of a polygon
+    /// without causing self-intersections or rendering artifacts. The result is scaled by the given safety margin factor.
+    /// </summary>
+    /// <param name="safetyMarginFactor">
+    /// A factor (0-1) to reduce the maximum thickness for safety. Default is 0.95 (5% margin).
+    /// </param>
+    /// <returns>The maximum safe line thickness for the polygon, or 0 if the polygon is invalid.</returns>
+    public float CalculatePolygonMaxLineThickness(float safetyMarginFactor = 0.95f)
+    {
+        if (Count < 3) return 0f;
+
+        var minDisSquared = float.MaxValue;
+
+        Vector2 lastPoint = Vector2.Zero, lastDir = Vector2.Zero;
+        for (var i = 0; i <= Count; i++)
+        {
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[ShapeMath.WrapIndex(Count, i)];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if (lsPrev <= 0 || lsNext <= 0) continue;
+
+            var dirPrev = wPrev.Normalize();
+            var dirNext = wNext.Normalize();
+
+            var normalPrev = dirPrev.GetPerpendicularRight();
+            var normalNext = dirNext.GetPerpendicularRight();
+
+            var miterDir = (normalPrev + normalNext).Normalize();
+            if (lastDir == Vector2.Zero)
+            {
+                lastPoint = cur;
+                lastDir = miterDir;
+                continue;
+            }
+
+            var intersection = Ray.IntersectRayRay(lastPoint, -lastDir, cur, -miterDir);
+            if (intersection.Valid)
+            {
+                float curLsSquared = (intersection.Point - cur).LengthSquared();
+                float prevLsSquared = (intersection.Point - lastPoint).LengthSquared();
+                if (curLsSquared > 0 && prevLsSquared > 0)
+                {
+                    float min = MathF.Min(curLsSquared, prevLsSquared);
+                    if (min < minDisSquared) minDisSquared = min;
+                }
+            }
+
+            lastPoint = cur;
+            lastDir = miterDir;
+        }
+
+        return MathF.Sqrt(minDisSquared) * safetyMarginFactor;
+    }
+
     #endregion
-    
+
     #region Transform
 
     /// <summary>
@@ -403,17 +474,18 @@ public partial class Polygon
     /// </returns>
     public Polygon? ToAbsolute(Transform2D transform)
     {
-        if(Count < 3) return null;
+        if (Count < 3) return null;
         var newPolygon = new Polygon(Count);
         for (var i = 0; i < Count; i++)
         {
             var p = transform.Position + (this[i] * transform.ScaledSize.Radius).Rotate(transform.RotationRad);
             newPolygon.Add(p);
         }
+
         return newPolygon;
     }
-    
-    
+
+
     /// <summary>
     /// Sets the position of the polygon's centroid.
     /// </summary>
@@ -424,6 +496,7 @@ public partial class Polygon
         var delta = newPosition - centroid;
         ChangePosition(delta);
     }
+
     /// <summary>
     /// Rotates the polygon by a given angle in radians.
     /// </summary>
@@ -438,6 +511,7 @@ public partial class Polygon
             this[i] = origin + w.Rotate(rotRad);
         }
     }
+
     /// <summary>
     /// Sets the absolute rotation of the polygon.
     /// </summary>
@@ -451,6 +525,7 @@ public partial class Polygon
         var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
         ChangeRotation(rotRad, origin);
     }
+
     /// <summary>
     /// Scales the polygon uniformly about its centroid.
     /// </summary>
@@ -465,6 +540,7 @@ public partial class Polygon
             this[i] = origin + w * scale;
         }
     }
+
     /// <summary>
     /// Changes the size of the polygon by a given amount (relative to each vertex).
     /// </summary>
@@ -479,6 +555,7 @@ public partial class Polygon
             this[i] = origin + w.ChangeLength(amount);
         }
     }
+
     /// <summary>
     /// Sets the size (distance from centroid) of the polygon.
     /// </summary>
@@ -493,6 +570,7 @@ public partial class Polygon
             this[i] = origin + w.SetLength(size);
         }
     }
+
     /// <summary>
     /// Returns a copy of the polygon with its centroid set to a new position.
     /// </summary>
@@ -505,6 +583,7 @@ public partial class Polygon
         var delta = newPosition - centroid;
         return ChangePositionCopy(delta);
     }
+
     /// <summary>
     /// Returns a copy of the polygon translated by an offset.
     /// </summary>
@@ -521,6 +600,7 @@ public partial class Polygon
 
         return newPolygon;
     }
+
     /// <summary>
     /// Returns a copy of the polygon rotated by a given angle around an origin.
     /// </summary>
@@ -539,6 +619,7 @@ public partial class Polygon
 
         return newPolygon;
     }
+
     /// <summary>
     /// Returns a copy of the polygon rotated by a given angle around its centroid.
     /// </summary>
@@ -549,6 +630,7 @@ public partial class Polygon
         if (Count < 3) return null;
         return ChangeRotationCopy(rotRad, GetCentroid());
     }
+
     /// <summary>
     /// Returns a copy of the polygon with its absolute rotation set around an origin.
     /// </summary>
@@ -562,6 +644,7 @@ public partial class Polygon
         var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
         return ChangeRotationCopy(rotRad, origin);
     }
+
     /// <summary>
     /// Returns a copy of the polygon with its absolute rotation set around its centroid.
     /// </summary>
@@ -576,6 +659,7 @@ public partial class Polygon
         var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
         return ChangeRotationCopy(rotRad, origin);
     }
+
     /// <summary>
     /// Returns a copy of the polygon scaled uniformly about its centroid.
     /// </summary>
@@ -586,6 +670,7 @@ public partial class Polygon
         if (Count < 3) return null;
         return ScaleSizeCopy(scale, GetCentroid());
     }
+
     /// <summary>
     /// Returns a copy of the polygon scaled uniformly about a given origin.
     /// </summary>
@@ -605,6 +690,7 @@ public partial class Polygon
 
         return newPolygon;
     }
+
     /// <summary>
     /// Returns a copy of the polygon scaled non-uniformly about a given origin.
     /// </summary>
@@ -624,6 +710,7 @@ public partial class Polygon
 
         return newPolygon;
     }
+
     /// <summary>
     /// Returns a copy of the polygon with its size changed by a given amount about a given origin.
     /// </summary>
@@ -643,6 +730,7 @@ public partial class Polygon
 
         return newPolygon;
     }
+
     /// <summary>
     /// Returns a copy of the polygon with its size changed by a given amount about its centroid.
     /// </summary>
@@ -653,6 +741,7 @@ public partial class Polygon
         if (Count < 3) return null;
         return ChangeSizeCopy(amount, GetCentroid());
     }
+
     /// <summary>
     /// Returns a copy of the polygon with its size set to a given value about a given origin.
     /// </summary>
@@ -672,6 +761,7 @@ public partial class Polygon
 
         return newPolygon;
     }
+
     /// <summary>
     /// Returns a copy of the polygon with its size set to a given value about its centroid.
     /// </summary>
@@ -682,6 +772,7 @@ public partial class Polygon
         if (Count < 3) return null;
         return SetSizeCopy(size, GetCentroid());
     }
+
     /// <summary>
     /// Returns a copy of the polygon with a transform applied, using a given origin.
     /// </summary>
@@ -697,6 +788,7 @@ public partial class Polygon
         newPolygon.SetSize(transform.ScaledSize.Length, origin);
         return newPolygon;
     }
+
     /// <summary>
     /// Returns a copy of the polygon with an offset transform applied, using a given origin.
     /// </summary>
@@ -715,8 +807,9 @@ public partial class Polygon
     }
 
     #endregion
-    
+
     #region Generate Rounded Corners
+
     /// <summary>
     /// Creates a copy of this polygon with rounded corners.
     /// </summary>
@@ -752,9 +845,10 @@ public partial class Polygon
         {
             return roundedPolygon;
         }
+
         return null;
     }
-    
+
     /// <summary>
     /// Attempts to produce a rounded-corner copy of this polygon and write it into <paramref name="copy"/>.
     /// </summary>
@@ -789,7 +883,7 @@ public partial class Polygon
         if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return false;
 
         copy.Clear();
-        
+
         for (var i = 0; i < Count; i++)
         {
             var prevP = this[ShapeMath.WrapIndex(Count, i - 1)];
@@ -807,7 +901,7 @@ public partial class Polygon
                 copy.Add(p);
                 continue;
             }
-            
+
             if (ShapeVec.IsColinearAngle(prevP, p, nextP, collinearAngleThresholdDeg))
             {
                 copy.Add(p);
@@ -819,24 +913,24 @@ public partial class Polygon
 
             float angle = MathF.Acos(Vector2.Dot(v1, v2));
             float cornerRadius = MathF.Min(prevEdgeLength, curEdgeLength) * 0.5f * cornerStrength;
-            
+
             float t = cornerRadius / MathF.Tan(angle / 2);
 
             // Prevent the rounded corner from extending beyond the midpoint of the adjacent edges
-            t = MathF.Min(t, prevEdgeLength * 0.45f);//45 used as a safety margin (from 50)
-            t = MathF.Min(t, curEdgeLength * 0.45f);//45 used as a safety margin (from 50)
+            t = MathF.Min(t, prevEdgeLength * 0.45f); //45 used as a safety margin (from 50)
+            t = MathF.Min(t, curEdgeLength * 0.45f); //45 used as a safety margin (from 50)
 
             // Recalculate cornerRadius based on the clamped t
             cornerRadius = t * MathF.Tan(angle / 2);
-            
+
             var startPoint = p + v1 * t;
             var endPoint = p + v2 * t;
 
             var center = p + (v1 + v2).Normalize() * (cornerRadius / MathF.Sin(angle / 2));
-            
+
             float startAngle = (startPoint - center).AngleRad();
             float endAngle = (endPoint - center).AngleRad();
-            
+
             float angleDiff = ShapeMath.GetShortestAngleRad(startAngle, endAngle);
 
             if (cornerPoints == 1)
@@ -856,7 +950,7 @@ public partial class Polygon
 
         return true;
     }
-    
+
     /// <summary>
     /// Creates rounded corners for this polygon in-place by replacing each sharp vertex with
     /// an approximated arc of points. The method mutates the polygon's vertex list.
@@ -891,7 +985,7 @@ public partial class Polygon
         if (cornerPoints <= 0 || Count < 3 || cornerStrength <= 0 || cornerStrength > 1) return false;
 
         var vertices = new List<Vector2>();
-        
+
         for (var i = 0; i < Count; i++)
         {
             var prevP = this[ShapeMath.WrapIndex(Count, i - 1)];
@@ -909,7 +1003,7 @@ public partial class Polygon
                 vertices.Add(p);
                 continue;
             }
-            
+
             if (ShapeVec.IsColinearAngle(prevP, p, nextP, collinearAngleThresholdDeg))
             {
                 vertices.Add(p);
@@ -921,24 +1015,24 @@ public partial class Polygon
 
             float angle = MathF.Acos(Vector2.Dot(v1, v2));
             float cornerRadius = MathF.Min(prevEdgeLength, curEdgeLength) * 0.5f * cornerStrength;
-            
+
             float t = cornerRadius / MathF.Tan(angle / 2);
 
             // Prevent the rounded corner from extending beyond the midpoint of the adjacent edges
-            t = MathF.Min(t, prevEdgeLength * 0.45f);//45 used as a safety margin (from 50)
-            t = MathF.Min(t, curEdgeLength * 0.45f);//45 used as a safety margin (from 50)
+            t = MathF.Min(t, prevEdgeLength * 0.45f); //45 used as a safety margin (from 50)
+            t = MathF.Min(t, curEdgeLength * 0.45f); //45 used as a safety margin (from 50)
 
             // Recalculate cornerRadius based on the clamped t
             cornerRadius = t * MathF.Tan(angle / 2);
-            
+
             var startPoint = p + v1 * t;
             var endPoint = p + v2 * t;
 
             var center = p + (v1 + v2).Normalize() * (cornerRadius / MathF.Sin(angle / 2));
-            
+
             float startAngle = (startPoint - center).AngleRad();
             float endAngle = (endPoint - center).AngleRad();
-            
+
             float angleDiff = ShapeMath.GetShortestAngleRad(startAngle, endAngle);
 
             if (cornerPoints == 1)
@@ -964,12 +1058,14 @@ public partial class Polygon
 
         return false;
     }
+
     #endregion
-    
+
     #region Triangulation
+
     //TODO: optimize triangulation to O(n log n) using Delaunay or other advanced methods
     // - Use clipper triangulation ?
-    
+
     /// <summary>
     /// Triangulates the polygon using an ear-clipping approach with randomized ear selection.
     /// Produces a set of non-overlapping triangles that cover the polygon interior.
@@ -996,9 +1092,10 @@ public partial class Polygon
         {
             validIndices.Add(i);
         }
+
         while (vertices.Count > 3)
         {
-            if (validIndices.Count <= 0) 
+            if (validIndices.Count <= 0)
                 break;
 
             int i = validIndices[Rng.Instance.RandI(0, validIndices.Count)];
@@ -1009,7 +1106,7 @@ public partial class Polygon
             var ba = b - a;
             var ca = c - a;
             float cross = ba.Cross(ca);
-            if (cross >= 0f)//makes sure that ear is not self intersecting
+            if (cross >= 0f) //makes sure that ear is not self intersecting
             {
                 validIndices.Remove(i);
                 continue;
@@ -1041,12 +1138,12 @@ public partial class Polygon
                 //break;
             }
         }
-        
+
         triangles.Add(new(vertices[0], vertices[1], vertices[2]));
-        
+
         return triangles;
     }
-    
+
     /// <summary>
     /// Triangulates this polygon and appends the resulting triangles into the provided <see cref="Triangulation"/>.
     /// This function aims to minimize memory allocations by reusing internal buffers and filling the provided collection instead of creating a new one.
@@ -1076,16 +1173,17 @@ public partial class Polygon
 
         triangulateTempVertices.Clear();
         triangulateTempValidIndices.Clear();
-        
+
         triangulateTempVertices.AddRange(this);
         int count = 0;
         for (var i = 0; i < triangulateTempVertices.Count; i++)
         {
             triangulateTempValidIndices.Add(i);
         }
+
         while (triangulateTempVertices.Count > 3)
         {
-            if (triangulateTempValidIndices.Count <= 0) 
+            if (triangulateTempValidIndices.Count <= 0)
                 break;
 
             int i = triangulateTempValidIndices[Rng.Instance.RandI(0, triangulateTempValidIndices.Count)];
@@ -1096,7 +1194,7 @@ public partial class Polygon
             var ba = b - a;
             var ca = c - a;
             float cross = ba.Cross(ca);
-            if (cross >= 0f)//makes sure that ear is not self intersecting
+            if (cross >= 0f) //makes sure that ear is not self intersecting
             {
                 triangulateTempValidIndices.Remove(i);
                 continue;
@@ -1119,7 +1217,7 @@ public partial class Polygon
             {
                 result.Add(t);
                 count++;
-                
+
                 triangulateTempVertices.RemoveAt(i);
 
                 triangulateTempValidIndices.Clear();
@@ -1136,7 +1234,7 @@ public partial class Polygon
 
         return count;
     }
-    
+
     /// <summary>
     /// Generates a triangulation for the polygon's outline when the polygon is inflated by a given <paramref name="thickness"/>.
     /// The outline is produced by inflating the polygon (using round, miter, bevel or square joins depending on parameters)
@@ -1164,7 +1262,8 @@ public partial class Polygon
     /// paths the function attempts to triangulate each resulting region. Uses the polygon's Inflate helper and the Clipper library
     /// for triangulation when applicable.
     /// </remarks>
-    public Triangulation? GenerateOutlineTriangulation(float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    public Triangulation? GenerateOutlineTriangulation(float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false,
+        bool useDelaunay = false)
     {
         if (Count <= 2) return null;
 
@@ -1184,33 +1283,34 @@ public partial class Polygon
                 joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
             }
         }
-        
+
         double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
         var result = this.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
         if (result.Count <= 0) return null;
 
         if (result.Count == 1)
         {
-            if(result[0].Count < 3) return null;
+            if (result[0].Count < 3) return null;
             var polygon = result[0].ToPolygon();
             return polygon.Triangulate();
         }
-        
+
         var triangulationResult = Clipper.Triangulate(result, 4, out var solution, useDelaunay);
         if (triangulationResult == TriangulateResult.success)
         {
             var triangulation = new Triangulation();
             foreach (var path in solution)
             {
-                if(path.Count < 3) continue;
+                if (path.Count < 3) continue;
                 triangulation.Add(new Triangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2()));
             }
+
             return triangulation;
         }
 
         return null;
     }
-    
+
     /// <summary>
     /// Generates a triangulation for the polygon's inflated outline and appends the resulting triangles
     /// into the provided <see cref="Triangulation"/> instance.
@@ -1241,7 +1341,8 @@ public partial class Polygon
     /// This overload minimizes allocations by filling the provided collection. For a standalone triangulation use
     /// the overload that returns a new <see cref="Triangulation"/> instance.
     /// </remarks>
-    public int GenerateOutlineTriangulation(ref Triangulation result, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    public int GenerateOutlineTriangulation(ref Triangulation result, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false,
+        bool useDelaunay = false)
     {
         if (Count <= 2) return 0;
 
@@ -1261,40 +1362,44 @@ public partial class Polygon
                 joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
             }
         }
-        
+
         double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
         var inflation = this.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
         if (inflation.Count <= 0) return 0;
 
         if (inflation.Count == 1)
         {
-            if(inflation[0].Count < 3) return 0;
+            if (inflation[0].Count < 3) return 0;
             triangulateTempPolygon.Clear();
             foreach (var vertex in inflation[0])
             {
                 triangulateTempPolygon.Add(vertex.ToVec2());
             }
+
             return triangulateTempPolygon.Triangulate(ref result);
         }
-        
+
         var triangulationResult = Clipper.Triangulate(inflation, 4, out var solution, useDelaunay);
         if (triangulationResult == TriangulateResult.success)
         {
             int count = 0;
             foreach (var path in solution)
             {
-                if(path.Count < 3) continue;
+                if (path.Count < 3) continue;
                 result.Add(new Triangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2()));
                 count++;
             }
+
             return count;
         }
 
         return 0;
     }
+
     #endregion
-    
+
     #region Outline Perimeter Triangulation
+
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's outline measured by a perimeter length.
     /// The method inflates the polygon by <paramref name="thickness"/> (using the specified join type and miter limit)
@@ -1311,17 +1416,18 @@ public partial class Polygon
     /// A <see cref="Triangulation"/> containing triangles for the generated outline segment, or <c>null</c> if the operation fails
     /// (for example when the polygon has insufficient vertices or the inflation/triangulation cannot produce a valid result).
     /// </returns>
-    public Triangulation? GenerateOutlinePerimeterTriangulation(float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    public Triangulation? GenerateOutlinePerimeterTriangulation(float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0,
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
-        if(perimeterToDraw <= 0f) return null;
+        if (perimeterToDraw <= 0f) return null;
 
         Polygon polygon = new(Count);
-        
+
         bool ccw = perimeterToDraw > 0;
         float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
         float accumulatedPerimeter = 0f;
         int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
-        
+
         //create polyline based on perimeter & start index
         while (absPerimeterToDraw > accumulatedPerimeter)
         {
@@ -1339,11 +1445,13 @@ public partial class Polygon
                 polygon.Add(end);
                 break;
             }
+
             accumulatedPerimeter += segmentLength;
         }
-        
+
         return polygon.GenerateOutlineTriangulation(thickness, cornerPoints, miterLimit, beveled, useDelaunay);
     }
+
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's inflated outline and appends the resulting triangles
     /// into the provided <see cref="Triangulation"/> instance.
@@ -1369,17 +1477,18 @@ public partial class Polygon
     /// The number of triangles appended to <paramref name="result"/>. Returns 0 if the polygon has insufficient vertices
     /// or if triangulation/inflation fails.
     /// </returns>
-    public int GenerateOutlinePerimeterTriangulation(ref Triangulation result, float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    public int GenerateOutlinePerimeterTriangulation(ref Triangulation result, float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0,
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
-        if(perimeterToDraw <= 0f) return 0;
+        if (perimeterToDraw <= 0f) return 0;
 
         Polygon polygon = new(Count);
-        
+
         bool ccw = perimeterToDraw > 0;
         float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
         float accumulatedPerimeter = 0f;
         int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
-        
+
         //create polyline based on perimeter & start index
         while (absPerimeterToDraw > accumulatedPerimeter)
         {
@@ -1397,16 +1506,19 @@ public partial class Polygon
                 polygon.Add(end);
                 break;
             }
+
             accumulatedPerimeter += segmentLength;
         }
-        
-        if(polygon.Count < 3) return 0;
-        
+
+        if (polygon.Count < 3) return 0;
+
         return polygon.GenerateOutlineTriangulation(ref result, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
     }
+
     #endregion
-    
+
     #region Outline Perimeter Triangulation
+
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter.
     /// The method inflates the polygon by <paramref name="thickness"/> and produces triangles that cover the outline segment
@@ -1433,16 +1545,17 @@ public partial class Polygon
     /// A <see cref="Triangulation"/> containing triangles for the generated outline percentage, or <c>null</c>
     /// if the operation fails (for example when the polygon has insufficient vertices or triangulation cannot produce a valid result).
     /// </returns>
-    public Triangulation? GenerateOutlinePercentageTriangulation(float f, float thickness, float perimeter = 0f, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    public Triangulation? GenerateOutlinePercentageTriangulation(float f, float thickness, float perimeter = 0f, int cornerPoints = 0, float miterLimit = 2f,
+        bool beveled = false, bool useDelaunay = false)
     {
-        if(f == 0f) return null;
-        
+        if (f == 0f) return null;
+
         float absF = MathF.Abs(f);
         var startIndex = (int)absF;
         float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
-        
-        if(f < 0f) percentage *= -1f;
-        
+
+        if (f < 0f) percentage *= -1f;
+
         if (perimeter <= 0)
         {
             perimeter = 0f;
@@ -1454,10 +1567,10 @@ public partial class Polygon
                 perimeter += l;
             }
         }
-        
+
         return GenerateOutlinePerimeterTriangulation(perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-        
     }
+
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter,
     /// appending the resulting triangles into <paramref name="result"/>.
@@ -1485,16 +1598,17 @@ public partial class Polygon
     /// The number of triangles appended to <paramref name="result"/>. Returns 0 if <paramref name="f"/> is 0,
     /// the polygon has insufficient vertices, or triangulation/inflation fails.
     /// </returns>
-    public int GenerateOutlinePercentageTriangulation(ref Triangulation result, float f, float thickness, float perimeter = 0f, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    public int GenerateOutlinePercentageTriangulation(ref Triangulation result, float f, float thickness, float perimeter = 0f, int cornerPoints = 0,
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
-        if(f == 0f) return 0;
-        
+        if (f == 0f) return 0;
+
         float absF = MathF.Abs(f);
         var startIndex = (int)absF;
         float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
-        
-        if(f < 0f) percentage *= -1f;
-        
+
+        if (f < 0f) percentage *= -1f;
+
         if (perimeter <= 0)
         {
             perimeter = 0f;
@@ -1506,9 +1620,9 @@ public partial class Polygon
                 perimeter += l;
             }
         }
-        
+
         return GenerateOutlinePerimeterTriangulation(ref result, perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-        
     }
+
     #endregion
 }

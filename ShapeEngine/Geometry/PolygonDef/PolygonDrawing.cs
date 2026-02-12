@@ -1,6 +1,4 @@
-using System.Drawing;
 using System.Numerics;
-using Clipper2Lib;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.CircleDef;
@@ -301,70 +299,6 @@ public static class PolygonDrawing
 
     #endregion
 
-
-    //TODO: Move to polygon math or similar
-    /// <summary>
-    /// Calculates the maximum line thickness that can be safely used to draw the outline of a polygon
-    /// without causing self-intersections or rendering artifacts. The result is scaled by the given safety margin factor.
-    /// </summary>
-    /// <param name="poly">The polygon to analyze.</param>
-    /// <param name="safetyMarginFactor">
-    /// A factor (0-1) to reduce the maximum thickness for safety. Default is 0.95 (5% margin).
-    /// </param>
-    /// <returns>The maximum safe line thickness for the polygon, or 0 if the polygon is invalid.</returns>
-    public static float CalculatePolygonMaxLineThickness(this Polygon poly, float safetyMarginFactor = 0.95f)
-    {
-        if (poly.Count < 3) return 0f;
-
-        var minDisSquared = float.MaxValue;
-
-        Vector2 lastPoint = Vector2.Zero, lastDir = Vector2.Zero;
-        for (var i = 0; i <= poly.Count; i++)
-        {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
-
-            var wPrev = cur - prev;
-            var wNext = next - cur;
-            float lsPrev = wPrev.LengthSquared();
-            float lsNext = wNext.LengthSquared();
-            if (lsPrev <= 0 || lsNext <= 0) continue;
-
-            var dirPrev = wPrev.Normalize();
-            var dirNext = wNext.Normalize();
-
-            var normalPrev = dirPrev.GetPerpendicularRight();
-            var normalNext = dirNext.GetPerpendicularRight();
-
-            var miterDir = (normalPrev + normalNext).Normalize();
-            if (lastDir == Vector2.Zero)
-            {
-                lastPoint = cur;
-                lastDir = miterDir;
-                continue;
-            }
-
-            var intersection = Ray.IntersectRayRay(lastPoint, -lastDir, cur, -miterDir);
-            if (intersection.Valid)
-            {
-                float curLsSquared = (intersection.Point - cur).LengthSquared();
-                float prevLsSquared = (intersection.Point - lastPoint).LengthSquared();
-                if (curLsSquared > 0 && prevLsSquared > 0)
-                {
-                    float min = MathF.Min(curLsSquared, prevLsSquared);
-                    if (min < minDisSquared) minDisSquared = min;
-                }
-            }
-
-            lastPoint = cur;
-            lastDir = miterDir;
-        }
-
-        return MathF.Sqrt(minDisSquared) * safetyMarginFactor;
-    }
-
-
     //TODO: Implement transparent version
 
     #region Draw Lines Perimeter & Percentage
@@ -462,7 +396,7 @@ public static class PolygonDrawing
         if (percentage <= 0) return;
         if (percentage >= 1)
         {
-            poly.DrawLines(lineThickness, color, capType, capPoints);
+            poly.DrawLines(lineThickness, color);
             return;
         }
 
@@ -508,256 +442,8 @@ public static class PolygonDrawing
 
     #endregion
 
-    //TODO: Remove -> rename DrawLinesTransparent to DrawLines
 
     #region Draw Lines
-
-    /// <summary>
-    /// Draws each edge of the polygon using a fast segment renderer with a color gradient from <paramref name="startColorRgba"/> to <paramref name="endColorRgba"/>.
-    /// The colors are interpolated per edge across the polygon's perimeter. Polygons with fewer than 3 points are ignored.
-    /// </summary>
-    /// <param name="polygon">The polygon whose edges will be drawn.</param>
-    /// <param name="lineThickness">Thickness of the line in world units.</param>
-    /// <param name="startColorRgba">Color used for the first edge. The renderer forces the alpha channel to fully opaque (255).</param>
-    /// <param name="endColorRgba">Color used for the last edge. The renderer forces the alpha channel to fully opaque (255).</param>
-    /// <param name="capType">Specifies the style of the line caps (start/end).</param>
-    /// <param name="capPoints">Number of points used to tessellate the caps.</param>
-    public static void DrawLines(this Polygon polygon, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba,
-        LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        if (polygon.Count < 3) return;
-
-        int redStep = (endColorRgba.R - startColorRgba.R) / polygon.Count;
-        int greenStep = (endColorRgba.G - startColorRgba.G) / polygon.Count;
-        int blueStep = (endColorRgba.B - startColorRgba.B) / polygon.Count;
-
-        for (var i = 0; i < polygon.Count; i++)
-        {
-            var start = polygon[i];
-            var end = polygon[(i + 1) % polygon.Count];
-            ColorRgba finalColorRgba = new
-            (
-                startColorRgba.R + redStep * i,
-                startColorRgba.G + greenStep * i,
-                startColorRgba.B + blueStep * i,
-                255
-            );
-            SegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
-        }
-    }
-
-    /// <summary>
-    /// Draws each edge of the polygon using a fast segment renderer.
-    /// This method is primarily optimized for performance and forces fully opaque colors
-    /// (alpha is set to 255 before drawing).
-    /// </summary>
-    /// <param name="poly">The polygon whose edges will be drawn. Polygons with fewer than 3 points are ignored.</param>
-    /// <param name="lineThickness">Thickness of the line in world units.</param>
-    /// <param name="color">Color used to draw the lines. Alpha channel will be set to 255 internally.</param>
-    /// <param name="capType">Specifies the style of the line caps (start/end).</param>
-    /// <param name="capPoints">Number of points used to tessellate the caps.</param>
-    /// <remarks>
-    /// <see cref="DrawLinesTransparent(Polygon, LineDrawingInfo, float, bool)"/> and
-    /// <see cref="DrawLinesConvex(Polygon, LineDrawingInfo, float, bool)"/> are more robust, faster alternatives for drawing outlines with transparent colors,
-    /// and also support miter and beveled joins. Use those instead when possible.
-    /// The only advantage of this function is that it can draw more rounded corners with high <paramref name="capPoints"/> values at the cost of performance.
-    /// </remarks>
-    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        if (poly.Count < 3) return;
-
-        //Does not support transparent colors! Therefore, alpha is set to 255 for safety
-        color = color.SetAlpha(255);
-
-        for (var i = 0; i < poly.Count; i++)
-        {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
-        }
-    }
-
-    /// <summary>
-    /// Draws each edge of the polygon using a fast segment renderer.
-    /// This overload accepts a <see cref="LineDrawingInfo"/> to supply thickness, color and cap options.
-    /// </summary>
-    /// <param name="poly">The polygon whose edges will be drawn. Polygons with fewer than 3 points are ignored.</param>
-    /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.). Alpha will be forced to 255 internally because this renderer does not support transparency.</param>
-    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo)
-    {
-        if (poly.Count < 3) return;
-
-        //Does not support transparent colors! Therefore, alpha is set to 255 for safety
-        var color = lineInfo.Color.SetAlpha(255);
-
-        for (var i = 0; i < poly.Count; i++)
-        {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(start, end, lineInfo.Thickness, color, lineInfo.CapType, lineInfo.CapPoints);
-        }
-    }
-
-    #endregion
-
-    #region Draw Lines Convex
-
-    /// <summary>
-    /// Draws the outline of a convex polygon with the specified line thickness and color.
-    /// This method is optimized for convex polygons and supports miter and beveled joins.
-    /// </summary>
-    /// <param name="poly">The convex polygon to draw. Must have at least 3 points.</param>
-    /// <param name="lineThickness">The thickness of the outline in world units.</param>
-    /// <param name="color">The color of the outline..</param>
-    /// <param name="miterLimit">
-    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
-    /// Default is 2.0f.
-    /// </param>
-    /// <param name="beveled">
-    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
-    /// </param>
-    public static void DrawLinesConvex(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
-    {
-        if (poly.Count < 3) return;
-
-        Vector2 outsidePrev = Vector2.Zero, insidePrev = Vector2.Zero;
-        var initialized = false;
-
-        var rayColor = color.ToRayColor();
-        float totalMiterLengthLimit = lineThickness * 0.5f * MathF.Max(2f, miterLimit);
-
-        for (var i = 0; i <= poly.Count; i++)
-        {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
-
-            var wPrev = cur - prev;
-            var wNext = next - cur;
-            float lsPrev = wPrev.LengthSquared();
-            float lsNext = wNext.LengthSquared();
-            if (lsPrev <= 0 || lsNext <= 0) continue;
-
-            var dirPrev = wPrev.Normalize();
-            var dirNext = wNext.Normalize();
-
-            var normalPrev = dirPrev.GetPerpendicularRight();
-            var normalNext = dirNext.GetPerpendicularRight();
-
-            var miterDir = (normalPrev + normalNext).Normalize();
-            float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-            float miterLength = lineThickness / MathF.Cos(miterAngleRad);
-
-            if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
-            {
-                if (!initialized)
-                {
-                    insidePrev = cur - miterDir * miterLength;
-                    outsidePrev = cur + miterDir * miterLength;
-                    initialized = true;
-                    continue;
-                }
-
-                var outsideCur = cur + miterDir * miterLength;
-                var insideCur = cur - miterDir * miterLength;
-
-                Raylib.DrawTriangle(outsidePrev, outsideCur, insideCur, rayColor);
-                Raylib.DrawTriangle(outsidePrev, insideCur, insidePrev, rayColor);
-
-                outsidePrev = outsideCur;
-                insidePrev = insideCur;
-            }
-            else
-            {
-                miterLength = totalMiterLengthLimit;
-
-                var insideCur = cur - miterDir * miterLength;
-
-                Vector2 outsideLeftCur, outsideRightCur;
-
-                if (beveled)
-                {
-                    outsideLeftCur = cur + normalNext * lineThickness;
-
-                    if (!initialized)
-                    {
-                        insidePrev = insideCur;
-                        outsidePrev = outsideLeftCur;
-                        initialized = true;
-                        continue;
-                    }
-
-                    outsideRightCur = cur + normalPrev * lineThickness;
-                }
-                else
-                {
-                    var p = cur + miterDir * miterLength;
-                    var dir = (p - cur).Normalize();
-                    var perp = dir.GetPerpendicularRight();
-
-                    var start = next + normalNext * lineThickness;
-                    var intersection = Ray.IntersectRayRay(start, -dirNext, p, -perp);
-                    if (intersection.Valid)
-                    {
-                        outsideLeftCur = intersection.Point;
-                    }
-                    else //fallback bevel
-                    {
-                        outsideLeftCur = cur + normalNext * lineThickness;
-                    }
-
-                    if (!initialized)
-                    {
-                        insidePrev = insideCur;
-                        outsidePrev = outsideLeftCur;
-                        initialized = true;
-                        continue;
-                    }
-
-                    start = prev + normalPrev * lineThickness;
-                    intersection = Ray.IntersectRayRay(start, dirPrev, p, perp);
-                    if (intersection.Valid)
-                    {
-                        outsideRightCur = intersection.Point;
-                    }
-                    else //fallback bevel
-                    {
-                        outsideRightCur = cur + normalPrev * lineThickness;
-                    }
-                }
-
-                Raylib.DrawTriangle(outsidePrev, outsideRightCur, insideCur, rayColor);
-                Raylib.DrawTriangle(outsidePrev, insideCur, insidePrev, rayColor);
-                Raylib.DrawTriangle(outsideRightCur, outsideLeftCur, insideCur, rayColor);
-
-                insidePrev = insideCur;
-                outsidePrev = outsideLeftCur;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Draws the outline of a convex polygon using the specified <see cref="LineDrawingInfo"/>.
-    /// This method is optimized for convex polygons and supports miter and beveled joins.
-    /// </summary>
-    /// <param name="poly">The convex polygon to draw. Must have at least 3 points.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="miterLimit">
-    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
-    /// Default is 2.0f.
-    /// </param>
-    /// <param name="beveled">
-    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
-    /// </param>
-    public static void DrawLinesConvex(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
-    {
-        if (poly.Count < 3) return;
-        poly.DrawLinesConvex(lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
-    }
-
-    #endregion
-
-    #region Draw Lines Transparent
 
     /// <summary>
     /// Draws the outline of a polygon with transparent color support.
@@ -773,7 +459,7 @@ public static class PolygonDrawing
     /// <param name="beveled">
     /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
     /// </param>
-    public static void DrawLinesTransparent(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
+    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         Vector2 lastOuter = Vector2.Zero, lastInner = Vector2.Zero;
         var lastCornerType = 0;
@@ -982,9 +668,166 @@ public static class PolygonDrawing
     /// <param name="beveled">
     /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
     /// </param>
-    public static void DrawLinesTransparent(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        poly.DrawLinesTransparent(lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
+        poly.DrawLines(lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
+    }
+
+    #endregion
+
+    #region Draw Lines Convex
+
+    /// <summary>
+    /// Draws the outline of a convex polygon with the specified line thickness and color.
+    /// This method is optimized for convex polygons and supports miter and beveled joins.
+    /// </summary>
+    /// <param name="poly">The convex polygon to draw. Must have at least 3 points.</param>
+    /// <param name="lineThickness">The thickness of the outline in world units.</param>
+    /// <param name="color">The color of the outline..</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
+    /// Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
+    /// </param>
+    public static void DrawLinesConvex(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
+    {
+        if (poly.Count < 3) return;
+
+        Vector2 outsidePrev = Vector2.Zero, insidePrev = Vector2.Zero;
+        var initialized = false;
+
+        var rayColor = color.ToRayColor();
+        float totalMiterLengthLimit = lineThickness * 0.5f * MathF.Max(2f, miterLimit);
+
+        for (var i = 0; i <= poly.Count; i++)
+        {
+            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
+            var cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
+            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+
+            var wPrev = cur - prev;
+            var wNext = next - cur;
+            float lsPrev = wPrev.LengthSquared();
+            float lsNext = wNext.LengthSquared();
+            if (lsPrev <= 0 || lsNext <= 0) continue;
+
+            var dirPrev = wPrev.Normalize();
+            var dirNext = wNext.Normalize();
+
+            var normalPrev = dirPrev.GetPerpendicularRight();
+            var normalNext = dirNext.GetPerpendicularRight();
+
+            var miterDir = (normalPrev + normalNext).Normalize();
+            float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
+            float miterLength = lineThickness / MathF.Cos(miterAngleRad);
+
+            if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
+            {
+                if (!initialized)
+                {
+                    insidePrev = cur - miterDir * miterLength;
+                    outsidePrev = cur + miterDir * miterLength;
+                    initialized = true;
+                    continue;
+                }
+
+                var outsideCur = cur + miterDir * miterLength;
+                var insideCur = cur - miterDir * miterLength;
+
+                Raylib.DrawTriangle(outsidePrev, outsideCur, insideCur, rayColor);
+                Raylib.DrawTriangle(outsidePrev, insideCur, insidePrev, rayColor);
+
+                outsidePrev = outsideCur;
+                insidePrev = insideCur;
+            }
+            else
+            {
+                miterLength = totalMiterLengthLimit;
+
+                var insideCur = cur - miterDir * miterLength;
+
+                Vector2 outsideLeftCur, outsideRightCur;
+
+                if (beveled)
+                {
+                    outsideLeftCur = cur + normalNext * lineThickness;
+
+                    if (!initialized)
+                    {
+                        insidePrev = insideCur;
+                        outsidePrev = outsideLeftCur;
+                        initialized = true;
+                        continue;
+                    }
+
+                    outsideRightCur = cur + normalPrev * lineThickness;
+                }
+                else
+                {
+                    var p = cur + miterDir * miterLength;
+                    var dir = (p - cur).Normalize();
+                    var perp = dir.GetPerpendicularRight();
+
+                    var start = next + normalNext * lineThickness;
+                    var intersection = Ray.IntersectRayRay(start, -dirNext, p, -perp);
+                    if (intersection.Valid)
+                    {
+                        outsideLeftCur = intersection.Point;
+                    }
+                    else //fallback bevel
+                    {
+                        outsideLeftCur = cur + normalNext * lineThickness;
+                    }
+
+                    if (!initialized)
+                    {
+                        insidePrev = insideCur;
+                        outsidePrev = outsideLeftCur;
+                        initialized = true;
+                        continue;
+                    }
+
+                    start = prev + normalPrev * lineThickness;
+                    intersection = Ray.IntersectRayRay(start, dirPrev, p, perp);
+                    if (intersection.Valid)
+                    {
+                        outsideRightCur = intersection.Point;
+                    }
+                    else //fallback bevel
+                    {
+                        outsideRightCur = cur + normalPrev * lineThickness;
+                    }
+                }
+
+                Raylib.DrawTriangle(outsidePrev, outsideRightCur, insideCur, rayColor);
+                Raylib.DrawTriangle(outsidePrev, insideCur, insidePrev, rayColor);
+                Raylib.DrawTriangle(outsideRightCur, outsideLeftCur, insideCur, rayColor);
+
+                insidePrev = insideCur;
+                outsidePrev = outsideLeftCur;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Draws the outline of a convex polygon using the specified <see cref="LineDrawingInfo"/>.
+    /// This method is optimized for convex polygons and supports miter and beveled joins.
+    /// </summary>
+    /// <param name="poly">The convex polygon to draw. Must have at least 3 points.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
+    /// Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
+    /// </param>
+    public static void DrawLinesConvex(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        if (poly.Count < 3) return;
+        poly.DrawLinesConvex(lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
     }
 
     #endregion
