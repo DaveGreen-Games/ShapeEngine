@@ -313,6 +313,7 @@ public static class PolygonDrawing
         float totalMiterLengthLimit = lineThickness * 0.5f * MathF.Max(2f, miterLimit);
         float f = -1f;
         
+        //TODO: Get negative (reverse) direction to work!
         bool reverse = perimeterToDraw < 0;
         if (reverse) perimeterToDraw *= -1;
         
@@ -320,7 +321,7 @@ public static class PolygonDrawing
         int steps = poly.Count;
         
         // var initialized = false;
-        var lastCornerType = 0;
+        var lastCornerType = 1;
         var nextPoint = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i - 1) : ShapeMath.WrapIndex(poly.Count, i + 1)];
         var curPoint = poly[i];
         var dir = (nextPoint - curPoint).Normalize();
@@ -331,6 +332,8 @@ public static class PolygonDrawing
         
         //Q: How to draw end caps?
         
+        
+        
         //DEBUG----------
         lastOuter.Draw(2f, new ColorRgba(System.Drawing.Color.Aqua));
         lastInner.Draw(2f, new ColorRgba(System.Drawing.Color.ForestGreen));
@@ -340,10 +343,11 @@ public static class PolygonDrawing
         //-------------
         i = reverse ? i - 1 : i + 1;
         
-        while(steps > 0 && f <= 0f)
+        while(steps > 0 && f < 0f)
         {
             var prev = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i + 1) : ShapeMath.WrapIndex(poly.Count, i - 1)];
             var cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
+            //ISSUE: WrapIndex seems to not always work correctly when i is negative?!
             var next = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i - 1) : ShapeMath.WrapIndex(poly.Count, i + 1)];
 
             i = reverse ? i - 1 : i + 1;
@@ -358,7 +362,7 @@ public static class PolygonDrawing
             {
                 //Note: Instead of lerping prev to cur we just calculate to factor to then later lerp the actual corner points
                 // - Just lerping prev to cur creates problems at corners (starts to intersect itself)
-                f = perimeterToDraw / length;
+                f = ShapeMath.Clamp(perimeterToDraw / length, 0f, 1f);
                 // float f = perimeterToDraw / length;
                 // cur = prev.Lerp(cur, f);
                 // prev.Draw(2f, new ColorRgba(System.Drawing.Color.White));
@@ -378,6 +382,11 @@ public static class PolygonDrawing
 
             //flip based on corner type
             var cornerType = dirPrev.ClassifyCorner(dirNext);
+            if (cornerType.type == 0)//collinear
+            {
+                //we dont treat collinear differently so we set it to 1 (ccw outwards corner)
+                cornerType = (1, cornerType.angle);
+            }
             Vector2 normalPrev, normalNext;
             if (cornerType.type >= 0)
             {
@@ -390,62 +399,30 @@ public static class PolygonDrawing
                 normalNext = dirNext.GetPerpendicularLeft();
             }
 
-            if (cornerType.type == 0) //collinear
-            {
-                var cornerOuter = cur + normalNext * lineThickness;
-                var cornerInner = cur - normalNext * lineThickness;
-
-                // if (!initialized)
-                // {
-                //     lastInner = cornerInner;
-                //     lastOuter = cornerOuter;
-                //     lastCornerType = cornerType.type;
-                //     initialized = true;
-                //     continue;
-                // }
-
-                Raylib.DrawTriangle(cornerInner, lastInner, lastOuter, new ColorRgba(System.Drawing.Color.Aqua).ToRayColor());
-                Raylib.DrawTriangle(cornerInner, lastOuter, cornerOuter, new ColorRgba(System.Drawing.Color.Aqua).ToRayColor());
-
-                lastInner = cornerInner;
-                lastOuter = cornerOuter;
-                lastCornerType = cornerType.type;
-                continue;
-            }
-
             var miterDir = (normalPrev + normalNext).Normalize();
             float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
             float miterLength = lineThickness / MathF.Cos(miterAngleRad);
 
             if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
             {
+                //NOTE: Works with positive (ccw) direction but not full with negative (reverse/cw) direction yet!
                 var cornerOuter = cur + miterDir * miterLength;
                 var cornerInner = cur - miterDir * miterLength;
 
-                //TODO: Figure out a way to correctly lerp the corner points to the last points!
-                if (f > 0)
+                if (f >= 0f)
                 {
-                    if (cornerType.type >= 0)
-                    {
-                        cornerOuter = lastInner.Lerp(cornerOuter, f);
-                        cornerInner = lastOuter.Lerp(cornerInner, f);
-                    }
-                    else
+                    if (cornerType.type == lastCornerType)
                     {
                         cornerOuter = lastOuter.Lerp(cornerOuter, f);
                         cornerInner = lastInner.Lerp(cornerInner, f);
                     }
-                    
+                    else
+                    {
+                        cornerOuter = lastInner.Lerp(cornerOuter, f);
+                        cornerInner = lastOuter.Lerp(cornerInner, f);
+                    }
                 }
-                // if (!initialized)
-                // {
-                //     lastInner = cornerInner;
-                //     lastOuter = cornerOuter;
-                //     lastCornerType = cornerType.type;
-                //     initialized = true;
-                //     continue;
-                // }
-
+                
                 if (cornerType.type >= 0)
                 {
                     if (lastCornerType >= 0)
@@ -479,6 +456,8 @@ public static class PolygonDrawing
             }
             else
             {
+                //TODO: Make this work now
+                
                 miterLength = totalMiterLengthLimit;
                 Vector2 cornerOuterPrev, cornerOuterNext;
 
@@ -511,15 +490,6 @@ public static class PolygonDrawing
                         cornerOuterNext = cur + normalNext * lineThickness;
                     }
                 }
-
-                // if (!initialized)
-                // {
-                //     lastInner = cornerInner;
-                //     lastOuter = cornerOuterNext;
-                //     lastCornerType = cornerType.type;
-                //     initialized = true;
-                //     continue;
-                // }
                 
                 if (cornerType.type >= 0)
                 {
@@ -817,8 +787,8 @@ public static class PolygonDrawing
                     continue;
                 }
 
-                Raylib.DrawTriangle(cornerInner, lastInner, lastOuter, new ColorRgba(System.Drawing.Color.Aqua).ToRayColor());
-                Raylib.DrawTriangle(cornerInner, lastOuter, cornerOuter, new ColorRgba(System.Drawing.Color.Aqua).ToRayColor());
+                Raylib.DrawTriangle(cornerInner, lastInner, lastOuter, rayColor);
+                Raylib.DrawTriangle(cornerInner, lastOuter, cornerOuter, rayColor);
 
                 lastInner = cornerInner;
                 lastOuter = cornerOuter;
