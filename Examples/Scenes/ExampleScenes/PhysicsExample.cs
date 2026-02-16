@@ -67,7 +67,7 @@ public class PhysicsExample : ExampleScene
             var sizeMax = ShapeMath.LerpFloat(1.5f, 3f, f);
             var sizeRange = new ValueRange(sizeMin, sizeMax);
             var color = ColorRgba.Lerp(ColorRgba.White, ColorRgba.White.SetAlpha(220), f);
-            t.BeginDraw(ColorRgba.Clear);
+            t.BeginDraw(ColorRgba.Transparent);
             for (int j = 0; j < starCount; j++)
             {
                 var x = Rng.Instance.RandF(0f, 2048);

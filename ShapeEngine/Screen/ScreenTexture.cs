@@ -74,7 +74,7 @@ public sealed class ScreenTexture
     /// <summary>
     /// The background color used when clearing the render texture.
     /// </summary>
-    public ColorRgba BackgroundColor = ColorRgba.Clear;
+    public ColorRgba BackgroundColor = ColorRgba.Transparent;
     /// <summary>
     /// Information about the game area and mouse position in world coordinates.
     /// </summary>

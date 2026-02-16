@@ -22,8 +22,8 @@ public class CurveColor(int capacity) : Curve<ColorRgba>(capacity)
     }
 
     /// <summary>
-    /// Gets the default value for the curve, which is <see cref="ColorRgba.Clear"/>.
+    /// Gets the default value for the curve, which is <see cref="ColorRgba.Transparent"/>.
     /// </summary>
     /// <returns>The default <see cref="ColorRgba"/> value.</returns>
-    protected override ColorRgba GetDefaultValue() => ColorRgba.Clear;
+    protected override ColorRgba GetDefaultValue() => ColorRgba.Transparent;
 }

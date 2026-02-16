@@ -55,7 +55,7 @@ public class EndlessSpaceCollision : ExampleScene
                 );
         }
 
-        public override (ColorRgba color, bool clear) GetBackgroundClearColor() => (ColorRgba.Clear, true);
+        public override (ColorRgba color, bool clear) GetBackgroundClearColor() => (ColorRgba.Transparent, true);
     }
 
     private List<ScreenTexture> starTextures = new(5);

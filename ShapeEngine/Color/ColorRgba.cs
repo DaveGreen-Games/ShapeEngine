@@ -38,10 +38,6 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     #endregion
     
     #region Predefined Colors
-    /// <summary>
-    /// Represents a predefined fully transparent color (R:0, G:0, B:0, A:0).
-    /// </summary>
-    public static ColorRgba Clear => new(0, 0, 0, 0);
     
     /// <summary>
     /// Gets a system-defined color that has an ARGB value of #00FFFFFF.
@@ -617,7 +613,7 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     /// Gets a system-defined color that has an ARGB value of #FFFF0000.
     /// </summary>
     public static ColorRgba Red => new(System.Drawing.Color.Red);
-
+    
     /// <summary>
     /// Gets a system-defined color that has an ARGB value of #FFBC8F8F.
     /// </summary>

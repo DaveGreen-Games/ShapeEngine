@@ -99,7 +99,7 @@ namespace Examples.Scenes
             
             textureSurface = new TextureSurface(2048, 2048);
             textureSurface.SetTextureFilter(TextureFilter.Trilinear);
-            textureSurface.BeginDraw(ColorRgba.Clear);
+            textureSurface.BeginDraw(ColorRgba.Transparent);
             LineDrawingInfo stripedInfo = new(2f, ColorRgba.White, LineCapType.Capped, 6);
             textureSurface.Rect.DrawStriped(16f, 30f, stripedInfo);
             textureSurface.EndDraw();
