@@ -689,7 +689,8 @@ public static class ShapeMath
     {
         if (count <= 0) return 0;
         if (index >= count) return index % count;
-        if (index < 0) return (index % count) + count;
+        if (index < 0) return ((index % count) + count) % count;
+        
         return index;
     }
     /// <summary>
