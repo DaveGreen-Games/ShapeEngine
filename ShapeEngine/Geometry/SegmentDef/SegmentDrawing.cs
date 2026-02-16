@@ -989,63 +989,7 @@ public static class SegmentDrawing
     
     #region Draw Cap
 
-    //Useless - DrawRoundCap is all that is needed
-    // public static void DrawSegmentCap(Vector2 p, Vector2 dir, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
-    // {
-    //   
-    //     if (capType == LineCapType.None || capPoints <= 0) return;
-    //     if (thickness < LineDrawingInfo.LineMinThickness) thickness = LineDrawingInfo.LineMinThickness;
-    //     float ls = dir.LengthSquared();
-    //     if (ls <= MinSegmentDrawLengthSquared) return;
-    //     
-    //     var pR = new Vector2(-dir.Y, dir.X);//perpendicular right
-    //     var pL = new Vector2(dir.Y, -dir.X);//perpendicular left
-    //
-    //     var capStart = p;
-    //     var capEnd = p + dir * thickness;
-    //     var capStartLeft = capStart + pL * thickness;
-    //     var capStartRight = capStart + pR * thickness;
-    //     
-    //     if (capType == LineCapType.Extended) //expand outwards
-    //     {
-    //         var br = capEnd + pR * thickness;
-    //         var tr = capEnd + pL * thickness;
-    //         Raylib.DrawTriangle(capStartLeft, capStartRight, br, color.ToRayColor());
-    //         Raylib.DrawTriangle(capStartLeft, br, tr, color.ToRayColor());
-    //         return;
-    //     }
-    //     
-    //     if (capType == LineCapType.Capped)//shrink inwards so that the line with cap is the same length
-    //     {
-    //         capEnd = capStart;
-    //         capStart -= dir * thickness;
-    //         capStartLeft -= dir * thickness;
-    //         capStartRight -= dir * thickness;
-    //         
-    //     }
-    //
-    //     //Draw Cap
-    //     if (capPoints == 1)
-    //     {
-    //         Raylib.DrawTriangle(capEnd, capStartLeft, capStart, color.ToRayColor());
-    //         Raylib.DrawTriangle(capEnd, capStart, capStartRight, color.ToRayColor());
-    //     }
-    //     else
-    //     {
-    //         var curStart = capStartLeft;
-    //         float angleStep = (180f / (capPoints + 1)) * ShapeMath.DEGTORAD;
-    //             
-    //         for (var i = 1; i <= capPoints; i++)
-    //         {
-    //             var pStart = capStart + pL.Rotate(- angleStep * i) * thickness;
-    //             Raylib.DrawTriangle(pStart, capStart, curStart, color.ToRayColor());
-    //             curStart = pStart;
-    //         }
-    //         Raylib.DrawTriangle(curStart, capStartRight, capStart, color.ToRayColor());
-    //
-    //     }
-    // }
-
+    //TODO: Add xml summary
     public static void DrawRoundCap(Vector2 center, Vector2 dir, float radius, int capPoints, ColorRgba color)
     {
         if(capPoints <= 0) return;
@@ -1066,6 +1010,29 @@ public static class SegmentDrawing
             curStart = pStart;
         }
         Raylib.DrawTriangle(curStart, capStartRight, center, color.ToRayColor());
+    }
+    
+    //Todo: Add xml summary
+    public static void DrawRoundCap(Vector2 left, Vector2 right, int capPoints, ColorRgba color)
+    {
+        if(capPoints <= 0) return;
+        var w = left - right;
+        var ls = w.LengthSquared();
+        if (ls <= 0f) return;
+        var l = MathF.Sqrt(ls);
+        var radius = l * 0.5f;
+        var dir = w / l;
+        var center = right + dir * radius;
+        var curStart = left;
+        float angleStep = (180f / (capPoints + 1)) * ShapeMath.DEGTORAD;
+                
+        for (var i = 1; i <= capPoints; i++)
+        {
+            var pStart = center + dir.Rotate(- angleStep * i) * radius;
+            Raylib.DrawTriangle(pStart, center, curStart, color.ToRayColor());
+            curStart = pStart;
+        }
+        Raylib.DrawTriangle(curStart, right, center, color.ToRayColor());
     }
     #endregion
     
