@@ -26,7 +26,6 @@ public static class PolygonDrawing
     #region Helper Members
 
     private static Triangulation drawHelperTriangulation = [];
-    private static Polygon drawRoundedHelperPolygon = [];
 
     #endregion
 
@@ -231,79 +230,29 @@ public static class PolygonDrawing
     }
 
     #endregion
-
-    #region Draw Rounded
-
-    /// <summary>
-    /// Draws the polygon with rounded corners by generating a rounded copy and triangulating it (performance-intensive, see remarks!).
-    /// </summary>
-    /// <param name="poly">The source polygon. Must contain at least 3 points.</param>
-    /// <param name="color">Fill color used to draw the rounded polygon.</param>
-    /// <param name="cornerPoints">Number of interpolated points used for each rounded corner. If &lt;= 0, corners are not rounded.</param>
-    /// <param name="cornerStrength">Controls how far the rounded corner deviates from the original corner. Range is [0-1] where 0 skips drawing and 1 draws max rounded corners; higher values produce larger arcs.</param>
-    /// <param name="collinearAngleThresholdDeg">Angle in degrees below which adjacent edges are considered collinear and corner is not rounded (Corner Vertex is copied as is).</param>
-    /// <param name="distanceThreshold">
-    /// Minimum adjacent edge length required to attempt rounding. If either adjacent edge is shorter
-    /// than this threshold the original vertex is preserved. Defaults to 1.0f.
-    /// </param>
-    /// <param name="multiThreaded">If true, the method avoids shared helper collections and uses local allocations (calls that return new triangulations).
-    /// This makes the call safe for concurrent threads but increases temporary allocations and CPU work.</param>
-    /// <remarks>
-    /// This method generates a new rounded polygon on each call which can be performance- and memory-intensive for complex polygons
-    /// or high corner point counts. For best performance, precompute the rounded polygon and triangulation. Use <see cref="Polygon.RoundCopy(int, float, float, float)"/> to create the rounded polygon,
-    /// and <see cref="Polygon.Triangulate()"/> to create the triangulation. Then translate/rotate/scale/draw the triangulation as needed.
-    /// </remarks>
-    public static void DrawRounded(this Polygon poly, ColorRgba color, int cornerPoints, float cornerStrength = 0.5f, float collinearAngleThresholdDeg = 5f,
-        float distanceThreshold = 1f, bool multiThreaded = false)
-    {
-        if (poly.Count < 3) return;
-        if (poly.Count == 3)
-        {
-            if (cornerPoints <= 0)
-                TriangleDrawing.DrawTriangle(poly[0], poly[1], poly[2], color);
-            else
-                TriangleDrawing.DrawTriangleRounded(poly[0], poly[1], poly[2], color, cornerPoints, cornerStrength);
-            return;
-        }
-
-        if (cornerPoints <= 0)
-        {
-            if (multiThreaded)
-            {
-                poly.Triangulate().Draw(color);
-            }
-            else
-            {
-                drawHelperTriangulation.Clear();
-                poly.Triangulate(ref drawHelperTriangulation);
-                drawHelperTriangulation.Draw(color);
-            }
-
-            return;
-        }
-
-        if (multiThreaded)
-        {
-            bool success = poly.RoundCopy(ref drawRoundedHelperPolygon, cornerPoints, cornerStrength, collinearAngleThresholdDeg, distanceThreshold);
-            if (!success) return;
-
-            drawHelperTriangulation.Clear();
-            drawRoundedHelperPolygon.Triangulate(ref drawHelperTriangulation);
-            drawHelperTriangulation.Draw(color);
-        }
-        else
-        {
-            var roundedPoly = poly.RoundCopy(cornerPoints, cornerStrength, collinearAngleThresholdDeg, distanceThreshold);
-            roundedPoly?.Triangulate().Draw(color);
-        }
-    }
-
-    #endregion
     
     #region Draw Lines Perimeter & Percentage
-
-    //TODO: Add xml summary
-    public static void DrawLinesPerimeterTransparent(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
+    
+    /// <summary>
+    /// Draws a portion of the polygon's perimeter as a thick line, starting at a given index.
+    /// Handles miter and beveled joins, and allows for custom miter limits.
+    /// </summary>
+    /// <param name="poly">The polygon whose perimeter will be drawn.</param>
+    /// <param name="perimeterToDraw">
+    /// The length of the perimeter to draw. If negative, draws in reverse order.
+    /// </param>
+    /// <param name="startIndex">
+    /// The index of the starting vertex. Drawing proceeds forward or backward depending on the sign of <paramref name="perimeterToDraw"/>.
+    /// </param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline, including alpha for transparency.</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel or squared join is used instead. Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// </param>
+    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3 || perimeterToDraw == 0) return;
         
@@ -625,15 +574,49 @@ public static class PolygonDrawing
             }
         }
     }
-
-    //TODO: Add xml summary
-    public static void DrawLinesPerimeterTransparent(this Polygon poly, float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    
+    /// <summary>
+    /// Draws a portion of the polygon's perimeter as a thick line, starting at a given index, using <see cref="LineDrawingInfo"/> for line options.
+    /// Handles miter and beveled joins, and allows for custom miter limits.
+    /// </summary>
+    /// <param name="poly">The polygon whose perimeter will be drawn.</param>
+    /// <param name="perimeterToDraw">
+    /// The length of the perimeter to draw. If negative, draws in reverse order.
+    /// </param>
+    /// <param name="startIndex">
+    /// The index of the starting vertex. Drawing proceeds forward or backward depending on the sign of <paramref name="perimeterToDraw"/>.
+    /// </param>
+    /// <param name="lineInfo">The line drawing information (thickness & color only).</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel or squared join is used instead. Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// </param>
+    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        poly.DrawLinesPerimeterTransparent(perimeterToDraw, startIndex,  lineInfo.Thickness, lineInfo.Color,  miterLimit, beveled);
+        poly.DrawLinesPerimeter(perimeterToDraw, startIndex,  lineInfo.Thickness, lineInfo.Color,  miterLimit, beveled);
     }
     
-    //TODO: Add xml summary
-    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, int startIndex, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
+    /// <summary>
+    /// Draws a portion of the polygon's perimeter as a thick line, starting at a given index, based on a percentage of the total perimeter.
+    /// </summary>
+    /// <param name="poly">The polygon whose perimeter will be drawn.</param>
+    /// <param name="f">
+    /// The percentage (0-1) of the perimeter to draw. If negative, draws in reverse order.
+    /// </param>
+    /// <param name="startIndex">
+    /// The index of the starting vertex. Drawing proceeds forward or backward depending on the sign of <paramref name="f"/>.
+    /// </param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline, including alpha for transparency.</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel or squared join is used instead. Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// </param>
+    public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3 || f == 0f) return;
 
@@ -644,8 +627,7 @@ public static class PolygonDrawing
             f *= -1;
         }
         
-        f = ShapeMath.Clamp(f, 0f, 1f);
-        // f = ShapeMath.WrapF(f, 0f, 1f);
+        f = ShapeMath.WrapF(f, 0f, 1f);
         startIndex = ShapeMath.WrapIndex(startIndex, poly.Count);
         if (f <= 0f) return;
         if (f >= 1f)
@@ -663,38 +645,53 @@ public static class PolygonDrawing
             perimeter += l;
         }
 
-        poly.DrawLinesPerimeterTransparent(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, miterLimit, beveled);
+        poly.DrawLinesPerimeter(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, miterLimit, beveled);
     }
     
-    //TODO: Add xml summary
-    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, int startIndex, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    /// <summary>
+    /// Draws a portion of the polygon's perimeter as a thick line, starting at a given index, based on a percentage of the total perimeter,
+    /// using <see cref="LineDrawingInfo"/> for line options.
+    /// </summary>
+    /// <param name="poly">The polygon whose perimeter will be drawn.</param>
+    /// <param name="f">
+    /// The percentage (0-1) of the perimeter to draw. If negative, draws in reverse order.
+    /// </param>
+    /// <param name="startIndex">
+    /// The index of the starting vertex. Drawing proceeds forward or backward depending on the sign of <paramref name="f"/>.
+    /// </param>
+    /// <param name="lineInfo">The line drawing information (thickness & color only).</param>
+    /// <param name="miterLimit">
+    /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel or squared join is used instead. Default is 2.0f.
+    /// </param>
+    /// <param name="beveled">
+    /// If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
+    /// </param>
+    public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        poly.DrawLinesPercentageTransparent(f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
+        poly.DrawLinesPercentage(f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
     }
     #endregion
     
-    
-    //NOTE: Keep this but rename it (for cap ends) and the transparent becomes default!
-    #region Draw Lines Perimeter & Percentage
+    #region Draw Lines Perimeter & Percentage Capped
 
     /// <summary>
-    /// Draws a certain amount of the polygon's perimeter as an outline.
-    /// This method forces a fully opaque color (alpha is set to 255 before drawing).
+    /// Draws a portion of the polygon's perimeter as a thick line with capped ends, starting at a given index.
+    /// Supports custom line thickness, color, cap type, and number of cap points.
+    /// This function is slower than <see cref="DrawLinesPerimeter(Polygon, float, int, float, ColorRgba, float, bool)"/>
+    /// due to drawing more triangles for the caps.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="poly">The polygon whose perimeter will be drawn.</param>
     /// <param name="perimeterToDraw">
-    /// The length of the perimeter to draw. If negative, draws in clockwise direction.
+    /// The length of the perimeter to draw. If negative, draws in reverse order.
     /// </param>
-    /// <param name="startIndex">The index of the vertex at which to start drawing.</param>
+    /// <param name="startIndex">
+    /// The index of the starting vertex. Drawing proceeds forward or backward depending on the sign of <paramref name="perimeterToDraw"/>.
+    /// </param>
     /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline. Only fully opaque colors are supported. Alpha is set 255.</param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    /// <remarks>
-    /// Useful for animating outlines or drawing partial polygons.
-    /// Use <see cref="Polygon.GenerateOutlinePerimeterTriangulation(float, int, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
-    /// </remarks>
-    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    /// <param name="color">The color of the outline. Does not support transparency, alpha will be set to 255 internally.</param>
+    /// <param name="capType">The type of line cap to use at the ends of the drawn segment.</param>
+    /// <param name="capPoints">The number of points for the cap (used for round caps).</param>
+    public static void DrawLinesPerimeterCapped(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3 || perimeterToDraw == 0) return;
 
@@ -726,32 +723,27 @@ public static class PolygonDrawing
             }
         }
     }
-
+    
     /// <summary>
-    /// Draws a certain percentage of the polygon's outline.
-    /// This method is primarily optimized for performance and forces fully opaque colors
-    /// (alpha is set to 255 before drawing).
+    /// Draws a portion of the polygon's perimeter as a thick line with capped ends, starting at a given index,
+    /// based on a percentage of the total perimeter.
+    /// This function is slower than <see cref="DrawLinesPercentage(Polygon, float, int, float, ColorRgba, float, bool)"/>
+    /// due to drawing more triangles for the caps.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="poly">The polygon whose perimeter will be drawn.</param>
     /// <param name="f">
-    /// Specifies the starting corner and the percentage of the outline to draw.
-    /// <list type="bullet">
-    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
-    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
-    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
-    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
-    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
-    /// </list>
+    /// The percentage (0-1) of the perimeter to draw. If negative, draws in reverse order.
+    /// </param>
+    /// <param name="startIndex">
+    /// The index of the starting vertex. Drawing proceeds forward or backward depending on the sign of <paramref name="f"/>.
     /// </param>
     /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline. Only fully opaque colors a supported. Sets alpha to 255. </param>
-    /// <param name="capType">The type of line cap to use.</param>
-    /// <param name="capPoints">The number of points for the cap.</param>
-    /// <remarks>
-    /// Useful for progress indicators or animated outlines.
-    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation(float, float, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
-    /// </remarks>
-    public static void DrawLinesPercentage(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    /// <param name="color">
+    /// The color of the outline. Does not support transparency, alpha will be set to 255 internally.
+    /// </param>
+    /// <param name="capType">The type of line cap to use at the ends of the drawn segment.</param>
+    /// <param name="capPoints">The number of points for the cap (used for round caps).</param>
+    public static void DrawLinesPercentageCapped(this Polygon poly, float f, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3 || f == 0f) return;
 
@@ -761,11 +753,11 @@ public static class PolygonDrawing
             negative = true;
             f *= -1;
         }
-
-        var startIndex = (int)f;
-        float percentage = f - startIndex;
-        if (percentage <= 0) return;
-        if (percentage >= 1)
+        
+        f = ShapeMath.WrapF(f, 0f, 1f);
+        startIndex = ShapeMath.WrapIndex(startIndex, poly.Count);
+        if (f <= 0f) return;
+        if (f >= 1f)
         {
             poly.DrawLines(lineThickness, color);
             return;
@@ -780,40 +772,32 @@ public static class PolygonDrawing
             perimeter += l;
         }
 
-        poly.DrawLinesPerimeter(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
+        poly.DrawLinesPerimeterCapped(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
-    /// Draws a certain percentage of the polygon's outline using <see cref="LineDrawingInfo"/>.
-    /// This method is primarily optimized for performance and forces fully opaque colors
-    /// (alpha is set to 255 before drawing).
+    /// Draws a portion of the polygon's perimeter as a thick line with capped ends, starting at a given index,
+    /// using <see cref="LineDrawingInfo"/> for line options. Supports custom cap types and cap points.
+    /// This function is slower than <see cref="DrawLinesPercentage(Polygon, float, int, LineDrawingInfo, float, bool)"/> due to drawing more triangles for the caps.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="poly">The polygon whose perimeter will be drawn.</param>
     /// <param name="f">
-    /// Specifies the starting corner and the percentage of the outline to draw.
-    /// <list type="bullet">
-    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
-    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
-    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
-    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
-    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
-    /// </list>
+    /// The percentage (0-1) of the perimeter to draw. If negative, draws in reverse order.
     /// </param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).
-    /// Only fully opaque colors are supported. Alpha is set to 255 internally.
+    /// <param name="startIndex">
+    /// The index of the starting vertex. Drawing proceeds forward or backward depending on the sign of <paramref name="f"/>.
     /// </param>
-    /// <remarks>
-    /// Useful for progress indicators or animated outlines.
-    /// Use <see cref="Polygon.GenerateOutlinePercentageTriangulation(float, float, float, int, float, bool, bool)"/> to create a triangulation that can be draw with transparent colors.
-    /// </remarks>
-    public static void DrawLinesPercentage(this Polygon poly, float f, LineDrawingInfo lineInfo)
+    /// <param name="lineInfo">
+    /// The line drawing information (thickness, color, cap type, cap points).
+    /// Color is expected to be opaque (alpha will be set to 255 internally).
+    /// </param>
+    public static void DrawLinesPercentageCapped(this Polygon poly, float f, int startIndex, LineDrawingInfo lineInfo)
     {
-        poly.DrawLinesPercentage(f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        poly.DrawLinesPercentageCapped(f, startIndex, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
 
     #endregion
-
-
+    
     #region Draw Lines
 
     /// <summary>
