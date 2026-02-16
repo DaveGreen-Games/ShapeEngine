@@ -299,13 +299,11 @@ public static class PolygonDrawing
     }
 
     #endregion
-
-    //TODO: Implement transparent version
-
+    
     #region Draw Lines Perimeter & Percentage
 
     //TODO: Add xml summary
-    public static void DrawLinesPerimeterTransparent(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2, float miterLimit = 2f, bool beveled = false)
+    public static void DrawLinesPerimeterTransparent(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3 || perimeterToDraw == 0) return;
         
@@ -320,28 +318,99 @@ public static class PolygonDrawing
         int steps = poly.Count;
         
         var lastCornerType = 1;
+        var prev = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i + 1) : ShapeMath.WrapIndex(poly.Count, i - 1)];
+        var cur = poly[i];
+        var next = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i - 1) : ShapeMath.WrapIndex(poly.Count, i + 1)];
+        var wPrev = cur - prev;
+        var wNext = next - cur;
+        float lsPrev = wPrev.LengthSquared();
+        float lsNext = wNext.LengthSquared();
+        if (lsPrev <= 0 || lsNext <= 0) return;
+
+        var dirPrev = wPrev.Normalize();
+        var dirNext = wNext.Normalize();
         
-        var curPoint = poly[i];
-        var nextPoint = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i - 1) : ShapeMath.WrapIndex(poly.Count, i + 1)];
+        //flip based on corner type
+        var cornerType = dirPrev.ClassifyCorner(dirNext);
+        if (cornerType.type == 0)//collinear
+        {
+            //we dont treat collinear differently so we set it to 1 (ccw outwards corner)
+            cornerType = (1, cornerType.angle);
+        }
+        Vector2 normalPrev, normalNext;
+        if (cornerType.type >= 0)
+        {
+            normalPrev = dirPrev.GetPerpendicularRight();
+            normalNext = dirNext.GetPerpendicularRight();
+        }
+        else
+        {
+            normalPrev = dirPrev.GetPerpendicularLeft();
+            normalNext = dirNext.GetPerpendicularLeft();
+        }
         
-        var dir = (nextPoint - curPoint).Normalize();
-        // var perp = reverse ? dir.GetPerpendicularLeft() : dir.GetPerpendicularRight();
-        var perp = dir.GetPerpendicularRight();
-        // var offsetPoint = curPoint - dir * lineThickness;
-        var lastOuter = curPoint + perp * lineThickness;
-        var lastInner = curPoint - perp * lineThickness;
-        
-        //Q: How to draw end caps?
-        //Q: Dont use endcaps and just calculate the correct points for the corner so end and start connect perfectly?
-        //Q: If caps are used the ends will overlap at some point?
+        var miterDir = (normalPrev + normalNext).Normalize();
+        float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
+        float miterLength = lineThickness / MathF.Cos(miterAngleRad);
+
+        Vector2 lastInner, lastOuter;
+        if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
+        {
+            lastOuter = cur + miterDir * miterLength;
+            lastInner = cur - miterDir * miterLength;
+        }
+        else
+        {
+            miterLength = totalMiterLengthLimit;
+
+            var prevOuter = prev + normalPrev * lineThickness;
+            var prevInner = prev - normalPrev * lineThickness;
+            var nextInner = next - normalNext * lineThickness;
+            var intersection = Ray.IntersectRayRay(prevInner, dirPrev, nextInner, -dirNext);
+            lastInner = intersection.Valid ? intersection.Point : cur - miterDir * miterLength;
+            
+            if (beveled)
+            {
+                // lastOuter = cur + normalPrev * lineThickness;
+                lastOuter = cur + normalNext * lineThickness;
+            }
+            else
+            {
+                var cornerOuter = cur + miterDir * miterLength;
+                var miterPerpRight = cornerType.type >= 0 ? miterDir.GetPerpendicularRight() : miterDir.GetPerpendicularLeft();
+                intersection = Ray.IntersectRayRay(prevOuter, dirPrev, cornerOuter, miterPerpRight);
+                if (intersection.Valid)
+                {
+                    // lastOuter = intersection.Point;
+                    float l = (cornerOuter - intersection.Point).Length();
+                    lastOuter = cornerOuter - miterPerpRight * l;
+                }
+                else //bevel fallback
+                {
+                    // lastOuter = cur + normalPrev * lineThickness;
+                    lastOuter = cur + normalNext * lineThickness;
+                }
+            }
+        }
+
+        if (cornerType.type < 0)
+        {
+            (lastInner, lastOuter) = (lastOuter, lastInner);
+        }
+
+        // var dir = (nextPoint - curPoint).Normalize();
+        //
+        // var perp = dir.GetPerpendicularRight();
+        // var lastOuter = curPoint + perp * lineThickness;
+        // var lastInner = curPoint - perp * lineThickness;
         
         i = reverse ? i - 1 : i + 1;
         
         while(steps > 0 && f < 0f)
         {
-            var prev = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i + 1) : ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
-            var next = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i - 1) : ShapeMath.WrapIndex(poly.Count, i + 1)];
+            prev = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i + 1) : ShapeMath.WrapIndex(poly.Count, i - 1)];
+            cur = poly[ShapeMath.WrapIndex(poly.Count, i)];
+            next = poly[reverse ? ShapeMath.WrapIndex(poly.Count, i - 1) : ShapeMath.WrapIndex(poly.Count, i + 1)];
             
             i = reverse ? i - 1 : i + 1;
             steps--;
@@ -356,23 +425,23 @@ public static class PolygonDrawing
                 f = ShapeMath.Clamp(perimeterToDraw / length, 0f, 1f);
             }
             
-            var wPrev = cur - prev;
-            var wNext = next - cur;
-            float lsPrev = wPrev.LengthSquared();
-            float lsNext = wNext.LengthSquared();
+            wPrev = cur - prev;
+            wNext = next - cur;
+            lsPrev = wPrev.LengthSquared();
+            lsNext = wNext.LengthSquared();
             if (lsPrev <= 0 || lsNext <= 0) return;
 
-            var dirPrev = wPrev.Normalize();
-            var dirNext = wNext.Normalize();
-
+            dirPrev = wPrev.Normalize();
+            dirNext = wNext.Normalize();
+            
             //flip based on corner type
-            var cornerType = dirPrev.ClassifyCorner(dirNext);
+            cornerType = dirPrev.ClassifyCorner(dirNext);
             if (cornerType.type == 0)//collinear
             {
                 //we dont treat collinear differently so we set it to 1 (ccw outwards corner)
                 cornerType = (1, cornerType.angle);
             }
-            Vector2 normalPrev, normalNext;
+            
             if (cornerType.type >= 0)
             {
                 normalPrev = dirPrev.GetPerpendicularRight();
@@ -384,9 +453,9 @@ public static class PolygonDrawing
                 normalNext = dirNext.GetPerpendicularLeft();
             }
 
-            var miterDir = (normalPrev + normalNext).Normalize();
-            float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-            float miterLength = lineThickness / MathF.Cos(miterAngleRad);
+            miterDir = (normalPrev + normalNext).Normalize();
+            miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
+            miterLength = lineThickness / MathF.Cos(miterAngleRad);
 
             if (miterLimit < 2f || miterLength < totalMiterLengthLimit)
             {
@@ -549,42 +618,42 @@ public static class PolygonDrawing
 
                     if(drawCorner) Raylib.DrawTriangle(cornerOuterNext, cornerOuterPrev, cornerInner, rayColor);
                 }
-
+                
                 lastInner = cornerInner;
                 lastOuter = cornerOuterNext;
                 lastCornerType = cornerType.type;
             }
         }
-        
     }
 
     //TODO: Add xml summary
     public static void DrawLinesPerimeterTransparent(this Polygon poly, float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        poly.DrawLinesPerimeterTransparent(perimeterToDraw, startIndex,  lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+        poly.DrawLinesPerimeterTransparent(perimeterToDraw, startIndex,  lineInfo.Thickness, lineInfo.Color,  miterLimit, beveled);
     }
     
     //TODO: Add xml summary
-    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2, float miterLimit = 2f, bool beveled = false)
+    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, int startIndex, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
         if (poly.Count < 3 || f == 0f) return;
-        
+
         var negative = false;
         if (f < 0)
         {
             negative = true;
             f *= -1;
         }
-
-        var startIndex = (int)f;
-        float percentage = f - startIndex;
-        if (percentage <= 0) return;
-        if (percentage >= 1)
+        
+        f = ShapeMath.Clamp(f, 0f, 1f);
+        // f = ShapeMath.WrapF(f, 0f, 1f);
+        startIndex = ShapeMath.WrapIndex(startIndex, poly.Count);
+        if (f <= 0f) return;
+        if (f >= 1f)
         {
-            poly.DrawLines(lineThickness, color);
+            poly.DrawLines(lineThickness, color, miterLimit, beveled);
             return;
         }
-
+        
         var perimeter = 0f;
         for (var i = 0; i < poly.Count; i++)
         {
@@ -594,25 +663,23 @@ public static class PolygonDrawing
             perimeter += l;
         }
 
-        poly.DrawLinesPerimeterTransparent(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints, miterLimit, beveled);
+        poly.DrawLinesPerimeterTransparent(perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, miterLimit, beveled);
     }
     
     //TODO: Add xml summary
-    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public static void DrawLinesPercentageTransparent(this Polygon poly, float f, int startIndex, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        poly.DrawLinesPercentageTransparent(f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+        poly.DrawLinesPercentageTransparent(f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
     }
     #endregion
     
     
-    //TODO: Test performance vs transparent methods
-    // - if transparent methods are faster remove these functions and rename transparent versions to DrawLinesPerimeter and DrawLinesPercentage
+    //NOTE: Keep this but rename it (for cap ends) and the transparent becomes default!
     #region Draw Lines Perimeter & Percentage
 
     /// <summary>
     /// Draws a certain amount of the polygon's perimeter as an outline.
-    /// This method is primarily optimized for performance and forces fully opaque colors
-    /// (alpha is set to 255 before drawing).
+    /// This method forces a fully opaque color (alpha is set to 255 before drawing).
     /// </summary>
     /// <param name="poly">The polygon to draw.</param>
     /// <param name="perimeterToDraw">
