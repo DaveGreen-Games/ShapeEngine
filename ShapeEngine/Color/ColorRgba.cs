@@ -1188,8 +1188,23 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     public ColorRgba ChangeBlue(int amount) => new(R, G, Clamp(B + amount), A);
     #endregion
 
+    #region Implicit Conversion
+
+    public static implicit operator System.Drawing.Color(ColorRgba c) 
+        => System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B);
+
+    public static implicit operator ColorRgba(System.Drawing.Color c) 
+        => new ColorRgba(c.R, c.G, c.B, c.A);
+    
+    public static implicit operator Raylib_cs.Color(ColorRgba c) 
+        => new Raylib_cs.Color(c.R, c.G, c.B, c.A);
+
+    public static implicit operator ColorRgba(Raylib_cs.Color c) 
+        => new ColorRgba(c.R, c.G, c.B, c.A);
+    
+    #endregion
+    
     #region Conversion
-    public System.Drawing.Color SystemColor => ToSysColor();
     
     /// <summary>
     /// Converts this ColorRgba to a System.Drawing.Color.
@@ -1454,7 +1469,6 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     public override int GetHashCode() => ToSysColor().GetHashCode();
     #endregion
     
-
     #region Clamp
     /// <summary>
     /// Clamps an integer value to the valid color component range of 0-255.
