@@ -1,7 +1,9 @@
 using System.Numerics;
+using Clipper2Lib;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
@@ -212,5 +214,93 @@ public readonly partial struct Circle
         return GetCircumference() * GetCircumference();
     }
 
+    #endregion
+    
+    #region Generate Circle Sector Outline Triangulation
+    private static Polygon? circleSectorOutlineTriangulationPolyCache = null;
+    
+    /// <summary>
+    /// Generates a triangulation for the outline of a circle sector (arc) with a specified thickness.
+    /// </summary>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="sides">The number of sides (segments) to approximate the arc.</param>
+    /// <param name="lineThickness">The thickness of the sector's outline.</param>
+    /// <param name="miterLimit">The miter limit for joins (default is 2.0).</param>
+    /// <param name="beveled">Whether to use beveled joins if miter limit is not met (default is false).</param>
+    /// <param name="useDelaunay">Whether to use Delaunay triangulation (default is false).</param>
+    /// <returns>
+    /// A <see cref="Triangulation"/> representing the triangulated outline of the circle sector,
+    /// or null if the parameters are invalid or the sector is degenerate.
+    /// </returns>
+    public Triangulation? GenerateCircleSectorOutlineTriangulation(float startAngleDeg, float endAngleDeg, int sides, float lineThickness, 
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (sides < 3 || Radius <= 0) return null;
+        float angleDifDeg = endAngleDeg - startAngleDeg;
+        float angleDifDegAbs = MathF.Abs(angleDifDeg);
+        if (angleDifDegAbs < 0.0001f) return null;
+        
+        if (angleDifDegAbs >= 360f)
+        {
+            
+            return null;
+        }
+
+        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+        float anglePieceRad = angleDifDeg * ShapeMath.DEGTORAD;
+        float angleStepRad = anglePieceRad / sides;
+
+        if (circleSectorOutlineTriangulationPolyCache == null)
+        {
+            circleSectorOutlineTriangulationPolyCache = new Polygon(sides + 1);
+        }
+        else
+        {
+            circleSectorOutlineTriangulationPolyCache.Clear();
+        }
+        
+        circleSectorOutlineTriangulationPolyCache.Add(Center);
+        for (var i = 0; i < sides; i++)
+        {
+            var p = Center + new Vector2(Radius, 0f).Rotate(startAngleRad + angleStepRad * i);
+            circleSectorOutlineTriangulationPolyCache.Add(p);
+        }
+        
+        ShapeClipperJoinType joinType;
+        if (sides > 0)
+        {
+            joinType = ShapeClipperJoinType.Round;
+        }
+        else
+        {
+            if (miterLimit >= 2f)
+            {
+                joinType = ShapeClipperJoinType.Miter;
+            }
+            else
+            {
+                joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
+            }
+        }
+
+        double arcTolerance = sides <= 0 ? 0.0 : lineThickness / (sides * 2);
+        
+        var paths = circleSectorOutlineTriangulationPolyCache.Inflate(lineThickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
+        var result = Clipper.Triangulate(paths, 8, out var solution, useDelaunay);
+        if (result == TriangulateResult.success)
+        {
+            var triangulation = new Triangulation();
+            foreach (var path in solution)
+            {
+                if (path.Count < 3) continue;
+                triangulation.Add(new TriangleDef.Triangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2()));
+            }
+
+            return triangulation;
+        }
+
+        return null;
+    }
     #endregion
 }
