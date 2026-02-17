@@ -1517,7 +1517,7 @@ public partial class Polygon
 
     #endregion
 
-    #region Outline Perimeter Triangulation
+    #region Outline Percentage Triangulation
 
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter.
