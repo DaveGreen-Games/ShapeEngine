@@ -287,6 +287,18 @@ public static class ShapeVec
         return new Vector2(sx * invArrayLen, sy * invArrayLen);
     }
     
+    /// <summary>
+    /// Converts an angle in radians to its positive equivalent in the range [0, 2π].
+    /// </summary>
+    /// <param name="angleRad">The angle in radians to convert.</param>
+    /// <returns>The equivalent positive angle in the range [0, 2π].</returns>
+    /// <remarks>Negative angles are wrapped to their positive equivalents by adding multiples of 2π.</remarks>
+    public static float ToPositiveAngleRad(float angleRad)
+    {
+        angleRad %= float.Tau; // float.Tau = 2 * π
+        if (angleRad < 0f) angleRad += float.Tau;
+        return angleRad;
+    }
 
     //Projection
     /// <summary>
