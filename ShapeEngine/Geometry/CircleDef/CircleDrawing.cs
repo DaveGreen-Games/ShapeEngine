@@ -1181,6 +1181,24 @@ public static class CircleDrawing
             return false;
         }
     }
+
+    private static void DrawCircleSectorLinesClosedFastInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides,
+        float lineThickness, ColorRgba color)
+    {
+        DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, sides, lineThickness, color);
+        
+        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+        float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
+        var startDir = Vector2.UnitX.Rotate(startAngleRad);
+        var endDir = Vector2.UnitX.Rotate(endAngleRad);
+        
+        var startPoint = center + startDir * radius;
+        var endPoint = center + endDir * radius;
+        SegmentDrawing.DrawSegment(center, startPoint, lineThickness, color, LineCapType.CappedExtended, 8);
+        SegmentDrawing.DrawSegment(center, endPoint, lineThickness, color, LineCapType.CappedExtended, 8);
+        
+    }
+
     private static void DrawCircleSectorLinesClosedInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, 
         float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
@@ -1194,26 +1212,15 @@ public static class CircleDrawing
             DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
             return;
         }
-
         
-        //TODO: Check Arc length from start to end angle
-        // - arc length needs to be at least lineThickness * 2
-        
-        //DEBUG------------------
-        var outsideCircle = new Circle(center, radius + lineThickness);
-        var insideCircle = new Circle(center, radius - lineThickness);
-        // outsideCircle.DrawLines(2f, ColorRgba.Wheat);
-        // insideCircle.DrawLines(2f, ColorRgba.Wheat);
-        outsideCircle.DrawSectorLines(startAngleDeg, endAngleDeg, 0, sides, new LineDrawingInfo(2f, ColorRgba.Wheat), false);
-        insideCircle.DrawSectorLines(startAngleDeg, endAngleDeg, 0, sides, new LineDrawingInfo(2f, ColorRgba.Wheat), false);
-        //----------------------
-        
+        if (color.A >= 255)
+        {
+            DrawCircleSectorLinesClosedFastInternal(center, radius, startAngleDeg, endAngleDeg, sides, lineThickness, color);
+            return;
+        }
         
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        float anglePieceRad = angleDifDeg * ShapeMath.DEGTORAD;
-        float angleStepRad = anglePieceRad / sides;
-        
         
         var prev = center + new Vector2(radius, 0f).Rotate(endAngleRad);
         var cur = center;
@@ -1237,11 +1244,18 @@ public static class CircleDrawing
         var nextInsideOffset = next - normalNext * lineThickness;
         
         var outsideCenterIntersection = RayDef.Ray.IntersectRayRay(prevOutsideOffset, dirPrev, nextOutsideOffset, -dirNext);
-        if(!outsideCenterIntersection.Valid) return;
+        if (!outsideCenterIntersection.Valid)
+        {
+            DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
+            return;
+        }
         var outsideCenter = outsideCenterIntersection.Point;
         
         var insideCenterIntersection = RayDef.Ray.IntersectRayRay(prevInsideOffset, dirPrev, nextInsideOffset, -dirNext);
-        if(!insideCenterIntersection.Valid) return;
+        if (!insideCenterIntersection.Valid)
+        {
+            return;
+        }
         var insideCenter = insideCenterIntersection.Point;
         
         var prevInsideCircleIntersection = RayDef.Ray.IntersectRayCircle(insideCenter, -dirPrev, center, radius - lineThickness);
@@ -1259,20 +1273,24 @@ public static class CircleDrawing
         {
             var ls = (prevOutside - nextOutside).LengthSquared();
             var thickness = lineThickness;
-            if (ls <= thickness * thickness) return;
+            if (ls <= thickness * thickness)
+            {
+                DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
+                return;
+            }
         }
         else
         {
             var ls = (prevInside - nextInside).LengthSquared();
             var thickness = lineThickness * 0.25f;
-            if (ls <= thickness * thickness) return;
+            if (ls <= thickness * thickness)
+            {
+                return;
+            }
         }
         
         var rayColor = color.ToRayColor();
         float totalMiterLengthLimit = lineThickness * 0.5f * MathF.Max(2f, miterLimit);
-        // var miterDir = (normalPrev + normalNext).Normalize();
-        // float miterAngleRad = MathF.Abs(miterDir.AngleRad(normalNext));
-        // float miterLength = lineThickness / MathF.Cos(miterAngleRad);
 
         var dis = (cur - outsideCenter).Length();
         if (miterLimit >= 2f && dis > totalMiterLengthLimit)
@@ -1378,103 +1396,40 @@ public static class CircleDrawing
         outsideCenter.Draw(4f, ColorRgba.Orange);
         //----------------------------------------
         
+
+        var curDir = (prevInside - center).Normalize();
+        var endDir = (nextInside - center).Normalize();
+        var angleRad = ShapeVec.AngleRad(endDir, curDir);
+        if (angleRad > 0)
+        {
+            angleRad *= -1;
+        }
+        else
+        {
+            angleRad = -MathF.Tau - angleRad;
+        }
         
-        //
-        // prevOutsideOffset.Draw(2f, ColorRgba.White);
-        // prevInsideOffset.Draw(2f, ColorRgba.White);
-        //
-        // nextInsideOffset.Draw(2f, ColorRgba.Green);
-        // nextOutsideOffset.Draw(2f, ColorRgba.Green);
+        var angleStepRad = angleRad / sides;
+        var prevInner = prevInside;
+        var prevOuter = center + curDir * (radius + lineThickness);
+
+        TriangleDrawing.DrawTriangle(prevInside, prevOutside, prevOuter, color);
         
-        // var outsideCenter = center + miterDir * miterLength;
-        // var insideCenter = center - miterDir * miterLength;
+        for (var i = 0; i < sides; i++)
+        {
+            curDir = curDir.Rotate(angleStepRad);
+            var curInner = center + curDir * (radius - lineThickness);
+            var curOuter = center + curDir * (radius + lineThickness);
+            
+            TriangleDrawing.DrawTriangle(prevInner, prevOuter, curOuter, color);
+            TriangleDrawing.DrawTriangle(prevInner, curOuter, curInner, color);
+
+            prevInner = curInner;
+            prevOuter = curOuter;
+        }
         
-        // var prevIntersection = RayDef.Ray.IntersectRayCircle(insideCenter, -dirPrev, center, radius - lineThickness);
-        // var nextIntersection = RayDef.Ray.IntersectRayCircle(insideCenter, dirNext, center, radius - lineThickness);
-        //
-        // Vector2 prevInside, nextInside;
-        // if (prevIntersection.a.Valid)
-        // {
-        //     prevInside = prevIntersection.a.Point;
-        // }
-        // else if (prevIntersection.b.Valid)
-        // {
-        //     prevInside = prevIntersection.b.Point;
-        // }
-        // else
-        // {
-        //     return;
-        // }
-        //
-        // if (nextIntersection.a.Valid)
-        // {
-        //     nextInside = nextIntersection.a.Point;
-        // }
-        // else if (nextIntersection.b.Valid)
-        // {
-        //     nextInside = nextIntersection.b.Point;
-        // }
-        // else
-        // {
-        //     return;
-        // }
-        //
-        // var prevOutside = prevInside + (prev - prevInside).Normalize() * miterLength;
-        // var nextOutside = nextInside + (next - nextInside).Normalize() * miterLength;
-        //
-        //
-        // insideCenter.Draw(2f, ColorRgba.Red);
-        // outsideCenter.Draw(2f, ColorRgba.Orange);
-        //
-        // prevInside.Draw(2f, ColorRgba.ForestGreen);
-        // prevOutside.Draw(2f, ColorRgba.Yellow);
-        //
-        // nextInside.Draw(2f, ColorRgba.CornflowerBlue);
-        // nextOutside.Draw(2f, ColorRgba.Purple);
-        //
-        // Raylib.DrawTriangle(insideCenter, prevInside, prevOutside, color);
-        // Raylib.DrawTriangle(insideCenter, prevOutside, outsideCenter, color);
-        // Raylib.DrawTriangle(insideCenter, outsideCenter, nextOutside, color);
-        // Raylib.DrawTriangle(insideCenter, nextOutside, nextInside, color);
+        TriangleDrawing.DrawTriangle(prevInner, prevOuter, nextOutside, color);
         
-        //Right now I ignore miterLimiter and beveled for simplicity!
-        // if (cornerType.type >= 0)
-        // {
-        //     
-        //     // normalPrev = dirPrev.GetPerpendicularRight();
-        //     // normalNext = dirNext.GetPerpendicularRight();
-        // }
-        // else
-        // {
-        //     
-        //     // normalPrev = dirPrev.GetPerpendicularLeft();
-        //     // normalNext = dirNext.GetPerpendicularLeft();
-        // }
-        
-        
-        //variant 1
-        // var poly = new Polygon(sides + 1);
-        //
-        // poly.Add(center);
-        // for (var i = 0; i < sides; i++)
-        // {
-        //     var p = center + new Vector2(radius, 0f).Rotate(startAngleRad + angleStepRad * i);
-        //     poly.Add(p);
-        // }
-        // poly.DrawLines(lineThickness, color, 2f, false);
-        // poly.DrawVertices(2f, ColorRgba.Yellow, 12);
-        
-        //variant 2
-        // var paths = poly.Inflate(lineThickness, ShapeClipperJoinType.Miter, ShapeClipperEndType.Joined, 2f, 2);
-        // var result = Clipper.Triangulate(paths, 8, out var solution, true);
-        // if (result == TriangulateResult.success)
-        // {
-        //     foreach (var path in solution)
-        //     {
-        //         if(path.Count < 3) continue;
-        //         Raylib.DrawTriangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2(), color);
-        //     }
-        // }
     }
 
     private static bool TransformPercentageToAngles(float f, out float startAngleDeg, out float endAngleDeg)
