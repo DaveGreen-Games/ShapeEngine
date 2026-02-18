@@ -14,6 +14,10 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
+//TODO: Remove all sides, segments and sideLength parameters and use a parameter for smoothness
+// - This affects all methods
+
+
 /// <summary>
 /// Provides static methods for drawing circles and circle-related shapes with various options,
 /// including filled circles, outlines, sectors, and advanced line drawing with scaling and percentage.
@@ -697,9 +701,6 @@ public static class CircleDrawing
 
     #endregion
     
-    
-    //TODO: Remove all side and sideLength parameters and use a parameter for smoothness
-    // - sides are calculate based on smoothnes and arc length -> twice as long arc length should have twice as many sides as half the arc length at the same smoothness level.
     #region Circle Sector
     
     /// <summary>
@@ -1062,29 +1063,6 @@ public static class CircleDrawing
         DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
     }
     #endregion
-    
-    //TODO: Delete
-    public static void DrawCircleSectorLinesDebug(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, ColorRgba color, bool closed = true)
-    {
-        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
-        float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        float anglePieceRad = endAngleRad - startAngleRad; // ShapeMath.GetShortestAngleDeg(startAngleDeg, endAngleDeg) * ShapeMath.DEGTORAD;
-        float angleStepRad = anglePieceRad / sides;
-        if (closed)
-        {
-            var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-            SegmentDrawing.DrawSegment(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2);
-
-            var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-            SegmentDrawing.DrawSegment(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2);
-        }
-        for (var i = 0; i < sides; i++)
-        {
-            var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStepRad * i);
-            var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStepRad * (i + 1));
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, LineCapType.CappedExtended, 2);
-        }
-    }
     
     #region Internal
     private static void DrawCircleLinesInternal(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba color)
@@ -1557,6 +1535,7 @@ public static class CircleDrawing
     }
 
     //only used for percentage drawing (only there are end caps necessary)
+    //TODO: This is not true! Percentage/Perimeter/Sector Lines all can make use of end caps! (Can I just remove the other OpenInternal method and use this?)
     private static void DrawCircleSectorLinesOpenInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, int sides, ColorRgba color, LineCapType lineCapType, int capPoints)
     {
         if (sides < 3 ||  radius <= 0) return;
@@ -1670,6 +1649,42 @@ public static class CircleDrawing
     #endregion
     
     #region Helper
+
+
+    public static ValueRange CircleSideLengthRange = new ValueRange(4f, 25f);
+    private static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleStepRad, out int steps)
+    {
+        angleStepRad = 0f;
+        steps = 0;
+        if (radius <= 0f) return false;
+        
+        // Normalize angle difference to [-360, 360], preserving sign
+        float angleDiffDeg = endAngleDeg - startAngleDeg;
+        if (angleDiffDeg > 360f) angleDiffDeg %= 360f;
+        if (angleDiffDeg < -360f) angleDiffDeg %= 360f;
+
+        float absAngleDiffDeg = MathF.Abs(angleDiffDeg);
+        if (absAngleDiffDeg < 0.00001f) return false;
+
+        smoothness = ShapeMath.Clamp(smoothness, 0f, 1f);
+        float sideLength = CircleSideLengthRange.Lerp(smoothness);
+        if(sideLength <= 0f) return false;
+
+        // Arc length for the given angle
+        float arcLength = 2f * ShapeMath.PI * radius * (absAngleDiffDeg / 360f);
+
+        // Calculate steps (at least 1)
+        steps = Math.Max(1, (int)MathF.Ceiling(arcLength / sideLength));
+
+        // Angle step in radians (preserve direction)
+        angleStepRad = (angleDiffDeg * ShapeMath.DEGTORAD) / steps;
+
+        return true;
+    }
+    
+    
+    //TODO: Remove?
+    
     /// <summary>
     /// Calculates the number of sides needed to approximate a circle with the given radius and maximum side length.
     /// </summary>
