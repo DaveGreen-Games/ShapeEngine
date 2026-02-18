@@ -778,7 +778,7 @@ public static class CircleDrawing
     #endregion
     
     #region Draw Circle Sector Lines
-    //TODO: Open Sector Lines should use end caps as well?
+    //TODO: Add cap type and cap point parameters
     
     /// <summary>
     /// Draws the outline of a sector of a circle using the specified <see cref="Circle"/> instance, start and end angles, line drawing info, and optional closure and side length.
@@ -965,7 +965,7 @@ public static class CircleDrawing
         }
         else
         {
-            DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, sides, lineThickness, color);
+            DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, lineThickness, sides, color, LineCapType.None, 0);
         }
         // float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         // float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
@@ -1024,7 +1024,7 @@ public static class CircleDrawing
         }
         else
         {
-            DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, sides, lineThickness, color);
+            DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, lineThickness, sides, color, LineCapType.None, 0);
         }
         // float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         // float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
@@ -1082,112 +1082,121 @@ public static class CircleDrawing
         }
     }
     
-    private static void DrawCircleSectorLinesOpenInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, ColorRgba color)
+    private static void DrawCircleSectorLinesOpenInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, int sides, ColorRgba color, LineCapType lineCapType, int capPoints)
     {
-        if (sides < 3 || radius <= 0) return;
+        if (sides < 3 ||  radius <= 0) return;
+        float angleDifDeg = endAngleDeg - startAngleDeg;
+        float angleDifDegAbs = MathF.Abs(angleDifDeg);
+        if (angleDifDegAbs < 0.0001f) return;
         
-        var angleDifDeg = endAngleDeg - startAngleDeg;
-        if (MathF.Abs(angleDifDeg) < 0.0001f) return;
-        if (MathF.Abs(angleDifDeg) >= 360f)
+        if (angleDifDegAbs >= 360f)
         {
             DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
             return;
         }
         
-        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
-        float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
+        // if(lineCapType == LineCapType.None || (lineCapType == LineCapType.Capped && capPoints <= 0) || (lineCapType == LineCapType.CappedExtended && capPoints <= 0))
+        // {
+        //     DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, sides, lineThickness, color);
+        //     return;
+        // }
         
-        var startDir = Vector2.UnitX.Rotate(startAngleRad);
-        var endDir = Vector2.UnitX.Rotate(endAngleRad);
-        
-        float anglePieceRad = angleDifDeg * ShapeMath.DEGTORAD;
-
-        float angleStepRad = anglePieceRad / sides;
-        
-        var startOuter = center + startDir * (radius + lineThickness);;
-        var startInner = center + startDir * (radius - lineThickness);
-        var endOuter = center + endDir * (radius + lineThickness);
-        var endInner = center + endDir * (radius - lineThickness);
-        
-        for (var i = 0; i < sides; i++)
+        if(lineCapType == LineCapType.Extended || (lineCapType == LineCapType.CappedExtended && capPoints > 0))
         {
-            if (i == 0)
+            float arcLength = Circle.ArcLengthFromAngle((360 - angleDifDegAbs) * ShapeMath.DEGTORAD, radius);
+            if (arcLength < lineThickness * 2)
             {
-                var nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad);//index 1
-                var nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad  + angleStepRad);//index 1
-                if (angleDifDeg < 0)
-                {
-                    TriangleDrawing.DrawTriangle(startInner, startOuter, nextOuter, color);
-                    TriangleDrawing.DrawTriangle(nextInner, startInner, nextOuter, color);
-                }
-                else
-                {
-                    TriangleDrawing.DrawTriangle(startOuter, startInner, nextOuter, color);
-                    TriangleDrawing.DrawTriangle(startInner, nextInner, nextOuter, color);
-                }
-                
+                DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
+                return;
             }
-            else if (i == sides - 1)
+        }
+
+        if (lineCapType == LineCapType.Extended)//expand angle segment
+        {
+            var angleExtension = Circle.ArcLengthToAngle(lineThickness, radius, true) * ShapeMath.RADTODEG;
+            if (angleDifDeg >= 0)
             {
-                var curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i);
-                var curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i);
-                
-                if (angleDifDeg < 0)
-                {
-                    TriangleDrawing.DrawTriangle(curInner, curOuter, endOuter, color);
-                    TriangleDrawing.DrawTriangle(endInner, curInner, endOuter, color);
-                }
-                else
-                {
-                    TriangleDrawing.DrawTriangle(curOuter, curInner, endOuter, color);
-                    TriangleDrawing.DrawTriangle(curInner, endInner, endOuter, color);
-                }
+                startAngleDeg -= angleExtension;
+                endAngleDeg += angleExtension;
             }
             else
             {
-                int nextIndex = i + 1;
-                var curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i);
-                var curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad + angleStepRad * i); 
-                var nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(startAngleRad + angleStepRad * nextIndex);
-                var nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(startAngleRad  + angleStepRad * nextIndex);
-                
-                if (angleDifDeg < 0)
+                startAngleDeg += angleExtension;
+                endAngleDeg -= angleExtension;
+            }
+            angleDifDeg = endAngleDeg - startAngleDeg;
+        }
+        else if (lineCapType == LineCapType.Capped) //shrink angle segment
+        {
+            var angleExtension = Circle.ArcLengthToAngle(lineThickness, radius, true) * ShapeMath.RADTODEG;
+            if (angleDifDeg >= 0)
+            {
+                startAngleDeg += angleExtension;
+                endAngleDeg -= angleExtension;
+            }
+            else
+            {
+                startAngleDeg -= angleExtension;
+                endAngleDeg += angleExtension;
+            }
+            angleDifDeg = endAngleDeg - startAngleDeg;
+        }
+        
+        float angleStepRad = (angleDifDeg * ShapeMath.DEGTORAD) / sides;
+        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+
+        bool drawCap = capPoints > 0 && (lineCapType == LineCapType.Capped || lineCapType == LineCapType.CappedExtended);
+        
+        for (var i = 0; i < sides; i++)
+        {
+            int nextIndex = i + 1;
+            float curAngleRad = startAngleRad + angleStepRad * i;
+            float nextAngleRad = startAngleRad + angleStepRad * nextIndex;
+            
+            Vector2 curOuter, nextOuter ,curInner, nextInner;
+            
+            if (angleStepRad < 0)
+            {
+                curInner = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
+                curOuter = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad); 
+                nextInner = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
+                nextOuter = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
+            }
+            else
+            {
+                curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
+                nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
+                curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad); 
+                nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
+            }
+            TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
+            TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
+            
+            //Draw Caps
+            if (drawCap && (i == 0 || i == sides - 1))
+            {
+                Vector2 capStart;
+                Vector2 dir;
+                if (i == 0) //first segment -> draw start cap
                 {
-                    TriangleDrawing.DrawTriangle(curInner, curOuter, nextOuter, color);
-                    TriangleDrawing.DrawTriangle(nextInner, curInner, nextOuter, color);
+                    capStart = center + new Vector2(radius, 0f).Rotate(curAngleRad);
+                    dir = (curOuter - curInner).GetPerpendicularLeft().Normalize();
+
                 }
-                else
+                else //last segment -> draw end cap
                 {
-                    TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
-                    TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
+                    capStart = center + new Vector2(radius, 0f).Rotate(nextAngleRad);
+                    dir = (nextOuter - nextInner).GetPerpendicularRight().Normalize();
                 }
+                SegmentDrawing.DrawRoundCap(capStart, dir, lineThickness, capPoints, color);
             }
         }
     }
     
-    private static bool SetIntersectionPoint((IntersectionPoint a, IntersectionPoint b) intersection, out Vector2 result)
-    {
-        if (intersection.a.Valid)
-        {
-            result = intersection.a.Point;
-            return true;
-        }
-        else if (intersection.b.Valid)
-        {
-            result = intersection.b.Point;
-            return true;
-        }
-        else
-        {
-            result = Vector2.Zero;
-            return false;
-        }
-    }
-
     private static void DrawCircleSectorLinesClosedFastInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides,
         float lineThickness, ColorRgba color)
     {
-        DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, sides, lineThickness, color);
+        DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, lineThickness, sides, color, LineCapType.CappedExtended, 4);
         
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
@@ -1514,143 +1523,11 @@ public static class CircleDrawing
         TriangleDrawing.DrawTriangle(prevInner, prevOuter, nextOutside, color);
         
     }
-
-    private static bool TransformPercentageToAngles(float f, out float startAngleDeg, out float endAngleDeg)
-    {
-        startAngleDeg = 0f;
-        endAngleDeg = 0f;
-        
-        if(f == 0) return false;
-        
-        if (f >= 0f)
-        {
-            startAngleDeg = 0f;
-            endAngleDeg = 360f * ShapeMath.Clamp(f, 0f, 1f);
-            return true;
-        }
-
-        startAngleDeg = 0f;
-        endAngleDeg = 360f * ShapeMath.Clamp(f, -1f, 0f);
-        return true;
-    }
-
-    //only used for percentage drawing (only there are end caps necessary)
-    //TODO: This is not true! Percentage/Perimeter/Sector Lines all can make use of end caps! (Can I just remove the other OpenInternal method and use this?)
-    private static void DrawCircleSectorLinesOpenInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, int sides, ColorRgba color, LineCapType lineCapType, int capPoints)
-    {
-        if (sides < 3 ||  radius <= 0) return;
-        float angleDifDeg = endAngleDeg - startAngleDeg;
-        float angleDifDegAbs = MathF.Abs(angleDifDeg);
-        if (angleDifDegAbs < 0.0001f) return;
-        
-        if (angleDifDegAbs >= 360f)
-        {
-            DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
-            return;
-        }
-        
-        if(lineCapType == LineCapType.None || (lineCapType == LineCapType.Capped && capPoints <= 0) || (lineCapType == LineCapType.CappedExtended && capPoints <= 0))
-        {
-            DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, sides, lineThickness, color);
-            return;
-        }
-        
-        if(lineCapType == LineCapType.Extended || (lineCapType == LineCapType.CappedExtended && capPoints > 0))
-        {
-            float arcLength = Circle.ArcLengthFromAngle((360 - angleDifDegAbs) * ShapeMath.DEGTORAD, radius);
-            if (arcLength < lineThickness * 2)
-            {
-                DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, sides, color);
-                return;
-            }
-        }
-
-        if (lineCapType == LineCapType.Extended)//expand angle segment
-        {
-            var angleExtension = Circle.ArcLengthToAngle(lineThickness, radius, true) * ShapeMath.RADTODEG;
-            if (angleDifDeg >= 0)
-            {
-                startAngleDeg -= angleExtension;
-                endAngleDeg += angleExtension;
-            }
-            else
-            {
-                startAngleDeg += angleExtension;
-                endAngleDeg -= angleExtension;
-            }
-            angleDifDeg = endAngleDeg - startAngleDeg;
-        }
-        else if (lineCapType == LineCapType.Capped) //shrink angle segment
-        {
-            var angleExtension = Circle.ArcLengthToAngle(lineThickness, radius, true) * ShapeMath.RADTODEG;
-            if (angleDifDeg >= 0)
-            {
-                startAngleDeg += angleExtension;
-                endAngleDeg -= angleExtension;
-            }
-            else
-            {
-                startAngleDeg -= angleExtension;
-                endAngleDeg += angleExtension;
-            }
-            angleDifDeg = endAngleDeg - startAngleDeg;
-        }
-        
-        float angleStepRad = (angleDifDeg * ShapeMath.DEGTORAD) / sides;
-        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
-
-        bool drawCap = capPoints > 0 && (lineCapType == LineCapType.Capped || lineCapType == LineCapType.CappedExtended);
-        
-        for (var i = 0; i < sides; i++)
-        {
-            int nextIndex = i + 1;
-            float curAngleRad = startAngleRad + angleStepRad * i;
-            float nextAngleRad = startAngleRad + angleStepRad * nextIndex;
-            
-            Vector2 curOuter, nextOuter ,curInner, nextInner;
-            
-            if (angleStepRad < 0)
-            {
-                curInner = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
-                curOuter = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad); 
-                nextInner = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
-                nextOuter = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
-            }
-            else
-            {
-                curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
-                nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
-                curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad); 
-                nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
-            }
-            TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
-            TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
-            
-            //Draw Caps
-            if (drawCap && (i == 0 || i == sides - 1))
-            {
-                Vector2 capStart;
-                Vector2 dir;
-                if (i == 0) //first segment -> draw start cap
-                {
-                    capStart = center + new Vector2(radius, 0f).Rotate(curAngleRad);
-                    dir = (curOuter - curInner).GetPerpendicularLeft().Normalize();
-
-                }
-                else //last segment -> draw end cap
-                {
-                    capStart = center + new Vector2(radius, 0f).Rotate(nextAngleRad);
-                    dir = (nextOuter - nextInner).GetPerpendicularRight().Normalize();
-                }
-                SegmentDrawing.DrawRoundCap(capStart, dir, lineThickness, capPoints, color);
-            }
-        }
-    }
+   
     #endregion
     
     #region Helper
-
-
+    
     public static ValueRange CircleSideLengthRange = new ValueRange(4f, 25f);
     private static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleStepRad, out int steps)
     {
@@ -1681,9 +1558,22 @@ public static class CircleDrawing
 
         return true;
     }
+
+    private static bool CalculateCircleDrawingParameters(float radius, float smoothness, out int steps)
+    {
+        steps = 0;
+        if(radius <= 0f) return false;
+        
+        smoothness = ShapeMath.Clamp(smoothness, 0f, 1f);
+        float sideLength = CircleSideLengthRange.Lerp(smoothness);
+        if(sideLength <= 0f) return false;
+        
+        float circumference = 2.0f * ShapeMath.PI * radius;
+        steps = Math.Max(1, (int)MathF.Ceiling(circumference / sideLength));
+        return true;
+    }
     
-    
-    //TODO: Remove?
+    //TODO: Remove? ----------------
     
     /// <summary>
     /// Calculates the number of sides needed to approximate a circle with the given radius and maximum side length.
@@ -1709,5 +1599,44 @@ public static class CircleDrawing
         float circumference = 2.0f * ShapeMath.PI * radius * (angleDeg / 360f);
         return (int)MathF.Max(circumference / maxLength, 1);
     }
+    
+    private static bool TransformPercentageToAngles(float f, out float startAngleDeg, out float endAngleDeg)
+    {
+        startAngleDeg = 0f;
+        endAngleDeg = 0f;
+        
+        if(f == 0) return false;
+        
+        if (f >= 0f)
+        {
+            startAngleDeg = 0f;
+            endAngleDeg = 360f * ShapeMath.Clamp(f, 0f, 1f);
+            return true;
+        }
+
+        startAngleDeg = 0f;
+        endAngleDeg = 360f * ShapeMath.Clamp(f, -1f, 0f);
+        return true;
+    }
+    private static bool SetIntersectionPoint((IntersectionPoint a, IntersectionPoint b) intersection, out Vector2 result)
+    {
+        if (intersection.a.Valid)
+        {
+            result = intersection.a.Point;
+            return true;
+        }
+        else if (intersection.b.Valid)
+        {
+            result = intersection.b.Point;
+            return true;
+        }
+        else
+        {
+            result = Vector2.Zero;
+            return false;
+        }
+    }
+
+    //TODO: --------------------------
     #endregion
 }
