@@ -173,7 +173,12 @@ public readonly struct ValueRange : IEquatable<ValueRange>, IComparable<ValueRan
     /// <param name="f">The interpolation factor (0-1).</param>
     /// <returns>The interpolated value.</returns>
     public float Lerp(float f) { return ShapeMath.LerpFloat(Min, Max, f); }
-
+    /// <summary>
+    /// Linearly interpolates between Min and Max by the inverse of the given factor (1 - f).
+    /// </summary>
+    /// <param name="f">The interpolation factor (0-1). 0 returns Max and 1 returns Min.</param>
+    /// <returns>The interpolated value.</returns>
+    public float LerpInverse(float f) { return ShapeMath.LerpFloat(Min, Max, 1f - f); }
     /// <summary>
     /// Calculates the normalized position of a value within the range.
     /// </summary>
