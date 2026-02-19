@@ -52,7 +52,7 @@ namespace Examples.Scenes.ExampleScenes
                 _ => Colors.Medium
             };
 
-            CircleDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
+            Transform.GetCircle().DrawFast(color);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)

@@ -1131,12 +1131,16 @@ public static class RectDrawing
     /// <param name="vertexRadius">The radius of each vertex circle.</param>
     /// <param name="color">The color of the vertex circles.</param>
     /// <param name="circleSegments">The number of segments for each circle (default: 8).</param>
-    public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba color, int circleSegments = 8)
+    public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba color, float smoothness = 0.5f)
     {
-        CircleDrawing.DrawCircle(rect.TopLeft, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(rect.TopRight, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(rect.BottomLeft, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
+        var circle = new Circle(rect.TopLeft, vertexRadius);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(rect.TopRight);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(rect.BottomLeft);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(rect.BottomRight);
+        circle.Draw(color, smoothness);
     }
     #endregion
     

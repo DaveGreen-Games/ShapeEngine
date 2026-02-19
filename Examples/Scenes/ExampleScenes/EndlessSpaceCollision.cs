@@ -252,7 +252,8 @@ public class EndlessSpaceCollision : ExampleScene
         {
             var pos = screeninfo.Area.GetRandomPointInside();
             
-            CircleDrawing.DrawCircleFast(pos, Rng.Instance.RandF(1, 5), Colors.Highlight.SetAlpha(alpha));
+            var circle = new Circle(pos, Rng.Instance.RandF(1, 5));
+            circle.DrawFast(Colors.Highlight.SetAlpha(alpha));
         }
     }
 
@@ -786,26 +787,17 @@ public class EndlessSpaceCollision : ExampleScene
         // {
         //     cutShape.Draw(cutShapeColor);
         // }
-       
-        
-        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, -10, 12f, Colors.PcDark.ColorRgba, false, 8f);
-        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, -170, 12f, Colors.PcDark.ColorRgba, false, 8f);
-        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, 10, 12f, Colors.PcDark.ColorRgba, false, 8f);
 
-        if (minigun.ReloadF > 0f)
-        {
-            CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, minigun.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
-        }
-        else CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, 1f - minigun.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
+        var sectorLineInfo = new LineDrawingInfo(12f, Colors.PcDark.ColorRgba);
+        var circle = new Circle(ship.Transform.Position, 250f);
+        circle.DrawSectorLines(-80f, -10f, sectorLineInfo, 0.75f, false);
+        circle.DrawSectorLines(-100f, -170f, sectorLineInfo, 0.75f, false);
+        circle.DrawSectorLines(170f, 10f, sectorLineInfo, 0.75f, false);
 
-        if (cannon.ReloadF > 0f)
-        {
-            CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, cannon.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
-        }
-        else CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, 1f - cannon.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
-        
-        
-        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, ShapeMath.LerpFloat(170, 10, ship.HealthF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
+        sectorLineInfo = new LineDrawingInfo(4f, Colors.PcWarm.ColorRgba);
+        circle.DrawSectorLines(-80, ShapeMath.LerpFloat(-80, -10, minigun.ReloadF > 0f ?  minigun.ReloadF : 1f - minigun.ClipSizeF), sectorLineInfo, 0.75f, false);
+        circle.DrawSectorLines(-100, ShapeMath.LerpFloat(-100, -170, cannon.ReloadF > 0f ?  cannon.ReloadF : 1f - cannon.ClipSizeF), sectorLineInfo, 0.75f, false);
+        circle.DrawSectorLines(170, ShapeMath.LerpFloat(170, 10, ship.HealthF), sectorLineInfo, 0.75f, false);
     }
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {

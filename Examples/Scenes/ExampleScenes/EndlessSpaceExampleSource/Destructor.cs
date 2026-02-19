@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.StaticLib;
@@ -111,7 +112,7 @@ internal class Destructor : CollisionObject
         var angle = Velocity.AngleDeg();
         var startAngle = angle - 50f;
         var endAngle = angle + 50f;
-        RingDrawing.DrawSectorRingLines(circle.Center, circle.Radius * 0.75f, circle.Radius, startAngle, endAngle, thickness, color, 4f);
+        RingDrawing.DrawSectorRingLines(circle.Center, circle.Radius * 0.75f, circle.Radius, startAngle, endAngle, new LineDrawingInfo(thickness, color), 0.6f);
     }
 
     public override void DrawGameUI(ScreenInfo gameUi)

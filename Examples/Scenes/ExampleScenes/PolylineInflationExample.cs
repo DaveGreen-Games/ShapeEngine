@@ -136,10 +136,15 @@ namespace Examples.Scenes.ExampleScenes
                 float disSq = (mousePos - p).LengthSquared();
                 if (pickedVertex == -1 && disSq < (vertexRadius * vertexRadius) * 2f)
                 {
-                    CircleDrawing.DrawCircle(p, vertexRadius * 2f, Colors.Highlight);
+                    var circle = new Circle(p, vertexRadius * 2f);
+                    circle.Draw(Colors.Highlight);
                     pickedVertex = i;
                 }
-                else CircleDrawing.DrawCircle(p, vertexRadius, Colors.Medium);
+                else
+                {
+                    var circle = new Circle(p, vertexRadius);
+                    circle.Draw(Colors.Medium);
+                }
                 if (drawClosest)
                 {
                     disSq = (closest.Point - p).LengthSquared();
@@ -218,7 +223,11 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
 
-            if (drawClosest) CircleDrawing.DrawCircle(closest.Point, vertexRadius, Colors.Warm);
+            if (drawClosest)
+            {
+                var circle = new Circle(closest.Point, vertexRadius);
+                circle.Draw(Colors.Warm);
+            }
 
             Polygons? inflatedPolygons = null;
             if (lerpOffsetDelta > 10f && polyline.Count > 1)

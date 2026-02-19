@@ -241,8 +241,8 @@ public class StripedShapeDrawingExample : ExampleScene
         curRotationDeg = rotationDegSlider.CurValue;
     
         float t = lineThicknessSlider.CurValue;
-        lineInfoStriped = lineInfoStriped.ChangeThickness(t);
-        lineInfoOutline = lineInfoOutline.ChangeThickness(t * 1.25f);
+        lineInfoStriped = lineInfoStriped.SetThickness(t);
+        lineInfoOutline = lineInfoOutline.SetThickness(t * 1.25f);
         
         curInsideShapeRotDeg = insideShapeRotDegSlider.CurValue;
         curInsideShapeSize = insideShapeSizeSlider.CurValue;
@@ -426,8 +426,8 @@ public class StripedShapeDrawingExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        lineInfoStriped = lineInfoStriped.ChangeColor(stripedColor.ColorRgba);
-        lineInfoOutline = lineInfoOutline.ChangeColor(outlineColor.ColorRgba);
+        lineInfoStriped = lineInfoStriped.SetColor(stripedColor.ColorRgba);
+        lineInfoOutline = lineInfoOutline.SetColor(outlineColor.ColorRgba);
         var lineInfoOutlineMasked = new LineDrawingInfo(lineInfoOutline.Thickness / 3, outlineColor.ColorRgba.ChangeBrightness(-0.5f), LineCapType.CappedExtended, 4);
         const bool reverseMask = false;
         const bool doubleMask = false; //if true draws the outsideShape outline different inside and outside the insideShape

@@ -50,9 +50,9 @@ internal class Penetrator : ExplosivePayload
         {
             var f = 1f - (SmokeTimer / Info.SmokeDuration);
             var color = Colors.PcWarm.ColorRgba.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
-            var size = Info.Radius; // ShapeMath.LerpFloat(Info.Radius * 0.5f, Info.Radius * 3f, f);
-            CircleDrawing.DrawCircle(CurPosition, size, color, 24);
-            // ShapeDrawing.DrawCircle(CurPosition, Info.Radius * 0.05f , color, 18);
+            var size = Info.Radius;
+            var circle = new Circle(CurPosition, size);
+            circle.Draw(color, 0.65f);
         }
 
     }

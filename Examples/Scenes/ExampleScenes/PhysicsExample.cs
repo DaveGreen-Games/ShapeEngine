@@ -74,7 +74,8 @@ public class PhysicsExample : ExampleScene
                 var y = Rng.Instance.RandF(0f, 2048);
                 var pos = new Vector2(x, y);
                 var size = sizeRange.Rand();
-                CircleDrawing.DrawCircle(pos, size, color);
+                var circle = new Circle(pos, size);
+                circle.Draw(color);
             }
             t.EndDraw();
             
@@ -232,8 +233,10 @@ public class PhysicsExample : ExampleScene
         
         StripedDrawing.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
         
-        CircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusInside, universeLineInfo , 0f, 24f);
-        CircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusOutside, universeLineInfo, 0f, 24f);
+        var insideCircle = new Circle(Vector2.Zero, SectorRadiusInside);
+        var outsideCircle = new Circle(Vector2.Zero, SectorRadiusOutside);
+        insideCircle.DrawLines(universeLineInfo, 0.75f);
+        outsideCircle.DrawLines(universeLineInfo, 0.75f);
         
         var textCount = 12;
         var angleStepRad = (360f / textCount) * ShapeMath.DEGTORAD;

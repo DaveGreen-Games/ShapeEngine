@@ -47,13 +47,14 @@ public static class CustomDrawing
     /// <remarks>
     /// Each intersection point is visualized as a small circle, and its normal is drawn as a line.
     /// </remarks>
-    public static void Draw(this IntersectionPoints colPoints, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba)
+    public static void Draw(this IntersectionPoints colPoints, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba, float pointSmoothness = 0.5f)
     {
         if ( colPoints.Count <= 0) return;
         
         foreach (var i in colPoints)
         {
-            CircleDrawing.DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
+            var circle = new Circle(i.Point, lineThickness * 2f);
+            circle.Draw(intersectColorRgba, pointSmoothness);
             SegmentDrawing.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
         }
     }

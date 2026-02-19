@@ -330,28 +330,38 @@ public class SavegameExample : ExampleScene
 
         if (draggingTopLeft)
         {
-            CircleDrawing.DrawCircleFast(rect.TopLeft, rectCornerSelectionRadius, ColorRgba.White);
-            CircleDrawing.DrawCircleFast(rect.BottomRight, rectCornerSize, color);
+            var circle1 = new Circle(rect.TopLeft, rectCornerSelectionRadius);
+            var circle2 = new Circle(rect.BottomRight, rectCornerSize);
+            circle1.DrawFast(ColorRgba.White);
+            circle2.DrawFast(color);
         }
         else if (draggingBottomRight)
         {
-            CircleDrawing.DrawCircleFast(rect.TopLeft, rectCornerSize, color);
-            CircleDrawing.DrawCircleFast(rect.BottomRight, rectCornerSelectionRadius, ColorRgba.White);
+            var circle1 = new Circle(rect.TopLeft, rectCornerSize);
+            var circle2 = new Circle(rect.BottomRight, rectCornerSelectionRadius);
+            circle1.DrawFast(color);
+            circle2.DrawFast(ColorRgba.White);
         }
         else if (nearTopLeft)
         {
-            CircleDrawing.DrawCircleFast(rect.TopLeft, rectCornerSelectionRadius, color);
-            CircleDrawing.DrawCircleFast(rect.BottomRight, rectCornerSize, color);
+            var circle1 = new Circle(rect.TopLeft, rectCornerSelectionRadius);
+            var circle2 = new Circle(rect.BottomRight, rectCornerSize);
+            circle1.DrawFast(color);
+            circle2.DrawFast(color);
         }
         else if (nearBottomRight)
         {
-            CircleDrawing.DrawCircleFast(rect.TopLeft, rectCornerSize, color);
-            CircleDrawing.DrawCircleFast(rect.BottomRight, rectCornerSelectionRadius, color);
+            var circle1 = new Circle(rect.TopLeft, rectCornerSize);
+            var circle2 = new Circle(rect.BottomRight, rectCornerSelectionRadius);
+            circle1.DrawFast(color);
+            circle2.DrawFast(color);
         }
         else
         {
-            CircleDrawing.DrawCircleFast(rect.TopLeft, rectCornerSize, color);
-            CircleDrawing.DrawCircleFast(rect.BottomRight, rectCornerSize, color);
+            var circle1 = new Circle(rect.TopLeft, rectCornerSize);
+            var circle2 = new Circle(rect.BottomRight, rectCornerSize);
+            circle1.DrawFast(color);
+            circle2.DrawFast(color);
         }
         
         var lmbState = ShapeMouseButton.LEFT.GetInputState();

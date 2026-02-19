@@ -402,13 +402,22 @@ public class PathfinderExample2 : ExampleScene
         private void DrawInterpolated(float factor)
         {
             var c = Predictor ? Colors.PcHighlight : Colors.PcSpecial;
-            if(factor <= 0f) CircleDrawing.DrawCircleFast(prevBody.Center, prevBody.Radius, c.ColorRgba);
-            else if(factor >= 1f) CircleDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
+            if (factor <= 0f)
+            {
+                var circle = new Circle(body.Center, prevBody.Radius);
+                circle.DrawFast(c.ColorRgba);
+            }
+            else if (factor >= 1f)
+            {
+                var circle = new Circle(body.Center, body.Radius);
+                circle.DrawFast(c.ColorRgba);
+            }
             else
             {
                 var interpPos = prevBody.Center.Lerp(body.Center, factor);
                 float interpRadius = ShapeMath.LerpFloat(prevBody.Radius, body.Radius, factor);
-                CircleDrawing.DrawCircleFast(interpPos, interpRadius, c.ColorRgba);
+                var circle = new Circle(interpPos, interpRadius);
+                circle.DrawFast(c.ColorRgba);
             }
         }
 
@@ -1037,9 +1046,9 @@ public class PathfinderExample2 : ExampleScene
                 var outerColor = Colors.PcSpecial.ColorRgba.ChangeAlpha((byte)150);
                 outerBoundary.DrawLines(thickness, outerColor);
             }
-            
-            CircleDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba, 0f, 8f);
-            // ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), Chaser.MaxPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
+
+            var circle = new Circle(ship.GetChasePosition(), MinPathRequestDistance);
+            circle.DrawLines(8f, Colors.PcCold.ColorRgba, 0.8f);
         }
 
         

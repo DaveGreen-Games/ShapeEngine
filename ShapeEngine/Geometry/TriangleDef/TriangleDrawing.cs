@@ -302,11 +302,14 @@ public static class TriangleDrawing
     /// <param name="vertexRadius">The radius of each vertex circle.</param>
     /// <param name="color">The color of the vertex circles.</param>
     /// <param name="circleSegments">The number of segments to use for each circle (default is 8).</param>
-    public static void DrawVertices(this Triangle t, float vertexRadius, ColorRgba color, int circleSegments = 8)
+    public static void DrawVertices(this Triangle t, float vertexRadius, ColorRgba color, float smoothness)
     {
-        CircleDrawing.DrawCircle(t.A, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(t.B, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(t.C, vertexRadius, color, circleSegments);
+        var circle = new Circle(t.A, vertexRadius);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(t.B);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(t.C);
+        circle.Draw(color, smoothness);
     }
     #endregion
 

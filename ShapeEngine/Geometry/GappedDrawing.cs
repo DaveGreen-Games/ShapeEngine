@@ -166,12 +166,12 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// - The <paramref name="sides"/> parameter controls the smoothness of the circle.
     /// </remarks>
-    public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, int sides = 18)
+    public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, float smoothness)
     {
-        if (sides < 3) return;
+        if (!CircleDrawing.CalculateCircleDrawingParameters(circle.Radius, smoothness, out float angleStep, out int sides)) return;
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
-            circle.DrawLines(lineInfo, rotDeg, sides);
+            circle.DrawLines(rotDeg, lineInfo, smoothness);
             return;
         }
 
@@ -182,7 +182,6 @@ public static class GappedDrawing
         var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
         var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
         
-        float angleStep = (MathF.PI * 2) / sides;
         float angleRad = rotDeg * ShapeMath.DEGTORAD;
         Vector2[] circlePoints = new Vector2[sides];
         

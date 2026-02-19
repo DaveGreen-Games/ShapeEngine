@@ -713,12 +713,16 @@ public static class QuadDrawing
     /// <remarks>
     /// Useful for visualizing or highlighting the corners of a quad.
     /// </remarks>
-    public static void DrawVertices(this Quad q, float vertexRadius, ColorRgba color, int circleSegments = 8)
+    public static void DrawVertices(this Quad q, float vertexRadius, ColorRgba color, float smoothness = 0.5f)
     {
-        CircleDrawing.DrawCircle(q.A, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(q.B, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(q.C, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(q.D, vertexRadius, color, circleSegments);
+        var circle = new Circle(q.A, vertexRadius);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(q.B);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(q.C);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(q.D);
+        circle.Draw(color, smoothness);
     }
     #endregion
     
@@ -915,7 +919,9 @@ public static class QuadDrawing
             if (Math.Abs(size1 - size2) < 0.00001f)
             {
                 var center = p1 + (p3 - p1) * 0.5f;
-                CircleDrawing.DrawCircle(center, size1 * 0.5f, color, segments * 4);
+                var circle = new Circle(center, size1 * 0.5f);
+                float smoothness = CircleDrawing.CircleSideLengthRange.Inverse(segments);
+                circle.Draw(color, smoothness);
                 return;
             }
 

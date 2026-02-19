@@ -26,12 +26,15 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw()
         {
-            var color = Colors.Dark; // new ColorRgba(System.Drawing.Color.DarkGray);
-            if (circle.Radius > 2f && circle.Radius <= 3f) color = Colors.Dark.ChangeBrightness(0.025f); // new(System.Drawing.Color.LightGray);
-            else if (circle.Radius > 3f) color = Colors.Dark.ChangeBrightness(0.05f); // new(System.Drawing.Color.AntiqueWhite);
-            CircleDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
+            var color = Colors.Dark;
+            if (circle.Radius > 2f && circle.Radius <= 3f) color = Colors.Dark.ChangeBrightness(0.025f);
+            else if (circle.Radius > 3f) color = Colors.Dark.ChangeBrightness(0.05f);
+            circle.DrawFast(color);
         }
-        public void Draw(ColorRgba c) => CircleDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
+        public void Draw(ColorRgba c)
+        {
+            circle.DrawFast(c);
+        }
     }
     internal class Comet
     {
@@ -228,11 +231,16 @@ namespace Examples.Scenes.ExampleScenes
         {
             var rightThruster = movementDir.RotateDeg(-25);
             var leftThruster = movementDir.RotateDeg(25);
-            CircleDrawing.DrawCircle(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
-            CircleDrawing.DrawCircle(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
-            Hull.Draw(hullColor.ColorRgba);
-            CircleDrawing.DrawCircle(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
 
+            var rightThrusterCircle = new Circle(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6);
+            var leftThrusterCircle = new Circle(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6);
+            var hullCircle = new Circle(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f);
+            
+            rightThrusterCircle.Draw(outlineColor.ColorRgba, 0.25f);
+            leftThrusterCircle.Draw(outlineColor.ColorRgba, 0.25f);
+            Hull.Draw(hullColor.ColorRgba);
+            hullCircle.Draw(cockpitColor.ColorRgba, 0.25f);
+            
             Hull.DrawLines(4f, outlineColor.ColorRgba);
         }
         

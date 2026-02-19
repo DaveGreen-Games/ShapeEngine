@@ -145,7 +145,10 @@ public static class UIDrawing
     /// <remarks>
     /// The outline is drawn as a sector of the circle, starting from 0 degrees.
     /// </remarks>
-    public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color) => CircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, color, false);
+    public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color, float smoothness = 0.5f)
+    {
+        c.DrawSectorLines(0, 360 * f, thickness, color, smoothness, false);
+    }
 
     /// <summary>
     /// Draws an outline bar along the circumference of a circle, starting at a specified angle offset, and filling based on the progress value.
@@ -158,7 +161,10 @@ public static class UIDrawing
     /// <remarks>
     /// The outline is drawn as a sector of the circle, starting from the specified angle offset.
     /// </remarks>
-    public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color) => CircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, color, false);
+    public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color, float smoothness = 0.5f)
+    {
+        c.DrawSectorLines(0, 360 * f, startOffsetDeg, thickness, color, smoothness, false);
+    }
 
     /// <summary>
     /// Draws a filled bar inside a rectangle, representing progress with customizable margins and colors.

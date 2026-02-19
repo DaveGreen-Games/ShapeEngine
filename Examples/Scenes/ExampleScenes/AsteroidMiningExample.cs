@@ -451,7 +451,8 @@ namespace Examples.Scenes.ExampleScenes
             if (hybernate) return;
             var c = Colors.Cold;
             shape.DrawLines(4f, c);
-            CircleDrawing.DrawCircle(tip, 8f, c);
+            var circle = new Circle(tip, 8f);
+            circle.Draw(c, 0.1f);
 
             if (laserEnabled && laserPoints.Count > 1)
             {
@@ -459,7 +460,8 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Segment laserSegment = new(laserPoints[i], laserPoints[i + 1]);
                     laserSegment.Draw(4f, c);
-                    CircleDrawing.DrawCircle(laserPoints[i + 1], Rng.Instance.RandF(6f, 12f), c, 12);
+                    var laserPointCircle = new Circle(laserPoints[i + 1], Rng.Instance.RandF(6f, 12f));
+                    laserPointCircle.Draw(c, 0.1f);
                 }
                 
             }

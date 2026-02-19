@@ -50,7 +50,8 @@ public class JsonDataExample : ExampleScene
             var startC = Colors.Warm;
             var endC = Colors.Medium.SetAlpha(150);
             var c = startC.Lerp(endC, f);
-            CircleDrawing.DrawCircle(pos, ShapeMath.LerpFloat(size * 0.5f, size, f), c, 24);
+            var circle = new Circle(pos, ShapeMath.LerpFloat(size * 0.5f, size, f));
+            circle.Draw(c, 0.55f);
         }
     }
     private class Planet
@@ -342,8 +343,8 @@ public class JsonDataExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        
-        CircleDrawing.DrawCircleLines(planet.Shape.Center, AsteroidSpawnRadius, 12f, Colors.Highlight, 4f);
+        var circle = new Circle(planet.Shape.Center, AsteroidSpawnRadius);
+        circle.DrawLines(12f, Colors.Highlight, 0.8f);
         
         planet.Draw();
         planet.DrawGameUI(textFont);

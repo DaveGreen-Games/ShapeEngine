@@ -111,8 +111,8 @@ public class OutlineDrawingExample : ExampleScene
     private LineDrawingInfo lineInfo;
     private LineDrawingInfo lineInfoOutline;
 
-    private int curCircleSides = 36;
-    
+    // private int curCircleSides = 36;
+    private float curCircleSmoothness = 0.5f;
     private float curSideScalingFactor = 0.5f;
     private float curSideScalingOriginFactor = 0.5f;
     
@@ -175,7 +175,7 @@ public class OutlineDrawingExample : ExampleScene
         {
             Percentage = false
         };
-        circleSideSlider = new( "Sides", 18, 3, 120, true)
+        circleSideSlider = new("Smoothness", 0.5f, 0f, 1f, true)
         {
             Percentage = false
         };
@@ -191,7 +191,8 @@ public class OutlineDrawingExample : ExampleScene
         curGaps = (int)(gapsSlider.CurValue);
         curGapPerimeterPercentage = gapPerimeterPercentageSlider.CurValue;
 
-        curCircleSides = (int)circleSideSlider.CurValue;
+        // curCircleSides = (int)circleSideSlider.CurValue;
+        curCircleSmoothness = circleSideSlider.CurValue;
     }
     public override void Reset()
     {
@@ -210,7 +211,7 @@ public class OutlineDrawingExample : ExampleScene
         curGaps = 4;
         gapsSlider.SetCurValue(4);
         
-        curCircleSides = 18;
+        curCircleSmoothness = 0.5f;
         circleSideSlider.SetCurValue(18);
         
         curGapPerimeterPercentage = 0.5f;
@@ -291,8 +292,8 @@ public class OutlineDrawingExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        lineInfo = lineInfo.ChangeColor(Colors.Highlight);
-        lineInfoOutline = lineInfoOutline.ChangeColor(Colors.Dark);
+        lineInfo = lineInfo.SetColor(Colors.Highlight);
+        lineInfoOutline = lineInfoOutline.SetColor(Colors.Dark);
         
         var curGappedOutlineInfo = new GappedOutlineDrawingInfo(curGaps, curStartOffset, curGapPerimeterPercentage);
 
@@ -313,14 +314,14 @@ public class OutlineDrawingExample : ExampleScene
         }
         else if (shapeIndex == 1) // Circle
         {
-            circle.DrawLines(lineInfoOutline, curCircleSides);
+            circle.DrawLines(lineInfoOutline, curCircleSmoothness);
             if (gappedMode)
             {
-                circle.DrawGappedOutline(lineInfo, curGappedOutlineInfo, 0f, curCircleSides);
+                circle.DrawGappedOutline(lineInfo, curGappedOutlineInfo, 0f, curCircleSmoothness);
             }
             else
             {
-                circle.DrawLinesScaled(lineInfo, 0f, curCircleSides, curSideScalingFactor, curSideScalingOriginFactor);
+                circle.DrawLinesScaled(0f, lineInfo, curCircleSmoothness, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 2) // Triangle

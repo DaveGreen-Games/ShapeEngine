@@ -378,11 +378,12 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <param name="vertexRadius">Radius of the drawn circle for each vertex (in world units).</param>
     /// <param name="color">Color of the vertex circles.</param>
     /// <param name="circleSegments">Number of segments to approximate each circle; higher values produce smoother circles.</param>
-    public void DrawVertices(float vertexRadius, ColorRgba color, int circleSegments)
+    public void DrawVertices(float vertexRadius, ColorRgba color, float smoothness)
     {
         foreach (var p in this)
         {
-            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
+            var circle = new Circle(p, vertexRadius);
+            circle.Draw(color, smoothness);
         }
     }
 }

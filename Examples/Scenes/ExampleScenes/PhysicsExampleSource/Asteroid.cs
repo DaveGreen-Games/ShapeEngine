@@ -44,7 +44,8 @@ public class AsteroidForceParticle(ValueRange radiusRange, float lifetime, float
         float f = timer / lifetime;
         if(reversed) f = 1f - f;
         var radius = radiusRange.Lerp(f);
-        CircleDrawing.DrawCircleLines(curPosition, radius, thickness, color.ColorRgba.SetAlpha(200), 8f);
+        var circle = new Circle(curPosition, radius);
+        circle.DrawLines(thickness, color.ColorRgba.SetAlpha(200), 0.1f);
     }
 }
 

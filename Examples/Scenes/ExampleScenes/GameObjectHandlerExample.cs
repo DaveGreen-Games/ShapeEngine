@@ -859,7 +859,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                CircleDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
+                var circle = new Circle(startPoint, 15f);
+                circle.Draw(Colors.Highlight);
                 Segment s = new(startPoint, mousePos);
                 s.Draw(4, Colors.Highlight);
 

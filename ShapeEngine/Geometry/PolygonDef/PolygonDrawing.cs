@@ -1745,7 +1745,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
     {
-        lineInfo = lineInfo.ChangeColor(lineInfo.Color.SetAlpha(255));
+        lineInfo = lineInfo.SetColor(lineInfo.Color.SetAlpha(255));
         for (var i = 0; i < poly.Count; i++)
         {
             var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
@@ -1796,7 +1796,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawCornered(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
     {
-        lineInfo = lineInfo.ChangeColor(lineInfo.Color.SetAlpha(255));
+        lineInfo = lineInfo.SetColor(lineInfo.Color.SetAlpha(255));
         for (var i = 0; i < poly.Count; i++)
         {
             float cornerLength = cornerLengths[i % cornerLengths.Count];

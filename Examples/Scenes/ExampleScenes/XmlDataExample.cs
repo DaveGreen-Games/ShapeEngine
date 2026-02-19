@@ -49,7 +49,9 @@ public class XmlDataExample : ExampleScene
             var startC = Colors.Warm;
             var endC = Colors.Medium.SetAlpha(150);
             var c = startC.Lerp(endC, f);
-            CircleDrawing.DrawCircle(pos, ShapeMath.LerpFloat(size * 0.5f, size, f), c, 24);
+            var r = ShapeMath.LerpFloat(size * 0.5f, size, f);
+            var circle = new Circle(pos, r);
+            circle.Draw(c);
         }
     }
     private class Planet
@@ -368,8 +370,8 @@ public class XmlDataExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        
-        CircleDrawing.DrawCircleLines(planet.Shape.Center, AsteroidSpawnRadius, 12f, Colors.Highlight, 4f);
+        var circle = new Circle(planet.Shape.Center, AsteroidSpawnRadius);
+        circle.DrawLines(12f, Colors.Highlight);
         
         planet.Draw();
         planet.DrawGameUI(textFont);
