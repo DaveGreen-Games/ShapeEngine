@@ -149,6 +149,7 @@ public readonly struct ValueRange : IEquatable<ValueRange>, IComparable<ValueRan
     public float GetFactor(float value)
     {
         if(value < Min) return 0.0f;
+        if(value > Max) return 1.0f;
         return (value - Min) / (Max - Min);
     }
     /// <summary>
@@ -172,12 +173,18 @@ public readonly struct ValueRange : IEquatable<ValueRange>, IComparable<ValueRan
     /// <param name="f">The interpolation factor (0-1).</param>
     /// <returns>The interpolated value.</returns>
     public float Lerp(float f) { return ShapeMath.LerpFloat(Min, Max, f); }
+
     /// <summary>
     /// Calculates the normalized position of a value within the range.
     /// </summary>
     /// <param name="value">The value to evaluate.</param>
     /// <returns>The normalized position (0-1).</returns>
-    public float Inverse(float value) { return (value - Min) / (Max - Min); }
+    public float Inverse(float value)
+    {
+        if(value < Min) return 0.0f;
+        if(value > Max) return 1.0f;
+        return (value - Min) / (Max - Min);
+    }
     /// <summary>
     /// Remaps a value from this range to another <see cref="ValueRange"/>.
     /// </summary>
