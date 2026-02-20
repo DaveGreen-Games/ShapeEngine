@@ -15,8 +15,6 @@ using ShapeEngine.StaticLib;
 namespace ShapeEngine.Geometry.CircleDef;
 
 //TODO:
-// - Remove all functions with sideLength parameter
-// - Change all functions with sides/segments parameter to use smoothness instead
 // - Upate all docs
 
 /// <summary>
@@ -178,7 +176,7 @@ public static class CircleDrawing
     }
     #endregion
     
-    #region Draw Full Circle
+    #region Draw
 
     /// <summary>
     /// Draws a filled circle using the specified <see cref="Circle"/> instance, color, rotation, and segment count.
@@ -220,6 +218,24 @@ public static class CircleDrawing
 
     #endregion
     
+    #region Draw Scaled
+
+    public static void DrawScaled(this Circle c, ColorRgba color, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        //TODO: Implement + test
+        //Note: Draws complete triangles (filled circle) but the outside edge of each triangle is scaled
+    }
+    #endregion
+    
+    #region Draw Sector Scaled
+
+    public static void DrawSectorScaled(this Circle c, float startAngleDeg, float endAngleDeg, float rotDeg, ColorRgba color, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        //TODO: Implement + test
+        //Note: Draws complete sector triangles (filled circle sector) but the outside edge of each triangle is scaled
+    }
+    #endregion
+    
     #region Draw Lines
     /// <summary>
     /// Draws the outline of a circle using the specified line thickness, number of sides, and color.
@@ -230,6 +246,12 @@ public static class CircleDrawing
     /// <param name="color">The color of the outline.</param>
     public static void DrawLines(this Circle c, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
+        if (c.Radius < lineThickness)
+        {
+            var circle = c.SetRadius(lineThickness * 2); 
+            circle.Draw(color, smoothness);
+            return;
+        }
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, color.ToRayColor());
     }
@@ -243,11 +265,15 @@ public static class CircleDrawing
     /// <param name="color">The color of the outline.</param>
     public static void DrawLines(this Circle c, float rotDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
+        if (c.Radius < lineThickness)
+        {
+            var circle = c.SetRadius(lineThickness * 2); 
+            circle.Draw(color, smoothness);
+            return;
+        }
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
-        //TODO: Test performance
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, rotDeg, lineThickness * 2, color.ToRayColor());
     }
-
     /// <summary>
     /// Draws the outline of a circle using the specified line drawing info and number of sides.
     /// </summary>
@@ -256,9 +282,16 @@ public static class CircleDrawing
     /// <param name="sides">The number of sides used to approximate the circle.</param>
     public static void DrawLines(this Circle c, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
-        DrawLines(c, 0f, lineInfo, smoothness);
+        if (c.Radius < lineInfo.Thickness)
+        {
+            var circle = c.SetRadius(lineInfo.Thickness * 2); 
+            circle.Draw(lineInfo.Color, smoothness);
+            return;
+        }
+        if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
+        var lineThickness = lineInfo.Thickness;
+        Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, lineInfo.Color.ToRayColor());
     }
-
     /// <summary>
     /// Draws the outline of a circle using the specified line drawing info, rotation, and number of sides.
     /// </summary>
@@ -267,10 +300,17 @@ public static class CircleDrawing
     /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
     /// <param name="rotDeg">The rotation of the circle in degrees.</param>
     /// <param name="sides">The number of sides used to approximate the circle.</param>
-    public static void DrawLines(this Circle c, float rotDeg,LineDrawingInfo lineInfo, float smoothness = 0.5f)
+    public static void DrawLines(this Circle c, float rotDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
-        //TODO: Why do I use this if I can use Raylib.DrawPolyLinesEx???
-        DrawCircleLinesInternal(c.Center, c.Radius, rotDeg, lineInfo.Thickness, lineInfo.Color, smoothness);
+        if (c.Radius < lineInfo.Thickness)
+        {
+            var circle = c.SetRadius(lineInfo.Thickness * 2); 
+            circle.Draw(lineInfo.Color, smoothness);
+            return;
+        }
+        if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
+        var lineThickness = lineInfo.Thickness;
+        Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, rotDeg, lineThickness * 2, lineInfo.Color.ToRayColor());
     }
     #endregion
 
@@ -367,10 +407,16 @@ public static class CircleDrawing
     /// <param name="sideScaleOrigin">The point along each circle segment to scale from in both directions (0-1, default 0.5).</param>
     public static void DrawLinesScaled(this Circle c, float rotDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
+        if (c.Radius < lineInfo.Thickness)
+        {
+            var circle = c.SetRadius(lineInfo.Thickness * 2);
+            circle.DrawScaled(lineInfo.Color, smoothness, sideScaleFactor, sideScaleOrigin);
+            return;
+        }
         if (sideScaleFactor <= 0f) return;
         if (sideScaleFactor >= 1f)
         {
-            DrawLines(c, lineInfo, smoothness);
+            c.DrawLines(lineInfo, smoothness);
             return;
         }
         
@@ -387,8 +433,7 @@ public static class CircleDrawing
             SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
-
-
+    
     #endregion
     
     #region Draw Lines Percentage
@@ -407,19 +452,19 @@ public static class CircleDrawing
     /// <remarks>
     /// Useful for drawing progress arcs or partial circles.
     /// </remarks>
-    public static void DrawLinesPercentage(this Circle c, float f, float rotDeg, float lineThickness, ColorRgba color, LineCapType lineCapType, int capPoints, float smoothness = 0.5f)
+    public static void DrawLinesPercentage(this Circle c, float f, float rotDeg, float lineThickness, ColorRgba color,  float smoothness = 0.5f)
     {
         if (f == 0) return;
 
         if (MathF.Abs(f) >= 1f)
         {
-            DrawCircleLinesInternal(c.Center, c.Radius, rotDeg, lineThickness, color, smoothness);
+            c.DrawLines(rotDeg, lineThickness, color, smoothness);
             return;
         }
         
         if (TransformPercentageToAngles(f, out float startAngleDeg, out float endAngleDeg))
         {
-            DrawCircleSectorLinesOpenInternal(c.Center, c.Radius, startAngleDeg + rotDeg, endAngleDeg + rotDeg, lineThickness, color, lineCapType, capPoints, smoothness);
+            c.DrawSectorLines(startAngleDeg + rotDeg, endAngleDeg + rotDeg, lineThickness, color, smoothness);
         }
     }
 
@@ -434,66 +479,112 @@ public static class CircleDrawing
     /// <param name="sides">The resolution of the circle. The more sides are used the closer it represents a circle.</param>
     public static void DrawLinesPercentage(this Circle c, float f, float rotDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
-        DrawLinesPercentage(c, f, lineInfo.Thickness, rotDeg, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints, smoothness);
-    }
+        // DrawLinesPercentage(c, f, lineInfo.Thickness, rotDeg, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints, smoothness);
+        if (f == 0) return;
 
-    #endregion
-    
-    #region Circle Sector
-    
-    /// <summary>
-    /// Draws a filled sector of a circle using the specified <see cref="Circle"/> instance, start and end angles, segment count, and color.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
-    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
-    /// <param name="segments">The number of segments used to approximate the sector.</param>
-    /// <param name="color">The color of the sector.</param>
-    public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, ColorRgba color, float smoothness = 0.5f)
-    {
-        if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
-        Raylib.DrawCircleSector(c.Center, c.Radius, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
-    }
-    
-    #endregion
-    
-    #region Draw Circle Sector Lines Scaled
-    /// <summary>
-    /// Draws a sector outline where each side can be scaled towards the origin of the side.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
-    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
-    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
-    /// <param name="rotOffsetDeg">The rotation offset in degrees.</param>
-    /// <param name="sides">The number of sides used to approximate the sector.</param>
-    /// <param name="sideScaleFactor">The scale factor for each side (0 = no sector, 1 = normal sector).</param>
-    /// <param name="sideScaleOrigin">The point along each circle segment to scale from in both directions (0-1, default 0.5).</param>
-    /// <param name="closed">Whether the sector should be closed (connect to the center).</param>
-    public static void DrawSectorLinesScaled(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness,
-        float sideScaleFactor, float sideScaleOrigin = 0.5f, bool closed = true)
-    {
-        if (sideScaleFactor <= 0f) return;
-        if (sideScaleFactor >= 1f)
+        if (MathF.Abs(f) >= 1f)
         {
-            DrawSectorLines(c, startAngleDeg, endAngleDeg, rotOffsetDeg, lineInfo, smoothness, closed);
+            c.DrawLines(rotDeg, lineInfo, smoothness);
             return;
         }
-
-        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg, smoothness, out float angleStep, out int sides)) return;
         
-        float startAngleRad = (startAngleDeg + rotOffsetDeg) * ShapeMath.DEGTORAD;
-        float endAngleRad = (endAngleDeg + rotOffsetDeg) * ShapeMath.DEGTORAD;
-        // float anglePiece = endAngleRad - startAngleRad;
-        // float angleStep = anglePiece / sides;
-        if (closed)
+        if (TransformPercentageToAngles(f, out float startAngleDeg, out float endAngleDeg))
         {
-            var sectorStart = c.Center + (ShapeVec.Right() * c.Radius).Rotate(startAngleRad);
-            SegmentDrawing.DrawSegment(c.Center, sectorStart, lineInfo, sideScaleFactor, sideScaleOrigin);
-
-            var sectorEnd = c.Center + (ShapeVec.Right() * c.Radius).Rotate(endAngleRad);
-            SegmentDrawing.DrawSegment(c.Center, sectorEnd, lineInfo, sideScaleFactor, sideScaleOrigin);
+            c.DrawSectorLines(startAngleDeg + rotDeg, endAngleDeg + rotDeg, lineInfo, smoothness);
         }
+    }
+
+    #endregion
+    
+    #region Draw Sector
+    public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, ColorRgba color, float smoothness = 0.5f)
+    {
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides)) return;
+        Raylib.DrawCircleSector(c.Center, c.Radius, startAngleDeg, startAngleDeg + (angleDifRad * ShapeMath.RADTODEG), sides, color.ToRayColor());
+    }
+    
+    public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, float rotDeg, ColorRgba color, float smoothness = 0.5f)
+    {
+        c.DrawSector(startAngleDeg + rotDeg, endAngleDeg + rotDeg, color, smoothness);
+    }
+    #endregion
+    
+    #region Draw Sector Lines Scaled
+    public static void DrawSectorLinesScaledClosed(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        if (c.Radius < lineInfo.Thickness)
+        {
+            var circle = c.SetRadius(lineInfo.Thickness * 2);
+            circle.DrawSectorScaled(startAngleDeg, endAngleDeg, rotOffsetDeg, lineInfo.Color, smoothness, sideScaleFactor, sideScaleOrigin);
+            return;
+        }
+        if (sideScaleFactor <= 0f) return;
+        
+        if (sideScaleFactor >= 1f)
+        {
+            DrawSectorLinesClosed(c, startAngleDeg, endAngleDeg, rotOffsetDeg, lineInfo, smoothness);
+            return;
+        }
+        startAngleDeg = startAngleDeg + rotOffsetDeg;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStep, out int sides)) return;
+        endAngleDeg = startAngleDeg + angleDifRad * ShapeMath.RADTODEG;
+        
+        var absAngleDifRad = MathF.Abs(angleDifRad);
+        if (absAngleDifRad < 0.00001f) return;
+        
+        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+        float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
+        
+        var sectorStart = c.Center + (ShapeVec.Right() * c.Radius).Rotate(startAngleRad);
+        SegmentDrawing.DrawSegment(c.Center, sectorStart, lineInfo, sideScaleFactor, sideScaleOrigin);
+        
+        if (absAngleDifRad >= MathF.Tau)
+        {
+            c.DrawLines(rotOffsetDeg, lineInfo.Thickness, lineInfo.Color, smoothness);
+            return;
+        }
+        
+        var sectorEnd = c.Center + (ShapeVec.Right() * c.Radius).Rotate(endAngleRad);
+        SegmentDrawing.DrawSegment(c.Center, sectorEnd, lineInfo, sideScaleFactor, sideScaleOrigin);
+        
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = i + 1;
+            var start = c.Center + new Vector2(c.Radius, 0f).Rotate(startAngleRad + angleStep * i);
+            var end = c.Center + new Vector2(c.Radius, 0f).Rotate(startAngleRad + angleStep * nextIndex);
+
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+        }
+    }
+    public static void DrawSectorLinesScaled(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        if (c.Radius < lineInfo.Thickness)
+        {
+            var circle = c.SetRadius(lineInfo.Thickness * 2);
+            circle.DrawSectorScaled(startAngleDeg, endAngleDeg, rotOffsetDeg, lineInfo.Color, smoothness, sideScaleFactor, sideScaleOrigin);
+            return;
+        }
+        if (sideScaleFactor <= 0f) return;
+        
+        if (sideScaleFactor >= 1f)
+        {
+            c.DrawSectorLines(startAngleDeg, endAngleDeg, rotOffsetDeg, lineInfo, smoothness);
+            return;
+        }
+        
+        startAngleDeg = startAngleDeg + rotOffsetDeg;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStep, out int sides)) return;
+        
+        var absAngleDifRad = MathF.Abs(angleDifRad);
+        if (absAngleDifRad < 0.00001f) return;
+        
+        if (absAngleDifRad >= MathF.Tau)
+        {
+            c.DrawLines(rotOffsetDeg, lineInfo.Thickness, lineInfo.Color, smoothness);
+            return;
+        }
+        
+        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         for (int i = 0; i < sides; i++)
         {
             var nextIndex = i + 1;
@@ -504,527 +595,135 @@ public static class CircleDrawing
         }
     }
     #endregion
-    
-    #region Draw Circle Sector Lines
-    /// <summary>
-    /// Draws the outline of a sector of a circle using the specified <see cref="Circle"/> instance, start and end angles, number of sides, line drawing info, and optional closure.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
-    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
-    /// <param name="sides">The number of sides used to approximate the sector.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
-    /// <param name="closed">Whether the sector should be closed (connect to the center).</param>
-    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f, bool closed = false)
-    {
-        if (closed)
-        {
-            DrawCircleSectorLinesClosedInternal(c.Center, c.Radius, startAngleDeg, endAngleDeg, lineInfo.Thickness, lineInfo.Color, smoothness);
-        }
-        else
-        {
-            DrawCircleSectorLinesOpenInternal(c.Center, c.Radius, startAngleDeg, endAngleDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints, smoothness);
-        }
-    }
-    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f, bool closed = false)
-    {
-        if (closed)
-        {
-            DrawCircleSectorLinesClosedInternal(c.Center, c.Radius, startAngleDeg, endAngleDeg, lineThickness, color, smoothness);
-        }
-        else
-        {
-            DrawCircleSectorLinesOpenInternal(c.Center, c.Radius, startAngleDeg, endAngleDeg, lineThickness, color, LineCapType.None, 0, smoothness);
-        }
-    }
-    
-    /// <summary>
-    /// Draws the outline of a sector of a circle using the specified <see cref="Circle"/> instance, start and end angles, rotation offset, number of sides, line drawing info, and optional closure.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
-    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
-    /// <param name="rotOffsetDeg">The rotation offset in degrees.</param>
-    /// <param name="sides">The number of sides used to approximate the sector.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
-    /// <param name="closed">Whether the sector should be closed (connect to the center).</param>
-    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f, bool closed = false)
-    {
-        DrawSectorLines(c, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineInfo, smoothness, closed);
-    }
-    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f, bool closed = false)
-    {
-        DrawSectorLines(c, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, smoothness, closed);
-    }
-    #endregion
-    
-    #region Internal
-    private static void DrawCircleLinesInternal(Vector2 center, float radius, float rotDeg, float lineThickness, ColorRgba color, float smoothness)
-    {
-        if (!CalculateCircleDrawingParameters(radius, smoothness, out float angleStep, out int sides)) return;
-        var rotRad = rotDeg * ShapeMath.DEGTORAD;
-        for (int i = 0; i < sides; i++)
-        {
-            var nextIndex = (i + 1) % sides;
-            var curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(rotRad + angleStep * i);
-            var nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(rotRad + angleStep * nextIndex);
-            var curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(rotRad + angleStep * i); 
-            var nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(rotRad + angleStep * nextIndex);
-            TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
-            TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
-        }
-    }
-    
-    private static void DrawCircleSectorLinesOpenInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, 
-        float lineThickness, ColorRgba color, LineCapType lineCapType, int capPoints, float smoothness)
-    {
-        
-        if (!CalculateCircleDrawingParameters(radius, startAngleDeg, endAngleDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides)) return;
-        // float angleDifDeg = endAngleDeg - startAngleDeg;
-        // float angleDifDegAbs = MathF.Abs(angleDifDeg);
-        float angleDifRadAbs = MathF.Abs(angleDifRad);
-        if (angleDifRadAbs < 0.0001f) return;
-        
-        if (angleDifRadAbs >= MathF.Tau)
-        {
-            DrawCircleLinesInternal(center, radius, startAngleDeg, lineThickness, color, smoothness);
-            return;
-        }
-        
-        
-        
-        if(lineCapType == LineCapType.Extended || (lineCapType == LineCapType.CappedExtended && capPoints > 0))
-        {
-            float arcLength = Circle.ArcLengthFromAngle(MathF.Tau - angleDifRadAbs, radius);
-            if (arcLength < lineThickness * 2)
-            {
-                DrawCircleLinesInternal(center, radius, startAngleDeg, lineThickness, color, smoothness);
-                return;
-            }
-        }
 
-        if (lineCapType == LineCapType.Extended)//expand angle segment
-        {
-            var angleExtension = Circle.ArcLengthToAngle(lineThickness, radius, true) * ShapeMath.RADTODEG;
-            if (angleDifRad >= 0)
-            {
-                startAngleDeg -= angleExtension;
-                endAngleDeg += angleExtension;
-            }
-            else
-            {
-                startAngleDeg += angleExtension;
-                endAngleDeg -= angleExtension;
-            }
-            var angleDifDeg = endAngleDeg - startAngleDeg;
-            angleStepRad = (angleDifDeg * ShapeMath.DEGTORAD) / sides;
-        }
-        else if (lineCapType == LineCapType.Capped) //shrink angle segment
-        {
-            var angleExtension = Circle.ArcLengthToAngle(lineThickness, radius, true) * ShapeMath.RADTODEG;
-            if (angleDifRad >= 0)
-            {
-                startAngleDeg += angleExtension;
-                endAngleDeg -= angleExtension;
-            }
-            else
-            {
-                startAngleDeg -= angleExtension;
-                endAngleDeg += angleExtension;
-            }
-            var angleDifDeg = endAngleDeg - startAngleDeg;
-            angleStepRad = (angleDifDeg * ShapeMath.DEGTORAD) / sides;
-        }
-        
-        // float angleStepRad = (angleDifDeg * ShapeMath.DEGTORAD) / sides;
-        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
-
-        bool drawCap = capPoints > 0 && (lineCapType == LineCapType.Capped || lineCapType == LineCapType.CappedExtended);
-        
-        for (var i = 0; i < sides; i++)
-        {
-            int nextIndex = i + 1;
-            float curAngleRad = startAngleRad + angleStepRad * i;
-            float nextAngleRad = startAngleRad + angleStepRad * nextIndex;
-            
-            Vector2 curOuter, nextOuter ,curInner, nextInner;
-            
-            if (angleStepRad < 0)
-            {
-                curInner = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
-                curOuter = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad); 
-                nextInner = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
-                nextOuter = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
-            }
-            else
-            {
-                curOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(curAngleRad);
-                nextOuter = center + new Vector2(radius + lineThickness, 0f).Rotate(nextAngleRad);
-                curInner = center + new Vector2(radius - lineThickness, 0f).Rotate(curAngleRad); 
-                nextInner = center + new Vector2(radius - lineThickness, 0f).Rotate(nextAngleRad);
-            }
-            TriangleDrawing.DrawTriangle(curOuter, curInner, nextOuter, color);
-            TriangleDrawing.DrawTriangle(curInner, nextInner, nextOuter, color);
-            
-            //Draw Caps
-            if (drawCap && (i == 0 || i == sides - 1))
-            {
-                Vector2 capStart;
-                Vector2 dir;
-                if (i == 0) //first segment -> draw start cap
-                {
-                    capStart = center + new Vector2(radius, 0f).Rotate(curAngleRad);
-                    dir = (curOuter - curInner).GetPerpendicularLeft().Normalize();
-
-                }
-                else //last segment -> draw end cap
-                {
-                    capStart = center + new Vector2(radius, 0f).Rotate(nextAngleRad);
-                    dir = (nextOuter - nextInner).GetPerpendicularRight().Normalize();
-                }
-                SegmentDrawing.DrawRoundCap(capStart, dir, lineThickness, capPoints, color);
-            }
-        }
-    }
-    
-    private static void DrawCircleSectorLinesClosedFastInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, float smoothness)
-    {
-        DrawCircleSectorLinesOpenInternal(center, radius, startAngleDeg, endAngleDeg, lineThickness, color, LineCapType.CappedExtended, 4, smoothness);
-        
-        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
-        float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        var startDir = Vector2.UnitX.Rotate(startAngleRad);
-        var endDir = Vector2.UnitX.Rotate(endAngleRad);
-        
-        var startPoint = center + startDir * radius;
-        var endPoint = center + endDir * radius;
-        SegmentDrawing.DrawSegment(center, startPoint, lineThickness, color, LineCapType.CappedExtended, 8);
-        SegmentDrawing.DrawSegment(center, endPoint, lineThickness, color, LineCapType.CappedExtended, 8);
-        
-    }
-
-    private static void DrawCircleSectorLinesClosedInternal(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, 
-        float lineThickness, ColorRgba color, float smoothness, float miterLimit = 2f, bool beveled = false)
-    {
-        if (lineThickness <= 0f) return;
-        
-        if (!CalculateCircleDrawingParameters(radius, startAngleDeg, endAngleDeg, smoothness, out float angleDifRad, out float angleStep, out int sides)) return;
-        // float angleDifDeg = endAngleDeg - startAngleDeg;
-        bool clockwise = angleStep < 0f; // angleDifDeg < 0f;
-        
-        // float angleDifDegAbs = MathF.Abs(angleDifDeg);
-        
-        if (MathF.Abs(angleDifRad) >= MathF.Tau)
-        {
-            if(!clockwise) DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, color, smoothness);
-            return;
-        }
-        
-        if (color.A >= 255)
-        {
-            DrawCircleSectorLinesClosedFastInternal(center, radius, startAngleDeg, endAngleDeg, lineThickness, color, smoothness);
-            return;
-        }
-        float angleDifRadAbs = MathF.Abs(angleDifRad);
-        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
-        float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        
-        var prev = center + new Vector2(radius, 0f).Rotate(endAngleRad);
-        var cur = center;
-        var next = center + new Vector2(radius, 0f).Rotate(startAngleRad);
-        var wPrev = cur - prev;
-        var wNext = next - cur;
-        float lsPrev = wPrev.LengthSquared();
-        float lsNext = wNext.LengthSquared();
-        if (lsPrev <= 0 || lsNext <= 0) return;
-
-        var dirPrev = wPrev.Normalize();
-        var dirNext = wNext.Normalize();
-        
-        Vector2 normalPrev = dirPrev.GetPerpendicularLeft();
-        Vector2 normalNext = dirNext.GetPerpendicularLeft();
-        
-        var prevOutsideOffset = prev + normalPrev * lineThickness;
-        var nextOutsideOffset = next + normalNext * lineThickness;
-        
-        var prevInsideOffset = prev - normalPrev * lineThickness;
-        var nextInsideOffset = next - normalNext * lineThickness;
-        
-        var outsideCenterIntersection = RayDef.Ray.IntersectRayRay(prevOutsideOffset, dirPrev, nextOutsideOffset, -dirNext);
-        if (!outsideCenterIntersection.Valid)
-        {
-            DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, color, smoothness);
-            return;
-        }
-        var outsideCenter = outsideCenterIntersection.Point;
-        
-        var insideCenterIntersection = RayDef.Ray.IntersectRayRay(prevInsideOffset, dirPrev, nextInsideOffset, -dirNext);
-        if (!insideCenterIntersection.Valid)
-        {
-            return;
-        }
-        var insideCenter = insideCenterIntersection.Point;
-        
-        var prevInsideCircleIntersection = RayDef.Ray.IntersectRayCircle(insideCenter, -dirPrev, center, radius - lineThickness);
-        var nextInsideCircleIntersection = RayDef.Ray.IntersectRayCircle(insideCenter, dirNext, center, radius - lineThickness);
-        
-        var prevOutsideCircleIntersection = RayDef.Ray.IntersectRayCircle(outsideCenter, -dirPrev, center, radius + lineThickness);
-        var nextOutsideCircleIntersection = RayDef.Ray.IntersectRayCircle(outsideCenter, dirNext, center, radius + lineThickness);
-        
-        if(!SetIntersectionPoint(prevInsideCircleIntersection, out var prevInside)) return;
-        if(!SetIntersectionPoint(nextInsideCircleIntersection, out var nextInside)) return;
-        if(!SetIntersectionPoint(prevOutsideCircleIntersection, out var prevOutside)) return;
-        if(!SetIntersectionPoint(nextOutsideCircleIntersection, out var nextOutside)) return;
-
-        if (angleDifRadAbs > MathF.PI)
-        {
-            var ls = (prevOutside - nextOutside).LengthSquared();
-            var thickness = lineThickness;
-            if (ls <= thickness * thickness)
-            {
-                if(!clockwise) DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, color, smoothness);
-                return;
-            }
-        }
-        else
-        {
-            var ls = (prevInside - nextInside).LengthSquared();
-            var thickness = lineThickness * 0.5f;
-            if (ls <= thickness * thickness)
-            {
-                if(clockwise) DrawCircleLinesInternal(center, radius, lineThickness, startAngleDeg, color, smoothness);
-                return;
-            }
-        }
-        
-        var rayColor = color.ToRayColor();
-        float totalMiterLengthLimit = lineThickness * 0.5f * MathF.Max(2f, miterLimit);
-
-        
-        var dis = (cur - outsideCenter).Length();
-        if (miterLimit >= 2f && dis > totalMiterLengthLimit)
-        {
-            if (beveled)
-            {
-                if (angleDifRadAbs > MathF.PI)
-                {
-                    if (clockwise)
-                    {
-                        Vector2 bevelPrev = cur + normalPrev * lineThickness;
-                        Vector2 bevelNext = cur + normalNext * lineThickness;
-                    
-                        bevelNext.Draw(4f, ColorRgba.Green, smoothness);
-                        bevelPrev.Draw(4f, ColorRgba.Orange, smoothness);
-                    
-                        Raylib.DrawTriangle(insideCenter, nextInside, bevelNext, rayColor);
-                        Raylib.DrawTriangle(insideCenter, bevelPrev, prevInside, rayColor);
-                    
-                        Raylib.DrawTriangle(bevelNext, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        
-                        Raylib.DrawTriangle(bevelNext, bevelPrev, insideCenter, rayColor);
-                    }
-                    else
-                    {
-                        Vector2 bevelPrev = cur - normalPrev * lineThickness;
-                        Vector2 bevelNext = cur - normalNext * lineThickness;
-                    
-                        Raylib.DrawTriangle(outsideCenter, bevelNext, nextOutside, rayColor);
-                        Raylib.DrawTriangle(outsideCenter, prevOutside, bevelPrev, rayColor);
-                    
-                        Raylib.DrawTriangle(bevelNext, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, bevelNext, outsideCenter, rayColor);
-                    }
-                    
-                }
-                else
-                {
-                    if (clockwise)
-                    {
-                        Vector2 bevelPrev = cur - normalPrev * lineThickness;
-                        Vector2 bevelNext = cur - normalNext * lineThickness;
-                        
-                        Raylib.DrawTriangle(prevOutside, bevelPrev,  outsideCenter, rayColor);
-                        Raylib.DrawTriangle(outsideCenter, bevelNext, nextOutside, rayColor);
-                        
-                        Raylib.DrawTriangle(bevelNext, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelNext, outsideCenter, bevelPrev, rayColor);
-                    }
-                    else
-                    {
-                        Vector2 bevelPrev = cur + normalPrev * lineThickness;
-                        Vector2 bevelNext = cur + normalNext * lineThickness;
-                    
-                        Raylib.DrawTriangle(insideCenter, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(insideCenter, nextOutside, bevelNext, rayColor);
-                        Raylib.DrawTriangle(insideCenter, bevelPrev, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelNext, bevelPrev, insideCenter, rayColor);
-                    }
-                    
-                }
-            }
-            else
-            {
-                if (angleDifRadAbs > MathF.PI)
-                {
-                    if (clockwise)
-                    {
-                        var dir = (outsideCenter - cur).Normalize();
-                        outsideCenter = cur + dir * totalMiterLengthLimit;
-                        var perp = dir.GetPerpendicularLeft();
-                        var intersection = RayDef.Ray.IntersectRayRay(prevOutside, dirPrev, outsideCenter, perp);
-                        Vector2 bevelNext, bevelPrev;
-                        if (!intersection.Valid)//bevel fallback
-                        {
-                            bevelPrev = cur + normalPrev * lineThickness;
-                            bevelNext = cur + normalNext * lineThickness;
-                        }
-                        else
-                        {
-                            bevelPrev = intersection.Point;
-                            bevelNext = outsideCenter - perp * (outsideCenter - intersection.Point).Length();
-                        }
-                        
-                        Raylib.DrawTriangle(insideCenter, nextInside, bevelNext, rayColor);
-                        Raylib.DrawTriangle(insideCenter, bevelPrev, prevInside, rayColor);
-                        
-                        Raylib.DrawTriangle(bevelNext, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        
-                        Raylib.DrawTriangle(bevelNext, bevelPrev, insideCenter, rayColor);
-                    }
-                    else
-                    {
-                        var dir = (insideCenter - cur).Normalize();
-                        insideCenter = cur + dir * totalMiterLengthLimit;
-                        var perp = dir.GetPerpendicularRight();
-                        var intersection = RayDef.Ray.IntersectRayRay(prevInside, dirPrev, insideCenter, perp);
-                        Vector2 bevelNext, bevelPrev;
-                        if (!intersection.Valid)//bevel fallback
-                        {
-                            bevelPrev = cur - normalPrev * lineThickness;
-                            bevelNext = cur - normalNext * lineThickness;
-                        }
-                        else
-                        {
-                            bevelPrev = intersection.Point;
-                            bevelNext = insideCenter - perp * (insideCenter - intersection.Point).Length();
-                        }
-                    
-                        Raylib.DrawTriangle(outsideCenter, bevelNext, nextOutside, rayColor);
-                        Raylib.DrawTriangle(outsideCenter, prevOutside, bevelPrev, rayColor);
-                        Raylib.DrawTriangle(bevelNext, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, bevelNext, outsideCenter, rayColor);
-                    }
-                }
-                else
-                {
-                    if (clockwise)
-                    {
-                        var dir = (insideCenter - cur).Normalize();
-                        insideCenter = cur + dir * totalMiterLengthLimit;
-                        var perp = dir.GetPerpendicularRight();
-                        var intersection = RayDef.Ray.IntersectRayRay(prevInside, dirPrev, insideCenter, perp);
-                        Vector2 bevelNext, bevelPrev;
-                        if (!intersection.Valid)//bevel fallback
-                        {
-                            bevelPrev = cur - normalPrev * lineThickness;
-                            bevelNext = cur - normalNext * lineThickness;
-                        }
-                        else
-                        {
-                            bevelPrev = intersection.Point;
-                            bevelNext = insideCenter - perp * (insideCenter - intersection.Point).Length();
-                        }
-                        
-                        Raylib.DrawTriangle(bevelPrev, outsideCenter, prevOutside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        
-                        Raylib.DrawTriangle(bevelNext, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(outsideCenter, bevelNext, nextOutside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, bevelNext, outsideCenter, rayColor);
-                    }
-                    else
-                    {
-                        var dir = (outsideCenter - cur).Normalize();
-                        outsideCenter = cur + dir * totalMiterLengthLimit;
-                        var perp = dir.GetPerpendicularLeft();
-                        var intersection = RayDef.Ray.IntersectRayRay(prevOutside, dirPrev, outsideCenter, perp);
-                        Vector2 bevelNext, bevelPrev;
-                        if (!intersection.Valid)//bevel fallback
-                        {
-                            bevelPrev = cur + normalPrev * lineThickness;
-                            bevelNext = cur + normalNext * lineThickness;
-                        }
-                        else
-                        {
-                            bevelPrev = intersection.Point;
-                            bevelNext = outsideCenter - perp * (outsideCenter - intersection.Point).Length();
-                        }
-                    
-                        Raylib.DrawTriangle(insideCenter, nextInside, nextOutside, rayColor);
-                        Raylib.DrawTriangle(insideCenter, nextOutside, bevelNext, rayColor);
-                        Raylib.DrawTriangle(insideCenter, bevelPrev, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelPrev, prevOutside, prevInside, rayColor);
-                        Raylib.DrawTriangle(bevelNext, bevelPrev, insideCenter, rayColor);
-                    }
-                }
-            }
-        }
-        else
-        {
-            Raylib.DrawTriangle(insideCenter, nextInside, nextOutside, rayColor);
-            Raylib.DrawTriangle(insideCenter, nextOutside, outsideCenter, rayColor);
-            Raylib.DrawTriangle(insideCenter, outsideCenter, prevInside, rayColor);
-            Raylib.DrawTriangle(outsideCenter, prevOutside, prevInside, rayColor);
-        }
-        
-        
-        var curDir = (prevInside - center).Normalize();
-        var endDir = (nextInside - center).Normalize();
-        
-        var angleRad = ShapeVec.AngleRad(endDir, curDir);
-        if (angleRad > 0)
-        {
-            angleRad *= -1;
-        }
-        else
-        {
-            angleRad = -MathF.Tau - angleRad;
-        }
-        
-        var angleStepRad = angleRad / sides;
-        
-        var prevInner = prevInside;
-        var prevOuter = center + curDir * (radius + lineThickness);
-
-        TriangleDrawing.DrawTriangle(prevInside, prevOutside, prevOuter, color);
-        
-        for (var i = 0; i < sides; i++)
-        {
-            curDir = curDir.Rotate(angleStepRad);
-            var curInner = center + curDir * (radius - lineThickness);
-            var curOuter = center + curDir * (radius + lineThickness);
-            
-            TriangleDrawing.DrawTriangle(prevInner, prevOuter, curOuter, color);
-            TriangleDrawing.DrawTriangle(prevInner, curOuter, curInner, color);
-
-            prevInner = curInner;
-            prevOuter = curOuter;
-        }
-        
-        TriangleDrawing.DrawTriangle(prevInner, prevOuter, nextOutside, color);
-        
-    }
+    #region Draw Sector Lines
    
-    #endregion
+    public static void DrawSectorLinesClosed(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
+    {
+        var color = lineInfo.Color.SetAlpha(255);
+        if (c.Radius < lineInfo.Thickness)
+        {
+            var circle = c.SetRadius(lineInfo.Thickness * 2);
+            circle.DrawSector(startAngleDeg, endAngleDeg, rotOffsetDeg, lineInfo.Color, smoothness);
+            return;
+        }
+        
+        startAngleDeg = startAngleDeg + rotOffsetDeg;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides)) return;
+        endAngleDeg = startAngleDeg + angleDifRad * ShapeMath.RADTODEG;
+        
+        var absAngleDifRad = MathF.Abs(angleDifRad);
+        if (absAngleDifRad < 0.00001f) return;
+        
+        var start = c.Center + (ShapeVec.Right() * c.Radius).Rotate(startAngleDeg * ShapeMath.DEGTORAD);
+        SegmentDrawing.DrawSegment(c.Center, start, lineInfo.Thickness, color, LineCapType.CappedExtended, lineInfo.CapPoints);
+        
+        if (absAngleDifRad >= MathF.Tau)
+        {
+            c.DrawLines(rotOffsetDeg, lineInfo.Thickness, color, smoothness);
+            return;
+        }
+        
+        var end = c.Center + (ShapeVec.Right() * c.Radius).Rotate(endAngleDeg * ShapeMath.DEGTORAD);
+        SegmentDrawing.DrawSegment(c.Center, end, lineInfo.Thickness, color, LineCapType.CappedExtended, lineInfo.CapPoints);
+        
+        Raylib.DrawRing(c.Center, c.Radius - lineInfo.Thickness, c.Radius + lineInfo.Thickness, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
+    }
     
+    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
+    {
+        c.DrawSectorLines(startAngleDeg, endAngleDeg, 0f, lineInfo, smoothness);
+    }
+    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
+    {
+        c.DrawSectorLines(startAngleDeg, endAngleDeg, 0f, lineThickness, color, smoothness);
+    }
+    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
+    {
+        if (c.Radius < lineInfo.Thickness)
+        {
+            var circle = c.SetRadius(lineInfo.Thickness * 2);
+            circle.DrawSector(startAngleDeg, endAngleDeg, rotOffsetDeg, lineInfo.Color, smoothness);
+            return;
+        }
+        
+        startAngleDeg = startAngleDeg + rotOffsetDeg;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides)) return;
+        endAngleDeg = startAngleDeg + angleDifRad * ShapeMath.RADTODEG;
+        
+        var absAngleDifRad = MathF.Abs(angleDifRad);
+        if (absAngleDifRad < 0.00001f) return;
+        if (absAngleDifRad >= MathF.Tau)
+        {
+            c.DrawLines(rotOffsetDeg, lineInfo, smoothness);
+            return;
+        }
+        
+        var lineCapType = lineInfo.CapType;
+        var capPoints = lineInfo.CapPoints;
+        var drawCap = (lineCapType is LineCapType.Capped or LineCapType.CappedExtended) && capPoints > 0;
+
+        if (drawCap) //shrink angle segment
+        {
+            // var angleExtensionRad = Circle.ArcLengthToAngle(lineInfo.Thickness, c.Radius, true);
+            // var angleExtensionDeg = angleExtensionRad * ShapeMath.RADTODEG;
+            // if (angleDifRad >= 0)
+            // {
+            //     // startAngleDeg += angleExtensionDeg;
+            //     endAngleDeg -= angleExtensionDeg * 2;
+            //     if(endAngleDeg < startAngleDeg) endAngleDeg = startAngleDeg;
+            // }
+            // else
+            // {
+            //     // startAngleDeg -= angleExtensionDeg;
+            //     endAngleDeg += angleExtensionDeg * 2;
+            //     if(endAngleDeg > startAngleDeg) endAngleDeg = startAngleDeg;
+            // }
+            //     
+            // var angleDifDeg = endAngleDeg - startAngleDeg;
+            // if (angleDifDeg > 360f) angleDifDeg %= 360f;
+            // if (angleDifDeg < -360f) angleDifDeg %= 360f;
+            // angleDifRad = angleDifDeg * ShapeMath.DEGTORAD;
+            
+            var startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+            var endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
+            
+            var p1Inner = c.Center + (ShapeVec.Right() * (c.Radius - lineInfo.Thickness)).Rotate(startAngleRad);
+            var p1Outer = c.Center + (ShapeVec.Right() * (c.Radius + lineInfo.Thickness)).Rotate(startAngleRad);
+        
+            var p2Inner = c.Center + (ShapeVec.Right() * (c.Radius - lineInfo.Thickness)).Rotate(endAngleRad);
+            var p2Outer = c.Center + (ShapeVec.Right() * (c.Radius + lineInfo.Thickness)).Rotate(endAngleRad);
+            
+            
+            if (angleDifRad > 0)
+            {
+                SegmentDrawing.DrawRoundCap(p2Inner, p2Outer, lineInfo.CapPoints, lineInfo.Color);
+                SegmentDrawing.DrawRoundCap(p1Outer, p1Inner, lineInfo.CapPoints, lineInfo.Color);
+            }
+            else
+            {
+                SegmentDrawing.DrawRoundCap(p2Outer, p2Inner, lineInfo.CapPoints, lineInfo.Color);
+                SegmentDrawing.DrawRoundCap(p1Inner, p1Outer, lineInfo.CapPoints, lineInfo.Color);
+            }
+        }
+        
+        Raylib.DrawRing(c.Center, c.Radius - lineInfo.Thickness, c.Radius + lineInfo.Thickness, startAngleDeg, endAngleDeg, sides, lineInfo.Color.ToRayColor());
+        
+    }
+    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
+    {
+        if (c.Radius < lineThickness)
+        {
+            var circle = c.SetRadius(lineThickness * 2);
+            circle.DrawSector(startAngleDeg, endAngleDeg, rotOffsetDeg, color, smoothness);
+            return;
+        }
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides)) return;
+        Raylib.DrawRing(c.Center, c.Radius - lineThickness, c.Radius + lineThickness, startAngleDeg + rotOffsetDeg, startAngleDeg + rotOffsetDeg + (angleDifRad * ShapeMath.RADTODEG), sides, color.ToRayColor());
+    }
+    #endregion
+
     #region Helper
-    //TODO: Add docs
 
     public static ValueRange CircleSideLengthRange = new ValueRange(2f, 75f);
     public static ValueRangeInt CircleSideCountRange = new ValueRangeInt(8, 128);
@@ -1179,9 +878,6 @@ public static class CircleDrawing
         return true;
     }
     
-    
-    //TODO: Remove? ----------------
-    
     /// <summary>
     /// Calculates the number of sides needed to approximate a circle with the given radius and maximum side length.
     /// </summary>
@@ -1225,25 +921,5 @@ public static class CircleDrawing
         endAngleDeg = 360f * ShapeMath.Clamp(f, -1f, 0f);
         return true;
     }
-    private static bool SetIntersectionPoint((IntersectionPoint a, IntersectionPoint b) intersection, out Vector2 result)
-    {
-        if (intersection.a.Valid)
-        {
-            result = intersection.a.Point;
-            return true;
-        }
-        else if (intersection.b.Valid)
-        {
-            result = intersection.b.Point;
-            return true;
-        }
-        else
-        {
-            result = Vector2.Zero;
-            return false;
-        }
-    }
-
-    //TODO: --------------------------
     #endregion
 }

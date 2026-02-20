@@ -26,7 +26,7 @@ internal class PayloadMarkerSimple : PayloadMarker
             }
 
             circle = circle.SetRadius(25f);
-            circle.DrawSectorLines(0, 359 * TravelF, new LineDrawingInfo(4f, Colors.Cold), 0.2f, false);
+            circle.DrawSectorLines(0, 359 * TravelF, new LineDrawingInfo(4f, Colors.Cold), 0.2f);
         }
         else
         {

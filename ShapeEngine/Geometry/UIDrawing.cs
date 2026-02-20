@@ -147,7 +147,7 @@ public static class UIDrawing
     /// </remarks>
     public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color, float smoothness = 0.5f)
     {
-        c.DrawSectorLines(0, 360 * f, thickness, color, smoothness, false);
+        c.DrawSectorLines(0, 360 * f, thickness, color, smoothness);
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public static class UIDrawing
     /// </remarks>
     public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color, float smoothness = 0.5f)
     {
-        c.DrawSectorLines(0, 360 * f, startOffsetDeg, thickness, color, smoothness, false);
+        c.DrawSectorLines(0, 360 * f, startOffsetDeg, thickness, color, smoothness);
     }
 
     /// <summary>

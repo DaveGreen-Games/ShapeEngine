@@ -790,14 +790,14 @@ public class EndlessSpaceCollision : ExampleScene
 
         var sectorLineInfo = new LineDrawingInfo(12f, Colors.PcDark.ColorRgba);
         var circle = new Circle(ship.Transform.Position, 250f);
-        circle.DrawSectorLines(-80f, -10f, sectorLineInfo, 0.75f, false);
-        circle.DrawSectorLines(-100f, -170f, sectorLineInfo, 0.75f, false);
-        circle.DrawSectorLines(170f, 10f, sectorLineInfo, 0.75f, false);
+        circle.DrawSectorLines(-80f, -10f, sectorLineInfo, 0.75f);
+        circle.DrawSectorLines(-100f, -170f, sectorLineInfo, 0.75f);
+        circle.DrawSectorLines(170f, 10f, sectorLineInfo, 0.75f);
 
         sectorLineInfo = new LineDrawingInfo(4f, Colors.PcWarm.ColorRgba);
-        circle.DrawSectorLines(-80, ShapeMath.LerpFloat(-80, -10, minigun.ReloadF > 0f ?  minigun.ReloadF : 1f - minigun.ClipSizeF), sectorLineInfo, 0.75f, false);
-        circle.DrawSectorLines(-100, ShapeMath.LerpFloat(-100, -170, cannon.ReloadF > 0f ?  cannon.ReloadF : 1f - cannon.ClipSizeF), sectorLineInfo, 0.75f, false);
-        circle.DrawSectorLines(170, ShapeMath.LerpFloat(170, 10, ship.HealthF), sectorLineInfo, 0.75f, false);
+        circle.DrawSectorLines(-80, ShapeMath.LerpFloat(-80, -10, minigun.ReloadF > 0f ?  minigun.ReloadF : 1f - minigun.ClipSizeF), sectorLineInfo, 0.75f);
+        circle.DrawSectorLines(-100, ShapeMath.LerpFloat(-100, -170, cannon.ReloadF > 0f ?  cannon.ReloadF : 1f - cannon.ClipSizeF), sectorLineInfo, 0.75f);
+        circle.DrawSectorLines(170, ShapeMath.LerpFloat(170, 10, ship.HealthF), sectorLineInfo, 0.75f);
     }
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {

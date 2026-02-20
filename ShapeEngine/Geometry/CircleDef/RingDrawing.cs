@@ -7,6 +7,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
+//TODO: Check and cleanup based on CircleDrawing changes
+
 /// <summary>
 /// Provides static methods for drawing ring shapes and ring outlines with various customization options.
 /// </summary>
@@ -29,11 +31,11 @@ public static class RingDrawing
     /// </remarks>
     public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, ColorRgba color, float smoothness)
     {
-        //TODO: Is this just an outline of a circle?
         DrawSectorRing(center, innerRadius, outerRadius, 0, 360, color, smoothness);
     }
     #endregion
     
+    //TODO: Use Raylib.DrawRing for all of those instead of circle.DrawLines!
     #region Draw Ring Lines
     /// <summary>
     /// Draws the outlines of a ring by drawing the inner and outer circles as lines.
@@ -361,6 +363,7 @@ public static class RingDrawing
     }
     #endregion
     
+    //TODO: Use Raylib.DrawRing (if circle drawing uses Raylib.DrawRing internally nothing needs to change here!)
     #region Draw Sector Ring Lines
     /// <summary>
     /// Draws the outlines of a sector ring (arc-shaped ring) with specified line thickness and color.
@@ -382,14 +385,14 @@ public static class RingDrawing
         if (innerRadius <= 0)
         {
             var circle = new Circle(center, outerRadius);
-            circle.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness, false);
+            circle.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness);
             return;
         }
 
         if (outerRadius <= 0)
         {
             var circle = new Circle(center, innerRadius);
-            circle.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness, false);
+            circle.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness);
             return;
         }
         
@@ -420,9 +423,9 @@ public static class RingDrawing
         }
         
         var c = new Circle(center, innerRadius);
-        c.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness, false);
+        c.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness);
         c = c.SetRadius(outerRadius);
-        c.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness, false);
+        c.DrawSectorLines(startAngleDeg, endAngleDeg, lineInfo, smoothness);
         
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
@@ -493,8 +496,8 @@ public static class RingDrawing
     /// <param name="sideLength">The length of each side segment. Default is 10.</param>
     public static void DrawSectorRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, ColorRgba color, float smoothness)
     {
+        //TODO: add angle fix
         if (!CircleDrawing.CalculateCircleDrawingParameters(outerRadius, startAngleDeg, endAngleDeg, smoothness, out int sides)) return;
-        //TODO: What does this actually look like? -> Is this just an "outline" of a circle sector?
         Raylib.DrawRing(center, innerRadius, outerRadius, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
     }
 
