@@ -236,7 +236,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
-            c.DrawLines(4f, Colors.Warm);
+            c.DrawLines(4f, Colors.Warm, 1f);
         }
 
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());

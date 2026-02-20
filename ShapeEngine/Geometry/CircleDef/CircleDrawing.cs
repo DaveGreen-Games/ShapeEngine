@@ -1026,21 +1026,44 @@ public static class CircleDrawing
     #region Helper
     //TODO: Add docs
 
-    //Q: This could be used for automatic ajustment of circle resolution (smoothness)? It tells the engine what a small circle and what a big circle is.
-    // - If used how to enabled/disable? Globally in CircleDrawing maybe? (then it is hard to enabled for certain circles only)
-    // - Everything smaller than min could use DrawFast?
-    public static ValueRange RadiusRange = new ValueRange(4f, 1000f);
+    public static ValueRange CircleSideLengthRange = new ValueRange(2f, 75f);
+    public static ValueRangeInt CircleSideCountRange = new ValueRangeInt(8, 128);
+
+    public static bool GetCircleSmoothness(float radius, int sides, out float smoothness)
+    {
+        smoothness = 0f;
+        if (radius <= 0f) return false;
+        sides = CircleSideCountRange.Clamp(sides);
+        float circumference = 2.0f * ShapeMath.PI * radius;
+        float sideLength = circumference / sides;
+        float f = CircleSideLengthRange.Inverse(sideLength);
+        smoothness = ShapeMath.Clamp(f, 0f, 1f);
+        return true;
+    }
+    public static bool GetCircleSmoothness(float radius, float startAngleDeg, float endAngleDeg, int sides, out float smoothness)
+    {
+        smoothness = 0f;
+        if (radius <= 0f) return false;
+        
+        // Normalize angle difference to [-360, 360], preserving sign
+        float angleDiffDeg = endAngleDeg - startAngleDeg;
+        if (angleDiffDeg > 360f) angleDiffDeg %= 360f;
+        if (angleDiffDeg < -360f) angleDiffDeg %= 360f;
+        float absAngleDiffDeg = MathF.Abs(angleDiffDeg);
+        if (absAngleDiffDeg < 0.00001f) return false;
+        
+        sides = CircleSideCountRange.Clamp(sides);
+        float arcLength = 2f * ShapeMath.PI * radius * (absAngleDiffDeg / 360f);
+        float sideLength = arcLength / sides;
+        float f = CircleSideLengthRange.Inverse(sideLength);
+        smoothness = ShapeMath.Clamp(f, 0f, 1f);
+        return true;
+    }
     
-    
-    
-    //Q: If calculated sideLength is too big for arc length and results in 1 or less steps, half sideLength for better quality?
-    //Q: Add global min/max circle sides ?
-    //Q: Add min side parameter (cant go under that and affects angleStepRad) instead or alongside with global min/max circle sides?
-    public static ValueRange CircleSideLengthRange = new ValueRange(4f, 75f);
-    public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleDifRad, out float angleStepRad, out int steps)
+    public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleDifRad, out float angleStepRad, out int sides)
     {
         angleStepRad = 0f;
-        steps = 0;
+        sides = 0;
         angleDifRad = 0f;
         if (radius <= 0f) return false;
         
@@ -1061,18 +1084,18 @@ public static class CircleDrawing
         // Arc length for the given angle
         float arcLength = 2f * ShapeMath.PI * radius * (absAngleDiffDeg / 360f);
 
-        // Calculate steps (at least 1)
-        steps = Math.Max(1, (int)MathF.Ceiling(arcLength / sideLength));
+        sides = (int)MathF.Ceiling(arcLength / sideLength);
+        sides = CircleSideCountRange.Clamp(sides);
 
         // Angle step in radians (preserve direction)
-        angleStepRad = (angleDiffDeg * ShapeMath.DEGTORAD) / steps;
+        angleStepRad = angleDifRad / sides;
 
         return true;
     }
-    public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleStepRad, out int steps)
+    public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleStepRad, out int sides)
     {
         angleStepRad = 0f;
-        steps = 0;
+        sides = 0;
         if (radius <= 0f) return false;
         
         // Normalize angle difference to [-360, 360], preserving sign
@@ -1090,17 +1113,17 @@ public static class CircleDrawing
         // Arc length for the given angle
         float arcLength = 2f * ShapeMath.PI * radius * (absAngleDiffDeg / 360f);
 
-        // Calculate steps (at least 1)
-        steps = Math.Max(1, (int)MathF.Ceiling(arcLength / sideLength));
+        sides = (int)MathF.Ceiling(arcLength / sideLength);
+        sides = CircleSideCountRange.Clamp(sides);
 
         // Angle step in radians (preserve direction)
-        angleStepRad = (angleDiffDeg * ShapeMath.DEGTORAD) / steps;
+        angleStepRad = (angleDiffDeg * ShapeMath.DEGTORAD) / sides;
 
         return true;
     }
-    public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out int steps)
+    public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out int sides)
     {
-        steps = 0;
+        sides = 0;
         if (radius <= 0f) return false;
         
         // Normalize angle difference to [-360, 360], preserving sign
@@ -1118,14 +1141,14 @@ public static class CircleDrawing
         // Arc length for the given angle
         float arcLength = 2f * ShapeMath.PI * radius * (absAngleDiffDeg / 360f);
 
-        // Calculate steps (at least 1)
-        steps = Math.Max(1, (int)MathF.Ceiling(arcLength / sideLength));
+        sides = (int)MathF.Ceiling(arcLength / sideLength);
+        sides = CircleSideCountRange.Clamp(sides);
         
         return true;
     }
-    public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out float angleStepRad, out int steps)
+    public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out float angleStepRad, out int sides)
     {
-        steps = 0;
+        sides = 0;
         angleStepRad = 0f;
         if(radius <= 0f) return false;
         
@@ -1134,14 +1157,15 @@ public static class CircleDrawing
         if(sideLength <= 0f) return false;
         
         float circumference = 2.0f * ShapeMath.PI * radius;
-        steps = Math.Max(1, (int)MathF.Ceiling(circumference / sideLength));
+        sides = (int)MathF.Ceiling(circumference / sideLength);
+        sides = CircleSideCountRange.Clamp(sides);
         
-        angleStepRad = MathF.Tau / steps;
+        angleStepRad = MathF.Tau / sides;
         return true;
     }
-    public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out int steps)
+    public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out int sides)
     {
-        steps = 0;
+        sides = 0;
         if(radius <= 0f) return false;
         
         smoothness = ShapeMath.Clamp(smoothness, 0f, 1f);
@@ -1149,10 +1173,12 @@ public static class CircleDrawing
         if(sideLength <= 0f) return false;
         
         float circumference = 2.0f * ShapeMath.PI * radius;
-        steps = Math.Max(1, (int)MathF.Ceiling(circumference / sideLength));
-        Console.WriteLine($"Circumference: {circumference}, SideLength: {sideLength}, Steps: {steps}");
+        sides = (int)MathF.Ceiling(circumference / sideLength);
+        sides = CircleSideCountRange.Clamp(sides);
+        
         return true;
     }
+    
     
     //TODO: Remove? ----------------
     
