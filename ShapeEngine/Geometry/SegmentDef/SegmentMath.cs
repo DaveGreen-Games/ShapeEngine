@@ -88,6 +88,22 @@ public readonly partial struct Segment
         return Polygon.FindConvexHull(points);
     }
 
+    /// <summary>
+    /// Scales the segment from a specific origin point along the segment.
+    /// </summary>
+    /// <param name="scaleOrigin">The origin point as a fraction (0=Start, 1=End) to scale from.</param>
+    /// <param name="scaleFactor">The factor by which to scale the segment.</param>
+    /// <returns>A new <see cref="Segment"/> scaled by the given factor relative to the origin.</returns>
+    public Segment ScaleSegment(float scaleOrigin, float scaleFactor)
+    {
+        var p = Start.Lerp(End, scaleOrigin);
+        var s = Start - p;
+        var e = End - p;
+
+        var newStart = p + s * scaleFactor;
+        var newEnd = p + e * scaleFactor;
+        return new Segment(newStart, newEnd);
+    }
     #endregion
 
     #region Transform
