@@ -14,18 +14,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
-//TODO:
-// - Upate all docs
+//TODO: Finish docs (add or update)
 
-/// <summary>
-/// Provides static methods for drawing circles and circle-related shapes with various options,
-/// including filled circles, outlines, sectors, and advanced line drawing with scaling and percentage.
-/// </summary>
-/// <remarks>
-/// This class is intended for use with Raylib and ShapeEngine types.
-/// It offers both simple and advanced
-/// circle drawing utilities, including performance-optimized methods for small circles.
-/// </remarks>
 public static class CircleDrawing
 {
     #region Draw
@@ -108,7 +98,21 @@ public static class CircleDrawing
     #endregion
     
     #region Draw Percentage
-    //TODO: Implement
+    public static void DrawPercentage(this Circle c, float f, float rotDeg, ColorRgba color, float smoothness = 0.5f)
+    {
+        if (f == 0) return;
+
+        if (MathF.Abs(f) >= 1f)
+        {
+            c.Draw(rotDeg, color, smoothness);
+            return;
+        }
+        
+        if (TransformPercentageToAngles(f, out float startAngleDeg, out float endAngleDeg))
+        {
+            c.DrawSector(startAngleDeg + rotDeg, endAngleDeg + rotDeg, color, smoothness);
+        }
+    }
     #endregion
     
     #region Draw Lines
