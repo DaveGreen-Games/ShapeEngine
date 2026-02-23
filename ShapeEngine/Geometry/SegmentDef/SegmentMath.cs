@@ -91,10 +91,10 @@ public readonly partial struct Segment
     /// <summary>
     /// Scales the segment from a specific origin point along the segment.
     /// </summary>
-    /// <param name="scaleOrigin">The origin point as a fraction (0=Start, 1=End) to scale from.</param>
     /// <param name="scaleFactor">The factor by which to scale the segment.</param>
+    /// <param name="scaleOrigin">The origin point as a fraction (0=Start, 1=End) to scale from.</param>
     /// <returns>A new <see cref="Segment"/> scaled by the given factor relative to the origin.</returns>
-    public Segment ScaleSegment(float scaleOrigin, float scaleFactor)
+    public Segment ScaleSegment(float scaleFactor, float scaleOrigin)
     {
         var p = Start.Lerp(End, scaleOrigin);
         var s = Start - p;
