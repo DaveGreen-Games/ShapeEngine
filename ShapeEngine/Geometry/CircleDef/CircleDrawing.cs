@@ -436,28 +436,8 @@ public static class CircleDrawing
         var capPoints = lineInfo.CapPoints;
         var drawCap = (lineCapType is LineCapType.Capped or LineCapType.CappedExtended) && capPoints > 0;
 
-        if (drawCap) //shrink angle segment
+        if (drawCap)
         {
-            // var angleExtensionRad = Circle.ArcLengthToAngle(lineInfo.Thickness, c.Radius, true);
-            // var angleExtensionDeg = angleExtensionRad * ShapeMath.RADTODEG;
-            // if (angleDifRad >= 0)
-            // {
-            //     // startAngleDeg += angleExtensionDeg;
-            //     endAngleDeg -= angleExtensionDeg * 2;
-            //     if(endAngleDeg < startAngleDeg) endAngleDeg = startAngleDeg;
-            // }
-            // else
-            // {
-            //     // startAngleDeg -= angleExtensionDeg;
-            //     endAngleDeg += angleExtensionDeg * 2;
-            //     if(endAngleDeg > startAngleDeg) endAngleDeg = startAngleDeg;
-            // }
-            //     
-            // var angleDifDeg = endAngleDeg - startAngleDeg;
-            // if (angleDifDeg > 360f) angleDifDeg %= 360f;
-            // if (angleDifDeg < -360f) angleDifDeg %= 360f;
-            // angleDifRad = angleDifDeg * ShapeMath.DEGTORAD;
-            
             var startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
             var endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
             
@@ -466,7 +446,6 @@ public static class CircleDrawing
         
             var p2Inner = c.Center + (ShapeVec.Right() * (c.Radius - lineInfo.Thickness)).Rotate(endAngleRad);
             var p2Outer = c.Center + (ShapeVec.Right() * (c.Radius + lineInfo.Thickness)).Rotate(endAngleRad);
-            
             
             if (angleDifRad > 0)
             {
