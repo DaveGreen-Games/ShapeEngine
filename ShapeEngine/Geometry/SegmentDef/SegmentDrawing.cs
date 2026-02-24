@@ -990,7 +990,14 @@ public static class SegmentDrawing
     
     #region Draw Cap
 
-    //TODO: Add xml summary
+    /// <summary>
+    /// Draws a round cap at the specified center with a given direction, radius, and number of cap points.
+    /// </summary>
+    /// <param name="center">The center of the round cap.</param>
+    /// <param name="dir">The direction of the cap.</param>
+    /// <param name="radius">The radius of the cap.</param>
+    /// <param name="capPoints">The number of points to use for drawing the cap.</param>
+    /// <param name="color">The color of the cap.</param>
     public static void DrawRoundCap(Vector2 center, Vector2 dir, float radius, int capPoints, ColorRgba color)
     {
         if(capPoints <= 0) return;
@@ -1013,7 +1020,13 @@ public static class SegmentDrawing
         Raylib.DrawTriangle(curStart, capStartRight, center, color.ToRayColor());
     }
     
-    //Todo: Add xml summary
+    /// <summary>
+    /// Draws a round cap at the specified left and right points with a given number of cap points and color.
+    /// </summary>
+    /// <param name="left">The left point of the cap.</param>
+    /// <param name="right">The right point of the cap.</param>
+    /// <param name="capPoints">The number of points to use for drawing the cap.</param>
+    /// <param name="color">The color of the cap.</param>
     public static void DrawRoundCap(Vector2 left, Vector2 right, int capPoints, ColorRgba color)
     {
         if(capPoints <= 0) return;
