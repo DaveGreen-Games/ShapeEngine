@@ -1,10 +1,7 @@
-using System.Drawing;
 using System.Numerics;
-using Clipper2Lib;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
@@ -14,45 +11,24 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
-//TODO: Finish docs (add or update)
+//TODO: Add missing docs & update existing docs!
 
 public static class CircleDrawing
 {
     #region Draw
-
-    /// <summary>
-    /// Draws a filled circle using the specified <see cref="Circle"/> instance, color, rotation, and segment count.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="color">The color of the circle.</param>
-    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
-    /// <param name="segments">The number of segments used to approximate the circle. Minimum is 3.</param>
+    
     public static void Draw(this Circle c, float rotDeg, ColorRgba color, float smoothness = 0.5f)
     {
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
         Raylib.DrawCircleSector(c.Center, c.Radius, rotDeg, 360 + rotDeg, sides, color.ToRayColor());
     }
 
-    /// <summary>
-    /// Draws a filled circle using the specified <see cref="Circle"/> instance and color.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="color">The color of the circle.</param>
     public static void Draw(this Circle c, ColorRgba color, float smoothness = 0.5f)
     {
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
         Raylib.DrawCircleSector(c.Center, c.Radius, 0, 360, sides, color.ToRayColor());
     }
     
-    /// <summary>
-    /// Very usefull for drawing small/tiny circles. Drawing the circle as rect increases performance a lot.
-    /// </summary>
-    /// <param name="center">The center of the circle.</param>
-    /// <param name="radius">The radius of the circle.</param>
-    /// <param name="color">The color of the circle.</param>
-    /// <remarks>
-    /// This method is optimized for performance and is useful for drawing tiny circles. Draws a rect!
-    /// </remarks>
     public static void DrawFast(this Circle c, ColorRgba color)
     {
         RectDrawing.DrawRect(c.Center - new Vector2(c.Radius, c.Radius), c.Center + new Vector2(c.Radius, c.Radius), color);
@@ -98,6 +74,7 @@ public static class CircleDrawing
     #endregion
     
     #region Draw Percentage
+    
     public static void DrawPercentage(this Circle c, float f, float rotDeg, ColorRgba color, float smoothness = 0.5f)
     {
         if (f == 0) return;
@@ -116,13 +93,7 @@ public static class CircleDrawing
     #endregion
     
     #region Draw Lines
-    /// <summary>
-    /// Draws the outline of a circle using the specified line thickness, number of sides, and color.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="sides">The number of sides used to approximate the circle.</param>
-    /// <param name="color">The color of the outline.</param>
+    
     public static void DrawLines(this Circle c, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
         if (c.Radius < lineThickness)
@@ -134,14 +105,7 @@ public static class CircleDrawing
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, color.ToRayColor());
     }
-    /// <summary>
-    /// Draws the outline of a circle using the specified line thickness, rotation, number of sides, and color.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
-    /// <param name="sides">The number of sides used to approximate the circle.</param>
-    /// <param name="color">The color of the outline.</param>
+
     public static void DrawLines(this Circle c, float rotDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
         if (c.Radius < lineThickness)
@@ -153,12 +117,7 @@ public static class CircleDrawing
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, rotDeg, lineThickness * 2, color.ToRayColor());
     }
-    /// <summary>
-    /// Draws the outline of a circle using the specified line drawing info and number of sides.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
-    /// <param name="sides">The number of sides used to approximate the circle.</param>
+
     public static void DrawLines(this Circle c, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -171,14 +130,7 @@ public static class CircleDrawing
         var lineThickness = lineInfo.Thickness;
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, lineInfo.Color.ToRayColor());
     }
-    /// <summary>
-    /// Draws the outline of a circle using the specified line drawing info, rotation, and number of sides.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="lineInfo">The line drawing parameters for the drawing the circle outline.
-    /// Only <see cref="LineDrawingInfo.Thickness"/> and <see cref="LineDrawingInfo.Color"/> are used!</param>
-    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
-    /// <param name="sides">The number of sides used to approximate the circle.</param>
+
     public static void DrawLines(this Circle c, float rotDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -195,28 +147,11 @@ public static class CircleDrawing
     
     #region Draw Lines Scaled
 
-    /// <summary>
-    /// Draws a circle outline where each side can be scaled towards the origin of the side.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
-    /// <param name="sides">The number of sides used to approximate the circle.</param>
-    /// <param name="sideScaleFactor">The scale factor for each side (0 = no circle, 1 = normal circle).</param>
-    /// <param name="sideScaleOrigin">The point along each circle segment to scale from in both directions (0-1, default 0.5).</param>
     public static void DrawLinesScaled(this Circle c, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         DrawLinesScaled(c, 0f, lineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
     }
-
-    /// <summary>
-    /// Draws a circle outline where each side can be scaled towards the origin of the side, with rotation.
-    /// </summary>
-    /// <param name="c">The circle to draw.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
-    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
-    /// <param name="sides">The number of sides used to approximate the circle.</param>
-    /// <param name="sideScaleFactor">The scale factor for each side (0 = no circle, 1 = normal circle).</param>
-    /// <param name="sideScaleOrigin">The point along each circle segment to scale from in both directions (0-1, default 0.5).</param>
+    
     public static void DrawLinesScaled(this Circle c, float rotDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -249,21 +184,7 @@ public static class CircleDrawing
     #endregion
     
     #region Draw Lines Percentage
-    /// <summary>
-    /// Draws part of a circle outline depending on f.
-    /// </summary>
-    /// <param name="c">The circle parameters.</param>
-    /// <param name="f">The percentage of the outline to draw. A positive value goes counter-clockwise
-    /// and a negative value goes clockwise.</param>
-    /// <param name="lineThickness">The line drawing parameters.</param>
-    /// <param name="rotDeg">The rotation of the circle. The lower the resolution of the circle the more visible is rotation</param>
-    /// <param name="sides">The resolution of the circle. The more sides are used the closer it represents a circle.</param>
-    /// <param name="color">The color of the line.</param>
-    /// <param name="lineCapType">The end cap type of the line.</param>
-    /// <param name="capPoints">How many points are used to draw the end cap.</param>
-    /// <remarks>
-    /// Useful for drawing progress arcs or partial circles.
-    /// </remarks>
+
     public static void DrawLinesPercentage(this Circle c, float f, float rotDeg, float lineThickness, ColorRgba color,  float smoothness = 0.5f)
     {
         if (f == 0) return;
@@ -276,19 +197,10 @@ public static class CircleDrawing
         
         if (TransformPercentageToAngles(f, out float startAngleDeg, out float endAngleDeg))
         {
-            c.DrawSectorLines(startAngleDeg + rotDeg, endAngleDeg + rotDeg, lineThickness, color, smoothness);
+            c.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineThickness, color, smoothness);
         }
     }
-
-    /// <summary>
-    /// Draws part of a circle outline depending on f.
-    /// </summary>
-    /// <param name="c">The circle parameters.</param>
-    /// <param name="f">The percentage of the outline to draw. A positive value goes counter-clockwise
-    /// and a negative value goes clockwise.</param>
-    /// <param name="lineInfo">The line drawing parameters.</param>
-    /// <param name="rotDeg">The rotation of the circle. The lower the resolution of the circle the more visible is rotation</param>
-    /// <param name="sides">The resolution of the circle. The more sides are used the closer it represents a circle.</param>
+    
     public static void DrawLinesPercentage(this Circle c, float f, float rotDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         // DrawLinesPercentage(c, f, lineInfo.Thickness, rotDeg, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints, smoothness);
@@ -302,7 +214,7 @@ public static class CircleDrawing
         
         if (TransformPercentageToAngles(f, out float startAngleDeg, out float endAngleDeg))
         {
-            c.DrawSectorLines(startAngleDeg + rotDeg, endAngleDeg + rotDeg, lineInfo, smoothness);
+            c.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineInfo, smoothness);
         }
     }
 
@@ -403,14 +315,6 @@ public static class CircleDrawing
         Raylib.DrawRing(c.Center, c.Radius - lineInfo.Thickness, c.Radius + lineInfo.Thickness, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
     }
     
-    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
-    {
-        c.DrawSectorLines(startAngleDeg, endAngleDeg, 0f, lineInfo, smoothness);
-    }
-    public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
-    {
-        c.DrawSectorLines(startAngleDeg, endAngleDeg, 0f, lineThickness, color, smoothness);
-    }
     public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -462,6 +366,7 @@ public static class CircleDrawing
         Raylib.DrawRing(c.Center, c.Radius - lineInfo.Thickness, c.Radius + lineInfo.Thickness, startAngleDeg, endAngleDeg, sides, lineInfo.Color.ToRayColor());
         
     }
+    
     public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
         if (c.Radius < lineThickness)
@@ -476,6 +381,7 @@ public static class CircleDrawing
     #endregion
     
     #region Draw Sector Lines Scaled
+    
     public static void DrawSectorLinesScaledClosed(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -522,6 +428,7 @@ public static class CircleDrawing
             SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
+    
     public static void DrawSectorLinesScaled(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -781,28 +688,6 @@ public static class CircleDrawing
     
     #region Draw Ring Lines
 
-    public static void DrawRingLines(this Circle ring, float ringThickness, float outerRotDeg, float innerRotDeg, 
-        LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo, float innerSmoothness, float outerSmoothness)
-    {
-        if(ringThickness <= 0 || innerLineInfo.Thickness <= 0 || outerLineInfo.Thickness <= 0)
-        {
-            return;
-        }
-
-        if (ringThickness >= ring.Radius)
-        {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawLines(outerRotDeg, outerLineInfo, outerSmoothness);
-            return;
-        }
-        
-        var innerRing = ring.SetRadius(ring.Radius - ringThickness);
-        var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-        
-        innerRing.DrawLines(innerRotDeg, innerLineInfo, innerSmoothness);
-        outerRing.DrawLines(outerRotDeg, outerLineInfo, outerSmoothness);
-    }
-    
     public static void DrawRingLines(this Circle ring, float ringThickness, float rotDeg, float lineThickness, ColorRgba color, float smoothness)
     {
         if(ringThickness <= 0 && lineThickness <= 0)
@@ -823,124 +708,61 @@ public static class CircleDrawing
             return;
         }
 
-        if (ringThickness >= ring.Radius)
+        // 1. Calculate the effective radius of the inner ring, applying the clamp constraint.
+        // The inner ring represents the centerline of the inner stroke.
+        float effectiveInnerRadius = MathF.Max(ring.Radius - ringThickness, lineThickness * 2f);
+        
+        // 2. Calculate the outer edge of the inner stroke.
+        // Stroke is centered on effectiveInnerRadius with total width (lineThickness * 2).
+        // It extends outwards by lineThickness.
+        float innerStrokeOuterEdge = effectiveInnerRadius + lineThickness;
+
+        // 3. Calculate the inner edge of the outer stroke.
+        // Outer ring is at Radius + ringThickness.
+        // Stroke extends inwards by lineThickness.
+        float outerStrokeInnerEdge = (ring.Radius + ringThickness) - lineThickness;
+
+        if (innerStrokeOuterEdge >= outerStrokeInnerEdge)
         {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawLines(rotDeg, lineThickness, color, smoothness);
+            // Calculating the total bounds of the merged shape
+            float totalInnerRadius = effectiveInnerRadius - lineThickness;
+            float totalOuterRadius = (ring.Radius + ringThickness) + lineThickness;
+
+            // Calculate the new center radius and thickness for the merged ring
+            float totalThickness = (totalOuterRadius - totalInnerRadius) * 0.5f;
+            float newRadius = totalInnerRadius + totalThickness;
+
+            // Draw the merged result using the calculated geometric center and thickness
+            var mergedRing = ring.SetRadius(newRadius);
+            mergedRing.DrawLines(rotDeg, lineThickness, color, smoothness);
             return;
         }
         
-        var innerRing = ring.SetRadius(ring.Radius - ringThickness);
+        var innerRing = ring.SetRadius(effectiveInnerRadius);
         var outerRing = ring.SetRadius(ring.Radius + ringThickness);
         
         innerRing.DrawLines(rotDeg, lineThickness, color, smoothness);
         outerRing.DrawLines(rotDeg, lineThickness, color, smoothness);
     }
+
+    public static void DrawRingLines(this Circle ring, float ringThickness, float rotDeg, LineDrawingInfo lineInfo, float smoothness)
+    {
+        ring.DrawRingLines(ringThickness, rotDeg, lineInfo.Thickness, lineInfo.Color, smoothness);
+    }
     
     #endregion
     
-    #region Draw Ring Lines Percentage
-    public static void DrawRingLinesPercentage(this Circle ring, float ringThickness, float f, float rotDeg, float lineThickness, ColorRgba color, float smoothness)
-    {
-        if(ringThickness <= 0 && lineThickness <= 0)
-        {
-            ring.DrawPercentage(f, rotDeg, color, smoothness);
-            return;
-        }
-        
-        if (lineThickness <= 0)
-        {
-            ring.DrawLinesPercentage(f, rotDeg, ringThickness, color, smoothness);
-            return;
-        }
-        
-        if (ringThickness <= 0)
-        {
-            ring.DrawLinesPercentage(f, rotDeg, lineThickness, color, smoothness);
-            return;
-        }
-
-        if (ringThickness >= ring.Radius)
-        {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawLinesPercentage(f, rotDeg, lineThickness, color, smoothness);
-            return;
-        }
-        
-        var innerRing = ring.SetRadius(ring.Radius - ringThickness);
-        var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-        
-        innerRing.DrawLinesPercentage(f, rotDeg, lineThickness, color, smoothness);
-        outerRing.DrawLinesPercentage(f, rotDeg, lineThickness, color, smoothness);
-    }
-    
-    public static void DrawRingLinesPercengate(this Circle ring, float ringThickness, float f, float outerRotDeg, float innerRotDeg, 
-        LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo, float innerSmoothness, float outerSmoothness)
-    {
-        if(ringThickness <= 0 || innerLineInfo.Thickness <= 0 || outerLineInfo.Thickness <= 0)
-        {
-            return;
-        }
-
-        if (ringThickness >= ring.Radius)
-        {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawLinesPercentage(f, outerRotDeg, outerLineInfo, outerSmoothness);
-            return;
-        }
-        
-        var innerRing = ring.SetRadius(ring.Radius - ringThickness);
-        var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-        
-        innerRing.DrawLinesPercentage(f, innerRotDeg, innerLineInfo, innerSmoothness);
-        outerRing.DrawLinesPercentage(f, outerRotDeg, outerLineInfo, outerSmoothness);
-    }
-    
-    #endregion 
-
     #region Draw Ring Lines Scaled
     
-    public static void DrawRingLinesScaled(this Circle ring, float ringThickness, float outerRotDeg, float innerRotDeg, 
-        LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo, float innerSmoothness, float outerSmoothness, 
-        float innerSideScaleFactor, float outerSideScaleFactor, float innerSideScaleOrigin, float outerSideScaleOrigin)
-    {
-        if (innerSideScaleFactor <= 0f || outerSideScaleFactor <= 0f || ringThickness <= 0 || innerLineInfo.Thickness <= 0 || outerLineInfo.Thickness <= 0)
-        {
-            return;
-        }
-        
-        if (innerSideScaleFactor >= 1f && outerSideScaleFactor >= 1f)
-        {
-            ring.DrawRingLines(ringThickness, innerRotDeg, outerRotDeg, innerLineInfo, outerLineInfo, innerSmoothness, outerSmoothness);
-            return;
-        }
-        
-        if (ringThickness >= ring.Radius)
-        {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawLinesScaled(outerRotDeg, outerLineInfo, outerSmoothness, outerSideScaleFactor, outerSideScaleOrigin);
-            return;
-        }
-
-        if (innerSideScaleOrigin < 1f)
-        {
-            var innerRing = ring.SetRadius(ring.Radius - ringThickness);
-            innerRing.DrawLinesScaled(innerRotDeg, innerLineInfo, innerSmoothness, innerSideScaleFactor, innerSideScaleOrigin);
-        }
-        
-        if (outerSideScaleOrigin < 1f)
-        {
-            var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-            outerRing.DrawLinesScaled(outerRotDeg, outerLineInfo, outerSmoothness, outerSideScaleFactor, outerSideScaleOrigin);
-        }
-    }
-    
-    public static void DrawRingLinesScaled(this Circle ring, float ringThickness, float rotDeg, float lineThickness, ColorRgba color, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public static void DrawRingLinesScaled(this Circle ring, float ringThickness, float rotDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0f)
         {
             return;
         }
+        
+        var lineThickness = lineInfo.Thickness;
+        var color = lineInfo.Color;
         
         if (sideScaleFactor >= 1f)
         {
@@ -956,35 +778,79 @@ public static class CircleDrawing
         
         if (lineThickness <= 0)
         {
-            ring.DrawLinesScaled(rotDeg, new LineDrawingInfo(lineThickness, color), smoothness, sideScaleFactor, sideScaleOrigin);
+            var newLineInfo = lineInfo.SetThickness(ringThickness);
+            ring.DrawLinesScaled(rotDeg, newLineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
             return;
         }
         
         if (ringThickness <= 0)
         {
-            ring.DrawLinesScaled(rotDeg, new LineDrawingInfo(lineThickness, color), smoothness, sideScaleFactor, sideScaleOrigin);
+            ring.DrawLinesScaled(rotDeg, lineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
             return;
         }
 
-        if (ringThickness >= ring.Radius)
+        
+        // 1. Calculate the effective radius of the inner ring, applying the clamp constraint.
+        // The inner ring represents the centerline of the inner stroke.
+        float effectiveInnerRadius = MathF.Max(ring.Radius - ringThickness, lineThickness * 2f);
+        
+        // 2. Calculate the outer edge of the inner stroke.
+        // Stroke is centered on effectiveInnerRadius with total width (lineThickness * 2).
+        // It extends outwards by lineThickness.
+        float innerStrokeOuterEdge = effectiveInnerRadius + lineThickness;
+
+        // 3. Calculate the inner edge of the outer stroke.
+        // Outer ring is at Radius + ringThickness.
+        // Stroke extends inwards by lineThickness.
+        float outerStrokeInnerEdge = (ring.Radius + ringThickness) - lineThickness;
+
+        if (innerStrokeOuterEdge >= outerStrokeInnerEdge)
         {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawLinesScaled(rotDeg, new LineDrawingInfo(lineThickness, color), smoothness, sideScaleFactor, sideScaleOrigin);
+            // Calculating the total bounds of the merged shape
+            float totalInnerRadius = effectiveInnerRadius - lineThickness;
+            float totalOuterRadius = (ring.Radius + ringThickness) + lineThickness;
+
+            // Calculate the new center radius and thickness for the merged ring
+            float totalThickness = (totalOuterRadius - totalInnerRadius) * 0.5f;
+            float newRadius = totalInnerRadius + totalThickness;
+
+            // Draw the merged result using the calculated geometric center and thickness
+            var mergedRing = ring.SetRadius(newRadius);
+            var newLineInfo = lineInfo.SetThickness(totalThickness);
+            mergedRing.DrawLinesScaled(rotDeg, newLineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
             return;
         }
         
-        var innerRing = ring.SetRadius(ring.Radius - ringThickness);
+        var innerRing = ring.SetRadius(effectiveInnerRadius);
         var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-        var lineInfo = new LineDrawingInfo(lineThickness, color);
+        
         innerRing.DrawLinesScaled(rotDeg, lineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
         outerRing.DrawLinesScaled(rotDeg, lineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
     }
     
     #endregion
     
+    #region Draw Ring Lines Percentage
+    
+    public static void DrawRingLinesPercentage(this Circle ring, float ringThickness, float f, float rotDeg, float lineThickness, ColorRgba color, float smoothness, bool closed = true)
+    {
+        if (!TransformPercentageToAngles(f, out var startAngleDeg, out var endAngleDeg)) return;
+        ring.DrawRingSectorLines(ringThickness, startAngleDeg, endAngleDeg, rotDeg, lineThickness, color, smoothness, closed);
+        
+    }
+    
+    public static void DrawRingLinesPercentage(this Circle ring, float ringThickness, float f, float rotDeg, LineDrawingInfo lineInfo, float smoothness)
+    {
+        if (!TransformPercentageToAngles(f, out var startAngleDeg, out var endAngleDeg)) return;
+        ring.DrawRingSectorLines(ringThickness, startAngleDeg, endAngleDeg, rotDeg, lineInfo, smoothness);
+      
+    }
+    
+    #endregion 
+    
     #region Draw Ring Sector Lines
    
-    public static void DrawRingSectorLines(this Circle ring, float ringThickness, float startAngleDeg, float endAngleDeg, float rotDeg, float lineThickness, ColorRgba color, float smoothness)
+    public static void DrawRingSectorLines(this Circle ring, float ringThickness, float startAngleDeg, float endAngleDeg, float rotDeg, float lineThickness, ColorRgba color, float smoothness, bool closed = true)
     {
         if(ringThickness <= 0 && lineThickness <= 0)
         {
@@ -1003,24 +869,39 @@ public static class CircleDrawing
             ring.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineThickness, color, smoothness);
             return;
         }
+        
+        // 1. Calculate the effective radius of the inner ring, applying the clamp constraint.
+        // The inner ring represents the centerline of the inner stroke.
+        float effectiveInnerRadius = MathF.Max(ring.Radius - ringThickness, lineThickness * 2f);
+        
+        // 2. Calculate the outer edge of the inner stroke.
+        // Stroke is centered on effectiveInnerRadius with total width (lineThickness * 2).
+        // It extends outwards by lineThickness.
+        float innerStrokeOuterEdge = effectiveInnerRadius + lineThickness;
 
-        if (ringThickness < lineThickness * 2f)
+        // 3. Calculate the inner edge of the outer stroke.
+        // Outer ring is at Radius + ringThickness.
+        // Stroke extends inwards by lineThickness.
+        float outerStrokeInnerEdge = (ring.Radius + ringThickness) - lineThickness;
+
+        if (innerStrokeOuterEdge >= outerStrokeInnerEdge)
         {
-            ring.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineThickness + ringThickness * 0.5f, color, smoothness);
+            // Calculating the total bounds of the merged shape
+            float totalInnerRadius = effectiveInnerRadius - lineThickness;
+            float totalOuterRadius = (ring.Radius + ringThickness) + lineThickness;
+
+            // Calculate the new center radius and thickness for the merged ring
+            float totalThickness = (totalOuterRadius - totalInnerRadius) * 0.5f;
+            float newRadius = totalInnerRadius + totalThickness;
+
+            // Draw the merged result using the calculated geometric center and thickness
+            var mergedRing = ring.SetRadius(newRadius);
+            mergedRing.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, totalThickness, color, smoothness);
             return;
         }
         
-        if (ringThickness >= ring.Radius)
-        {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineThickness, color, smoothness);
-            return;
-        }
-        
-        var innerRing = ring.SetRadius(ring.Radius - ringThickness);
+        var innerRing = ring.SetRadius(effectiveInnerRadius);
         var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-
-        if (innerRing.Radius < lineThickness || outerRing.Radius < lineThickness) return;
 
         var innerParametersValid = CalculateCircleDrawingParameters(innerRing.Radius, startAngleDeg + rotDeg, endAngleDeg + rotDeg, smoothness,
             out float innerAngleDifRad, out float innerAngleStepRad, out int innerSides, false);
@@ -1034,78 +915,120 @@ public static class CircleDrawing
         var outerStartAngleDeg = startAngleDeg + rotDeg;
         var innerEndAngleDeg = innerStartAngleDeg + (innerAngleDifRad * ShapeMath.RADTODEG);
         var outerEndAngleDeg = outerStartAngleDeg + (outerAngleDifRad * ShapeMath.RADTODEG);
-        var innerStartAngleRad = innerStartAngleDeg * ShapeMath.DEGTORAD;
-        var outerStartAngleRad = outerStartAngleDeg * ShapeMath.DEGTORAD;
-        var innerEndAngleRad = innerEndAngleDeg * ShapeMath.DEGTORAD;
-        var outerEndAngleRad = outerEndAngleDeg * ShapeMath.DEGTORAD;
-
-        var ccw = innerAngleDifRad < 0;
-        var innerStartPoint = innerRing.Center + new Vector2(innerRing.Radius - lineThickness, 0f).Rotate(innerStartAngleRad);
-        var outerStartPoint = outerRing.Center + new Vector2(outerRing.Radius + lineThickness, 0f).Rotate(outerStartAngleRad);
-        var startDir = (outerStartPoint - innerStartPoint).Normalize();
-        var startPerp = ccw ? startDir.GetPerpendicularRight() : startDir.GetPerpendicularLeft();
-        var innerStartOffsetPoint = innerStartPoint + startPerp * lineThickness * 2;
-        var outerStartOffsetPoint = outerStartPoint + startPerp * lineThickness * 2;
-        
-        var innerEndPoint = innerRing.Center + new Vector2(innerRing.Radius - lineThickness, 0f).Rotate(innerEndAngleRad);
-        var outerEndPoint = outerRing.Center + new Vector2(outerRing.Radius + lineThickness, 0f).Rotate(outerEndAngleRad);
-        var endDir = (outerEndPoint - innerEndPoint).Normalize();
-        var endPerp = ccw ? endDir.GetPerpendicularLeft() : endDir.GetPerpendicularRight();
-        var innerEndOffsetPoint = innerEndPoint + endPerp * lineThickness * 2;
-        var outerEndOffsetPoint = outerEndPoint + endPerp * lineThickness * 2;
-
         var rayColor = color.ToRayColor();
         
-        if (ccw)
+        if (closed)
         {
-            Raylib.DrawTriangle(outerStartOffsetPoint, innerStartPoint, innerStartOffsetPoint, rayColor);
-            Raylib.DrawTriangle(outerStartOffsetPoint, outerStartPoint, innerStartPoint, rayColor);
-        
-            Raylib.DrawTriangle(outerEndPoint, innerEndOffsetPoint, innerEndPoint, rayColor);
-            Raylib.DrawTriangle(outerEndPoint, outerEndOffsetPoint, innerEndOffsetPoint, rayColor);
+            var innerStartAngleRad = innerStartAngleDeg * ShapeMath.DEGTORAD;
+            var outerStartAngleRad = outerStartAngleDeg * ShapeMath.DEGTORAD;
+            var innerEndAngleRad = innerEndAngleDeg * ShapeMath.DEGTORAD;
+            var outerEndAngleRad = outerEndAngleDeg * ShapeMath.DEGTORAD;
+
+            var ccw = innerAngleDifRad < 0;
+            var innerStartPoint = innerRing.Center + new Vector2(innerRing.Radius - lineThickness, 0f).Rotate(innerStartAngleRad);
+            var outerStartPoint = outerRing.Center + new Vector2(outerRing.Radius + lineThickness, 0f).Rotate(outerStartAngleRad);
+            var startDir = (outerStartPoint - innerStartPoint).Normalize();
+            var startPerp = ccw ? startDir.GetPerpendicularRight() : startDir.GetPerpendicularLeft();
+            var innerStartOffsetPoint = innerStartPoint + startPerp * lineThickness * 2;
+            var outerStartOffsetPoint = outerStartPoint + startPerp * lineThickness * 2;
+            
+            var innerEndPoint = innerRing.Center + new Vector2(innerRing.Radius - lineThickness, 0f).Rotate(innerEndAngleRad);
+            var outerEndPoint = outerRing.Center + new Vector2(outerRing.Radius + lineThickness, 0f).Rotate(outerEndAngleRad);
+            var endDir = (outerEndPoint - innerEndPoint).Normalize();
+            var endPerp = ccw ? endDir.GetPerpendicularLeft() : endDir.GetPerpendicularRight();
+            var innerEndOffsetPoint = innerEndPoint + endPerp * lineThickness * 2;
+            var outerEndOffsetPoint = outerEndPoint + endPerp * lineThickness * 2;
+            
+            if (ccw)
+            {
+                Raylib.DrawTriangle(outerStartOffsetPoint, innerStartPoint, innerStartOffsetPoint, rayColor);
+                Raylib.DrawTriangle(outerStartOffsetPoint, outerStartPoint, innerStartPoint, rayColor);
+            
+                Raylib.DrawTriangle(outerEndPoint, innerEndOffsetPoint, innerEndPoint, rayColor);
+                Raylib.DrawTriangle(outerEndPoint, outerEndOffsetPoint, innerEndOffsetPoint, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle(innerStartOffsetPoint, innerStartPoint, outerStartPoint, rayColor);
+                Raylib.DrawTriangle(innerStartOffsetPoint, outerStartPoint, outerStartOffsetPoint, rayColor);
+            
+                Raylib.DrawTriangle(innerEndPoint, innerEndOffsetPoint, outerEndOffsetPoint, rayColor);
+                Raylib.DrawTriangle(innerEndPoint, outerEndOffsetPoint, outerEndPoint, rayColor);
+            }
         }
-        else
-        {
-            Raylib.DrawTriangle(innerStartOffsetPoint, innerStartPoint, outerStartPoint, rayColor);
-            Raylib.DrawTriangle(innerStartOffsetPoint, outerStartPoint, outerStartOffsetPoint, rayColor);
         
-            Raylib.DrawTriangle(innerEndPoint, innerEndOffsetPoint, outerEndOffsetPoint, rayColor);
-            Raylib.DrawTriangle(innerEndPoint, outerEndOffsetPoint, outerEndPoint, rayColor);
-        }
-        
-        Raylib.DrawRing(innerRing.Center, innerRing.Radius - lineThickness, innerRing.Radius + lineThickness, innerStartAngleDeg, innerEndAngleDeg, innerSides, color.ToRayColor());
-        Raylib.DrawRing(outerRing.Center, outerRing.Radius - lineThickness, outerRing.Radius + lineThickness, outerStartAngleDeg, outerEndAngleDeg, outerSides, color.ToRayColor());
+        Raylib.DrawRing(innerRing.Center, innerRing.Radius - lineThickness, innerRing.Radius + lineThickness, innerStartAngleDeg, innerEndAngleDeg, innerSides, rayColor);
+        Raylib.DrawRing(outerRing.Center, outerRing.Radius - lineThickness, outerRing.Radius + lineThickness, outerStartAngleDeg, outerEndAngleDeg, outerSides, rayColor);
     }
     
-    //TODO: Needs to connect ends of both sectors as well
-    public static void DrawRingSectorLines(this Circle ring, float ringThickness, float startAngleDeg, float endAngleDeg, float outerRotDeg, float innerRotDeg, 
-        LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo, float innerSmoothness, float outerSmoothness)
+    public static void DrawRingSectorLines(this Circle ring, float ringThickness, float startAngleDeg, float endAngleDeg, float rotDeg, LineDrawingInfo lineInfo, float smoothness)
     {
-        if(ringThickness <= 0 || innerLineInfo.Thickness <= 0 || outerLineInfo.Thickness <= 0)
+        var lineThickness = lineInfo.Thickness;
+        var color = lineInfo.Color;
+        if(ringThickness <= 0 && lineThickness <= 0)
         {
+            ring.DrawSector(startAngleDeg, endAngleDeg, rotDeg, color, smoothness);
             return;
         }
+        
+        if (lineThickness <= 0)
+        {
+            var newLineInfo = lineInfo.SetThickness(ringThickness);
+            ring.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, newLineInfo, smoothness);
+            return;
+        }
+        
+        if (ringThickness <= 0)
+        {
+            ring.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineInfo, smoothness);
+            return;
+        }
+        
+        // 1. Calculate the effective radius of the inner ring, applying the clamp constraint.
+        // The inner ring represents the centerline of the inner stroke.
+        float effectiveInnerRadius = MathF.Max(ring.Radius - ringThickness, lineThickness * 2f);
+        
+        // 2. Calculate the outer edge of the inner stroke.
+        // Stroke is centered on effectiveInnerRadius with total width (lineThickness * 2).
+        // It extends outwards by lineThickness.
+        float innerStrokeOuterEdge = effectiveInnerRadius + lineThickness;
 
-        if (ringThickness >= ring.Radius)
+        // 3. Calculate the inner edge of the outer stroke.
+        // Outer ring is at Radius + ringThickness.
+        // Stroke extends inwards by lineThickness.
+        float outerStrokeInnerEdge = (ring.Radius + ringThickness) - lineThickness;
+
+        if (innerStrokeOuterEdge >= outerStrokeInnerEdge)
         {
-            ring = ring.SetRadius(ring.Radius + ringThickness);
-            ring.DrawSectorLines(startAngleDeg, endAngleDeg, outerRotDeg, outerLineInfo, outerSmoothness);
+            // Calculating the total bounds of the merged shape
+            float totalInnerRadius = effectiveInnerRadius - lineThickness;
+            float totalOuterRadius = (ring.Radius + ringThickness) + lineThickness;
+
+            // Calculate the new center radius and thickness for the merged ring
+            float totalThickness = (totalOuterRadius - totalInnerRadius) * 0.5f;
+            float newRadius = totalInnerRadius + totalThickness;
+
+            // Draw the merged result using the calculated geometric center and thickness
+            var mergedRing = ring.SetRadius(newRadius);
+            var newLineInfo = lineInfo.SetThickness(totalThickness);
+            mergedRing.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, newLineInfo, smoothness);
             return;
         }
         
-        var innerRing = ring.SetRadius(ring.Radius - ringThickness);
+        var innerRing = ring.SetRadius(effectiveInnerRadius);
         var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-        
-        innerRing.DrawSectorLines(startAngleDeg, endAngleDeg, innerRotDeg, innerLineInfo, innerSmoothness);
-        outerRing.DrawSectorLines(startAngleDeg, endAngleDeg, outerRotDeg, outerLineInfo, outerSmoothness);
+
+        innerRing.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineInfo, smoothness);
+        outerRing.DrawSectorLines(startAngleDeg, endAngleDeg, rotDeg, lineInfo, smoothness);
     }
     
     #endregion 
     
     
-    #region Helper
+    #region Math
 
     public static ValueRange CircleSideLengthRange = new ValueRange(2f, 75f);
+    
     public static ValueRangeInt CircleSideCountRange = new ValueRangeInt(8, 128);
 
     public static bool GetCircleSmoothness(float radius, int sides, out float smoothness)
@@ -1119,6 +1042,7 @@ public static class CircleDrawing
         smoothness = ShapeMath.Clamp(f, 0f, 1f);
         return true;
     }
+    
     public static bool GetCircleSmoothness(float radius, float startAngleDeg, float endAngleDeg, int sides, out float smoothness)
     {
         smoothness = 0f;
@@ -1171,6 +1095,7 @@ public static class CircleDrawing
 
         return true;
     }
+    
     public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleStepRad, out int sides, bool clampSides = true)
     {
         angleStepRad = 0f;
@@ -1200,6 +1125,7 @@ public static class CircleDrawing
 
         return true;
     }
+    
     public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out int sides, bool clampSides = true)
     {
         sides = 0;
@@ -1225,6 +1151,7 @@ public static class CircleDrawing
         
         return true;
     }
+    
     public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out float angleStepRad, out int sides, bool clampSides = true)
     {
         sides = 0;
@@ -1242,6 +1169,7 @@ public static class CircleDrawing
         angleStepRad = MathF.Tau / sides;
         return true;
     }
+    
     public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out int sides, bool clampSides = true)
     {
         sides = 0;
@@ -1277,6 +1205,9 @@ public static class CircleDrawing
         return sides;
     }
     
+    #endregion
+    
+    #region Helper
     private static bool TransformPercentageToAngles(float f, out float startAngleDeg, out float endAngleDeg)
     {
         startAngleDeg = 0f;
