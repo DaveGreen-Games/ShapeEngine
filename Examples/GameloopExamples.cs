@@ -534,7 +534,7 @@ public class GameloopExamples : Game
         SegmentDrawing.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
         SegmentDrawing.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
         var circle = new Circle(circleCenter, size);
-        circle.DrawSectorLines(180, 270, 1f, colorRgba, 0.65f);
+        circle.DrawSectorLines(180, 270, 0f, 1f, colorRgba, 0.65f);
     }
 
     protected override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)

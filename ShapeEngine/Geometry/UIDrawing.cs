@@ -147,7 +147,7 @@ public static class UIDrawing
     /// </remarks>
     public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color, float smoothness = 0.5f)
     {
-        c.DrawSectorLines(0, 360 * f, thickness, color, smoothness);
+        c.DrawSectorLines(0, 360 * f, 0f, thickness, color, smoothness);
     }
 
     /// <summary>
