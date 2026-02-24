@@ -160,11 +160,14 @@ public static class GappedDrawing
     /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
     /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
     /// <param name="rotDeg">The rotation of the circle in degrees.</param>
-    /// <param name="sides">The number of sides to approximate the circle (minimum 3).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <remarks>
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
-    /// - The <paramref name="sides"/> parameter controls the smoothness of the circle.
     /// </remarks>
     public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, float smoothness)
     {

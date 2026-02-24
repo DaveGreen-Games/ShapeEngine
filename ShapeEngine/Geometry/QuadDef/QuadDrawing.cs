@@ -709,7 +709,11 @@ public static class QuadDrawing
     /// <param name="q">The quad whose vertices to draw.</param>
     /// <param name="vertexRadius">The radius of each vertex circle.</param>
     /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="circleSegments">The number of segments to use for each circle (default is 8).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <remarks>
     /// Useful for visualizing or highlighting the corners of a quad.
     /// </remarks>

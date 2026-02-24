@@ -979,11 +979,15 @@ public static class SegmentDrawing
     /// <param name="segment">The segment whose vertices to draw.</param>
     /// <param name="vertexRadius">The radius of the vertex circles.</param>
     /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="vertexSegments">The number of segments to use for drawing the circles (default is 16).</param>
-    public static void DrawVertices(this Segment segment, float vertexRadius, ColorRgba color, int vertexSegments = 16)
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    public static void DrawVertices(this Segment segment, float vertexRadius, ColorRgba color, float smoothness = 0.25f)
     {
-        segment.Start.Draw( vertexRadius, color, vertexSegments);
-        segment.End.Draw(vertexRadius, color, vertexSegments);
+        segment.Start.Draw(vertexRadius, color, smoothness);
+        segment.End.Draw(vertexRadius, color, smoothness);
     }
 
     #endregion

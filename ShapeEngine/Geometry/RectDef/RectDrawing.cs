@@ -1130,7 +1130,11 @@ public static class RectDrawing
     /// <param name="rect">The rectangle whose vertices to draw.</param>
     /// <param name="vertexRadius">The radius of each vertex circle.</param>
     /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="circleSegments">The number of segments for each circle (default: 8).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba color, float smoothness = 0.5f)
     {
         var circle = new Circle(rect.TopLeft, vertexRadius);
