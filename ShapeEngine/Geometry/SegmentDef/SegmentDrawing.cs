@@ -73,8 +73,8 @@ public static class SegmentDrawing
         var w = end - start;
         float ls = w.X * w.X + w.Y * w.Y; // w.LengthSquared();
         if (ls <= MinSegmentDrawLengthSquared) return;
-        
-        var dir = w / MathF.Sqrt(ls);
+        var l = MathF.Sqrt(ls);
+        var dir = w / l;
         var pR = new Vector2(-dir.Y, dir.X);//perpendicular right
         var pL = new Vector2(dir.Y, -dir.X);//perpendicular left
         
@@ -85,8 +85,9 @@ public static class SegmentDrawing
         }
         else if (capType == LineCapType.Capped)//shrink inwards so that the line with cap is the same length
         {
-            start += dir * thickness;
-            end -= dir * thickness;
+            var offset = MathF.Min(l * 0.5f, thickness);
+            start += dir * offset;
+            end -= dir * offset;
         }
         
         var tl = start + pL * thickness;
