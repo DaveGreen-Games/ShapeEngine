@@ -11,24 +11,48 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
-//TODO: Add missing docs & update existing docs!
-
 public static class CircleDrawing
 {
     #region Draw
     
+    /// <summary>
+    /// Draws the filled circle.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
+    /// <param name="color">The color of the circle.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void Draw(this Circle c, float rotDeg, ColorRgba color, float smoothness = 0.5f)
     {
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
         Raylib.DrawCircleSector(c.Center, c.Radius, rotDeg, 360 + rotDeg, sides, color.ToRayColor());
     }
 
+    /// <summary>
+    /// Draws the filled circle.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="color">The color of the circle.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void Draw(this Circle c, ColorRgba color, float smoothness = 0.5f)
     {
         if (!CalculateCircleDrawingParameters(c.Radius, smoothness, out int sides)) return;
         Raylib.DrawCircleSector(c.Center, c.Radius, 0, 360, sides, color.ToRayColor());
     }
     
+    /// <summary>
+    /// Draws the circle as a square (fastest). Usefull for very small circles to save performance and still look good.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="color">The color of the circle.</param>
     public static void DrawFast(this Circle c, ColorRgba color)
     {
         RectDrawing.DrawRect(c.Center - new Vector2(c.Radius, c.Radius), c.Center + new Vector2(c.Radius, c.Radius), color);
@@ -44,7 +68,11 @@ public static class CircleDrawing
     /// <param name="c">The circle to draw.</param>
     /// <param name="rotDeg">Rotation of the circle in degrees.</param>
     /// <param name="color">Color of the circle.</param>
-    /// <param name="smoothness">Controls the number of sides used to approximate the circle.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <param name="sideScaleFactor">Scale factor for each side (0 = no circle, 1 = normal circle).</param>
     /// <param name="sideScaleOrigin">Point along each segment to scale from (0-1, default 0.5).</param>
     public static void DrawScaled(this Circle c, float rotDeg, ColorRgba color, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
@@ -75,6 +103,21 @@ public static class CircleDrawing
     
     #region Draw Percentage
     
+    /// <summary>
+    /// Draws a filled circle sector based on a percentage value.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="f">The fill percentage (0 to 1 or 0 to -1). Positive values are clockwise, negative are counter-clockwise.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="color">The color of the circle sector.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawPercentage(this Circle c, float f, float rotDeg, ColorRgba color, float smoothness = 0.5f)
     {
         if (f == 0) return;
@@ -94,6 +137,17 @@ public static class CircleDrawing
     
     #region Draw Lines
     
+    /// <summary>
+    /// Draws the outline of the circle.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void DrawLines(this Circle c, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
         if (c.Radius < lineThickness)
@@ -106,6 +160,18 @@ public static class CircleDrawing
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, color.ToRayColor());
     }
 
+    /// <summary>
+    /// Draws the outline of the circle.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void DrawLines(this Circle c, float rotDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
         if (c.Radius < lineThickness)
@@ -118,6 +184,16 @@ public static class CircleDrawing
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, rotDeg, lineThickness * 2, color.ToRayColor());
     }
 
+    /// <summary>
+    /// Draws the outline of the circle with detailed line drawing options.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void DrawLines(this Circle c, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -131,6 +207,17 @@ public static class CircleDrawing
         Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius + lineThickness, 0f, lineThickness * 2, lineInfo.Color.ToRayColor());
     }
 
+    /// <summary>
+    /// Draws the outline of the circle with detailed line drawing options.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void DrawLines(this Circle c, float rotDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -147,11 +234,36 @@ public static class CircleDrawing
     
     #region Draw Lines Scaled
 
+    /// <summary>
+    /// Draws the outline of the circle where each segment is scaled towards the segment center.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sideScaleFactor">Scale factor for each side segment (0 = invisible, 1 = full connected circle).</param>
+    /// <param name="sideScaleOrigin">The point on the segment to scale from (0-1, default 0.5 is center).</param>
     public static void DrawLinesScaled(this Circle c, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         DrawLinesScaled(c, 0f, lineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
     }
     
+    /// <summary>
+    /// Draws the outline of the circle where each segment is scaled towards the segment center.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sideScaleFactor">Scale factor for each side segment (0 = invisible, 1 = full connected circle).</param>
+    /// <param name="sideScaleOrigin">The point on the segment to scale from (0-1, default 0.5 is center).</param>
     public static void DrawLinesScaled(this Circle c, float rotDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -185,6 +297,22 @@ public static class CircleDrawing
     
     #region Draw Lines Percentage
 
+    /// <summary>
+    /// Draws the outline of a circle sector based on a percentage value.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="f">The fill percentage (0 to 1 or 0 to -1). Positive values are clockwise, negative are counter-clockwise.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawLinesPercentage(this Circle c, float f, float rotDeg, float lineThickness, ColorRgba color,  float smoothness = 0.5f)
     {
         if (f == 0) return;
@@ -201,6 +329,21 @@ public static class CircleDrawing
         }
     }
     
+    /// <summary>
+    /// Draws the outline of a circle sector based on a percentage value.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="f">The fill percentage (0 to 1 or 0 to -1). Positive values are clockwise, negative are counter-clockwise.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawLinesPercentage(this Circle c, float f, float rotDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         // DrawLinesPercentage(c, f, lineInfo.Thickness, rotDeg, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints, smoothness);
@@ -222,12 +365,43 @@ public static class CircleDrawing
     
     
     #region Draw Sector
+    /// <summary>
+    /// Draws a filled sector of the circle.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="color">The color of the sector.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, ColorRgba color, float smoothness = 0.5f)
     {
-        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides, false)) return;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg, smoothness, out float angleDifRad, out float _, out int sides, false)) return;
         Raylib.DrawCircleSector(c.Center, c.Radius, startAngleDeg, startAngleDeg + (angleDifRad * ShapeMath.RADTODEG), sides, color.ToRayColor());
     }
     
+    /// <summary>
+    /// Draws a filled sector of the circle.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="color">The color of the sector.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, float rotDeg, ColorRgba color, float smoothness = 0.5f)
     {
         c.DrawSector(startAngleDeg + rotDeg, endAngleDeg + rotDeg, color, smoothness);
@@ -236,6 +410,24 @@ public static class CircleDrawing
     
     #region Draw Sector Scaled
 
+    /// <summary>
+    /// Draws a filled sector of the circle where the outside edge of each (pie slice) segment is scaled towards the point determined by <paramref name="sideScaleOrigin"/>.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="color">The color of the sector.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sideScaleFactor">Scale factor for each side segment (0 = invisible, 1 = full connected circle).</param>
+    /// <param name="sideScaleOrigin">The point on the segment to scale from (0-1, default 0.5 is center).</param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSectorScaled(this Circle c, float startAngleDeg, float endAngleDeg, float rotDeg, ColorRgba color, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (c.Radius <= 0f || sideScaleFactor <= 0f) return;
@@ -283,6 +475,22 @@ public static class CircleDrawing
     
     #region Draw Sector Lines
    
+    /// <summary>
+    /// Draws the outline framework of a circle sector (perimeter lines including the radii).
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotOffsetDeg">The rotation offset in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSectorLinesClosed(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         var color = lineInfo.Color.SetAlpha(255);
@@ -294,7 +502,7 @@ public static class CircleDrawing
         }
         
         startAngleDeg = startAngleDeg + rotOffsetDeg;
-        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides, false)) return;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float _, out int sides, false)) return;
         endAngleDeg = startAngleDeg + angleDifRad * ShapeMath.RADTODEG;
         
         var absAngleDifRad = MathF.Abs(angleDifRad);
@@ -315,6 +523,22 @@ public static class CircleDrawing
         Raylib.DrawRing(c.Center, c.Radius - lineInfo.Thickness, c.Radius + lineInfo.Thickness, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
     }
     
+    /// <summary>
+    /// Draws the outline arc of a circle sector (only the curved part).
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotOffsetDeg">The rotation offset in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -325,7 +549,7 @@ public static class CircleDrawing
         }
         
         startAngleDeg = startAngleDeg + rotOffsetDeg;
-        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides, false)) return;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float _, out int sides, false)) return;
         endAngleDeg = startAngleDeg + angleDifRad * ShapeMath.RADTODEG;
         
         var absAngleDifRad = MathF.Abs(angleDifRad);
@@ -367,6 +591,23 @@ public static class CircleDrawing
         
     }
     
+    /// <summary>
+    /// Draws the outline arc of a circle sector (only the curved part).
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotOffsetDeg">The rotation offset in degrees.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, float smoothness = 0.5f)
     {
         if (c.Radius < lineThickness)
@@ -375,13 +616,31 @@ public static class CircleDrawing
             circle.DrawSector(startAngleDeg, endAngleDeg, rotOffsetDeg, color, smoothness);
             return;
         }
-        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float angleStepRad, out int sides, false)) return;
+        if (!CalculateCircleDrawingParameters(c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, smoothness, out float angleDifRad, out float _, out int sides, false)) return;
         Raylib.DrawRing(c.Center, c.Radius - lineThickness, c.Radius + lineThickness, startAngleDeg + rotOffsetDeg, startAngleDeg + rotOffsetDeg + (angleDifRad * ShapeMath.RADTODEG), sides, color.ToRayColor());
     }
     #endregion
     
     #region Draw Sector Lines Scaled
     
+    /// <summary>
+    /// Draws the outline of a circle sector where each segment is scaled.
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotOffsetDeg">The rotation offset in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sideScaleFactor">Scale factor for each side segment (0 = invisible, 1 = full connected circle).</param>
+    /// <param name="sideScaleOrigin">The point on the segment to scale from (0-1, default 0.5 is center).</param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSectorLinesScaledClosed(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -429,6 +688,24 @@ public static class CircleDrawing
         }
     }
     
+    /// <summary>
+    /// Draws the outline arc of a circle sector where each segment is scaled (only the curved part).
+    /// </summary>
+    /// <param name="c">The circle to draw.</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotOffsetDeg">The rotation offset in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sideScaleFactor">Scale factor for each side segment (0 = invisible, 1 = full connected circle).</param>
+    /// <param name="sideScaleOrigin">The point on the segment to scale from (0-1, default 0.5 is center).</param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawSectorLinesScaled(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (c.Radius < lineInfo.Thickness)
@@ -478,7 +755,11 @@ public static class CircleDrawing
     /// <param name="mask">The <see cref="Triangle"/> used to mask (clip) each generated segment.</param>
     /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
-    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Circle circle, Triangle mask, LineDrawingInfo lineInfo, float rotDeg, float smoothness, bool reversedMask = false)
     {
@@ -502,7 +783,11 @@ public static class CircleDrawing
     /// <param name="mask">The <see cref="Circle"/> used to mask (clip) each generated segment.</param>
     /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
-    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Circle circle, Circle mask, LineDrawingInfo lineInfo, float rotDeg, float smoothness, bool reversedMask = false)
     {
@@ -526,7 +811,11 @@ public static class CircleDrawing
     /// <param name="mask">The <see cref="Rect"/> used to mask (clip) each generated segment.</param>
     /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
-    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Circle circle, Rect mask, LineDrawingInfo lineInfo, float rotDeg, float smoothness, bool reversedMask = false)
     {
@@ -550,7 +839,11 @@ public static class CircleDrawing
     /// <param name="mask">The <see cref="Quad"/> used to mask (clip) each generated segment.</param>
     /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
-    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Circle circle, Quad mask, LineDrawingInfo lineInfo, float rotDeg, float smoothness, bool reversedMask = false)
     {
@@ -574,7 +867,11 @@ public static class CircleDrawing
     /// <param name="mask">The <see cref="Polygon"/> used to mask (clip) each generated segment.</param>
     /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
-    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked(this Circle circle, Polygon mask, LineDrawingInfo lineInfo, float rotDeg, float smoothness, bool reversedMask = false)
     {
@@ -599,7 +896,11 @@ public static class CircleDrawing
     /// <param name="mask">The mask used to clip each generated segment.</param>
     /// <param name="lineInfo">Parameters controlling line drawing (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">Rotation offset in degrees applied to the entire approximated polygon.</param>
-    /// <param name="sides">Number of sides used to approximate the circle. Values below 3 will be clamped to 3.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
     public static void DrawLinesMasked<T>(this Circle circle, T mask, LineDrawingInfo lineInfo, float rotDeg, float smoothness, bool reversedMask = false) where T : IClosedShapeTypeProvider
     {
@@ -630,11 +931,15 @@ public static class CircleDrawing
     /// <param name="angleDeg">The rotation of the checkered pattern in degrees.</param>
     /// <param name="lineColorRgba">The color of the checkered lines.</param>
     /// <param name="bgColorRgba">The background color of the circle (drawn first if alpha &gt; 0).</param>
-    /// <param name="circleSegments">The number of segments used to approximate the circle.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     /// <remarks>
     /// Useful for visualizing grid or checkered overlays on circular shapes.
     /// </remarks>
-    public static void DrawCircleCheckeredLines(Vector2 pos, AnchorPoint alignment, float radius, float spacing, 
+    public static void DrawCircleCheckeredLines(Vector2 pos, AnchorPoint alignment, float radius, float spacing,
         float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba bgColorRgba, float smoothness = 0.5f)
     {
 
@@ -688,6 +993,19 @@ public static class CircleDrawing
     
     #region Draw Ring Lines
 
+    /// <summary>
+    /// Draws a ring (annulus) outline.
+    /// </summary>
+    /// <param name="ring">The circle defining the center and outer radius of the ring.</param>
+    /// <param name="ringThickness">The thickness of the ring (inwards from the circle radius).</param>
+    /// <param name="rotDeg">The rotation of the ring in degrees.</param>
+    /// <param name="lineThickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void DrawRingLines(this Circle ring, float ringThickness, float rotDeg, float lineThickness, ColorRgba color, float smoothness)
     {
         if(ringThickness <= 0 && lineThickness <= 0)
@@ -745,6 +1063,18 @@ public static class CircleDrawing
         outerRing.DrawLines(rotDeg, lineThickness, color, smoothness);
     }
 
+    /// <summary>
+    /// Draws a ring (annulus) outline using line drawing info.
+    /// </summary>
+    /// <param name="ring">The circle defining the center and outer radius of the ring.</param>
+    /// <param name="ringThickness">The thickness of the ring (inwards from the circle radius).</param>
+    /// <param name="rotDeg">The rotation of the ring in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
     public static void DrawRingLines(this Circle ring, float ringThickness, float rotDeg, LineDrawingInfo lineInfo, float smoothness)
     {
         ring.DrawRingLines(ringThickness, rotDeg, lineInfo.Thickness, lineInfo.Color, smoothness);
@@ -754,6 +1084,20 @@ public static class CircleDrawing
     
     #region Draw Ring Lines Scaled
     
+    /// <summary>
+    /// Draws a ring (annulus) outline where each segment is scaled.
+    /// </summary>
+    /// <param name="ring">The circle defining the center and outer radius of the ring.</param>
+    /// <param name="ringThickness">The thickness of the ring (inwards from the circle radius).</param>
+    /// <param name="rotDeg">The rotation of the ring in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sideScaleFactor">Scale factor for each side segment (0 = invisible, 1 = full connected circle).</param>
+    /// <param name="sideScaleOrigin">The point on the segment to scale from (0-1, default 0.5 is center).</param>
     public static void DrawRingLinesScaled(this Circle ring, float ringThickness, float rotDeg, LineDrawingInfo lineInfo, float smoothness, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0f)
@@ -823,7 +1167,7 @@ public static class CircleDrawing
         
         var innerRing = ring.SetRadius(effectiveInnerRadius);
         var outerRing = ring.SetRadius(ring.Radius + ringThickness);
-        
+
         innerRing.DrawLinesScaled(rotDeg, lineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
         outerRing.DrawLinesScaled(rotDeg, lineInfo, smoothness, sideScaleFactor, sideScaleOrigin);
     }
@@ -832,6 +1176,24 @@ public static class CircleDrawing
     
     #region Draw Ring Lines Percentage
     
+    /// <summary>
+    /// Draws a ring (annulus) sector outline based on a percentage value.
+    /// </summary>
+    /// <param name="ring">The circle defining the center and outer radius of the ring.</param>
+    /// <param name="ringThickness">The thickness of the ring (inwards from the circle radius).</param>
+    /// <param name="f">The fill percentage (0 to 1 or 0 to -1). Positive values are clockwise, negative are counter-clockwise.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="closed">If true, draws the start and end caps of the sector.</param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawRingLinesPercentage(this Circle ring, float ringThickness, float f, float rotDeg, float lineThickness, ColorRgba color, float smoothness, bool closed = true)
     {
         if (!TransformPercentageToAngles(f, out var startAngleDeg, out var endAngleDeg)) return;
@@ -839,6 +1201,22 @@ public static class CircleDrawing
         
     }
     
+    /// <summary>
+    /// Draws a ring (annulus) sector outline based on a percentage value.
+    /// </summary>
+    /// <param name="ring">The circle defining the center and outer radius of the ring.</param>
+    /// <param name="ringThickness">The thickness of the ring (inwards from the circle radius).</param>
+    /// <param name="f">The fill percentage (0 to 1 or 0 to -1). Positive values are clockwise, negative are counter-clockwise.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawRingLinesPercentage(this Circle ring, float ringThickness, float f, float rotDeg, LineDrawingInfo lineInfo, float smoothness)
     {
         if (!TransformPercentageToAngles(f, out var startAngleDeg, out var endAngleDeg)) return;
@@ -850,6 +1228,25 @@ public static class CircleDrawing
     
     #region Draw Ring Sector Lines
    
+    /// <summary>
+    /// Draws a ring (annulus) sector outline.
+    /// </summary>
+    /// <param name="ring">The circle defining the center and outer radius of the ring.</param>
+    /// <param name="ringThickness">The thickness of the ring (inwards from the circle radius).</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="closed">If true, draws the start and end caps of the sector.</param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawRingSectorLines(this Circle ring, float ringThickness, float startAngleDeg, float endAngleDeg, float rotDeg, float lineThickness, ColorRgba color, float smoothness, bool closed = true)
     {
         if(ringThickness <= 0 && lineThickness <= 0)
@@ -904,11 +1301,11 @@ public static class CircleDrawing
         var outerRing = ring.SetRadius(ring.Radius + ringThickness);
 
         var innerParametersValid = CalculateCircleDrawingParameters(innerRing.Radius, startAngleDeg + rotDeg, endAngleDeg + rotDeg, smoothness,
-            out float innerAngleDifRad, out float innerAngleStepRad, out int innerSides, false);
+            out float innerAngleDifRad, out float _, out int innerSides, false);
         if (!innerParametersValid) return;
         
         var outerParametersValid = CalculateCircleDrawingParameters(outerRing.Radius, startAngleDeg + rotDeg, endAngleDeg + rotDeg, smoothness,
-            out float outerAngleDifRad, out float outerAngleStepRad, out int outerSides, false);
+            out float outerAngleDifRad, out float _, out int outerSides, false);
         if (!outerParametersValid) return;
         
         var innerStartAngleDeg = startAngleDeg + rotDeg;
@@ -961,6 +1358,23 @@ public static class CircleDrawing
         Raylib.DrawRing(outerRing.Center, outerRing.Radius - lineThickness, outerRing.Radius + lineThickness, outerStartAngleDeg, outerEndAngleDeg, outerSides, rayColor);
     }
     
+    /// <summary>
+    /// Draws a ring (annulus) sector outline.
+    /// </summary>
+    /// <param name="ring">The circle defining the center and outer radius of the ring.</param>
+    /// <param name="ringThickness">The thickness of the ring (inwards from the circle radius).</param>
+    /// <param name="startAngleDeg">The starting angle of the sector in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the sector in degrees.</param>
+    /// <param name="rotDeg">The rotation offset in degrees.</param>
+    /// <param name="lineInfo">Contains line drawing parameters (thickness, color, caps, etc.).</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// This function does not clamp the resulting side count with <see cref="CircleSideCountRange"/>.
+    /// </remarks>
     public static void DrawRingSectorLines(this Circle ring, float ringThickness, float startAngleDeg, float endAngleDeg, float rotDeg, LineDrawingInfo lineInfo, float smoothness)
     {
         var lineThickness = lineInfo.Thickness;
@@ -1026,11 +1440,36 @@ public static class CircleDrawing
     
     
     #region Math
-
+    /// <summary>
+    /// Defines the minimum and maximum allowed side lengths for circle approximation.
+    /// Used to control the smoothness and performance of circle drawing by limiting the number of polygon sides.
+    /// </summary>
+    /// <remarks>
+    /// The smaller a side length is the more sides are used to approximate the circle, resulting in a smoother appearance but potentially worse performance.
+    /// The smoothness value in the CircleDrawing methods is used to inversly interpolate between the minimum and maximum side lengths. (Lerp(min, max, 1 - smoothness))
+    /// </remarks>
+    /// <example>
+    /// A smoothness of 0 will use the maximum side length (fewer sides, less smooth), while a smoothness of 1 will use the minimum side length (more sides, smoother).
+    /// </example>
     public static ValueRange CircleSideLengthRange = new ValueRange(2f, 75f);
     
+    /// <summary>
+    /// Defines the minimum and maximum allowed number of sides for circle approximation.
+    /// Used to control the smoothness and performance of circle drawing by limiting the number of polygon sides.
+    /// </summary>
+    /// <remarks>
+    /// This is the most useful for constraining the minimum number of sides to a value that still resembles a circle (for example, 3 or 4 sides would look like a triangle or square, not a circle).
+    /// Any function that uses an arc length (Sector / Percentage variations) do not clamp the side count.
+    /// </remarks>
     public static ValueRangeInt CircleSideCountRange = new ValueRangeInt(8, 128);
 
+    /// <summary>
+    /// Calculates the smoothness value required to match a given number of sides for a circle.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="sides">The target number of sides.</param>
+    /// <param name="smoothness">Output smoothness value (0-1).</param>
+    /// <returns>True if calculation was successful, false if radius is invalid.</returns>
     public static bool GetCircleSmoothness(float radius, int sides, out float smoothness)
     {
         smoothness = 0f;
@@ -1043,6 +1482,15 @@ public static class CircleDrawing
         return true;
     }
     
+    /// <summary>
+    /// Calculates the smoothness value required to match a given number of sides for a circle arc.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="startAngleDeg">The starting angle of the arc in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle of the arc in degrees.</param>
+    /// <param name="sides">The target number of sides.</param>
+    /// <param name="smoothness">Output smoothness value (0-1).</param>
+    /// <returns>True if calculation was successful, false if inputs are invalid.</returns>
     public static bool GetCircleSmoothness(float radius, float startAngleDeg, float endAngleDeg, int sides, out float smoothness)
     {
         smoothness = 0f;
@@ -1063,6 +1511,22 @@ public static class CircleDrawing
         return true;
     }
     
+    /// <summary>
+    /// Calculates drawing parameters for a circle sector (arc) based on smoothness.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="startAngleDeg">The starting angle in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle in degrees.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="angleDifRad">Output total angular difference in radians.</param>
+    /// <param name="angleStepRad">Output angle step per side in radians.</param>
+    /// <param name="sides">Output number of sides.</param>
+    /// <param name="clampSides">If true, clamps the number of sides to a min/max range set in <see cref="CircleSideCountRange"/>.</param>
+    /// <returns>True if parameters were calculated successfully.</returns>
     public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleDifRad, out float angleStepRad, out int sides, bool clampSides = true)
     {
         angleStepRad = 0f;
@@ -1096,6 +1560,21 @@ public static class CircleDrawing
         return true;
     }
     
+    /// <summary>
+    /// Calculates drawing parameters for a circle sector (arc) based on smoothness.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="startAngleDeg">The starting angle in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle in degrees.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="angleStepRad">Output angle step per side in radians.</param>
+    /// <param name="sides">Output number of sides.</param>
+    /// <param name="clampSides">If true, clamps the number of sides to a min/max range set in <see cref="CircleSideCountRange"/>.</param>
+    /// <returns>True if parameters were calculated successfully.</returns>
     public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out float angleStepRad, out int sides, bool clampSides = true)
     {
         angleStepRad = 0f;
@@ -1126,6 +1605,20 @@ public static class CircleDrawing
         return true;
     }
     
+    /// <summary>
+    /// Calculates the number of sides for a circle sector (arc) based on smoothness.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="startAngleDeg">The starting angle in degrees.</param>
+    /// <param name="endAngleDeg">The ending angle in degrees.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sides">Output number of sides.</param>
+    /// <param name="clampSides">If true, clamps the number of sides to a min/max range set in <see cref="CircleSideCountRange"/>.</param>
+    /// <returns>True if parameters were calculated successfully.</returns>
     public static bool CalculateCircleDrawingParameters(float radius, float startAngleDeg, float endAngleDeg, float smoothness, out int sides, bool clampSides = true)
     {
         sides = 0;
@@ -1152,6 +1645,19 @@ public static class CircleDrawing
         return true;
     }
     
+    /// <summary>
+    /// Calculates drawing parameters for a full circle based on smoothness.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="angleStepRad">Output angle step per side in radians.</param>
+    /// <param name="sides">Output number of sides.</param>
+    /// <param name="clampSides">If true, clamps the number of sides to a min/max range set in <see cref="CircleSideCountRange"/>.</param>
+    /// <returns>True if parameters were calculated successfully.</returns>
     public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out float angleStepRad, out int sides, bool clampSides = true)
     {
         sides = 0;
@@ -1170,6 +1676,18 @@ public static class CircleDrawing
         return true;
     }
     
+    /// <summary>
+    /// Calculates the number of sides for a full circle based on smoothness.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <param name="sides">Output number of sides.</param>
+    /// <param name="clampSides">If true, clamps the number of sides to a min/max range set in <see cref="CircleSideCountRange"/>.</param>
+    /// <returns>True if parameters were calculated successfully.</returns>
     public static bool CalculateCircleDrawingParameters(float radius, float smoothness, out int sides, bool clampSides = true)
     {
         sides = 0;
@@ -1186,6 +1704,13 @@ public static class CircleDrawing
         return true;
     }
     
+    /// <summary>
+    /// Calculates the number of sides for a circle based on a target side length.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="sideLength">The desired length of each side segment.</param>
+    /// <param name="clampSides">If true, clamps the number of sides to a min/max range set in <see cref="CircleSideCountRange"/>.</param>
+    /// <returns>The calculated number of sides.</returns>
     public static int GetCircleSideCount(float radius, float sideLength = 10f, bool clampSides = true)
     {
         if (radius <= 0f || sideLength <= 0f) return 0;
@@ -1195,6 +1720,14 @@ public static class CircleDrawing
         return sides;
     }
 
+    /// <summary>
+    /// Calculates the number of sides for a circle arc based on a target side length.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="angleDeg">The angular span of the arc in degrees.</param>
+    /// <param name="sideLength">The desired length of each side segment.</param>
+    /// <param name="clampSides">If true, clamps the number of sides to a min/max range set in <see cref="CircleSideCountRange"/>.</param>
+    /// <returns>The calculated number of sides.</returns>
     public static int GetCircleArcSideCount(float radius, float angleDeg, float sideLength = 10f, bool clampSides = true)
     {
         if (radius <= 0f || angleDeg <= 0f || sideLength <= 0f) return 0;
