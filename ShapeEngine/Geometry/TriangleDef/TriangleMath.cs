@@ -358,6 +358,16 @@ public readonly partial struct Triangle
     #region Math
 
     /// <summary>
+    /// Checks if the triangle's vertices are collinear (lie on a straight line).
+    /// </summary>
+    /// <param name="epsilon">Tolerance for float precision when determining collinearity.</param>
+    /// <returns>True if the area is less than or equal to epsilon, indicating collinearity; otherwise, false.</returns>
+    public bool IsCollinear(float epsilon = 1e-6f)
+    {
+        return GetArea() <= epsilon; 
+    }
+    
+    /// <summary>
     /// Determines whether the triangle is geometrically valid.
     /// </summary>
     /// <returns>True if the triangle has a positive area; otherwise, false.</returns>
