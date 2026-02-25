@@ -391,6 +391,22 @@ public readonly partial struct Triangle
     public Vector2 GetCentroid() => (A + B + C) / 3;
 
     /// <summary>
+    /// Calculates and returns the incenter of the triangle.
+    /// </summary>
+    /// <returns>The incenter point, which is the intersection of the angle bisectors of the triangle.</returns>
+    public Vector2 GetIncenter()
+    {
+        var lenAB = SideA.Length();
+        var lenBC = SideB.Length();
+        var lenCA = SideC.Length();
+        var perimeter = lenAB + lenBC + lenCA;
+        // Calculate Incenter (intersection of angle bisectors)
+        // Incenter = (a*A + b*B + c*C) / perimeter
+        Vector2 incenter = (A * lenBC + B * lenCA + C * lenAB) / perimeter;
+        return incenter;
+    }
+
+    /// <summary>
     /// Gets the points that form the projected shape when this triangle is extruded along a vector.
     /// </summary>
     /// <param name="v">The vector along which to project the triangle.</param>
