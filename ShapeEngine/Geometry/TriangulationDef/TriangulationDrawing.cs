@@ -49,26 +49,26 @@ public static class TriangulationDrawing
     {
         foreach (var t in triangles) t.Draw(color);
     }
-    /// <summary>
-    /// Draws all triangles in the given <see cref="Triangulation"/> using rounded outer corners.
-    /// This is a convenience extension that iterates the collection and draws each triangle
-    /// using the same rounding parameters.
-    /// </summary>
-    /// <param name="triangles">The collection of triangles to draw.</param>
-    /// <param name="color">The fill color applied to each rounded triangle.</param>
-    /// <param name="cornerPoints">
-    /// Number of extra points used to approximate each rounded corner.
-    /// 0 = sharp corners (no rounding). Higher values produce smoother rounded corners. Default: 5.
-    /// </param>
-    /// <param name="cornerStrength">
-    /// Controls the strength (radius) of the corner rounding:
-    /// 0 = maximum roundness, 1 = no roundness (sharp corners).
-    /// Values between 0 and 1 interpolate between fully rounded and sharp corners. Default: 0.5.
-    /// </param>
-    public static void DrawRounded(this Triangulation triangles, ColorRgba color, int cornerPoints = 5, float cornerStrength = 0.5f)
-    {
-        foreach (var t in triangles) t.DrawRounded(color, cornerPoints, cornerStrength);
-    }
+    // /// <summary>
+    // /// Draws all triangles in the given <see cref="Triangulation"/> using rounded outer corners.
+    // /// This is a convenience extension that iterates the collection and draws each triangle
+    // /// using the same rounding parameters.
+    // /// </summary>
+    // /// <param name="triangles">The collection of triangles to draw.</param>
+    // /// <param name="color">The fill color applied to each rounded triangle.</param>
+    // /// <param name="cornerPoints">
+    // /// Number of extra points used to approximate each rounded corner.
+    // /// 0 = sharp corners (no rounding). Higher values produce smoother rounded corners. Default: 5.
+    // /// </param>
+    // /// <param name="cornerStrength">
+    // /// Controls the strength (radius) of the corner rounding:
+    // /// 0 = maximum roundness, 1 = no roundness (sharp corners).
+    // /// Values between 0 and 1 interpolate between fully rounded and sharp corners. Default: 0.5.
+    // /// </param>
+    // public static void DrawRounded(this Triangulation triangles, ColorRgba color, int cornerPoints = 5, float cornerStrength = 0.5f)
+    // {
+    //     foreach (var t in triangles) t.DrawRounded(color, cornerPoints, cornerStrength);
+    // }
     #endregion
     
     #region Draw Lines

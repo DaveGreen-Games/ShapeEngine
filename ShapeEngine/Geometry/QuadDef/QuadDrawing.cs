@@ -12,6 +12,9 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.QuadDef;
 
+//TODO: Raylib.DrawPolyLinesEx can be used for square quads (width = height)
+// - Test if it is faster than my implementation
+
 /// <summary>
 /// Provides static methods for drawing quads (quadrilaterals) and their outlines, including partial outlines and vertex markers.
 /// </summary>

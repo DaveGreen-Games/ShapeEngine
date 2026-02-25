@@ -214,7 +214,8 @@ public static class CustomDrawing
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
         if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        var triangle = new Triangle(headPoint, b, c);
+        triangle.DrawLines(info);
     }
 
     /// <summary>
@@ -248,7 +249,8 @@ public static class CustomDrawing
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
         if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        var triangle = new Triangle(headPoint, b, c);
+        triangle.DrawLines(info);
     }
 
     /// <summary>
@@ -284,7 +286,8 @@ public static class CustomDrawing
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
         if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        var triangle = new Triangle(headPoint, b, c);
+        triangle.DrawLines(info);
     }
     #endregion
 }
