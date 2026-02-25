@@ -587,5 +587,33 @@ public readonly partial struct Triangle
         return MathF.Abs(cross) < narrowValue;
     }
 
+    /// <summary>
+    /// Calculates the maximum line thickness that can be drawn inside the triangle without exceeding its boundaries.
+    /// </summary>
+    /// <param name="margin">
+    /// Optional margin factor to reduce the maximum thickness for safety (default is 0.95).
+    /// </param>
+    /// <returns>
+    /// The maximum allowable line thickness as a float, based on the triangle's inradius and margin.
+    /// </returns>
+    public float CalculateMaxLineThickness(float margin = 0.95f)
+    {
+        // Calculate side lengths
+        float a = (B - C).Length();
+        float b = (C - A).Length();
+        float c = (A - B).Length();
+    
+        // Calculate semi-perimeter
+        float s = (a + b + c) * 0.5f;
+    
+        // Calculate area using Heron's formula
+        float area = MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
+    
+        // Inradius formula: r = area / s
+        float inradius = area / s;
+    
+        // Return inradius as max thickness (or slightly less to be safe)
+        return inradius * margin; // 0.95 leaves a small margin
+    }
     #endregion
 }
