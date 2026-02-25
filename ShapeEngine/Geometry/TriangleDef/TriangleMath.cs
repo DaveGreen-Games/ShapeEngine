@@ -624,22 +624,53 @@ public readonly partial struct Triangle
     /// </returns>
     public float CalculateMaxLineThickness(float margin = 0.95f)
     {
+        //TODO: Test both variants for correctness and speed and delete the slower/incorrect one.
+        var edgeAB = B - A;
+        var edgeBC = C - B;
+        var edgeCA = A - C;
+        
+        var lengthAB = edgeAB.Length();
+        if (lengthAB <= 0f) return -1f;
+        
+        var lengthBC = edgeBC.Length();
+        if (lengthBC <= 0f) return -1f;
+        
+        var lengthCA = edgeCA.Length();
+        if (lengthCA <= 0f) return -1f;
+
+        float perimeter = lengthAB + lengthBC + lengthCA;
+        Vector2 incenter = (A * lengthBC + B * lengthCA + C * lengthAB) / perimeter;
+        
+        var minLengthSquared = (incenter - A).LengthSquared();
+        var lengthSquared = (incenter - B).LengthSquared();
+        if (lengthSquared < minLengthSquared)
+        {
+            minLengthSquared = lengthSquared;
+        }
+        lengthSquared = (incenter - C).LengthSquared();
+        if (lengthSquared < minLengthSquared)
+        {
+            minLengthSquared = lengthSquared;
+        }
+        if(minLengthSquared <= 0f) return -1f;
+        return MathF.Sqrt(minLengthSquared) * margin;
+        
         // Calculate side lengths
-        float a = (B - C).Length();
-        float b = (C - A).Length();
-        float c = (A - B).Length();
-    
-        // Calculate semi-perimeter
-        float s = (a + b + c) * 0.5f;
-    
-        // Calculate area using Heron's formula
-        float area = MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
-    
-        // Inradius formula: r = area / s
-        float inradius = area / s;
-    
-        // Return inradius as max thickness (or slightly less to be safe)
-        return inradius * margin; // 0.95 leaves a small margin
+        // float a = (B - C).Length();
+        // float b = (C - A).Length();
+        // float c = (A - B).Length();
+        //
+        // // Calculate semi-perimeter
+        // float s = (a + b + c) * 0.5f;
+        //
+        // // Calculate area using Heron's formula
+        // float area = MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
+        //
+        // // Inradius formula: r = area / s
+        // float inradius = area / s;
+        //
+        // // Return inradius as max thickness (or slightly less to be safe)
+        // return inradius * margin; // 0.95 leaves a small margin
     }
     #endregion
 }
