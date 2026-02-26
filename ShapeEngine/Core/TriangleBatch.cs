@@ -6,8 +6,6 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Core;
 
-//TODO: review if this class should stay?
-
 /// <summary>
 /// A class for efficient triangle drawing using Raylib's RLGL, supporting both persistent batches and immediate-mode drawing.
 /// <para>
