@@ -7,8 +7,10 @@ namespace ShapeEngine.StaticLib;
 /// Produces smooth, continuous noise values (approximately in the range [-1, 1]) for given world coordinates
 /// scaled by a lattice cell size (gridSize). Maintains a static cache of pseudo-random gradient vectors
 /// and exposes an integer Seed to change the generated gradients. Changing Seed clears the gradient cache.
-/// Note: the internal gradient cache is not synchronized; use external synchronization for concurrent access.
 /// </summary>
+/// <remarks>
+/// The internal gradient cache is not synchronized; use external synchronization for concurrent access.
+/// </remarks>
 public static class PerlinNoise2D
 {
     private static readonly Dictionary<(int, int), Vector2> gradients = [];
