@@ -3,70 +3,120 @@ using System.Diagnostics;
 namespace ShapeEngine.Core;
 
 //TODO: Add docs
-//TODO: Add min/max/standard deviation as well
-//TODO: Use logger instance instead of console
-//TODO: Implement Auto-Measurement Scope? (Implement a disposable struct/class (e.g., using var m = watch.Measure("title");) for automatic timing.)
-//TODO: Enforce minimum print interval?
-//TODO: Remove Update() and timer auto printing? Just use a Print()/ GetData() methods with optional filters and tags?
-//TODO: Add additional concurrent collections if high contention is expected for thread safety.
 public class PerformanceMeasureWatch
 {
+    #region Structs
+
+    public record MeasurementData(string Title, string Tag, long Total, long Elapsed, long Count, long Min, long Max, long Average)
+    {
+        public override string ToString()
+        {
+            return $"{Title} [{Tag}] -> Elapsed: {Elapsed}, Min: {Min}, Max: {Max}, Average: {Average} = {Total} / {Count}";
+        }
+    }
+    
     private struct Measurement
     {
         public long Start;
         public long Total;
-        public int Count;
+        public long Count;
+        public long Elapsed;
+        public long Min;
+        public long Max;
+        public string Tag;
         
-        public Measurement(long start)
+        public Measurement(long start, string tag)
         {
             Start = start;
             Total = 0;
             Count = 0;
+            Elapsed = 0;
+            Min = long.MaxValue;
+            Max = long.MinValue;
+            Tag = tag;
         }
 
-        private Measurement(long start, long total, int count)
+        private Measurement(long start, long total, long elapsed, long count, long min, long max, string tag)
         {
             Start = start;
             Total = total;
+            Elapsed = elapsed;
             Count = count;
+            Min = min;
+            Max = max;
+            Tag = tag;
         }
         public Measurement SetStart(long start)
         {
-            return new Measurement(start, Total, Count);
+            return new Measurement(start, Total, Elapsed, Count, Min, Max, Tag);
         }
         public Measurement TakeMeasurement(long end)
         {
             var elapsed = end - Start;
-            return new Measurement(0, Total + elapsed, Count + 1);
+            var newMin = Math.Min(Min, elapsed);
+            var newMax = Math.Max(Max, elapsed);
+            return new Measurement(0, Total + elapsed, elapsed, Count + 1, newMin, newMax, Tag);
         }
         public long Average => Count > 0 ? Total / Count : 0;
     }
     
+    public struct MeasurementScope : IDisposable
+    {
+        private readonly PerformanceMeasureWatch watch;
+        private readonly string title;
+        private readonly string tag;
+        
+        public MeasurementScope(PerformanceMeasureWatch watch, string title, string tag)
+        {
+            this.watch = watch;
+            this.title = title;
+            this.tag = tag;
+            watch.BeginMeasurement(title, tag);
+        }
+
+        public void Dispose()
+        {
+            watch.EndMeasurement(title, tag);
+        }
+    }
+    #endregion
+    
     #region Fields
     private readonly object _lock = new();
-    private readonly Dictionary<string, Measurement> measurements = new();
+    private readonly Dictionary<(string Title, string Tag), Measurement> measurements = new();
     private readonly Stopwatch watch;
-    private float timer = 0f;
-    
-    public float PrintIntervalSeconds { get; set; }
     #endregion
     
     #region Constructor
-    public PerformanceMeasureWatch(float printIntervalSeconds)
+    public PerformanceMeasureWatch()
     {
         watch = new Stopwatch();
-        PrintIntervalSeconds = printIntervalSeconds;
     }
     #endregion
     
     #region Functions
+    /// <summary>
+    /// Allows the use of using blocks for automatic measurement.
+    /// </summary>
+    /// <param name="title"></param>
+    /// <param name="tag"></param>
+    /// <returns></returns>
+    /// <code>
+    /// using (watch.Measure("MyOperation", "Tag"))
+    /// {
+    ///     // Code to measure
+    /// }
+    /// </code>
+    public MeasurementScope Measure(string title, string tag = "")
+    {
+        return new MeasurementScope(this, title, tag);
+    }
     
     public void Start()
     {
         lock (_lock)
         {
             watch.Restart();
-            timer = 0f;
             measurements.Clear();
         }
     }
@@ -75,75 +125,84 @@ public class PerformanceMeasureWatch
     {
         lock (_lock)
         {
-            Print();
             watch.Stop();
             watch.Reset();
-            timer = 0f;
-            measurements.Clear();
         }
     }
     
-    public void BeginMeasurement(string title)
+    public void BeginMeasurement(string title, string tag = "")
     {
         lock (_lock)
         {
-            if (measurements.ContainsKey(title))
+            var key = (title, tag);
+            if (measurements.ContainsKey(key))
             {
-                measurements[title] = measurements[title].SetStart(watch.ElapsedTicks);
+                measurements[key] = measurements[key].SetStart(watch.ElapsedTicks);
             }
             else
             {
-                measurements.Add(title, new Measurement(watch.ElapsedTicks));
+                measurements.Add(key, new Measurement(watch.ElapsedTicks, tag));
             }
         }
     }
 
-    public void EndMeasurement(string title)
+    public void EndMeasurement(string title, string tag = "")
     {
         lock (_lock)
         {
-            if (!measurements.TryGetValue(title, out var measurement)) return; //it was never started
+            var key = (title, tag);
+            if (!measurements.TryGetValue(key, out var measurement)) return; //it was never started
             if (measurement.Start <= 0) return; //it was never started
-            measurements[title] = measurement.TakeMeasurement(watch.ElapsedTicks);
+            measurements[key] = measurement.TakeMeasurement(watch.ElapsedTicks);
         }
     }
-
-    public void Update(float deltaTime)
+    public void ClearData()
     {
         lock (_lock)
         {
-            if (!watch.IsRunning) return;
-            
-            timer += deltaTime;
-            if (timer >= PrintIntervalSeconds)
-            {
-                Print();
-                timer = 0f;
-                measurements.Clear();
-            }
+            measurements.Clear();
+        }
+    }
+    public IEnumerable<MeasurementData> GetData(Func<MeasurementData, bool>? filter = null)
+    {
+        lock (_lock)
+        {
+            var data = measurements.Select(kvp =>
+                new MeasurementData(
+                    kvp.Key.Title,
+                    kvp.Key.Tag,
+                    kvp.Value.Total,
+                    kvp.Value.Elapsed,
+                    kvp.Value.Count,
+                    kvp.Value.Min,
+                    kvp.Value.Max,
+                    kvp.Value.Average
+                )
+            );
+            return filter != null ? data.Where(filter).ToList() : data.ToList();
         }
     }
     
-    public void Print()
-    {
-        lock (_lock)
-        {
-            if (measurements.Count <= 0)
-            {
-                Console.WriteLine("No measurements taken.");
-                return;
-            }
-            
-            Console.WriteLine($"Performance Measurments Info from last {timer:F2}s:");
-            foreach (var kvp in measurements)
-            {
-                var title = kvp.Key;
-                var measurement = kvp.Value;
-                Console.WriteLine($" - {title}: Total Ticks = {measurement.Total}, Average Ticks = {measurement.Average}, Count {measurement.Count}");
-            }
-            Console.WriteLine("-----------------------------");
-        }
-    }
+    // public void Print()
+    // {
+    //     lock (_lock)
+    //     {
+    //         if (measurements.Count <= 0)
+    //         {
+    //             Console.WriteLine("No measurements taken.");
+    //             return;
+    //         }
+    //         
+    //         Console.WriteLine($"Performance Measurments Info from last {timer:F2}s:");
+    //         foreach (var kvp in measurements)
+    //         {
+    //             var title = kvp.Key;
+    //             var measurement = kvp.Value;
+    //             Console.WriteLine($" - {title}: Total Ticks = {measurement.Total}, Average Ticks = {measurement.Average}, Count {measurement.Count}");
+    //         }
+    //         Console.WriteLine("-----------------------------");
+    //     }
+    // }
     
     #endregion
 }
