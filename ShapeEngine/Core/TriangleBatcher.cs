@@ -115,7 +115,8 @@ public class TriangleBatch
 
     #region Methods
     /// <summary>
-    /// Sets the color for the entire batch.
+    /// Sets the color for the entire batch. This is mostly useful for changing color between frames or over time
+    /// without needing to create a new batch, but it can also be used to change the color of the batch before drawing if needed.
     /// </summary>
     /// <param name="newColor">The new color to apply.</param>
     /// <remarks>
@@ -130,7 +131,7 @@ public class TriangleBatch
         }
         this.color = newColor;
     }
-
+    
     /// <summary>
     /// Adds a triangle to the batch.
     /// </summary>
@@ -208,6 +209,16 @@ public class TriangleBatch
     {
         vertices.Clear();
     }
+    
+    /// <summary>
+    /// Clears all vertices from the batch and sets a new color.
+    /// </summary>
+    /// <param name="newColor">The new color to use for the batch.</param>
+    public void Clear(ColorRgba newColor)
+    {
+        this.color = newColor;
+        vertices.Clear();
+    }
     #endregion
     
     #endregion
@@ -229,6 +240,7 @@ public class TriangleBatch
 public static class TriangleBatcher
 {
     private static bool batchActive;
+    private static ColorRgba currentColor;
     
     #region Start/End Batch Logic
     /// <summary>
@@ -248,6 +260,8 @@ public static class TriangleBatcher
         }
         
         batchActive = true;
+        
+        currentColor = color;
         
         Rlgl.Begin(DrawMode.Triangles);
         Rlgl.Color4f(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f); 
@@ -291,6 +305,8 @@ public static class TriangleBatcher
             return;
         }
         
+        currentColor = color;
+        
         Rlgl.Color4f(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f); 
     }
     #endregion
@@ -319,7 +335,6 @@ public static class TriangleBatcher
 
     /// <summary>
     /// Sets the color and adds a single vertex to the current batch.
-    /// The color used will affect all subsequent vertices until changed again or the batch ends.
     /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndBatch"/> is called!
     /// </summary>
     /// <param name="x">The x-coordinate of the vertex.</param>
@@ -327,6 +342,7 @@ public static class TriangleBatcher
     /// <param name="color">The color to apply for this vertex and subsequent vertices.</param>
     /// <remarks>
     /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
+    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the vertex, so this will not affect subsequent vertices.
     /// </remarks>
     public static void AddVertex(float x, float y, ColorRgba color)
     {
@@ -339,6 +355,8 @@ public static class TriangleBatcher
         Rlgl.Color4f(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f); 
         
         Rlgl.Vertex2f(x, y);
+        
+        Rlgl.Color4f(currentColor.R / 255f, currentColor.G / 255f, currentColor.B / 255f, currentColor.A / 255f); 
     }
     
     /// <summary>
@@ -369,6 +387,7 @@ public static class TriangleBatcher
     /// <param name="color">The color to apply for this vertex and subsequent vertices.</param>
     /// <remarks>
     /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
+    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the vertex, so this will not affect subsequent vertices.
     /// </remarks>
     public static void AddVertex(Vector2 vertex, ColorRgba color)
     {
@@ -381,6 +400,8 @@ public static class TriangleBatcher
         Rlgl.Color4f(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f); 
         
         Rlgl.Vertex2f(vertex.X, vertex.Y);
+        
+        Rlgl.Color4f(currentColor.R / 255f, currentColor.G / 255f, currentColor.B / 255f, currentColor.A / 255f); 
     }
 
     /// <summary>
@@ -414,6 +435,7 @@ public static class TriangleBatcher
     /// <param name="color">The color to apply for these vertices and subsequent vertices.</param>
     /// <remarks>
     /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
+    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the vertices, so this will not affect subsequent vertices.
     /// </remarks>
     public static void AddVertices(IEnumerable<Vector2> vertices, ColorRgba color)
     {
@@ -429,6 +451,8 @@ public static class TriangleBatcher
         {
             Rlgl.Vertex2f(vertex.X, vertex.Y);
         }
+        
+        Rlgl.Color4f(currentColor.R / 255f, currentColor.G / 255f, currentColor.B / 255f, currentColor.A / 255f); 
     }
     #endregion
     
@@ -465,6 +489,7 @@ public static class TriangleBatcher
     /// <param name="color">The color to use for this triangle.</param>
     /// <remarks>
     /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before setting the color.
+    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the triangle vertices, so this will not affect subsequent vertices.
     /// </remarks>
     public static void AddTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color)
     {
@@ -479,6 +504,8 @@ public static class TriangleBatcher
         Rlgl.Vertex2f(a.X, a.Y);
         Rlgl.Vertex2f(b.X, b.Y);
         Rlgl.Vertex2f(c.X, c.Y);
+        
+        Rlgl.Color4f(currentColor.R / 255f, currentColor.G / 255f, currentColor.B / 255f, currentColor.A / 255f); 
     }
     
     /// <summary>
@@ -509,6 +536,7 @@ public static class TriangleBatcher
     /// <param name="color">The color to use for this triangle.</param>
     /// <remarks>
     /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before setting the color.
+    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the triangle, so this will not affect subsequent vertices.
     /// </remarks>
     public static void AddTriangle(Triangle triangle, ColorRgba color)
     {
@@ -523,6 +551,8 @@ public static class TriangleBatcher
         Rlgl.Vertex2f(triangle.A.X, triangle.A.Y);
         Rlgl.Vertex2f(triangle.B.X, triangle.B.Y);
         Rlgl.Vertex2f(triangle.C.X, triangle.C.Y);
+        
+        Rlgl.Color4f(currentColor.R / 255f, currentColor.G / 255f, currentColor.B / 255f, currentColor.A / 255f); 
     }
 
     /// <summary>
@@ -556,6 +586,7 @@ public static class TriangleBatcher
     /// <param name="color">The color to use for these triangles.</param>
     /// <remarks>
     /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before adding triangles.
+    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the triangles, so this will not affect subsequent vertices.
     /// </remarks>
     public static void AddTriangles(IEnumerable<Triangle> triangles, ColorRgba color)
     {
@@ -573,6 +604,8 @@ public static class TriangleBatcher
             Rlgl.Vertex2f(triangle.B.X, triangle.B.Y);
             Rlgl.Vertex2f(triangle.C.X, triangle.C.Y);
         }
+        
+        Rlgl.Color4f(currentColor.R / 255f, currentColor.G / 255f, currentColor.B / 255f, currentColor.A / 255f); 
     }
     #endregion
 
@@ -682,6 +715,8 @@ public static class TriangleBatcher
             Game.Instance.Logger.LogWarning("Cannot draw triangles immediately! A batch is currently active. Call EndBatch() before drawing individual triangles.");
             return;
         }
+
+        if (trianglePoints.Length <= 0) return;
         
         Rlgl.Begin(DrawMode.Triangles);
         
