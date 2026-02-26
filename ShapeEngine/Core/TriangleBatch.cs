@@ -6,23 +6,27 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Core;
 
+//TODO: review if this class should stay?
+
 /// <summary>
-/// Represents a batch of triangles that can be drawn together.
+/// A class for efficient triangle drawing using Raylib's RLGL, supporting both persistent batches and immediate-mode drawing.
+/// <para>
+/// This class serves two main purposes:
+/// </para>
 /// <list type="bullet">
 /// <item>
-/// This class is internally pooled to minimize garbage collection allocations.
-/// Instances must be retrieved with <see cref="Get"/> and should be returned when no longer need with <see cref="Return"/>.
-/// Returned instances should not be used after being returned to the pool, and doing so will result in warnings being logged.
+/// <b>Pooled Instances:</b> obtain an instance via <see cref="Get(ColorRgba, int)"/> to manage a persistent list of vertices.
+/// This is ideal for static geometry that doesn't change often. The batch can be drawn repeatedly with <see cref="Draw"/>.
+/// Remember to return it to the pool with <see cref="Return(TriangleBatch)"/> when finished.
 /// </item>
 /// <item>
-/// This should mainly be used for static triangles that don't change often, so the batch can just be re-drawn each frame without needing to be modified much after creation.
-/// Otherwise the static <see cref="TriangleBatcher"/> class can be used for immediate-mode style triangle drawing without needing to manage a batch manually.
-/// </item>
-/// <item>
-/// Using a single batch multiple times with filling, drawing, clearing, and refilling is possible,
-/// but the static <see cref="TriangleBatcher"/> class is better suited for this use-case.
+/// <b>Immediate Mode (Static):</b> use static methods like <see cref="StartImmediateBatch(ColorRgba)"/>, <see cref="AddImmediateVertex(float, float)"/>,
+/// and <see cref="EndImmediateBatch"/> for dynamic, per-frame triangle drawing without managing a specific object instance.
 /// </item>
 /// </list>
+/// <para>
+/// Both approaches utilize <see cref="DrawMode.Triangles"/>, meaning every 3 consecutive vertices form a single triangle.
+/// </para>
 /// </summary>
 public class TriangleBatch
 {
@@ -222,23 +226,8 @@ public class TriangleBatch
     #endregion
     
     #endregion
-}
-
-/// <summary>
-/// A static helper class for immediate-mode style triangle drawing and batching operations using Raylib's RLGL.
-/// <list type="bullet">
-/// <item>The more triangles you can batch together between StartBatch and EndBatch, the better performance you'll get.</item>
-/// <item>Starting and ending batches for each triangle will work but will not have any significant performance benefits over just calling <see cref="Raylib.DrawTriangle"/>!</item>
-/// <item>
-/// Immediate-mode style drawing functions (<see cref="DrawTriangle(Triangle, ColorRgba)"/> for instance) start and end a batch internally for each call,
-/// so they are not intended for high-performance drawing of many triangles,
-/// but can be convenient for quick one-off triangle drawing without needing to manage a batch manually.
-/// </item>
-/// <item>This class always uses <see cref="DrawMode.Triangles"/>, so every 3 consecutive vertices will form a triangle.</item>
-/// </list>
-/// </summary>
-public static class TriangleBatcher
-{
+    
+    #region Immediate Mode Logic
     private static bool batchActive;
     private static ColorRgba currentColor;
     
@@ -249,9 +238,9 @@ public static class TriangleBatcher
     /// <param name="color">The color to be applied to subsequent vertices.</param>
     /// <remarks>
     /// Calls <see cref="Rlgl.Begin(DrawMode)"/> with <see cref="DrawMode.Triangles"/>.
-    /// Must be paired with <see cref="EndBatch"/>.
+    /// Must be paired with <see cref="EndImmediateBatch"/>.
     /// </remarks>
-    public static void StartBatch(ColorRgba color)
+    public static void StartImmediateBatch(ColorRgba color)
     {
         if (batchActive)
         {
@@ -273,7 +262,7 @@ public static class TriangleBatcher
     /// <remarks>
     /// Calls <see cref="Rlgl.End"/>.
     /// </remarks>
-    public static void EndBatch()
+    public static void EndImmediateBatch()
     {
         if (!batchActive)
         {
@@ -295,9 +284,9 @@ public static class TriangleBatcher
     /// </summary>
     /// <param name="color">The color to set.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before setting the color.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch before setting the color.
     /// </remarks>
-    public static void SetColor(ColorRgba color)
+    public static void SetImmediateColor(ColorRgba color)
     {
         if (!batchActive)
         {
@@ -315,14 +304,14 @@ public static class TriangleBatcher
 
     /// <summary>
     /// Adds a single vertex to the current batch using the current color.
-    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndBatch"/> is called!
+    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndImmediateBatch"/> is called!
     /// </summary>
     /// <param name="x">The x-coordinate of the vertex.</param>
     /// <param name="y">The y-coordinate of the vertex.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch.
     /// </remarks>
-    public static void AddVertex(float x, float y)
+    public static void AddImmediateVertex(float x, float y)
     {
         if (!batchActive)
         {
@@ -335,16 +324,16 @@ public static class TriangleBatcher
 
     /// <summary>
     /// Sets the color and adds a single vertex to the current batch.
-    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndBatch"/> is called!
+    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndImmediateBatch"/> is called!
     /// </summary>
     /// <param name="x">The x-coordinate of the vertex.</param>
     /// <param name="y">The y-coordinate of the vertex.</param>
     /// <param name="color">The color to apply for this vertex and subsequent vertices.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
-    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the vertex, so this will not affect subsequent vertices.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch.
+    /// Resets the color back to the previous color set by <see cref="SetImmediateColor"/> or <see cref="StartImmediateBatch"/> after adding the vertex, so this will not affect subsequent vertices.
     /// </remarks>
-    public static void AddVertex(float x, float y, ColorRgba color)
+    public static void AddImmediateVertex(float x, float y, ColorRgba color)
     {
         if (!batchActive)
         {
@@ -361,13 +350,13 @@ public static class TriangleBatcher
     
     /// <summary>
     /// Adds a single vertex to the current batch using the current color.
-    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndBatch"/> is called!
+    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndImmediateBatch"/> is called!
     /// </summary>
     /// <param name="vertex">The position of the vertex.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch.
     /// </remarks>
-    public static void AddVertex(Vector2 vertex)
+    public static void AddImmediateVertex(Vector2 vertex)
     {
         if (!batchActive)
         {
@@ -381,15 +370,15 @@ public static class TriangleBatcher
     /// <summary>
     /// Sets the color and adds a single vertex to the current batch.
     /// The color used will affect all subsequent vertices until changed again or the batch ends.
-    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndBatch"/> is called!
+    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndImmediateBatch"/> is called!
     /// </summary>
     /// <param name="vertex">The position of the vertex.</param>
     /// <param name="color">The color to apply for this vertex and subsequent vertices.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
-    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the vertex, so this will not affect subsequent vertices.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch.
+    /// Resets the color back to the previous color set by <see cref="SetImmediateColor"/> or <see cref="StartImmediateBatch"/> after adding the vertex, so this will not affect subsequent vertices.
     /// </remarks>
-    public static void AddVertex(Vector2 vertex, ColorRgba color)
+    public static void AddImmediateVertex(Vector2 vertex, ColorRgba color)
     {
         if (!batchActive)
         {
@@ -406,13 +395,13 @@ public static class TriangleBatcher
 
     /// <summary>
     /// Adds a collection of vertices to the current batch using the current color.
-    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndBatch"/> is called!
+    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndImmediateBatch"/> is called!
     /// </summary>
     /// <param name="vertices">The collection of vertices to add.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch.
     /// </remarks>
-    public static void AddVertices(IEnumerable<Vector2> vertices)
+    public static void AddImmediateVertices(IEnumerable<Vector2> vertices)
     {
         if (!batchActive)
         {
@@ -429,15 +418,15 @@ public static class TriangleBatcher
     /// <summary>
     /// Sets the color and adds a collection of vertices to the current batch.
     /// The color used will affect all subsequent vertices until changed again or the batch ends.
-    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndBatch"/> is called!
+    /// TriangleBatcher uses DrawMode.Triangles, so every 3 consecutive vertices added will form a triangle when <see cref="EndImmediateBatch"/> is called!
     /// </summary>
     /// <param name="vertices">The collection of vertices to add.</param>
     /// <param name="color">The color to apply for these vertices and subsequent vertices.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch.
-    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the vertices, so this will not affect subsequent vertices.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch.
+    /// Resets the color back to the previous color set by <see cref="SetImmediateColor"/> or <see cref="StartImmediateBatch"/> after adding the vertices, so this will not affect subsequent vertices.
     /// </remarks>
-    public static void AddVertices(IEnumerable<Vector2> vertices, ColorRgba color)
+    public static void AddImmediateVertices(IEnumerable<Vector2> vertices, ColorRgba color)
     {
         if (!batchActive)
         {
@@ -464,9 +453,9 @@ public static class TriangleBatcher
     /// <param name="b">The second vertex.</param>
     /// <param name="c">The third vertex.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before setting the color.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch before setting the color.
     /// </remarks>
-    public static void AddTriangle(Vector2 a, Vector2 b, Vector2 c)
+    public static void AddImmediateTriangle(Vector2 a, Vector2 b, Vector2 c)
     {
         if (!batchActive)
         {
@@ -488,10 +477,10 @@ public static class TriangleBatcher
     /// <param name="c">The third vertex.</param>
     /// <param name="color">The color to use for this triangle.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before setting the color.
-    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the triangle vertices, so this will not affect subsequent vertices.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch before setting the color.
+    /// Resets the color back to the previous color set by <see cref="SetImmediateColor"/> or <see cref="StartImmediateBatch"/> after adding the triangle vertices, so this will not affect subsequent vertices.
     /// </remarks>
-    public static void AddTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color)
+    public static void AddImmediateTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color)
     {
         if (!batchActive)
         {
@@ -513,9 +502,9 @@ public static class TriangleBatcher
     /// </summary>
     /// <param name="triangle">The triangle to add.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before setting the color.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch before setting the color.
     /// </remarks>
-    public static void AddTriangle(Triangle triangle)
+    public static void AddImmediateTriangle(Triangle triangle)
     {
         if (!batchActive)
         {
@@ -535,10 +524,10 @@ public static class TriangleBatcher
     /// <param name="triangle">The triangle to add.</param>
     /// <param name="color">The color to use for this triangle.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before setting the color.
-    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the triangle, so this will not affect subsequent vertices.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch before setting the color.
+    /// Resets the color back to the previous color set by <see cref="SetImmediateColor"/> or <see cref="StartImmediateBatch"/> after adding the triangle, so this will not affect subsequent vertices.
     /// </remarks>
-    public static void AddTriangle(Triangle triangle, ColorRgba color)
+    public static void AddImmediateTriangle(Triangle triangle, ColorRgba color)
     {
         if (!batchActive)
         {
@@ -560,9 +549,9 @@ public static class TriangleBatcher
     /// </summary>
     /// <param name="triangles">The collection of triangles to add.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before adding triangles.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch before adding triangles.
     /// </remarks>
-    public static void AddTriangles(IEnumerable<Triangle> triangles)
+    public static void AddImmediateTriangles(IEnumerable<Triangle> triangles)
     {
         if (!batchActive)
         {
@@ -585,10 +574,10 @@ public static class TriangleBatcher
     /// <param name="triangles">The collection of triangles to add.</param>
     /// <param name="color">The color to use for these triangles.</param>
     /// <remarks>
-    /// Batch must be active before using this function. Use <see cref="StartBatch(ColorRgba)"/> to start a batch before adding triangles.
-    /// Resets the color back to the previous color set by <see cref="SetColor"/> or <see cref="StartBatch"/> after adding the triangles, so this will not affect subsequent vertices.
+    /// Batch must be active before using this function. Use <see cref="StartImmediateBatch(ColorRgba)"/> to start a batch before adding triangles.
+    /// Resets the color back to the previous color set by <see cref="SetImmediateColor"/> or <see cref="StartImmediateBatch"/> after adding the triangles, so this will not affect subsequent vertices.
     /// </remarks>
-    public static void AddTriangles(IEnumerable<Triangle> triangles, ColorRgba color)
+    public static void AddImmediateTriangles(IEnumerable<Triangle> triangles, ColorRgba color)
     {
         if (!batchActive)
         {
@@ -617,9 +606,9 @@ public static class TriangleBatcher
     /// <param name="color">The color of the triangle.</param>
     /// <remarks>
     /// Batch must NOT be active when calling this function. This is for immediate-mode style drawing of individual triangles.
-    /// Use <see cref="EndBatch"/> to end any active batch before calling this function.
+    /// Use <see cref="EndImmediateBatch"/> to end any active batch before calling this function.
     /// </remarks>
-    public static void DrawTriangle(Triangle triangle, ColorRgba color)
+    public static void DrawImmediateTriangle(Triangle triangle, ColorRgba color)
     {
         if (batchActive)
         {
@@ -647,9 +636,9 @@ public static class TriangleBatcher
     /// <param name="color">The color of the triangle.</param>
     /// <remarks>
     /// Batch must NOT be active when calling this function. This is for immediate-mode style drawing of individual triangles.
-    /// Use <see cref="EndBatch"/> to end any active batch before calling this function.
+    /// Use <see cref="EndImmediateBatch"/> to end any active batch before calling this function.
     /// </remarks>
-    public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color)
+    public static void DrawImmediateTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color)
     {
         if (batchActive)
         {
@@ -675,9 +664,9 @@ public static class TriangleBatcher
     /// <param name="color">The color to use for all triangles.</param>
     /// <remarks>
     /// Batch must NOT be active when calling this function. This is for immediate-mode style drawing of individual triangles.
-    /// Use <see cref="EndBatch"/> to end any active batch before calling this function.
+    /// Use <see cref="EndImmediateBatch"/> to end any active batch before calling this function.
     /// </remarks>
-    public static void DrawTriangles(IEnumerable<Triangle> triangles, ColorRgba color)
+    public static void DrawImmediateTriangles(IEnumerable<Triangle> triangles, ColorRgba color)
     {
         if (batchActive)
         {
@@ -706,9 +695,9 @@ public static class TriangleBatcher
     /// <param name="color">The color to use for all triangles.</param>
     /// <remarks>
     /// Batch must NOT be active when calling this function. This is for immediate-mode style drawing of individual triangles.
-    /// Use <see cref="EndBatch"/> to end any active batch before calling this function.
+    /// Use <see cref="EndImmediateBatch"/> to end any active batch before calling this function.
     /// </remarks>
-    public static void DrawTriangles(Vector2[] trianglePoints, ColorRgba color)
+    public static void DrawImmediateTriangles(Vector2[] trianglePoints, ColorRgba color)
     {
         if (batchActive)
         {
@@ -729,5 +718,7 @@ public static class TriangleBatcher
 
         Rlgl.End();
     }
+    #endregion
+    
     #endregion
 }
