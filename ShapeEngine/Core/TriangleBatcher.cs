@@ -8,7 +8,21 @@ namespace ShapeEngine.Core;
 
 /// <summary>
 /// Represents a batch of triangles that can be drawn together.
-/// This class is pooled to minimize garbage collection allocations.
+/// <list type="bullet">
+/// <item>
+/// This class is internally pooled to minimize garbage collection allocations.
+/// Instances must be retrieved with <see cref="Get"/> and should be returned when no longer need with <see cref="Return"/>.
+/// Returned instances should not be used after being returned to the pool, and doing so will result in warnings being logged.
+/// </item>
+/// <item>
+/// This should mainly be used for static triangles that don't change often, so the batch can just be re-drawn each frame without needing to be modified much after creation.
+/// Otherwise the static <see cref="TriangleBatcher"/> class can be used for immediate-mode style triangle drawing without needing to manage a batch manually.
+/// </item>
+/// <item>
+/// Using a single batch multiple times with filling, drawing, clearing, and refilling is possible,
+/// but the static <see cref="TriangleBatcher"/> class is better suited for this use-case.
+/// </item>
+/// </list>
 /// </summary>
 public class TriangleBatch
 {
@@ -22,19 +36,17 @@ public class TriangleBatch
     /// Retrieves a cleared, ready-to-use TriangleBatch from the pool or creates a new one.
     /// </summary>
     /// <param name="color">The color to be used for drawing the triangles in this batch.</param>
-    /// <param name="initialCapacity">The initial capacity of the vertex list (number of triangles * 3).Defaults to 256.</param>
+    /// <param name="initialCapacity">The initial capacity of the vertex list (number of triangles * 3).</param>
     /// <returns>A TriangleBatch instance ready for use.</returns>
-    public static TriangleBatch Get(ColorRgba color, int initialCapacity = 256)
+    public static TriangleBatch Get(ColorRgba color, int initialCapacity = 64)
     {
         TriangleBatch batch;
+        
         if (Pool.Count > 0)
         {
             batch = Pool.Pop();
             batch.color = color;
-            // batch.vertices.Clear(); // Ensure it's empty
             
-            // Optional: Ensure capacity if specifically requested, 
-            // though usually we just let the list grow and keep the large buffer.
             if (batch.vertices.Capacity < initialCapacity * 3)
             {
                 batch.vertices.Capacity = initialCapacity * 3;
@@ -203,6 +215,16 @@ public class TriangleBatch
 
 /// <summary>
 /// A static helper class for immediate-mode style triangle drawing and batching operations using Raylib's RLGL.
+/// <list type="bullet">
+/// <item>The more triangles you can batch together between StartBatch and EndBatch, the better performance you'll get.</item>
+/// <item>Starting and ending batches for each triangle will work but will not have any significant performance benefits over just calling <see cref="Raylib.DrawTriangle"/>!</item>
+/// <item>
+/// Immediate-mode style drawing functions (<see cref="DrawTriangle(Triangle, ColorRgba)"/> for instance) start and end a batch internally for each call,
+/// so they are not intended for high-performance drawing of many triangles,
+/// but can be convenient for quick one-off triangle drawing without needing to manage a batch manually.
+/// </item>
+/// <item>This class always uses <see cref="DrawMode.Triangles"/>, so every 3 consecutive vertices will form a triangle.</item>
+/// </list>
 /// </summary>
 public static class TriangleBatcher
 {
