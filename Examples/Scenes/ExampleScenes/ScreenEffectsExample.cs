@@ -122,8 +122,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            background.Draw(Colors.Dark, 0.5f, 4);
-            fill.Draw(Colors.Medium, 0.5f, 4);
+            background.Draw(Colors.Dark);
+            fill.Draw(Colors.Medium);
             
             int textValue = (int)(CurValue * TextValueMax);
             font.ColorRgba = mouseInside ? Colors.Highlight: Colors.Special;
