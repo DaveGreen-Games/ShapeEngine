@@ -227,6 +227,486 @@ public static class TriangleDrawing
     
     #endregion
     
+    #region Draw Corners
+    
+    /// <summary>
+    /// Draws the corners of the triangle with a specific length along the edges.
+    /// </summary>
+    /// <param name="triangle">The triangle to draw the corners for.</param>
+    /// <param name="lineThickness">The thickness of the corner lines.</param>
+    /// <param name="color">The color of the corners.</param>
+    /// <param name="cornerLength">The absolute length of the corner segments along the edges from each vertex.</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
+    public static void DrawCorners(this Triangle triangle, float lineThickness, ColorRgba color, float cornerLength, float miterLimit = 4f, bool beveled = true)
+    {
+        if(triangle.IsCollinear()) return;
+        
+        if(cornerLength <= 0f) return;
+        
+        var edgeAB = triangle.B - triangle.A;
+        var edgeBC = triangle.C - triangle.B;
+        var edgeCA = triangle.A - triangle.C;
+        
+        var lengthAB = edgeAB.Length();
+        if (lengthAB <= 0f) return;
+        
+        var lengthBC = edgeBC.Length();
+        if (lengthBC <= 0f) return;
+        
+        var lengthCA = edgeCA.Length();
+        if (lengthCA <= 0f) return;
+        
+        var minLength = MathF.Min(lengthAB, MathF.Min(lengthBC, lengthCA));
+        if (minLength <= cornerLength)
+        {
+            triangle.DrawLines(lineThickness, color, miterLimit, beveled);
+            return;
+        }
+        var cornerLengthFactor = ShapeMath.Clamp(0f, 1f, cornerLength / minLength);
+        
+        float totalMiterLengthLimit = lineThickness * 0.5f * MathF.Max(2f, miterLimit);
+        
+        float perimeter = lengthAB + lengthBC + lengthCA;
+        Vector2 incenter = (triangle.A * lengthBC + triangle.B * lengthCA + triangle.C * lengthAB) / perimeter;
+        
+        var innerMaxLengthA = (incenter - triangle.A).Length();
+        if(innerMaxLengthA <= 0f) return;
+        
+        var innerMaxLengthB = (incenter - triangle.B).Length();
+        if(innerMaxLengthB <= 0f) return;
+        
+        var innerMaxLengthC = (incenter - triangle.C).Length();
+        if(innerMaxLengthC <= 0f) return;
+        
+        var edgeABDir = edgeAB / lengthAB;
+        var edgeBCDir = edgeBC / lengthBC;
+        var edgeCADir = edgeCA / lengthCA;
+        
+        var normalAB = edgeABDir.GetPerpendicularRight();
+        var normalBC = edgeBCDir.GetPerpendicularRight();
+        var normalCA = edgeCADir.GetPerpendicularRight();
+        
+        var miterDirA = (normalCA + normalAB).Normalize();
+        var miterDirB = (normalAB + normalBC).Normalize();
+        var miterDirC = (normalBC + normalCA).Normalize();
+        
+        float miterAngleRadA = MathF.Abs(miterDirA.AngleRad(normalAB));
+        float miterLengthA = lineThickness / MathF.Cos(miterAngleRadA);
+        
+        float miterAngleRadB = MathF.Abs(miterDirB.AngleRad(normalBC));
+        float miterLengthB = lineThickness / MathF.Cos(miterAngleRadB);
+        
+        float miterAngleRadC = MathF.Abs(miterDirC.AngleRad(normalCA));
+        float miterLengthC = lineThickness / MathF.Cos(miterAngleRadC);
+        
+        Vector2 aOuterPrev, aOuterNext;
+        Vector2 bOuterPrev, bOuterNext;
+        Vector2 cOuterPrev, cOuterNext;
+        
+        Vector2 aInner = triangle.A - miterDirA * MathF.Min(miterLengthA, innerMaxLengthA);
+        Vector2 bInner = triangle.B - miterDirB * MathF.Min(miterLengthB, innerMaxLengthB);
+        Vector2 cInner = triangle.C - miterDirC * MathF.Min(miterLengthC, innerMaxLengthC);
+        
+        var rayColor = color.ToRayColor();
+        
+        if (miterLimit < 2f || miterLengthA < totalMiterLengthLimit)
+        {
+            aOuterPrev = triangle.A + miterDirA * miterLengthA;
+            aOuterNext = aOuterPrev;
+        }
+        else
+        {
+            if (beveled)
+            {
+                aOuterPrev = triangle.A + normalCA * lineThickness;
+                aOuterNext = triangle.A + normalAB * lineThickness;
+            }
+            else
+            {
+                var p = triangle.A + miterDirA * totalMiterLengthLimit;
+                var dir = (p - triangle.A).Normalize();
+                var pr = dir.GetPerpendicularRight();
+                var offsetC = triangle.C + normalCA * lineThickness;
+        
+                var ip = Ray.IntersectRayRay(p, pr, offsetC, edgeCADir);
+                if (ip.Valid)
+                {
+                    aOuterPrev = ip.Point;
+                    aOuterNext = p - pr * (p - ip.Point).Length();
+                }
+                else
+                {
+                    aOuterPrev = triangle.A + normalCA * lineThickness;
+                    aOuterNext = triangle.A + normalAB * lineThickness;
+                }
+            }
+            Raylib.DrawTriangle(aOuterPrev, aOuterNext, aInner, rayColor);
+        }
+        
+        if (miterLimit < 2f || miterLengthB < totalMiterLengthLimit)
+        {
+            bOuterPrev = triangle.B + miterDirB * miterLengthB;
+            bOuterNext = bOuterPrev;
+        }
+        else
+        {
+            if (beveled)
+            {
+                bOuterPrev = triangle.B + normalAB * lineThickness;
+                bOuterNext = triangle.B + normalBC * lineThickness;
+            }
+            else
+            {
+                var p = triangle.B + miterDirB * totalMiterLengthLimit;
+                var dir = (p - triangle.B).Normalize();
+                var pr = dir.GetPerpendicularRight();
+                var offsetA = triangle.A + normalAB * lineThickness;
+        
+                var ip = Ray.IntersectRayRay(p, pr, offsetA, edgeABDir);
+                if (ip.Valid)
+                {
+                    bOuterPrev = ip.Point;
+                    bOuterNext = p - pr * (p - ip.Point).Length();
+                }
+                else
+                {
+                    bOuterPrev = triangle.B + normalAB * lineThickness;
+                    bOuterNext = triangle.B + normalBC * lineThickness;
+                }
+            }
+            Raylib.DrawTriangle(bOuterPrev, bOuterNext, bInner, rayColor);
+        }
+        
+        if (miterLimit < 2f || miterLengthC < totalMiterLengthLimit)
+        {
+            cOuterPrev = triangle.C + miterDirC * miterLengthC;
+            cOuterNext = cOuterPrev;
+        }
+        else
+        {
+            if (beveled)
+            {
+                cOuterPrev = triangle.C + normalBC * lineThickness;
+                cOuterNext = triangle.C + normalCA * lineThickness;
+            }
+            else
+            {
+                var p = triangle.C + miterDirC * totalMiterLengthLimit;
+                var dir = (p - triangle.C).Normalize();
+                var pr = dir.GetPerpendicularRight();
+                var offsetB = triangle.B + normalBC * lineThickness;
+        
+                var ip = Ray.IntersectRayRay(p, pr, offsetB, edgeBCDir);
+                if (ip.Valid)
+                {
+                    cOuterPrev = ip.Point;
+                    cOuterNext = p - pr * (p - ip.Point).Length();
+                }
+                else
+                {
+                    cOuterPrev = triangle.C + normalBC * lineThickness;
+                    cOuterNext = triangle.C + normalCA * lineThickness;
+                }
+            }
+            Raylib.DrawTriangle(cOuterPrev, cOuterNext, cInner, rayColor);
+        }
+        
+        Vector2 sideACenter = triangle.A + edgeABDir * lengthAB * 0.5f;
+        Vector2 sideBCenter = triangle.B + edgeBCDir * lengthBC * 0.5f;
+        Vector2 sideCCenter = triangle.C + edgeCADir * lengthCA * 0.5f;
+        
+        Vector2 sideACenterOutside = sideACenter + normalAB * lineThickness;
+        Vector2 sideACenterInside = sideACenter - normalAB * lineThickness;
+        
+        Vector2 sideBCenterOutside = sideBCenter + normalBC * lineThickness;
+        Vector2 sideBCenterInside = sideBCenter - normalBC * lineThickness;
+        
+        Vector2 sideCCenterOutside = sideCCenter + normalCA * lineThickness;
+        Vector2 sideCCenterInside = sideCCenter - normalCA * lineThickness;
+        
+        var aInnerNextEnd = aInner.Lerp(sideACenterInside, cornerLengthFactor);
+        var aInnerPrevEnd = aInner.Lerp(sideCCenterInside, cornerLengthFactor);
+        var aOuterNextEnd = aOuterNext.Lerp(sideACenterOutside, cornerLengthFactor);
+        var aOuterPrevEnd = aOuterPrev.Lerp(sideCCenterOutside, cornerLengthFactor);
+        
+        var bInnerNextEnd = bInner.Lerp(sideBCenterInside, cornerLengthFactor);
+        var bInnerPrevEnd = bInner.Lerp(sideACenterInside, cornerLengthFactor);
+        var bOuterNextEnd = bOuterNext.Lerp(sideBCenterOutside, cornerLengthFactor);
+        var bOuterPrevEnd = bOuterPrev.Lerp(sideACenterOutside, cornerLengthFactor);
+        
+        var cInnerNextEnd = cInner.Lerp(sideCCenterInside, cornerLengthFactor);
+        var cInnerPrevEnd = cInner.Lerp(sideBCenterInside, cornerLengthFactor);
+        var cOuterNextEnd = cOuterNext.Lerp(sideCCenterOutside, cornerLengthFactor);
+        var cOuterPrevEnd = cOuterPrev.Lerp(sideBCenterOutside, cornerLengthFactor);
+        // var aInnerNextEnd = aInner.LerpByLength(sideACenterInside, cornerLength);
+        // var aInnerPrevEnd = aInner.LerpByLength(sideCCenterInside, cornerLength);
+        // var aOuterNextEnd = aOuterNext.LerpByLength(sideACenterOutside, cornerLength);
+        // var aOuterPrevEnd = aOuterPrev.LerpByLength(sideCCenterOutside, cornerLength);
+        //
+        // var bInnerNextEnd = bInner.LerpByLength(sideBCenterInside, cornerLength);
+        // var bInnerPrevEnd = bInner.LerpByLength(sideACenterInside, cornerLength);
+        // var bOuterNextEnd = bOuterNext.LerpByLength(sideBCenterOutside, cornerLength);
+        // var bOuterPrevEnd = bOuterPrev.LerpByLength(sideACenterOutside, cornerLength);
+        //
+        // var cInnerNextEnd = cInner.LerpByLength(sideCCenterInside, cornerLength);
+        // var cInnerPrevEnd = cInner.LerpByLength(sideBCenterInside, cornerLength);
+        // var cOuterNextEnd = cOuterNext.LerpByLength(sideCCenterOutside, cornerLength);
+        // var cOuterPrevEnd = cOuterPrev.LerpByLength(sideBCenterOutside, cornerLength);
+        
+        Raylib.DrawTriangle(aOuterPrev, aInner, aOuterPrevEnd, rayColor);
+        Raylib.DrawTriangle(aInner, aInnerPrevEnd, aOuterPrevEnd, rayColor);
+        
+        Raylib.DrawTriangle(aOuterNext, aOuterNextEnd, aInner, rayColor);
+        Raylib.DrawTriangle(aOuterNextEnd, aInnerNextEnd, aInner, rayColor);
+        
+        Raylib.DrawTriangle(bOuterPrev, bInner, bOuterPrevEnd, rayColor);
+        Raylib.DrawTriangle(bInner, bInnerPrevEnd, bOuterPrevEnd, rayColor);
+        
+        Raylib.DrawTriangle(bOuterNext, bOuterNextEnd, bInner, rayColor);
+        Raylib.DrawTriangle(bOuterNextEnd, bInnerNextEnd, bInner, rayColor);
+        
+        Raylib.DrawTriangle(cOuterPrev, cInner, cOuterPrevEnd, rayColor);
+        Raylib.DrawTriangle(cInner, cInnerPrevEnd, cOuterPrevEnd, rayColor);
+        
+        Raylib.DrawTriangle(cOuterNext, cOuterNextEnd, cInner, rayColor);
+        Raylib.DrawTriangle(cOuterNextEnd, cInnerNextEnd, cInner, rayColor);
+    }
+    
+    #endregion
+    
+    #region Draw Corners Relative
+    
+    /// <summary>
+    /// Draws the corners of the triangle where the length of the corner segments is relative to the shortest edge.
+    /// </summary>
+    /// <param name="triangle">The triangle to draw the corners for.</param>
+    /// <param name="lineThickness">The thickness of the corner lines.</param>
+    /// <param name="color">The color of the corners.</param>
+    /// <param name="cornerLengthFactor">The length factor of the corner segments relative to the shortest edge (0 to 0.5 recommended).</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
+    public static void DrawCornersRelative(this Triangle triangle, float lineThickness, ColorRgba color, float cornerLengthFactor, float miterLimit = 4f, bool beveled = true)
+    {
+        if(triangle.IsCollinear()) return;
+
+        if(cornerLengthFactor <= 0f) return;
+        
+        if(cornerLengthFactor >= 1f)
+        {
+            triangle.DrawLines(lineThickness, color, miterLimit, beveled);
+            return;
+        }
+        
+        float totalMiterLengthLimit = lineThickness * 0.5f * MathF.Max(2f, miterLimit);
+        
+        var edgeAB = triangle.B - triangle.A;
+        var edgeBC = triangle.C - triangle.B;
+        var edgeCA = triangle.A - triangle.C;
+        
+        var lengthAB = edgeAB.Length();
+        if (lengthAB <= 0f) return;
+        
+        var lengthBC = edgeBC.Length();
+        if (lengthBC <= 0f) return;
+        
+        var lengthCA = edgeCA.Length();
+        if (lengthCA <= 0f) return;
+
+        float perimeter = lengthAB + lengthBC + lengthCA;
+        Vector2 incenter = (triangle.A * lengthBC + triangle.B * lengthCA + triangle.C * lengthAB) / perimeter;
+        
+        var innerMaxLengthA = (incenter - triangle.A).Length();
+        if(innerMaxLengthA <= 0f) return;
+        
+        var innerMaxLengthB = (incenter - triangle.B).Length();
+        if(innerMaxLengthB <= 0f) return;
+        
+        var innerMaxLengthC = (incenter - triangle.C).Length();
+        if(innerMaxLengthC <= 0f) return;
+        
+        var edgeABDir = edgeAB / lengthAB;
+        var edgeBCDir = edgeBC / lengthBC;
+        var edgeCADir = edgeCA / lengthCA;
+        
+        var normalAB = edgeABDir.GetPerpendicularRight();
+        var normalBC = edgeBCDir.GetPerpendicularRight();
+        var normalCA = edgeCADir.GetPerpendicularRight();
+        
+        var miterDirA = (normalCA + normalAB).Normalize();
+        var miterDirB = (normalAB + normalBC).Normalize();
+        var miterDirC = (normalBC + normalCA).Normalize();
+        
+        float miterAngleRadA = MathF.Abs(miterDirA.AngleRad(normalAB));
+        float miterLengthA = lineThickness / MathF.Cos(miterAngleRadA);
+        
+        float miterAngleRadB = MathF.Abs(miterDirB.AngleRad(normalBC));
+        float miterLengthB = lineThickness / MathF.Cos(miterAngleRadB);
+        
+        float miterAngleRadC = MathF.Abs(miterDirC.AngleRad(normalCA));
+        float miterLengthC = lineThickness / MathF.Cos(miterAngleRadC);
+
+        Vector2 aOuterPrev, aOuterNext;
+        Vector2 bOuterPrev, bOuterNext;
+        Vector2 cOuterPrev, cOuterNext;
+        
+        Vector2 aInner = triangle.A - miterDirA * MathF.Min(miterLengthA, innerMaxLengthA);
+        Vector2 bInner = triangle.B - miterDirB * MathF.Min(miterLengthB, innerMaxLengthB);
+        Vector2 cInner = triangle.C - miterDirC * MathF.Min(miterLengthC, innerMaxLengthC);
+        
+        var rayColor = color.ToRayColor();
+        
+        if (miterLimit < 2f || miterLengthA < totalMiterLengthLimit)
+        {
+            aOuterPrev = triangle.A + miterDirA * miterLengthA;
+            aOuterNext = aOuterPrev;
+        }
+        else
+        {
+            if (beveled)
+            {
+                aOuterPrev = triangle.A + normalCA * lineThickness;
+                aOuterNext = triangle.A + normalAB * lineThickness;
+            }
+            else
+            {
+                var p = triangle.A + miterDirA * totalMiterLengthLimit;
+                var dir = (p - triangle.A).Normalize();
+                var pr = dir.GetPerpendicularRight();
+                var offsetC = triangle.C + normalCA * lineThickness;
+
+                var ip = Ray.IntersectRayRay(p, pr, offsetC, edgeCADir);
+                if (ip.Valid)
+                {
+                    aOuterPrev = ip.Point;
+                    aOuterNext = p - pr * (p - ip.Point).Length();
+                }
+                else
+                {
+                    aOuterPrev = triangle.A + normalCA * lineThickness;
+                    aOuterNext = triangle.A + normalAB * lineThickness;
+                }
+            }
+            Raylib.DrawTriangle(aOuterPrev, aOuterNext, aInner, rayColor);
+        }
+
+        if (miterLimit < 2f || miterLengthB < totalMiterLengthLimit)
+        {
+            bOuterPrev = triangle.B + miterDirB * miterLengthB;
+            bOuterNext = bOuterPrev;
+        }
+        else
+        {
+            if (beveled)
+            {
+                bOuterPrev = triangle.B + normalAB * lineThickness;
+                bOuterNext = triangle.B + normalBC * lineThickness;
+            }
+            else
+            {
+                var p = triangle.B + miterDirB * totalMiterLengthLimit;
+                var dir = (p - triangle.B).Normalize();
+                var pr = dir.GetPerpendicularRight();
+                var offsetA = triangle.A + normalAB * lineThickness;
+
+                var ip = Ray.IntersectRayRay(p, pr, offsetA, edgeABDir);
+                if (ip.Valid)
+                {
+                    bOuterPrev = ip.Point;
+                    bOuterNext = p - pr * (p - ip.Point).Length();
+                }
+                else
+                {
+                    bOuterPrev = triangle.B + normalAB * lineThickness;
+                    bOuterNext = triangle.B + normalBC * lineThickness;
+                }
+            }
+            Raylib.DrawTriangle(bOuterPrev, bOuterNext, bInner, rayColor);
+        }
+        
+        if (miterLimit < 2f || miterLengthC < totalMiterLengthLimit)
+        {
+            cOuterPrev = triangle.C + miterDirC * miterLengthC;
+            cOuterNext = cOuterPrev;
+        }
+        else
+        {
+            if (beveled)
+            {
+                cOuterPrev = triangle.C + normalBC * lineThickness;
+                cOuterNext = triangle.C + normalCA * lineThickness;
+            }
+            else
+            {
+                var p = triangle.C + miterDirC * totalMiterLengthLimit;
+                var dir = (p - triangle.C).Normalize();
+                var pr = dir.GetPerpendicularRight();
+                var offsetB = triangle.B + normalBC * lineThickness;
+
+                var ip = Ray.IntersectRayRay(p, pr, offsetB, edgeBCDir);
+                if (ip.Valid)
+                {
+                    cOuterPrev = ip.Point;
+                    cOuterNext = p - pr * (p - ip.Point).Length();
+                }
+                else
+                {
+                    cOuterPrev = triangle.C + normalBC * lineThickness;
+                    cOuterNext = triangle.C + normalCA * lineThickness;
+                }
+            }
+            Raylib.DrawTriangle(cOuterPrev, cOuterNext, cInner, rayColor);
+        }
+
+        Vector2 sideACenter = triangle.A + edgeABDir * lengthAB * 0.5f;
+        Vector2 sideBCenter = triangle.B + edgeBCDir * lengthBC * 0.5f;
+        Vector2 sideCCenter = triangle.C + edgeCADir * lengthCA * 0.5f;
+
+        Vector2 sideACenterOutside = sideACenter + normalAB * lineThickness;
+        Vector2 sideACenterInside = sideACenter - normalAB * lineThickness;
+        
+        Vector2 sideBCenterOutside = sideBCenter + normalBC * lineThickness;
+        Vector2 sideBCenterInside = sideBCenter - normalBC * lineThickness;
+        
+        Vector2 sideCCenterOutside = sideCCenter + normalCA * lineThickness;
+        Vector2 sideCCenterInside = sideCCenter - normalCA * lineThickness;
+
+        var aInnerNextEnd = aInner.Lerp(sideACenterInside, cornerLengthFactor);
+        var aInnerPrevEnd = aInner.Lerp(sideCCenterInside, cornerLengthFactor);
+        var aOuterNextEnd = aOuterNext.Lerp(sideACenterOutside, cornerLengthFactor);
+        var aOuterPrevEnd = aOuterPrev.Lerp(sideCCenterOutside, cornerLengthFactor);
+        
+        var bInnerNextEnd = bInner.Lerp(sideBCenterInside, cornerLengthFactor);
+        var bInnerPrevEnd = bInner.Lerp(sideACenterInside, cornerLengthFactor);
+        var bOuterNextEnd = bOuterNext.Lerp(sideBCenterOutside, cornerLengthFactor);
+        var bOuterPrevEnd = bOuterPrev.Lerp(sideACenterOutside, cornerLengthFactor);
+        
+        var cInnerNextEnd = cInner.Lerp(sideCCenterInside, cornerLengthFactor);
+        var cInnerPrevEnd = cInner.Lerp(sideBCenterInside, cornerLengthFactor);
+        var cOuterNextEnd = cOuterNext.Lerp(sideCCenterOutside, cornerLengthFactor);
+        var cOuterPrevEnd = cOuterPrev.Lerp(sideBCenterOutside, cornerLengthFactor);
+        
+        Raylib.DrawTriangle(aOuterPrev, aInner, aOuterPrevEnd, rayColor);
+        Raylib.DrawTriangle(aInner, aInnerPrevEnd, aOuterPrevEnd, rayColor);
+        
+        Raylib.DrawTriangle(aOuterNext, aOuterNextEnd, aInner, rayColor);
+        Raylib.DrawTriangle(aOuterNextEnd, aInnerNextEnd, aInner, rayColor);
+        
+        Raylib.DrawTriangle(bOuterPrev, bInner, bOuterPrevEnd, rayColor);
+        Raylib.DrawTriangle(bInner, bInnerPrevEnd, bOuterPrevEnd, rayColor);
+        
+        Raylib.DrawTriangle(bOuterNext, bOuterNextEnd, bInner, rayColor);
+        Raylib.DrawTriangle(bOuterNextEnd, bInnerNextEnd, bInner, rayColor);
+        
+        Raylib.DrawTriangle(cOuterPrev, cInner, cOuterPrevEnd, rayColor);
+        Raylib.DrawTriangle(cInner, cInnerPrevEnd, cOuterPrevEnd, rayColor);
+        
+        Raylib.DrawTriangle(cOuterNext, cOuterNextEnd, cInner, rayColor);
+        Raylib.DrawTriangle(cOuterNextEnd, cInnerNextEnd, cInner, rayColor);
+    }
+    
+    #endregion
+    
     #region Draw Vertices
     
     /// <summary>
