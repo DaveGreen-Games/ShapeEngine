@@ -12,7 +12,6 @@ using Ray = ShapeEngine.Geometry.RayDef.Ray;
 
 namespace ShapeEngine.Geometry.TriangleDef;
 
-//TODO: Add/Update xml summaries
 
 /// <summary>
 /// Provides static methods for drawing triangles and collections of triangles with various styles and options.
@@ -24,6 +23,7 @@ namespace ShapeEngine.Geometry.TriangleDef;
 public static class TriangleDrawing
 {
     #region Draw
+    
     /// <summary>
     /// Draws a filled triangle using the specified vertices and color.
     /// </summary>
@@ -45,11 +45,26 @@ public static class TriangleDrawing
     {
         Raylib.DrawTriangle(t.A, t.B, t.C, color.ToRayColor());
     }
+    
     #endregion
 
     #region Draw Scaled
 
-    //drawType 0 = filled, 1 = sides towards center, 2 = squared sides towards center
+    /// <summary>
+    /// Draws a triangle with scaled sides based on a specific draw type.
+    /// </summary>
+    /// <param name="t">The triangle to draw.</param>
+    /// <param name="color">The color of the drawn shape.</param>
+    /// <param name="sideScaleFactor">The scale factor of the sides (0 to 1). If >= 1, the full triangle is drawn. If &lt;= 0, nothing is drawn.</param>
+    /// <param name="sideScaleOrigin">The origin point for scaling the sides (0 = start, 1 = end, 0.5 = center).</param>
+    /// <param name="drawType">
+    /// The style of drawing:
+    /// <list type="bullet">
+    /// <item><description>0: [Filled] Drawn as 4 filled triangles, effectivly cutting of corners.</description></item>
+    /// <item><description>1: [Sides] Each side is connected to the triangle's centroid.</description></item>
+    /// <item><description>2: [Sides Inverse] The start of 1 side is connected to the end of the next side and is connected to the triangle's centroid.</description></item>
+    /// </list>
+    /// </param>
     public static void DrawScaled(this Triangle t, ColorRgba color, float sideScaleFactor, float sideScaleOrigin, int drawType)
     {
         if (sideScaleFactor <= 0) return;
@@ -86,15 +101,31 @@ public static class TriangleDrawing
             Raylib.DrawTriangle(s2.End, s3.Start, center, rayColor);
         }
     }
+    
     #endregion
     
     #region Draw Lines
 
+    /// <summary>
+    /// Draws the outline of the triangle with specified line thickness and color.
+    /// </summary>
+    /// <param name="t">The triangle to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
     public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, float miterLimit = 4f, bool beveled = true)
     {
         DrawLinesHelper(t, lineThickness, color, miterLimit, beveled);
     }
     
+    /// <summary>
+    /// Draws the outline of the triangle using <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="t">The triangle to draw.</param>
+    /// <param name="lineInfo">Contains line style information such as thickness and color.</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
     public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo, float miterLimit = 4f, bool beveled = true)
     {
         DrawLinesHelper(t, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
@@ -104,11 +135,30 @@ public static class TriangleDrawing
     
     #region Draw Lines Percentage
     
+    /// <summary>
+    /// Draws a partial outline of the triangle based on a percentage coverage.
+    /// </summary>
+    /// <param name="t">The triangle to draw.</param>
+    /// <param name="f">The percentage of the outline to draw (0 to 1). Negative values reverse the drawing direction.</param>
+    /// <param name="startCorner">The index of the corner to start drawing from (0, 1, or 2).</param>
+    /// <param name="lineInfo">Contains line style information such as thickness and color.</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
     public static void DrawLinesPercentage(this Triangle t, float f, int startCorner, LineDrawingInfo lineInfo, float miterLimit = 4f, bool beveled = true)
     {
         t.DrawLinesPercentage(f, startCorner, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled);
     }
     
+    /// <summary>
+    /// Draws a partial outline of the triangle based on a percentage coverage.
+    /// </summary>
+    /// <param name="t">The triangle to draw.</param>
+    /// <param name="f">The percentage of the outline to draw (0 to 1). Negative values reverse the drawing direction.</param>
+    /// <param name="startCorner">The index of the corner to start drawing from (0, 1, or 2).</param>
+    /// <param name="lineThickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
     public static void DrawLinesPercentage(this Triangle t, float f, int startCorner, float lineThickness, ColorRgba color, float miterLimit = 4f, bool beveled = true)
     {
         bool cw = false;
@@ -178,6 +228,7 @@ public static class TriangleDrawing
     #endregion
     
     #region Draw Vertices
+    
     /// <summary>
     /// Draws circles at each vertex of the triangle.
     /// </summary>
@@ -198,6 +249,7 @@ public static class TriangleDrawing
         circle = circle.SetPosition(t.C);
         circle.Draw(color, smoothness);
     }
+    
     #endregion
     
     #region Draw Masked
@@ -217,6 +269,7 @@ public static class TriangleDrawing
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    
     /// <summary>
     /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
     /// clipped by a circular <see cref="Circle"/> mask.
@@ -232,6 +285,7 @@ public static class TriangleDrawing
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    
     /// <summary>
     /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
     /// clipped by a rectangular <see cref="Rect"/> mask.
@@ -247,6 +301,7 @@ public static class TriangleDrawing
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    
     /// <summary>
     /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
     /// clipped by a quadrilateral <see cref="Quad"/> mask.
@@ -262,6 +317,7 @@ public static class TriangleDrawing
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    
     /// <summary>
     /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
     /// clipped by a polygonal <see cref="Polygon"/> mask.
@@ -277,6 +333,7 @@ public static class TriangleDrawing
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    
     /// <summary>
     /// Draws the triangle's three segments using the provided <see cref="LineDrawingInfo"/>,
     /// clipped by a closed-shape mask of the generic type <typeparamref name="T"/>.
@@ -296,6 +353,7 @@ public static class TriangleDrawing
         triangle.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         triangle.SegmentCToA.DrawMasked(mask, lineInfo, reversedMask);
     }
+    
     #endregion
     
     #region Helper
@@ -756,6 +814,6 @@ public static class TriangleDrawing
         
     }
     
-    
     #endregion
 }
+
