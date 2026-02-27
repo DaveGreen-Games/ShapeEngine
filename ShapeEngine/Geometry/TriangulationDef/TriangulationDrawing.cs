@@ -3,14 +3,6 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.TriangulationDef;
 
-//TODO: Add overloads for all supported triangle drawing variants:
-// - [] DrawScaled
-// - [] DrawLinesScaled
-// - [] DrawVertices
-// - [Done] Draw
-// - [Done] DrawLines
-// - [Canceled] DrawLinesPercentage
-
 /// <summary>
 /// Collection of extension drawing helpers for <see cref="Triangulation"/>.
 /// Contains methods to render filled triangles, outlines (with configurable thickness or style),
@@ -20,6 +12,7 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 public static class TriangulationDrawing
 {
     #region Draw
+    
     /// <summary>
     /// Draws a collection of triangles filled with the specified color.
     /// </summary>
@@ -29,40 +22,54 @@ public static class TriangulationDrawing
     {
         foreach (var t in triangles) t.Draw(color);
     }
-    // /// <summary>
-    // /// Draws all triangles in the given <see cref="Triangulation"/> using rounded outer corners.
-    // /// This is a convenience extension that iterates the collection and draws each triangle
-    // /// using the same rounding parameters.
-    // /// </summary>
-    // /// <param name="triangles">The collection of triangles to draw.</param>
-    // /// <param name="color">The fill color applied to each rounded triangle.</param>
-    // /// <param name="cornerPoints">
-    // /// Number of extra points used to approximate each rounded corner.
-    // /// 0 = sharp corners (no rounding). Higher values produce smoother rounded corners. Default: 5.
-    // /// </param>
-    // /// <param name="cornerStrength">
-    // /// Controls the strength (radius) of the corner rounding:
-    // /// 0 = maximum roundness, 1 = no roundness (sharp corners).
-    // /// Values between 0 and 1 interpolate between fully rounded and sharp corners. Default: 0.5.
-    // /// </param>
-    // public static void DrawRounded(this Triangulation triangles, ColorRgba color, int cornerPoints = 5, float cornerStrength = 0.5f)
-    // {
-    //     foreach (var t in triangles) t.DrawRounded(color, cornerPoints, cornerStrength);
-    // }
+  
     #endregion
     
     #region Draw Scaled
-    //TODO: Implement
+    
+    /// <summary>
+    /// Draws each triangle in the triangulation with scaled sides based on a specific draw type.
+    /// </summary>
+    /// <param name="triangles">The collection of triangles to draw.</param>
+    /// <param name="color">The color of the drawn shapes.</param>
+    /// <param name="sideScaleFactor">The scale factor of the sides (0 to 1). If >= 1, the full triangle is drawn. If &lt;= 0, nothing is drawn.</param>
+    /// <param name="sideScaleOrigin">The origin point for scaling the sides (0 = start, 1 = end, 0.5 = center).</param>
+    /// <param name="drawType">
+    /// The style of drawing applied to each triangle:
+    /// <list type="bullet">
+    /// <item><description>0: [Filled] Drawn as 4 filled triangles, effectivly cutting of corners.</description></item>
+    /// <item><description>1: [Sides] Each side is connected to the triangle's centroid.</description></item>
+    /// <item><description>2: [Sides Inverse] The start of 1 side is connected to the end of the next side and is connected to the triangle's centroid.</description></item>
+    /// </list>
+    /// </param>
+    public static void DrawScaled(this Triangulation triangles, ColorRgba color, float sideScaleFactor, float sideScaleOrigin, int drawType)
+    {
+        foreach (var t in triangles) t.DrawScaled(color, sideScaleFactor, sideScaleOrigin, drawType);
+    }
     #endregion
     
     #region Draw Lines
-    //TODO: xml summary
+    
+    /// <summary>
+    /// Draws the outline of each triangle in the triangulation with specified line thickness and color.
+    /// </summary>
+    /// <param name="triangles">The collection of triangles to draw.</param>
+    /// <param name="lineThickness">The thickness of the outline lines.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
     public static void DrawLines(this Triangulation triangles, float lineThickness, ColorRgba color, float miterLimit = 4f, bool beveled = true)
     {
         foreach (var t in triangles) t.DrawLines(lineThickness, color, miterLimit, beveled);
     }
 
-    //TODO: xml summary
+    /// <summary>
+    /// Draws the outline of each triangle in the triangulation using <see cref="LineDrawingInfo"/>.
+    /// </summary>
+    /// <param name="triangles">The collection of triangles to draw.</param>
+    /// <param name="lineInfo">Contains line style information such as thickness and color.</param>
+    /// <param name="miterLimit">The limit for miter joins to prevent sharp spikes. Defaults to 4f.</param>
+    /// <param name="beveled">If true, uses beveled joins when the miter limit is exceeded; otherwise, cuts off the miter point.</param>
     public static void DrawLines(this Triangulation triangles, LineDrawingInfo lineInfo, float miterLimit = 4f, bool beveled = true)
     {
         foreach (var t in triangles) t.DrawLines(lineInfo, miterLimit, beveled);
@@ -71,14 +78,44 @@ public static class TriangulationDrawing
     #endregion
     
     #region Draw Lines Scaled
-    //TODO: Implement
+    
+    /// <summary>
+    /// Draws the outlines of each triangle in the triangulation where each side can be scaled towards the origin of the side.
+    /// </summary>
+    /// <param name="triangles">The collection of triangles to draw.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="sideScaleFactor">The scale factor for each side <c>(0 = No Side, 1 = Full Side).</c></param>
+    /// <param name="sideScaleOrigin">The point along each side to scale from in both directions <c>(0 = Start, 1 = End)</c>.</param>
+    /// <remarks>
+    /// Allows for dynamic scaling of triangle sides, useful for effects or partial outlines.
+    /// </remarks>
+    public static void DrawLinesScaled(this Triangulation triangles, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        foreach (var t in triangles) t.DrawLinesScaled(lineInfo, sideScaleFactor, sideScaleOrigin);
+    }
+    
     #endregion
     
     #region Draw Vertices
-    //TODO: Implement
+    
+    /// <summary>
+    /// Draws circles at each vertex of every triangle in the triangulation.
+    /// </summary>
+    /// <param name="triangles">The collection of triangles whose vertices to draw.</param>
+    /// <param name="vertexRadius">The radius of each vertex circle.</param>
+    /// <param name="color">The color of the vertex circles.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDef.CircleDrawing.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// </param>
+    public static void DrawVertices(this Triangulation triangles, float vertexRadius, ColorRgba color, float smoothness)
+    {
+        foreach (var t in triangles) t.DrawVertices(vertexRadius, color, smoothness);
+    } 
     #endregion
     
     #region Draw Glow
+    
     /// <summary>
     /// Draws the triangulation using a glow-like effect by repeatedly drawing the triangles
     /// with interpolated colors between <paramref name="color"/> and <paramref name="endColorRgba"/>.
@@ -104,6 +141,7 @@ public static class TriangulationDrawing
             triangulation.Draw(currentColor);
         }
     }
+    
     #endregion
 
 }
