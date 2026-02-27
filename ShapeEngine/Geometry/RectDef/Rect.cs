@@ -392,6 +392,15 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         result.Add(C);
         result.Add(D);
     }
+
+    /// <summary>
+    /// Converts the rectangle to a quadrilateral (<see cref="Quad"/>).
+    /// </summary>
+    /// <returns>A <see cref="Quad"/> representing the rectangle.</returns>
+    public Quad ToQuad()
+    {
+        return new Quad(this);
+    }
     
     /// <summary>
     /// Converts the rectangle to a polyline representing its outline.
