@@ -358,6 +358,36 @@ public readonly partial struct Triangle
     #region Math
 
     /// <summary>
+    /// Gets the length of the shortest side of the triangle.
+    /// </summary>
+    /// <returns>The length of the shortest side.</returns>
+    public float GetMinSideLength()
+    {
+        var sideALengthSquared = SideA.LengthSquared();
+        var sideBLengthSquared = SideB.LengthSquared();
+        var sideCLengthSquared = SideC.LengthSquared();
+        
+        if(sideALengthSquared < sideBLengthSquared && sideALengthSquared < sideCLengthSquared) return MathF.Sqrt(sideALengthSquared);
+        if(sideBLengthSquared < sideALengthSquared && sideBLengthSquared < sideCLengthSquared) return MathF.Sqrt(sideBLengthSquared);
+        return MathF.Sqrt(sideCLengthSquared);
+    }
+
+    /// <summary>
+    /// Gets the length of the longest side of the triangle.
+    /// </summary>
+    /// <returns>The length of the longest side.</returns>
+    public float GetMaxSideLength()
+    {
+        var sideALengthSquared = SideA.LengthSquared();
+        var sideBLengthSquared = SideB.LengthSquared();
+        var sideCLengthSquared = SideC.LengthSquared();
+        
+        if(sideALengthSquared > sideBLengthSquared && sideALengthSquared > sideCLengthSquared) return MathF.Sqrt(sideALengthSquared);
+        if(sideBLengthSquared > sideALengthSquared && sideBLengthSquared > sideCLengthSquared) return MathF.Sqrt(sideBLengthSquared);
+        return MathF.Sqrt(sideCLengthSquared);
+    }
+
+    /// <summary>
     /// Checks if the triangle's vertices are collinear (lie on a straight line).
     /// </summary>
     /// <param name="epsilon">Tolerance for float precision when determining collinearity.</param>
