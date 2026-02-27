@@ -419,6 +419,23 @@ public static class ShapeVec
     public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); }
 
     /// <summary>
+    /// Linearly interpolates between two vectors by a specific length rather than a factor.
+    /// </summary>
+    /// <param name="from">The starting vector.</param>
+    /// <param name="to">The target vector.</param>
+    /// <param name="length">The distance to move from the start vector towards the target vector.</param>
+    /// <returns>The interpolated vector.</returns>
+    public static Vector2 LerpByLength(this Vector2 from, Vector2 to, float length)
+    {
+        if (length <= 0f) return from;
+        var l = (to - from).Length();
+        if(l <= 0f) return from;
+        if (length >= l) return to;
+        return from + (to - from) * (length / l);
+
+    }
+
+    /// <summary>
     /// Exponentially decays and linearly interpolates between two vectors.
     /// </summary>
     /// <param name="from">The starting vector.</param>
