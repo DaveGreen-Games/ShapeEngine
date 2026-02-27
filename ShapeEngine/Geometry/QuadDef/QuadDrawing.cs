@@ -12,8 +12,18 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.QuadDef;
 
-//TODO: Raylib.DrawPolyLinesEx can be used for square quads (width = height)
-// - Test if it is faster than my implementation
+//NOTE: The best way is to:
+// - Remove all non-extensions methods and clean up function overloads / parameters in general (keeping it simple, less overloads)
+// - Clean up regions
+// - Create copies of the rounded parameters function with *Rounded suffix
+// - Remove all the rounded parameters from the current functions
+// - Do the same things for Rect
+// - Add / Update Docs
+
+//NOTE: Draw SlantedCorner & DrawSlantedCornerLines is very similar draw scaled.
+//Q: Does DrawSlanterCorner & DrawSlantedCornerLines draw the quad with slanted corners or does it only draw the slanted corners?
+// - DrawSlanted/ DrawSlantedLines for the full shape version
+// - DrawSlantedCorners/ DrawSlantedCornerLines for the corner-only version
 
 /// <summary>
 /// Provides static methods for drawing quads (quadrilaterals) and their outlines, including partial outlines and vertex markers.
@@ -183,6 +193,68 @@ public static class QuadDrawing
     }
     #endregion
     
+    #region Draw Scaled
+    /// <summary>
+    /// Draws a quad with scaled sides based on a specific draw type.
+    /// </summary>
+    /// <param name="q">The quad to draw.</param>
+    /// <param name="color">The color of the drawn shape.</param>
+    /// <param name="sideScaleFactor">The scale factor of the sides (0 to 1). If >= 1, the full quad is drawn. If &lt;= 0, nothing is drawn.</param>
+    /// <param name="sideScaleOrigin">The origin point for scaling the sides (0 = start, 1 = end, 0.5 = center).</param>
+    /// <param name="drawType">
+    /// The style of drawing:
+    /// <list type="bullet">
+    /// <item><description>0: [Filled] Drawn as 6 filled triangles, effectivly cutting of corners.</description></item>
+    /// <item><description>1: [Sides] Each side is connected to the quad's center.</description></item>
+    /// <item><description>2: [Sides Inverse] The start of 1 side is connected to the end of the next side and is connected to the quad's center.</description></item>
+    /// </list>
+    /// </param>
+    public static void DrawScaled(this Quad q, ColorRgba color, float sideScaleFactor, float sideScaleOrigin, int drawType)
+    {
+        if (sideScaleFactor <= 0) return;
+        if (sideScaleFactor >= 1)
+        {
+            q.Draw(color);
+            return;
+        }
+
+        var s1 = new Segment(q.A, q.B).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+        var s2 = new Segment(q.B, q.C).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+        var s3 = new Segment(q.C, q.D).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+        var s4 = new Segment(q.D, q.A).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+
+        var rayColor = color.ToRayColor();
+        if (drawType == 0)
+        {
+            Raylib.DrawTriangle(s1.Start, s1.End, s2.Start, rayColor);
+            Raylib.DrawTriangle(s4.End, s1.Start, s2.Start, rayColor);
+            
+            Raylib.DrawTriangle(s4.End, s2.Start, s4.Start, rayColor);
+            Raylib.DrawTriangle(s4.Start, s2.Start, s2.End, rayColor);
+            
+            Raylib.DrawTriangle(s4.Start, s2.End, s3.End, rayColor);
+            Raylib.DrawTriangle(s3.End, s2.End, s3.Start, rayColor);
+            
+        }
+        else if (drawType == 1)
+        {
+            var center = q.Center;
+            Raylib.DrawTriangle(s1.Start, s1.End, center, rayColor);
+            Raylib.DrawTriangle(s2.Start, s2.End, center, rayColor);
+            Raylib.DrawTriangle(s3.Start, s3.End, center, rayColor);
+            Raylib.DrawTriangle(s4.Start, s4.End, center, rayColor);
+        }
+        else
+        {
+            var center = q.Center;
+            Raylib.DrawTriangle(s4.End, s1.Start, center, rayColor);
+            Raylib.DrawTriangle(s1.End, s2.Start, center, rayColor);
+            Raylib.DrawTriangle(s2.End, s3.Start, center, rayColor);
+            Raylib.DrawTriangle(s3.End, s4.Start, center, rayColor);
+        }
+    }
+    #endregion
+    
     #region Draw Lines
 
     /// <summary>
@@ -247,23 +319,6 @@ public static class QuadDrawing
 
     #endregion
     
-    #region Draw Lines Percentage
-    public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
-    {
-        DrawQuadLinesPercentageHelper(a, b, c, d,f, lineThickness, color, roundness, cornerPoints);
-    }
-    public static void DrawLinesPercentage(this Quad q, float f, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
-    {
-        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineThickness, color, roundness, cornerPoints);
-    }
-
-    public static void DrawLinesPercentage(this Quad q, float f, LineDrawingInfo lineInfo, float roundness = 0)
-    {
-        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineInfo.Thickness, lineInfo.Color, roundness, lineInfo.CapPoints);
-    }
-
-    #endregion
-    
     #region Draw Lines Scaled
     /// <summary>
     /// Draws the outline of a quadrilateral, scaling each side by a specified factor.
@@ -299,6 +354,7 @@ public static class QuadDrawing
         SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
         SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
     }
+   
     /// <summary>
     /// Draws the outline of a <see cref="Quad"/>, scaling each side by a specified factor.
     /// </summary>
@@ -315,6 +371,7 @@ public static class QuadDrawing
     {
         DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, sideLengthFactor, capType, capPoints);
     }
+    
     /// <summary>
     /// Draws the outline of a <see cref="Quad"/> where each side can be scaled towards the origin of the side.
     /// </summary>
@@ -356,6 +413,23 @@ public static class QuadDrawing
         
     }
     
+    #endregion
+    
+    #region Draw Lines Percentage
+    public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
+    {
+        DrawQuadLinesPercentageHelper(a, b, c, d,f, lineThickness, color, roundness, cornerPoints);
+    }
+    public static void DrawLinesPercentage(this Quad q, float f, float lineThickness, ColorRgba color, float roundness = 0, int cornerPoints = 0)
+    {
+        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineThickness, color, roundness, cornerPoints);
+    }
+
+    public static void DrawLinesPercentage(this Quad q, float f, LineDrawingInfo lineInfo, float roundness = 0)
+    {
+        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineInfo.Thickness, lineInfo.Color, roundness, lineInfo.CapPoints);
+    }
+
     #endregion
  
     #region Draw Corners
@@ -417,6 +491,19 @@ public static class QuadDrawing
                 lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
         }
     }
+    
+    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        DrawQuadCorners(quad.A, quad.B, quad.C, quad.D, lineInfo, tlCorner, trCorner, brCorner, blCorner);
+    }
+    
+    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float cornerLength)
+    {
+        DrawCorners(quad, lineInfo, cornerLength, cornerLength, cornerLength, cornerLength);
+    }
+    #endregion
+    
+    #region Draw Corners Relative
     public static void DrawQuadCornersRelative(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
     {
         float w = (d - a).Length();
@@ -424,33 +511,26 @@ public static class QuadDrawing
         float minSize = MathF.Min(w, h);
         DrawQuadCorners(a, b, c, d, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
     }
-    
-    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        DrawQuadCorners(quad.A, quad.B, quad.C, quad.D, lineInfo, tlCorner, trCorner, brCorner, blCorner);
-    }
-    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float cornerLength)
-    {
-        DrawCorners(quad, lineInfo, cornerLength, cornerLength, cornerLength, cornerLength);
-    }
+
     public static void DrawCornersRelative(this Quad quad, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
     {
         float minSize = quad.GetSize().Min();
         DrawCorners(quad, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
     }
+    
     public static void DrawCornersRelative(this Quad quad, LineDrawingInfo lineInfo, float cornerLengthFactor)
     {
         DrawCornersRelative(quad, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
     }
-
     #endregion
     
     #region Draw Slanted Corners
-    //TODO: All functions that use polygonHelper should be looked at (because they are not transparent version anymore because polygon drawing with transparent colors is way more complicated)
+    
     public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float cornerLength)
     {
         DrawSlantedCorners(quad, color, cornerLength, cornerLength);
     }
+    
     public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var size = quad.GetSize();
@@ -545,6 +625,7 @@ public static class QuadDrawing
             TriangleDrawing.DrawTriangle(trV, brH, brV, color);
         }
     }
+    
     public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         if (tlCorner <= 0 && trCorner <= 0 && brCorner <= 0 && blCorner <= 0)
@@ -552,12 +633,18 @@ public static class QuadDrawing
             quad.Draw(color);
             return;
         }
+        
+        //NOTE: I need polygon helper (cant fully remove) so just keeping it simple for now is better I think!
+        //TODO: This can just easily be replaced with using the code from FillSlantedCornerPoints + DrawPolygonConvex to get rid of the polygon helper
         polygonHelper.Clear();
         FillSlantedCornerPoints(quad, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
         polygonHelper.DrawPolygonConvex(quad.Center, color);
 
     }
     
+    #endregion
+
+    #region Draw Slanted Corners Relative
 
     public static void DrawSlantedCornersRelative(this Quad quad, ColorRgba color, float cornerLengthFactor)
     {
@@ -575,6 +662,7 @@ public static class QuadDrawing
         if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
         DrawSlantedCorners(quad, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
     }
+    
     public static void DrawSlantedCornersRelative(this Quad quad, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var size = quad.GetSize();
@@ -592,13 +680,16 @@ public static class QuadDrawing
         float cornerLengthV = cornerLengthFactorVertical * size.Height * 0.5f;
         DrawSlantedCorners(quad, color, cornerLengthH, cornerLengthV);
     }
-    
-    
-    
+
+    #endregion
+
+    #region Draw Slanted Corners Lines
+
     public static void DrawSlantedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLength)
     {
         DrawSlantedCornersLines(quad, thickness, color, cornerLength, cornerLength);
     }
+    
     public static void DrawSlantedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var size = quad.GetSize();
@@ -665,9 +756,11 @@ public static class QuadDrawing
             polygonHelper.Add(tr + nD * cornerLengthVertical);
             polygonHelper.Add(tr + nL * cornerLengthHorizontal);
         }
-
+    
+        //TODO: Use DrawLinesConvex?
         polygonHelper.DrawLines(thickness, color);
     }
+    
     public static void DrawSlantedCornersLines(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         if(tlCorner <= 0f && trCorner <= 0f && brCorner <= 0f && blCorner <= 0f)
@@ -675,16 +768,21 @@ public static class QuadDrawing
             quad.DrawLines(lineInfo);
             return;
         }
+        //TODO: Use DrawLinesConvex?
         polygonHelper.Clear();
         FillSlantedCornerPoints(quad, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
         polygonHelper.DrawLines(lineInfo);
     }
     
-    
+    #endregion
+
+    #region Draw Slanted Corners Relative Lines
+
     public static void DrawSlantedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactor)
     {
         DrawSlantedCornersRelativeLines(quad, thickness, color, cornerLengthFactor, cornerLengthFactor);
     }
+    
     public static void DrawSlantedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var size = quad.GetSize();
@@ -702,7 +800,7 @@ public static class QuadDrawing
         float cornerLengthV = cornerLengthFactorVertical * halfHeight;
         DrawSlantedCornersLines(quad, thickness, color, cornerLengthH, cornerLengthV);
     }
-    
+
     #endregion
     
     #region Draw Vertices
@@ -734,6 +832,8 @@ public static class QuadDrawing
     #endregion
     
     #region Helper
+    //TODO: Take a look at this and clean up if possible!
+    
     private static void DrawQuadLinesInternal(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float roundness = 0f, int cornerPoints = 0)
     {
         if(cornerPoints > 0 && roundness > 0f)
