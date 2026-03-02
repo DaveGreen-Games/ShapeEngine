@@ -153,6 +153,135 @@ public static class QuadDrawing
     }
     #endregion
  
+    #region Draw Vignette
+    /// <summary>
+    /// Draws a "vignette" effect inside the quad, creating a circular hole in the center.
+    /// The area between the inner circle and the quad's outer edges is filled with the specified color.
+    /// </summary>
+    /// <param name="q">The quad to draw the vignette within.</param>
+    /// <param name="circleRadius">The radius of the inner circular hole.</param>
+    /// <param name="circleRotDeg">The starting rotation angle of the inner circle in degrees.</param>
+    /// <param name="color">The color of the filled area.</param>
+    /// <param name="circleSmoothness">
+    /// Determines the smoothness of the inner circle (0.0 to 1.0). 
+    /// Higher values result in more segments and a smoother circle.
+    /// </param>
+    public static void DrawVignette(this Quad q, float circleRadius, float circleRotDeg, ColorRgba color, float circleSmoothness = 0.5f)
+    {
+        if (circleRadius <= 0)
+        {
+            q.Draw(color);
+            return;
+        }
+
+        // Clamp radius to ensure at least some vignette is drawn
+        var minDimension = q.Size.Min();
+        var maxRadius = minDimension * 0.5f - 1f;
+        if (circleRadius > maxRadius)
+        {
+            circleRadius = maxRadius;
+        }
+
+        if (!CircleDrawing.CalculateCircleDrawingParameters(circleRadius, circleSmoothness, out float angleStepRad, out int segments, true)) return;
+
+        var center = q.Center;
+
+        // 1. Calculate Basis Vectors for local coordinate projection
+        // Assuming A=TopLeft, B=BottomLeft -> A->B is Down
+        // Assuming B=BottomLeft, C=BottomRight -> B->C is Right
+        Vector2 rightVec = q.C - q.B;
+        float width = rightVec.Length();
+        if (width <= 0) return;
+        Vector2 rightAxis = rightVec / width;
+
+        Vector2 downVec = q.B - q.A;
+        float height = downVec.Length();
+        if (height <= 0) return;
+        Vector2 downAxis = downVec / height;
+
+        float halfWidth = width * 0.5f;
+        float halfHeight = height * 0.5f;
+        
+        // Map side indices to actual Quad corner vertices for filling gaps.
+        // Side 0 (Right)  -> Side 1 (Bottom) crosses Corner BR (C)
+        // Side 1 (Bottom) -> Side 2 (Left)   crosses Corner BL (B)
+        // Side 2 (Left)   -> Side 3 (Top)    crosses Corner TL (A)
+        // Side 3 (Top)    -> Side 0 (Right)  crosses Corner TR (D)
+        Vector2[] cornerVertices = { q.C, q.B, q.A, q.D };
+        
+        var rayColor = color.ToRayColor();
+        var circleRotRad = circleRotDeg * ShapeMath.DEGTORAD;
+
+        // Helper to project a direction vector onto the Quad's outer boundary
+        // Returns the world position on the edge and the side index (0=Right, 1=Bottom, 2=Left, 3=Top)
+        (Vector2 point, int side) ProjectToEdge(Vector2 direction)
+        {
+            float dotRight = Vector2.Dot(direction, rightAxis);
+            float dotDown = Vector2.Dot(direction, downAxis);
+
+            // Avoid division by zero
+            float denomX = MathF.Abs(dotRight) > 1e-6f ? dotRight : 1e-6f;
+            float denomY = MathF.Abs(dotDown) > 1e-6f ? dotDown : 1e-6f;
+
+            // Calculate distance to vertical (X) and horizontal (Y) boundaries
+            float tX = MathF.Abs(halfWidth / denomX);
+            float tY = MathF.Abs(halfHeight / denomY);
+
+            if (tX < tY)
+            {
+                // Hits vertical side
+                int side = dotRight > 0 ? 0 : 2; // 0: Right, 2: Left
+                return (center + direction * tX, side);
+            }
+            else
+            {
+                // Hits horizontal side
+                int side = dotDown > 0 ? 1 : 3; // 1: Bottom, 3: Top
+                return (center + direction * tY, side);
+            }
+        }
+
+        // 2. Initialize Starting Point
+        Vector2 currentDir = new Vector2(MathF.Cos(circleRotRad), MathF.Sin(circleRotRad));
+        Vector2 startInner = center + currentDir * circleRadius;
+        var startProjection = ProjectToEdge(currentDir);
+        
+        Vector2 currentInner = startInner;
+        Vector2 currentOuter = startProjection.point;
+        int currentSide = startProjection.side;
+
+        // 3. Iterate Segments
+        for (int i = 0; i < segments; i++)
+        {
+            float nextAngle = circleRotRad + angleStepRad * (i + 1);
+            Vector2 nextDir = new Vector2(MathF.Cos(nextAngle), MathF.Sin(nextAngle));
+            
+            // Calculate Next Vertices
+            Vector2 nextInner = center + nextDir * circleRadius;
+            var nextProjection = ProjectToEdge(nextDir);
+            Vector2 nextOuter = nextProjection.point;
+            int nextSide = nextProjection.side;
+
+            // Draw Vignette Segment (2 Triangles forming a quad)
+            // CCW Order: InnerStart -> EndOuter -> StartOuter
+            Raylib.DrawTriangle(currentInner, nextOuter, currentOuter, rayColor);
+            // CCW Order: InnerStart -> EndInner -> EndOuter
+            Raylib.DrawTriangle(currentInner, nextInner, nextOuter, rayColor);
+
+            // Fill Corner Gap if we transitioned between sides (e.g., Right to Bottom)
+            if (currentSide != nextSide)
+            {
+                // The corner to fill corresponds to the current side index before the switch
+                Raylib.DrawTriangle(currentOuter, nextOuter, cornerVertices[currentSide], rayColor);
+            }
+
+            // Advance
+            currentInner = nextInner;
+            currentOuter = nextOuter;
+            currentSide = nextSide;
+        }
+    }
+    #endregion
     
     
     #region Draw Corners

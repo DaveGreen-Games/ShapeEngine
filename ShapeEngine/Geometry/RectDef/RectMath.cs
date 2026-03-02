@@ -439,6 +439,14 @@ public readonly partial struct Rect
         return Clamp(new Rect(min, max));
     }
 
-    
+    /// <summary>
+    /// Gets the length of the diagonal connecting corner A and corner C.
+    /// </summary>
+    public float DiagonalLengt => (A - C).Length();
+
+    /// <summary>
+    /// Gets the squared length of the diagonal connecting corner A and corner C.
+    /// </summary>
+    public float DiagonalLengthSquare => (A - C).LengthSquared();
     #endregion
 }

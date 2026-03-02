@@ -172,10 +172,49 @@ public readonly partial struct Quad
         float width = e2.Length();
         return new Size(width, height);
     }
+    
+    /// <summary>
+    /// Gets the approximate size of the quad.
+    /// </summary>
+    /// <remarks>
+    /// This property wraps <see cref="GetSize"/>, measuring the width and height based on the edges connected to corner A.
+    /// </remarks>
+    public Size Size => GetSize();
+
+    /// <summary>
+    /// Gets the length of the diagonal connecting corner A and corner C.
+    /// </summary>
+    public float DiagonalLengt => (A - C).Length();
+
+    /// <summary>
+    /// Gets the squared length of the diagonal connecting corner A and corner C.
+    /// </summary>
+    public float DiagonalLengthSquare => (A - C).LengthSquared();
+
     #endregion
 
     #region Transform
+    
+    /// <summary>
+    /// Gets the current rotation of the quad in radians.
+    /// </summary>
+    /// <remarks>
+    /// The rotation is calculated based on the angle of the vector from the <see cref="Center"/> to vertex A.
+    /// </remarks>
+    public float RotationRad
+    {
+        get
+        {
+            var w = A - Center;
+            return ShapeVec.AngleRad(w);
+        }
+    }
 
+    /// <summary>
+    /// Gets the current rotation of the quad in degrees.
+    /// </summary>
+    public float RotationDeg => RotationRad * ShapeMath.RADTODEG;
+    
     /// <summary>
     /// Rotates the quad by a specified angle in radians around a given anchor point.
     /// </summary>

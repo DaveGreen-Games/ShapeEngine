@@ -859,6 +859,27 @@ public static class RectDrawing
         rect.RightSegment.DrawMasked(mask, lineInfo, reversedMask);
     }
     #endregion
+    
+    #region Draw Vignette
+
+    /// <summary>
+    /// Draws a "vignette" effect inside the rect, creating a circular hole in the center.
+    /// The area between the inner circle and the rect's outer edges is filled with the specified color.
+    /// </summary>
+    /// <param name="r">The rect to draw the vignette within.</param>
+    /// <param name="circleRadius">The radius of the inner circular hole.</param>
+    /// <param name="circleRotDeg">The starting rotation angle of the inner circle in degrees.</param>
+    /// <param name="color">The color of the filled area.</param>
+    /// <param name="circleSmoothness">
+    /// Determines the smoothness of the inner circle (0.0 to 1.0). 
+    /// Higher values result in more segments and a smoother circle.
+    /// </param>
+    public static void DrawVignette(this Rect r, float circleRadius, float circleRotDeg, ColorRgba color, float circleSmoothness = 0.5f)
+    {
+        var q = r.ToQuad();
+        q.DrawVignette(circleRadius, circleRotDeg, color, circleSmoothness);
+    }
+    #endregion
  
     
     #region Helper
@@ -926,3 +947,4 @@ public static class RectDrawing
     #endregion
     
 }
+   
