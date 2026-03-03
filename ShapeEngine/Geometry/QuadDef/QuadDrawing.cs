@@ -288,9 +288,219 @@ public static class QuadDrawing
     //TODO: Docs
     public static void DrawCorners(this Quad quad, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        //Fix: If a cornerLength is 0 and lineThickness grows too big the entire quad is drawn (with the corner that should not be there)
-        // - I have to simply draw each corner seperate! 
         if (lineThickness <= 0f || color.A <= 0) return;
+        if(tlCorner <= 0 && trCorner <= 0 && brCorner <= 0 && blCorner <= 0) return;
+        
+        var a = quad.A;
+        var b = quad.B;
+        var c = quad.C;
+        var d = quad.D;
+        
+        float w = (d - a).Length();
+        float h = (b - a).Length();
+        if(w <= 0 || h <= 0) return;
+
+        var nL = (a - d).Normalize();
+        var nD = (b - a).Normalize();
+        var nR = (c - b).Normalize();
+        var nU = (d - c).Normalize();
+        
+        float halfWidth = w * 0.5f;
+        float halfHeight = h * 0.5f;
+        
+        bool lineThicknessBiggerThanWidthOrHeight = lineThickness >= halfWidth || lineThickness >= halfHeight;
+        var rayColor = color.ToRayColor();
+        
+        if (tlCorner > 0f)
+        {
+            var cornerLength = tlCorner;
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = a + nU * lineThickness + nL * lineThickness;
+                var newB = a + nD * innerH + nL * lineThickness;
+                var newC = a + nD * innerH + nR * innerW;
+                var newD = a + nU * lineThickness + nR * innerW;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = a + nU * lineThickness + nL * lineThickness;
+                var bl = a + nD * lineThickness + nL * lineThickness;
+                var br = a + nD * lineThickness + nR * lineThickness;
+                var tr = a + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = a + nU * lineThickness + nL * lineThickness;
+                var outerH = a + nU * lineThickness + nR * cornerLengthH;
+                var outerV = a + nD * cornerLengthV + nL * lineThickness;
+                var inner = a + nD * lineThickness + nR * lineThickness;
+                var innerH = a + nD * lineThickness + nR * cornerLengthH;
+                var innerV = a + nD * cornerLengthV + nR * lineThickness;
+                
+                TriangleDrawing.DrawTriangle(outer, inner, outerH, rayColor);
+                TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
+                TriangleDrawing.DrawTriangle(outer, outerV, inner, rayColor);
+                TriangleDrawing.DrawTriangle(inner, outerV, innerV, rayColor);
+                
+            }
+        }
+
+        if (trCorner > 0f)
+        {
+            var cornerLength = trCorner;
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = d + nU * lineThickness + nL * innerW;
+                var newB = d + nD * innerH + nL * innerW;
+                var newC = d + nD * innerH + nR * lineThickness;
+                var newD = d + nU * lineThickness + nR * lineThickness;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = d + nU * lineThickness + nL * lineThickness;
+                var bl = d + nD * lineThickness + nL * lineThickness;
+                var br = d + nD * lineThickness + nR * lineThickness;
+                var tr = d + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = d + nU * lineThickness + nR * lineThickness;
+                var outerH = d + nU * lineThickness + nL * cornerLengthH;
+                var outerV = d + nD * cornerLengthV + nR * lineThickness;
+                var inner = d + nD * lineThickness + nL * lineThickness;
+                var innerH = d + nD * lineThickness + nL * cornerLengthH;
+                var innerV = d + nD * cornerLengthV + nL * lineThickness;
+                
+                TriangleDrawing.DrawTriangle(outerH, inner, outer, rayColor);
+                TriangleDrawing.DrawTriangle(outerH, innerH, inner, rayColor);
+                TriangleDrawing.DrawTriangle(outer, inner, outerV, rayColor);
+                TriangleDrawing.DrawTriangle(inner, innerV, outerV, rayColor);
+                
+            }
+        }
+
+        if (brCorner > 0f)
+        {
+            var cornerLength = brCorner;
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = c + nU * innerH + nL * innerW;
+                var newB = c + nD * lineThickness + nL * innerW;
+                var newC = c + nD * lineThickness + nR * lineThickness;
+                var newD = c + nU * innerH + nR * lineThickness;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = c + nU * lineThickness + nL * lineThickness;
+                var bl = c + nD * lineThickness + nL * lineThickness;
+                var br = c + nD * lineThickness + nR * lineThickness;
+                var tr = c + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = c + nD * lineThickness + nR * lineThickness;
+                var outerH = c + nD * lineThickness + nL * cornerLengthH;
+                var outerV = c + nU * cornerLengthV + nR * lineThickness;
+                var inner = c + nU * lineThickness + nL * lineThickness;
+                var innerH = c + nU * lineThickness + nL * cornerLengthH;
+                var innerV = c + nU * cornerLengthV + nL * lineThickness;
+                
+                TriangleDrawing.DrawTriangle(outerV, inner, outer, rayColor);
+                TriangleDrawing.DrawTriangle(outerV, innerV, inner, rayColor);
+                TriangleDrawing.DrawTriangle(outerH, outer, inner, rayColor);
+                TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
+                
+            }
+        }
+
+        if (blCorner > 0f)
+        {
+            var cornerLength = blCorner;
+            
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = b + nU * innerH + nL * lineThickness;
+                var newB = b + nD * lineThickness + nL * lineThickness;
+                var newC = b + nD * lineThickness + nR * innerW;
+                var newD = b + nU * innerH + nR * innerW;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = b + nU * lineThickness + nL * lineThickness;
+                var bl = b + nD * lineThickness + nL * lineThickness;
+                var br = b + nD * lineThickness + nR * lineThickness;
+                var tr = b + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = b + nD * lineThickness + nL * lineThickness;
+                var outerH = b + nD * lineThickness + nR * cornerLengthH;
+                var outerV = b + nU * cornerLengthV + nL * lineThickness;
+                var inner = b + nU * lineThickness + nR * lineThickness;
+                var innerH = b + nU * lineThickness + nR * cornerLengthH;
+                var innerV = b + nU * cornerLengthV + nR * lineThickness;
+                
+                TriangleDrawing.DrawTriangle(outerV, outer, inner, rayColor);
+                TriangleDrawing.DrawTriangle(outerV, inner, innerV, rayColor);
+                TriangleDrawing.DrawTriangle(outer, outerH, inner, rayColor);
+                TriangleDrawing.DrawTriangle(inner, outerH, innerH, rayColor);
+                
+            }
+        }
+    }
+    
+    //TODO: Docs
+    public static void DrawCorners(this Quad quad, float lineThickness, ColorRgba color, float cornerLength)
+    {
+        if (lineThickness <= 0f || color.A <= 0 || cornerLength <= 0) return;
         
         var a = quad.A;
         var b = quad.B;
@@ -311,8 +521,7 @@ public static class QuadDrawing
         bool widthDominant = w > h;
         float minHalf = widthDominant ? halfHeight : halfWidth;
         float maxHalf = widthDominant ? halfWidth : halfHeight;
-        float maxCorner = MathF.Max(tlCorner, MathF.Max(trCorner, MathF.Max(brCorner, blCorner)));
-        maxCorner = MathF.Max(lineThickness, maxCorner);
+        float maxCorner = MathF.Max(lineThickness, cornerLength);
         var rayColor = color.ToRayColor();
         
         if (lineThickness >= minHalf)
@@ -392,148 +601,102 @@ public static class QuadDrawing
         }
         else
         {
-            if (tlCorner > 0f)
+            if (cornerLength < lineThickness)
             {
-                var cornerLength = tlCorner;
-                if (cornerLength < lineThickness)
-                {
-                    //just draw a square over the corner
-                    var tl = a + nU * lineThickness + nL * lineThickness;
-                    var bl = a + nD * lineThickness + nL * lineThickness;
-                    var br = a + nD * lineThickness + nR * lineThickness;
-                    var tr = a + nU * lineThickness + nR * lineThickness;
-                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
-                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                //just draw a squares over each corner
+                
+                //tl
+                var tl = a + nU * lineThickness + nL * lineThickness;
+                var bl = a + nD * lineThickness + nL * lineThickness;
+                var br = a + nD * lineThickness + nR * lineThickness;
+                var tr = a + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                
+                //tr
+                tl = d + nU * lineThickness + nL * lineThickness;
+                bl = d + nD * lineThickness + nL * lineThickness;
+                br = d + nD * lineThickness + nR * lineThickness;
+                tr = d + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                
+                //br
+                tl = c + nU * lineThickness + nL * lineThickness;
+                bl = c + nD * lineThickness + nL * lineThickness;
+                br = c + nD * lineThickness + nR * lineThickness;
+                tr = c + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                
+                //bl
+                tl = b + nU * lineThickness + nL * lineThickness;
+                bl = b + nD * lineThickness + nL * lineThickness;
+                br = b + nD * lineThickness + nR * lineThickness;
+                tr = b + nU * lineThickness + nR * lineThickness;
+                TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
                     
-                }
-                else
-                {
-                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
-                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
-                    
-                    var outer = a + nU * lineThickness + nL * lineThickness;
-                    var outerH = a + nU * lineThickness + nR * cornerLengthH;
-                    var outerV = a + nD * cornerLengthV + nL * lineThickness;
-                    var inner = a + nD * lineThickness + nR * lineThickness;
-                    var innerH = a + nD * lineThickness + nR * cornerLengthH;
-                    var innerV = a + nD * cornerLengthV + nR * lineThickness;
-                    
-                    TriangleDrawing.DrawTriangle(outer, inner, outerH, rayColor);
-                    TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
-                    TriangleDrawing.DrawTriangle(outer, outerV, inner, rayColor);
-                    TriangleDrawing.DrawTriangle(inner, outerV, innerV, rayColor);
-                    
-                }
             }
-
-            if (trCorner > 0f)
+            else
             {
-                var cornerLength = trCorner;
-                if (cornerLength < lineThickness)
-                {
-                    //just draw a square over the corner
-                    var tl = d + nU * lineThickness + nL * lineThickness;
-                    var bl = d + nD * lineThickness + nL * lineThickness;
-                    var br = d + nD * lineThickness + nR * lineThickness;
-                    var tr = d + nU * lineThickness + nR * lineThickness;
-                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
-                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                //tl
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
                     
-                }
-                else
-                {
-                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
-                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                var outer = a + nU * lineThickness + nL * lineThickness;
+                var outerH = a + nU * lineThickness + nR * cornerLengthH;
+                var outerV = a + nD * cornerLengthV + nL * lineThickness;
+                var inner = a + nD * lineThickness + nR * lineThickness;
+                var innerH = a + nD * lineThickness + nR * cornerLengthH;
+                var innerV = a + nD * cornerLengthV + nR * lineThickness;
                     
-                    var outer = d + nU * lineThickness + nR * lineThickness;
-                    var outerH = d + nU * lineThickness + nL * cornerLengthH;
-                    var outerV = d + nD * cornerLengthV + nR * lineThickness;
-                    var inner = d + nD * lineThickness + nL * lineThickness;
-                    var innerH = d + nD * lineThickness + nL * cornerLengthH;
-                    var innerV = d + nD * cornerLengthV + nL * lineThickness;
+                TriangleDrawing.DrawTriangle(outer, inner, outerH, rayColor);
+                TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
+                TriangleDrawing.DrawTriangle(outer, outerV, inner, rayColor);
+                TriangleDrawing.DrawTriangle(inner, outerV, innerV, rayColor);
+                
+                //tr
+                outer = d + nU * lineThickness + nR * lineThickness;
+                outerH = d + nU * lineThickness + nL * cornerLengthH;
+                outerV = d + nD * cornerLengthV + nR * lineThickness;
+                inner = d + nD * lineThickness + nL * lineThickness;
+                innerH = d + nD * lineThickness + nL * cornerLengthH;
+                innerV = d + nD * cornerLengthV + nL * lineThickness;
                     
-                    TriangleDrawing.DrawTriangle(outerH, inner, outer, rayColor);
-                    TriangleDrawing.DrawTriangle(outerH, innerH, inner, rayColor);
-                    TriangleDrawing.DrawTriangle(outer, inner, outerV, rayColor);
-                    TriangleDrawing.DrawTriangle(inner, innerV, outerV, rayColor);
+                TriangleDrawing.DrawTriangle(outerH, inner, outer, rayColor);
+                TriangleDrawing.DrawTriangle(outerH, innerH, inner, rayColor);
+                TriangleDrawing.DrawTriangle(outer, inner, outerV, rayColor);
+                TriangleDrawing.DrawTriangle(inner, innerV, outerV, rayColor);
+                
+                //br
+                outer = c + nD * lineThickness + nR * lineThickness;
+                outerH = c + nD * lineThickness + nL * cornerLengthH;
+                outerV = c + nU * cornerLengthV + nR * lineThickness;
+                inner = c + nU * lineThickness + nL * lineThickness;
+                innerH = c + nU * lineThickness + nL * cornerLengthH;
+                innerV = c + nU * cornerLengthV + nL * lineThickness;
                     
-                }
-            }
-
-            if (brCorner > 0f)
-            {
-                var cornerLength = brCorner;
-                if (cornerLength < lineThickness)
-                {
-                    //just draw a square over the corner
-                    var tl = c + nU * lineThickness + nL * lineThickness;
-                    var bl = c + nD * lineThickness + nL * lineThickness;
-                    var br = c + nD * lineThickness + nR * lineThickness;
-                    var tr = c + nU * lineThickness + nR * lineThickness;
-                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
-                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                TriangleDrawing.DrawTriangle(outerV, inner, outer, rayColor);
+                TriangleDrawing.DrawTriangle(outerV, innerV, inner, rayColor);
+                TriangleDrawing.DrawTriangle(outerH, outer, inner, rayColor);
+                TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
+                
+                //bl
+                outer = b + nD * lineThickness + nL * lineThickness;
+                outerH = b + nD * lineThickness + nR * cornerLengthH;
+                outerV = b + nU * cornerLengthV + nL * lineThickness;
+                inner = b + nU * lineThickness + nR * lineThickness;
+                innerH = b + nU * lineThickness + nR * cornerLengthH;
+                innerV = b + nU * cornerLengthV + nR * lineThickness;
                     
-                }
-                else
-                {
-                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
-                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                TriangleDrawing.DrawTriangle(outerV, outer, inner, rayColor);
+                TriangleDrawing.DrawTriangle(outerV, inner, innerV, rayColor);
+                TriangleDrawing.DrawTriangle(outer, outerH, inner, rayColor);
+                TriangleDrawing.DrawTriangle(inner, outerH, innerH, rayColor);
                     
-                    var outer = c + nD * lineThickness + nR * lineThickness;
-                    var outerH = c + nD * lineThickness + nL * cornerLengthH;
-                    var outerV = c + nU * cornerLengthV + nR * lineThickness;
-                    var inner = c + nU * lineThickness + nL * lineThickness;
-                    var innerH = c + nU * lineThickness + nL * cornerLengthH;
-                    var innerV = c + nU * cornerLengthV + nL * lineThickness;
-                    
-                    TriangleDrawing.DrawTriangle(outerV, inner, outer, rayColor);
-                    TriangleDrawing.DrawTriangle(outerV, innerV, inner, rayColor);
-                    TriangleDrawing.DrawTriangle(outerH, outer, inner, rayColor);
-                    TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
-                    
-                }
-            }
-
-            if (blCorner > 0f)
-            {
-                var cornerLength = blCorner;
-                if (cornerLength < lineThickness)
-                {
-                    //just draw a square over the corner
-                    var tl = b + nU * lineThickness + nL * lineThickness;
-                    var bl = b + nD * lineThickness + nL * lineThickness;
-                    var br = b + nD * lineThickness + nR * lineThickness;
-                    var tr = b + nU * lineThickness + nR * lineThickness;
-                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
-                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
-                    
-                }
-                else
-                {
-                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
-                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
-                    
-                    var outer = b + nD * lineThickness + nL * lineThickness;
-                    var outerH = b + nD * lineThickness + nR * cornerLengthH;
-                    var outerV = b + nU * cornerLengthV + nL * lineThickness;
-                    var inner = b + nU * lineThickness + nR * lineThickness;
-                    var innerH = b + nU * lineThickness + nR * cornerLengthH;
-                    var innerV = b + nU * cornerLengthV + nR * lineThickness;
-                    
-                    TriangleDrawing.DrawTriangle(outerV, outer, inner, rayColor);
-                    TriangleDrawing.DrawTriangle(outerV, inner, innerV, rayColor);
-                    TriangleDrawing.DrawTriangle(outer, outerH, inner, rayColor);
-                    TriangleDrawing.DrawTriangle(inner, outerH, innerH, rayColor);
-                    
-                }
             }
         }
-    }
-    
-    //TODO: Docs
-    public static void DrawCorners(this Quad quad, float lineThickness, ColorRgba color, float cornerLength)
-    {
-        quad.DrawCorners(lineThickness, color, cornerLength, cornerLength, cornerLength, cornerLength);
     }
     #endregion
     
