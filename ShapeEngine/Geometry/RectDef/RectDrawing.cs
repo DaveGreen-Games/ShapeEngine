@@ -130,67 +130,33 @@ public static class RectDrawing
     #endregion
     
     #region Draw Corners
-    /// <summary>
-    /// Draws corner lines for a rectangle, with each corner having a specified length.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="tlCorner">The length of the top-left corner lines.</param>
-    /// <param name="trCorner">The length of the top-right corner lines.</param>
-    /// <param name="brCorner">The length of the bottom-right corner lines.</param>
-    /// <param name="blCorner">The length of the bottom-left corner lines.</param>
-    /// <remarks>
-    /// Uses absolute values for corner values from 0 to Min(width,height) of the rect.
-    /// Therefore, the corner values should be positive and not exceed the smallest dimension of the rect.
-    /// </remarks>
-    public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    //TODO: Docs
+    public static void DrawCorners(this Rect rect, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         var quad = rect.ToQuad();
-        quad.DrawCorners(lineInfo, tlCorner, trCorner, brCorner, blCorner);
+        quad.DrawCorners(lineThickness, color, tlCorner, trCorner, brCorner, blCorner);
     }
     
-    /// <summary>
-    /// Draws corner lines for a rectangle, with all corners having the same length.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="cornerLength">
-    /// The length of the corner lines for all corners.
-    /// Uses an absolute value from 0 to Min(width,height) of the rect.
-    /// Therefore, the corner value should be positive and not exceed the smallest dimension of the rect.
-    /// </param>
-    public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float cornerLength)
+    //TODO: Docs
+    public static void DrawCorners(this Rect rect, float lineThickness, ColorRgba color, float cornerLength)
     {
-        DrawCorners(rect, lineInfo, cornerLength, cornerLength, cornerLength, cornerLength);
+        rect.DrawCorners(lineThickness, color, cornerLength, cornerLength, cornerLength, cornerLength);
     }
     
     #endregion
     
     #region Draw Corners Relative
-    /// <summary>
-    /// Draws corner lines for a rectangle, with each corner having a specified relative length (0 to 1).
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="tlCornerFactor">The relative length of the top-left corner lines (0-1).</param>
-    /// <param name="trCornerFactor">The relative length of the top-right corner lines (0-1).</param>
-    /// <param name="brCornerFactor">The relative length of the bottom-right corner lines (0-1).</param>
-    /// <param name="blCornerFactor">The relative length of the bottom-left corner lines (0-1).</param>
-    public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
+    //TODO: Docs
+    public static void DrawCornersRelative(this Rect rect, float lineThickness, ColorRgba color, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
     {
         float minSize = MathF.Min(rect.Width, rect.Height);
-        DrawCorners(rect, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
+        rect.DrawCorners(lineThickness, color, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
     }
-
-    /// <summary>
-    /// Draws corner lines for a rectangle, with all corners having the same relative length (0 to 1).
-    /// </summary>
-    /// <param name="rect">The rectangle to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
-    /// <param name="cornerLengthFactor">The relative length of the corner lines for all corners (0 to 1).</param>
-    public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float cornerLengthFactor)
+    
+    //TODO: Docs
+    public static void DrawCornersRelative(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactor)
     {
-        DrawCornersRelative(rect, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
+        rect.DrawCornersRelative(lineThickness, color, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
     }
 
     #endregion

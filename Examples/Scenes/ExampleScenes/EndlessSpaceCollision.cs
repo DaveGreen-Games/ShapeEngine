@@ -845,12 +845,14 @@ public class EndlessSpaceCollision : ExampleScene
         var multiDestructorStripedBarRect = multiDestructorRectBar.GetProgressRect(multiDestructorF, 0f, 1f, 0f, 0f).ApplyMargins(0.01f, 0.01f, 0.04f, 0.04f);
         LineDrawingInfo stripedBarInfo = new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4);
         
-        singleDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
+        // singleDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
+        singleDestructorRect.DrawCorners(thickness, Colors.Warm, cornerLength);
         singleDestructorRectBar.Draw(Colors.Medium);
         singleDestructorStripedBarRect.DrawStriped(singleDestructorRectBar.Width * 0.015f, -15, stripedBarInfo);
 
         
-        multiDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
+        // multiDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
+        multiDestructorRect.DrawCorners(thickness, Colors.Warm, cornerLength);
         multiDestructorRectBar.Draw(Colors.Medium);
         multiDestructorStripedBarRect.DrawStriped(multiDestructorRectBar.Width * 0.015f, 15, stripedBarInfo);
 

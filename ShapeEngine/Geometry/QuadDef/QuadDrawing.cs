@@ -1,4 +1,5 @@
 
+using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -283,12 +284,14 @@ public static class QuadDrawing
     }
     #endregion
     
-    
     #region Draw Corners
-    //TODO: no end caps anymore -> change to lineThickness, color parameters
-    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    //TODO: Docs
+    public static void DrawCorners(this Quad quad, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        //TODO: Overhaul / fix -> seems very complicated for what it does!
+        //Fix: If a cornerLength is 0 and lineThickness grows too big the entire quad is drawn (with the corner that should not be there)
+        // - I have to simply draw each corner seperate! 
+        if (lineThickness <= 0f || color.A <= 0) return;
+        
         var a = quad.A;
         var b = quad.B;
         var c = quad.C;
@@ -296,81 +299,261 @@ public static class QuadDrawing
         
         float w = (d - a).Length();
         float h = (b - a).Length();
-        var size = new Size(w, h);
-        if(lineInfo.Thickness <= 0f || lineInfo.Color.A <= 0 || size.Width <= 0 || size.Height <= 0) return;
+        if(w <= 0 || h <= 0) return;
 
         var nL = (a - d).Normalize();
         var nD = (b - a).Normalize();
         var nR = (c - b).Normalize();
         var nU = (d - c).Normalize();
         
-        float miterLength = MathF.Sqrt(lineInfo.Thickness * lineInfo.Thickness * 2f);
-        float halfWidth = size.Width / 2f;
-        float halfHeight = size.Height / 2f;
-
-        if ((lineInfo.CapType == LineCapType.CappedExtended && lineInfo.CapPoints > 0) || lineInfo.CapType == LineCapType.Extended)
+        float halfWidth = w * 0.5f;
+        float halfHeight = h * 0.5f;
+        bool widthDominant = w > h;
+        float minHalf = widthDominant ? halfHeight : halfWidth;
+        float maxHalf = widthDominant ? halfWidth : halfHeight;
+        float maxCorner = MathF.Max(tlCorner, MathF.Max(trCorner, MathF.Max(brCorner, blCorner)));
+        maxCorner = MathF.Max(lineThickness, maxCorner);
+        var rayColor = color.ToRayColor();
+        
+        if (lineThickness >= minHalf)
         {
-            if (halfWidth > halfHeight)
+            if (lineThickness >= maxHalf)
             {
-                halfHeight -= lineInfo.Thickness;
-            }
-            else if(halfWidth < halfHeight)
-            {
-                halfWidth -= lineInfo.Thickness;
+                var newA = a + nU * lineThickness + nL * lineThickness;
+                var newB = b + nD * lineThickness + nL * lineThickness;
+                var newC = c + nD * lineThickness + nR * lineThickness;
+                var newD = d + nU * lineThickness + nR * lineThickness;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
             }
             else
             {
-                halfWidth -= lineInfo.Thickness;
-                halfHeight -= lineInfo.Thickness;
+                if (widthDominant)
+                {
+                    if (maxCorner >= halfWidth)
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newB = b + nD * lineThickness + nL * lineThickness;
+                        var newC = c + nD * lineThickness + nR * lineThickness;
+                        var newD = d + nU * lineThickness + nR * lineThickness;
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                    else
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newB = b + nD * lineThickness + nL * lineThickness;
+                        var newC = newB + nR * (lineThickness + maxCorner);
+                        var newD = newA + nR * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                        
+                        newC = c + nD * lineThickness + nR * lineThickness;
+                        newD = d + nU * lineThickness + nR * lineThickness;
+                        newA = newD + nL * (lineThickness + maxCorner);
+                        newB = newC + nL * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                }
+                else
+                {
+                    if (maxCorner >= halfHeight)
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newB = b + nD * lineThickness + nL * lineThickness;
+                        var newC = c + nD * lineThickness + nR * lineThickness;
+                        var newD = d + nU * lineThickness + nR * lineThickness;
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                    else
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newD = d + nU * lineThickness + nR * lineThickness;
+                        var newB = newA + nD * (lineThickness + maxCorner);
+                        var newC = newD + nD * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                        
+                        newB = b + nD * lineThickness + nL * lineThickness;
+                        newC = c + nD * lineThickness + nR * lineThickness;
+                        newA = newB + nU * (lineThickness + maxCorner);
+                        newD = newC + nU * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                }
             }
         }
-
-        if (tlCorner > 0f)
+        else
         {
-            DrawCorner(a, nU, nL, MathF.Min(tlCorner, halfHeight), MathF.Min(tlCorner, halfWidth), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        }
+            if (tlCorner > 0f)
+            {
+                var cornerLength = tlCorner;
+                if (cornerLength < lineThickness)
+                {
+                    //just draw a square over the corner
+                    var tl = a + nU * lineThickness + nL * lineThickness;
+                    var bl = a + nD * lineThickness + nL * lineThickness;
+                    var br = a + nD * lineThickness + nR * lineThickness;
+                    var tr = a + nU * lineThickness + nR * lineThickness;
+                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                    
+                }
+                else
+                {
+                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                    
+                    var outer = a + nU * lineThickness + nL * lineThickness;
+                    var outerH = a + nU * lineThickness + nR * cornerLengthH;
+                    var outerV = a + nD * cornerLengthV + nL * lineThickness;
+                    var inner = a + nD * lineThickness + nR * lineThickness;
+                    var innerH = a + nD * lineThickness + nR * cornerLengthH;
+                    var innerV = a + nD * cornerLengthV + nR * lineThickness;
+                    
+                    TriangleDrawing.DrawTriangle(outer, inner, outerH, rayColor);
+                    TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
+                    TriangleDrawing.DrawTriangle(outer, outerV, inner, rayColor);
+                    TriangleDrawing.DrawTriangle(inner, outerV, innerV, rayColor);
+                    
+                }
+            }
 
-        if (trCorner > 0f)
-        {
-            DrawCorner(d, nR, nU, MathF.Min(trCorner, halfWidth), MathF.Min(trCorner, halfHeight), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        }
+            if (trCorner > 0f)
+            {
+                var cornerLength = trCorner;
+                if (cornerLength < lineThickness)
+                {
+                    //just draw a square over the corner
+                    var tl = d + nU * lineThickness + nL * lineThickness;
+                    var bl = d + nD * lineThickness + nL * lineThickness;
+                    var br = d + nD * lineThickness + nR * lineThickness;
+                    var tr = d + nU * lineThickness + nR * lineThickness;
+                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                    
+                }
+                else
+                {
+                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                    
+                    var outer = d + nU * lineThickness + nR * lineThickness;
+                    var outerH = d + nU * lineThickness + nL * cornerLengthH;
+                    var outerV = d + nD * cornerLengthV + nR * lineThickness;
+                    var inner = d + nD * lineThickness + nL * lineThickness;
+                    var innerH = d + nD * lineThickness + nL * cornerLengthH;
+                    var innerV = d + nD * cornerLengthV + nL * lineThickness;
+                    
+                    TriangleDrawing.DrawTriangle(outerH, inner, outer, rayColor);
+                    TriangleDrawing.DrawTriangle(outerH, innerH, inner, rayColor);
+                    TriangleDrawing.DrawTriangle(outer, inner, outerV, rayColor);
+                    TriangleDrawing.DrawTriangle(inner, innerV, outerV, rayColor);
+                    
+                }
+            }
 
-        if (brCorner > 0f)
-        {
-            DrawCorner(c, nD, nR, MathF.Min(brCorner, halfHeight), MathF.Min(brCorner, halfWidth), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        }
+            if (brCorner > 0f)
+            {
+                var cornerLength = brCorner;
+                if (cornerLength < lineThickness)
+                {
+                    //just draw a square over the corner
+                    var tl = c + nU * lineThickness + nL * lineThickness;
+                    var bl = c + nD * lineThickness + nL * lineThickness;
+                    var br = c + nD * lineThickness + nR * lineThickness;
+                    var tr = c + nU * lineThickness + nR * lineThickness;
+                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                    
+                }
+                else
+                {
+                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                    
+                    var outer = c + nD * lineThickness + nR * lineThickness;
+                    var outerH = c + nD * lineThickness + nL * cornerLengthH;
+                    var outerV = c + nU * cornerLengthV + nR * lineThickness;
+                    var inner = c + nU * lineThickness + nL * lineThickness;
+                    var innerH = c + nU * lineThickness + nL * cornerLengthH;
+                    var innerV = c + nU * cornerLengthV + nL * lineThickness;
+                    
+                    TriangleDrawing.DrawTriangle(outerV, inner, outer, rayColor);
+                    TriangleDrawing.DrawTriangle(outerV, innerV, inner, rayColor);
+                    TriangleDrawing.DrawTriangle(outerH, outer, inner, rayColor);
+                    TriangleDrawing.DrawTriangle(inner, innerH, outerH, rayColor);
+                    
+                }
+            }
 
-        if (blCorner > 0f)
-        {
-            DrawCorner(b, nL, nD, MathF.Min(blCorner, halfWidth), MathF.Min(blCorner, halfHeight), lineInfo.Thickness, miterLength,
-                lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+            if (blCorner > 0f)
+            {
+                var cornerLength = blCorner;
+                if (cornerLength < lineThickness)
+                {
+                    //just draw a square over the corner
+                    var tl = b + nU * lineThickness + nL * lineThickness;
+                    var bl = b + nD * lineThickness + nL * lineThickness;
+                    var br = b + nD * lineThickness + nR * lineThickness;
+                    var tr = b + nU * lineThickness + nR * lineThickness;
+                    TriangleDrawing.DrawTriangle(tl, bl, tr, rayColor);
+                    TriangleDrawing.DrawTriangle(tr, bl, br, rayColor);
+                    
+                }
+                else
+                {
+                    var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                    var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                    
+                    var outer = b + nD * lineThickness + nL * lineThickness;
+                    var outerH = b + nD * lineThickness + nR * cornerLengthH;
+                    var outerV = b + nU * cornerLengthV + nL * lineThickness;
+                    var inner = b + nU * lineThickness + nR * lineThickness;
+                    var innerH = b + nU * lineThickness + nR * cornerLengthH;
+                    var innerV = b + nU * cornerLengthV + nR * lineThickness;
+                    
+                    TriangleDrawing.DrawTriangle(outerV, outer, inner, rayColor);
+                    TriangleDrawing.DrawTriangle(outerV, inner, innerV, rayColor);
+                    TriangleDrawing.DrawTriangle(outer, outerH, inner, rayColor);
+                    TriangleDrawing.DrawTriangle(inner, outerH, innerH, rayColor);
+                    
+                }
+            }
         }
     }
     
-    //TODO: no end caps anymore -> change to lineThickness, color parameters
-    public static void DrawCorners(this Quad quad, LineDrawingInfo lineInfo, float cornerLength)
+    //TODO: Docs
+    public static void DrawCorners(this Quad quad, float lineThickness, ColorRgba color, float cornerLength)
     {
-        quad.DrawCorners(lineInfo, cornerLength, cornerLength, cornerLength, cornerLength);
+        quad.DrawCorners(lineThickness, color, cornerLength, cornerLength, cornerLength, cornerLength);
     }
     #endregion
     
     #region Draw Corners Relative
-    //TODO: no end caps anymore -> change to lineThickness, color parameters
-    public static void DrawCornersRelative(this Quad quad, LineDrawingInfo lineInfo, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
+    //TODO: Docs
+    public static void DrawCornersRelative(this Quad quad, float lineThickness, ColorRgba color, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
     {
         float minSize = quad.GetSize().Min();
-        DrawCorners(quad, lineInfo, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
+        quad.DrawCorners(lineThickness, color, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
     }
     
-    //TODO: no end caps anymore -> change to lineThickness, color parameters
-    public static void DrawCornersRelative(this Quad quad, LineDrawingInfo lineInfo, float cornerLengthFactor)
+    //TODO: Docs
+    public static void DrawCornersRelative(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthFactor)
     {
-        quad.DrawCornersRelative(lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
+        quad.DrawCornersRelative(lineThickness, color, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
     }
     #endregion
+    
+    
+    
     
     #region Draw Slanted Corners
     //TODO: Check vs DrawScaled
@@ -800,10 +983,7 @@ public static class QuadDrawing
     
     #region Helper
     
-    //!!! Rework DrawLinesHelper (based on triangle but simpler) and then use it for reworking DrawCorner (should work the same as triangle) 
-    // - Check if DrawLinesPercentageHelper can be improved based on triangle version as well.
-    
-    //TODO: Check if it can be implemented easier    
+    //TODO: Rework and Check if it can be implemented easier
     private static void DrawLinesHelper(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
     {
         var offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
@@ -862,7 +1042,7 @@ public static class QuadDrawing
         TriangleDrawing.DrawTriangle(insideD, outsideA, insideA, color);
     }
     
-    //TODO: Improve based on triangle version!
+    //TODO: Rework and Check if it can be implemented easier    
     private static void DrawLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, int startIndex, float lineThickness, ColorRgba color)
     {
         if (percentage == 0f || lineThickness <= 0) return;
@@ -1060,6 +1240,7 @@ public static class QuadDrawing
             }
         }
     }
+    
     //TODO: Possibly Remove
     private static (Vector2 a, Vector2 b, Vector2 c, Vector2 d, float p, bool ccw) GetDrawLinePercentageOrder(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float percentage, int startIndex)
     {
@@ -1089,50 +1270,8 @@ public static class QuadDrawing
         return ccw ? (d, a, b, c, perc, ccw) : (d, c, b, a, perc, ccw);
     }
     
-    //TODO: Improve based on triangle version!
-    private static void DrawCorner(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
-    {
-        if (capType == LineCapType.Extended || (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0))
-        {
-            cornerLength1 = MathF.Max(thickness, cornerLength1);
-            cornerLength2 = MathF.Max(thickness, cornerLength2);
-        }
-        var miterDir = (n1 + n2).Normalize();
-        var maxMiterLength = MathF.Sqrt(cornerLength1 * cornerLength1 + cornerLength2 * cornerLength2);
-        miterLength = MathF.Min(miterLength, maxMiterLength);
-        
-        var innerMiter = p - miterDir * miterLength;
-        var end1 = p - n1 * cornerLength1;
-        var end2 = p - n2 * cornerLength2;
-        if (capType == LineCapType.Extended)
-        {
-            end1 -= n1 * thickness;
-            end2 -= n2 * thickness;
-        }
-        else if (capType == LineCapType.Capped && capPoints > 0)
-        {
-            end1 += n1 * thickness;
-            end2 += n2 * thickness;
-        }
-        
-        var end1Inner = end1 - n2 * thickness;
-        var end2Inner = end2 - n1 * thickness;
-        
-        var outerMiter = p + miterDir * miterLength;
-        var end1Outer = end1 + n2 * thickness;
-        var end2Outer = end2 + n1 * thickness;
-        TriangleDrawing.DrawTriangle(outerMiter, end1Outer, innerMiter, color);
-        TriangleDrawing.DrawTriangle(end1Outer, end1Inner, innerMiter, color);
-        TriangleDrawing.DrawTriangle(outerMiter, innerMiter, end2Outer, color); 
-        TriangleDrawing.DrawTriangle(innerMiter, end2Inner, end2Outer, color);
 
-        if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
-        {
-            SegmentDrawing.DrawRoundCap(end1, -n1, thickness, capPoints, color);
-            SegmentDrawing.DrawRoundCap(end2, -n2, thickness, capPoints, color);
-        }
-    }
-    
+
     //TODO: Check all functions that use polygonHelper if it is still needed
     private static Polygon polygonHelper = new(12);
     private static void FillSlantedCornerPoints(Quad quad, float tlCorner, float trCorner, float brCorner, float blCorner, ref Polygon points)
@@ -1780,3 +1919,28 @@ public static class QuadDrawing
         }
     }
     #endregion*/
+    
+ /*
+private static void DrawCorner(Vector2 p, Vector2 n1, Vector2 n2, float cornerLength1, float cornerLength2, float thickness, float miterLength, ColorRgba color)
+{
+ var miterDir = (n1 + n2).Normalize();
+ var maxMiterLength = MathF.Sqrt(cornerLength1 * cornerLength1 + cornerLength2 * cornerLength2);
+ miterLength = MathF.Min(miterLength, maxMiterLength);
+
+ var innerMiter = p - miterDir * miterLength;
+ var end1 = p - n1 * cornerLength1;
+ var end2 = p - n2 * cornerLength2;
+
+ var end1Inner = end1 - n2 * thickness;
+ var end2Inner = end2 - n1 * thickness;
+
+ var outerMiter = p + miterDir * miterLength;
+ var end1Outer = end1 + n2 * thickness;
+ var end2Outer = end2 + n1 * thickness;
+
+ TriangleDrawing.DrawTriangle(outerMiter, end1Outer, innerMiter, color);
+ TriangleDrawing.DrawTriangle(end1Outer, end1Inner, innerMiter, color);
+ TriangleDrawing.DrawTriangle(outerMiter, innerMiter, end2Outer, color);
+ TriangleDrawing.DrawTriangle(innerMiter, end2Inner, end2Outer, color);
+}
+*/

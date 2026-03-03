@@ -380,7 +380,7 @@ public class SavegameExample : ExampleScene
             var slotButtonArea = slotButtonsAreas[i].ApplyMargins(buttonMargin);
             if (i == currentSavegameSlot)
             {
-                slotButtonArea.DrawCornersRelative(new LineDrawingInfo(rectLineThickness / 2, ColorRgba.White), 0.15f);
+                slotButtonArea.DrawCornersRelative(rectLineThickness / 2, ColorRgba.White, 0.15f);
             }
 
             ColorRgba slotColor;
