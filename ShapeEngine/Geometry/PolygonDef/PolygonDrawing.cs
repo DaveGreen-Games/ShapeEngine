@@ -798,6 +798,7 @@ public static class PolygonDrawing
 
     #endregion
     
+    //TODO: still creates artifacts in corners (ignore?)
     #region Draw Lines
 
     /// <summary>
@@ -1030,6 +1031,7 @@ public static class PolygonDrawing
 
     #endregion
 
+    //TODO: still creates artifacts in corners (ignore?)
     #region Draw Lines Convex
 
     /// <summary>
