@@ -331,17 +331,17 @@ public static class RectDrawing
     //TODO: Clean up + Docs
     #region Draw Chamfered Corners Lines
     
-    public static void DrawChamferedCornersLines(this Rect rect, float thickness, ColorRgba color, float cornerLength)
+    public static void DrawChamferedCornersLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLength)
     {
         var q = rect.ToQuad();
-        q.DrawChamferedCornersLines(thickness, color, cornerLength);
+        q.DrawChamferedCornersLines(lineThickness, color, cornerLength);
         // DrawChamferedCornersLines(rect, thickness, color, cornerLength, cornerLength);
     }
     
-    public static void DrawChamferedCornersLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    public static void DrawChamferedCornersLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var q = rect.ToQuad();
-        q.DrawChamferedCornersLines(thickness, color, cornerLengthHorizontal, cornerLengthVertical);
+        q.DrawChamferedCornersLines(lineThickness, color, cornerLengthHorizontal, cornerLengthVertical);
         // if(rect.Width <= 0 || rect.Height <= 0) return;
         // if (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0)
         // {
@@ -419,10 +419,10 @@ public static class RectDrawing
         // }
     }
     
-    public static void DrawChamferedCornersLines(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float blCorner, float brCorner, float trCorner)
+    public static void DrawChamferedCornersLines(this Rect rect, float lineThickness, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
         var q = rect.ToQuad();
-        q.DrawChamferedCornersLines(lineInfo, tlCorner, blCorner, brCorner, trCorner);
+        q.DrawChamferedCornersLines(lineThickness, color, tlCorner, blCorner, brCorner, trCorner);
         // polygonHelper.Clear();
         // FillSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
         // polygonHelper.DrawLines(lineInfo);
@@ -433,17 +433,17 @@ public static class RectDrawing
     //TODO: Clean up + Docs
     #region Draw Chamfered Corners Relative Lines
     
-    public static void DrawChamferedCornersRelativeLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthFactor)
+    public static void DrawChamferedCornersRelativeLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactor)
     {
         var q = rect.ToQuad();
-        q.DrawChamferedCornersRelativeLines(thickness, color, cornerLengthFactor);
+        q.DrawChamferedCornersRelativeLines(lineThickness, color, cornerLengthFactor);
         // DrawChamferedCornersRelativeLines(rect, thickness, color, cornerLengthFactor, cornerLengthFactor);
     }
  
-    public static void DrawChamferedCornersRelativeLines(this Rect rect, float thickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    public static void DrawChamferedCornersRelativeLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var q = rect.ToQuad();
-        q.DrawChamferedCornersRelativeLines(thickness, color, cornerLengthFactorHorizontal, cornerLengthFactorVertical);
+        q.DrawChamferedCornersRelativeLines(lineThickness, color, cornerLengthFactorHorizontal, cornerLengthFactorVertical);
         // var halfWidth = rect.Width / 2f;
         // var halfHeight = rect.Height / 2f;
         // if(cornerLengthFactorHorizontal >= 1f) cornerLengthFactorHorizontal = 1f;
@@ -453,10 +453,10 @@ public static class RectDrawing
         // DrawChamferedCornersLines(rect, thickness, color, cornerLengthH, cornerLengthV);
     }
     
-    public static void DrawChamferedCornersRelativeLines(this Rect rect, float thickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
+    public static void DrawChamferedCornersRelativeLines(this Rect rect, float lineThickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
     {
        var q = rect.ToQuad();
-       q.DrawChamferedCornersRelativeLines(thickness, color, tlCornerFactor, blCornerFactor, brCornerFactor, trCornerFactor);
+       q.DrawChamferedCornersRelativeLines(lineThickness, color, tlCornerFactor, blCornerFactor, brCornerFactor, trCornerFactor);
     }
     #endregion
     
