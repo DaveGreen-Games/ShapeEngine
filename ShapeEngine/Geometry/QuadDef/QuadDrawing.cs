@@ -1275,13 +1275,204 @@ public static class QuadDrawing
     // - check if lineThickness is bigger than haldWidth/halfHeight for special cases
     
     //TODO: Docs
-    public static void DrawChamferedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLength)
+    public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLength)
     {
-        DrawChamferedCornersLines(quad, thickness, color, cornerLength, cornerLength);
+        if (cornerLength <= 0 && lineThickness <= 0)
+        {
+            quad.Draw(ColorRgba.Pink);
+            return;
+        }
+        
+        if (cornerLength <= 0)
+        {
+            quad.DrawLines(lineThickness, ColorRgba.Purple);
+            return;
+        }
+
+        if (lineThickness <= 0)
+        {
+            quad.DrawChamferedCorners(ColorRgba.Aqua, cornerLength);
+            return;
+        }
+        
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        
+        var nR = quad.NormalRight;
+        var nD = quad.NormalDown;
+        var nL = -nR;
+        var nU = -nD;
+        
+        var rayColor = color.ToRayColor();
+        
+        if(cornerLength >= halfWidth && cornerLength >= halfHeight)
+        {
+            
+            var a = quad.A + nD * halfHeight;
+            var b = quad.B + nR * halfWidth;
+            var c = quad.C + nU * halfHeight;
+            var d = quad.D + nL * halfWidth;
+            var q = new Quad(a, b, c, d);
+            q.DrawLines(lineThickness, color);
+        }
+        else if(cornerLength >= halfWidth)
+        {
+            quad.Draw(ColorRgba.Yellow);
+        }
+        else if (cornerLength >= halfHeight)
+        {
+            quad.Draw(ColorRgba.Green);
+        }
+        else
+        {
+            //NOTE: This is actually working - just need to find out how to handle edge cases
+            quad.DrawLines(1f, ColorRgba.White);
+            
+            var aPrev = quad.A + nR * cornerLength;
+            var aNext = quad.A + nD * cornerLength;
+            var chamferDirA = (aNext - aPrev).Normalize().GetPerpendicularRight();
+            var chamferDirAPrev = (chamferDirA + nU).Normalize();
+            var chamferDirANext = (chamferDirA + nL).Normalize();
+ 
+            var bPrev = quad.B + nU * cornerLength;
+            var bNext = quad.B + nR * cornerLength;
+            var chamferDirB = (bNext - bPrev).Normalize().GetPerpendicularRight();
+            var chamferDirBPrev = (chamferDirB + nL).Normalize();
+            var chamferDirBNext = (chamferDirB + nD).Normalize();
+ 
+            var cPrev = quad.C + nL * cornerLength;
+            var cNext = quad.C + nU * cornerLength;
+            // var chamferDirC = -chamferDirA; // (cNext - cPrev).Normalize().GetPerpendicularRight();
+            var chamferDirCPrev = -chamferDirAPrev; // (chamferDirC + nD).Normalize();
+            var chamferDirCNext = -chamferDirANext; //(chamferDirC + nR).Normalize();
+ 
+            var dPrev = quad.D + nD * cornerLength;
+            var dNext = quad.D + nL * cornerLength;
+            // var chamferDirD = -chamferDirB; // (dNext - dPrev).Normalize().GetPerpendicularRight();
+            var chamferDirDPrev = -chamferDirBPrev; //(chamferDirD + nR).Normalize();
+            var chamferDirDNext = -chamferDirBNext; // (chamferDirD + nU).Normalize();
+ 
+            aPrev.Draw(4f, ColorRgba.Red);
+            aNext.Draw(4f, ColorRgba.Red);
+            bPrev.Draw(4f, ColorRgba.Blue);
+            bNext.Draw(4f, ColorRgba.Blue);
+            cPrev.Draw(4f, ColorRgba.Green);
+            cNext.Draw(4f, ColorRgba.Green);
+            dPrev.Draw(4f, ColorRgba.Yellow);
+            dNext.Draw(4f, ColorRgba.Yellow);
+            
+            // lineThickness = MathF.Min(lineThickness, cornerLength);
+ 
+            var aPrevOuter = aPrev + chamferDirAPrev * lineThickness;
+            var aNextOuter = aNext + chamferDirANext * lineThickness;
+            
+            var bPrevOuter = bPrev + chamferDirBPrev * lineThickness;
+            var bNextOuter = bNext + chamferDirBNext * lineThickness;
+
+            var cPrevOuter = cPrev + chamferDirCPrev * lineThickness;
+            var cNextOuter = cNext + chamferDirCNext * lineThickness;
+
+            var dPrevOuter = dPrev + chamferDirDPrev * lineThickness;
+            var dNextOuter = dNext + chamferDirDNext * lineThickness;
+
+            var aPrevInner = aPrev - chamferDirAPrev * lineThickness;
+            var aNextInner = aNext - chamferDirANext * lineThickness;
+
+            var bPrevInner = bPrev - chamferDirBPrev * lineThickness;
+            var bNextInner = bNext - chamferDirBNext * lineThickness;
+
+            var cPrevInner = cPrev - chamferDirCPrev * lineThickness;
+            var cNextInner = cNext - chamferDirCNext * lineThickness;
+
+            var dPrevInner = dPrev - chamferDirDPrev * lineThickness;
+            var dNextInner = dNext - chamferDirDNext * lineThickness;
+            
+            aPrevOuter.Draw(4f, ColorRgba.Red);
+            aNextOuter.Draw(4f, ColorRgba.Red);
+            bPrevOuter.Draw(4f, ColorRgba.Blue);
+            bNextOuter.Draw(4f, ColorRgba.Blue);
+            cPrevOuter.Draw(4f, ColorRgba.Green);
+            cNextOuter.Draw(4f, ColorRgba.Green);
+            dPrevOuter.Draw(4f, ColorRgba.Yellow);
+            dNextOuter.Draw(4f, ColorRgba.Yellow);  
+            
+            aPrevInner.Draw(4f, ColorRgba.Red);
+            aNextInner.Draw(4f, ColorRgba.Red);
+            bPrevInner.Draw(4f, ColorRgba.Blue);
+            bNextInner.Draw(4f, ColorRgba.Blue);
+            cPrevInner.Draw(4f, ColorRgba.Green);
+            cNextInner.Draw(4f, ColorRgba.Green);
+            dPrevInner.Draw(4f, ColorRgba.Yellow);
+            dNextInner.Draw(4f, ColorRgba.Yellow);
+            
+            // //outer offset points
+            // var aPrevOuter = aPrev + nU * lineThickness;
+            // var aNextOuter = aNext + nL * lineThickness;
+            //
+            // var bPrevOuter = bPrev + nL * lineThickness;
+            // var bNextOuter = bNext + nD * lineThickness;
+            //
+            // var cPrevOuter = cPrev + nD * lineThickness;
+            // var cNextOuter = cNext + nR * lineThickness;
+            //
+            // var dPrevOuter = dPrev + nR * lineThickness;
+            // var dNextOuter = dNext + nU * lineThickness;
+            //
+            // //inner offset points
+            // var aPrevInner = aPrev + nD * lineThickness;
+            // var aNextInner = aNext + nR * lineThickness;
+            //
+            // var bPrevInner = bPrev + nR * lineThickness;
+            // var bNextInner = bNext + nU * lineThickness;
+            //
+            // var cPrevInner = cPrev + nU * lineThickness;
+            // var cNextInner = cNext + nL * lineThickness;
+            //
+            // var dPrevInner = dPrev + nL * lineThickness;
+            // var dNextInner = dNext + nD * lineThickness;
+            
+            
+            //a corner
+            Raylib.DrawTriangle(aPrevOuter, aNextOuter, aPrevInner, rayColor);
+            Raylib.DrawTriangle(aPrevInner, aNextOuter, aNextInner, rayColor);
+            
+            //b corner
+            Raylib.DrawTriangle(bPrevOuter, bNextOuter, bPrevInner, rayColor);
+            Raylib.DrawTriangle(bPrevInner, bNextOuter, bNextInner, rayColor);
+            
+            //c corner
+            Raylib.DrawTriangle(cPrevOuter, cNextOuter, cPrevInner, rayColor);
+            Raylib.DrawTriangle(cPrevInner, cNextOuter, cNextInner, rayColor);
+            
+            //d corner
+            Raylib.DrawTriangle(dPrevOuter, dNextOuter, dPrevInner, rayColor);
+            Raylib.DrawTriangle(dPrevInner, dNextOuter, dNextInner, rayColor);
+            
+            //edge a to b
+            Raylib.DrawTriangle(aNextOuter, bPrevInner, aNextInner, rayColor);
+            Raylib.DrawTriangle(aNextOuter, bPrevOuter, bPrevInner, rayColor);
+            
+            //edge b to c
+            Raylib.DrawTriangle(bNextOuter, cPrevInner, bNextInner, rayColor);
+            Raylib.DrawTriangle(bNextOuter, cPrevOuter, cPrevInner, rayColor);
+            
+            //edge c to d
+            Raylib.DrawTriangle(cNextOuter, dPrevInner, cNextInner, rayColor);
+            Raylib.DrawTriangle(cNextOuter, dPrevOuter, dPrevInner, rayColor);
+            
+            //edge d to a
+            Raylib.DrawTriangle(dNextOuter, aPrevInner, dNextInner, rayColor);
+            Raylib.DrawTriangle(dNextOuter, aPrevOuter, aPrevInner, rayColor);
+        }
+        
+        
     }
     
     //TODO: Docs
-    public static void DrawChamferedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
@@ -1309,7 +1500,7 @@ public static class QuadDrawing
             polygonHelper.Add(tl + nD * halfHeight);
             polygonHelper.Add(br + nL * halfWidth);
             polygonHelper.Add(br + nU * halfHeight);
-            polygonHelper.DrawLines(thickness, color);
+            polygonHelper.DrawLines(lineThickness, color);
             return;
         }
         
@@ -1349,21 +1540,21 @@ public static class QuadDrawing
         }
     
         //TODO: Use DrawLinesConvex?
-        polygonHelper.DrawLines(thickness, color);
+        polygonHelper.DrawLines(lineThickness, color);
     }
     
     //TODO: Docs
-    public static void DrawChamferedCornersLines(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float blCorner, float brCorner, float trCorner)
+    public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
         if(tlCorner <= 0f && trCorner <= 0f && brCorner <= 0f && blCorner <= 0f)
         {
-            quad.DrawLines(lineInfo);
+            quad.DrawLines(lineThickness, color);
             return;
         }
         //TODO: Use DrawLinesConvex?
         polygonHelper.Clear();
         FillSlantedCornerPoints(quad, tlCorner, trCorner, brCorner, blCorner, ref polygonHelper);
-        polygonHelper.DrawLines(lineInfo);
+        polygonHelper.DrawLines(lineThickness, color);
     }
     
     #endregion
@@ -1372,13 +1563,13 @@ public static class QuadDrawing
     //NOTE: Correct (still needs testing)
     
     //TODO: Docs
-    public static void DrawChamferedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactor)
+    public static void DrawChamferedCornersRelativeLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthFactor)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
         if (cornerLengthFactor <= 0)
         {
-            quad.DrawLines(thickness, color);
+            quad.DrawLines(lineThickness, color);
             return;
         }
         
@@ -1386,19 +1577,19 @@ public static class QuadDrawing
         float halfHeight = size.Height / 2f;
 
         if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
-        DrawChamferedCornersLines(quad, thickness, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
+        DrawChamferedCornersLines(quad, lineThickness, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
     }
     
     //NOTE: Correct (still needs testing)
     
     //TODO: Docs
-    public static void DrawChamferedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    public static void DrawChamferedCornersRelativeLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
         if (cornerLengthFactorHorizontal <= 0 || cornerLengthFactorVertical <= 0)
         {
-            quad.DrawLines(thickness, color);
+            quad.DrawLines(lineThickness, color);
             return;
         }
         float halfWidth = size.Width / 2f;
@@ -1407,11 +1598,11 @@ public static class QuadDrawing
         if(cornerLengthFactorVertical >= 1f) cornerLengthFactorVertical = 1f;
         float cornerLengthH = cornerLengthFactorHorizontal * halfWidth;
         float cornerLengthV = cornerLengthFactorVertical * halfHeight;
-        DrawChamferedCornersLines(quad, thickness, color, cornerLengthH, cornerLengthV);
+        DrawChamferedCornersLines(quad, lineThickness, color, cornerLengthH, cornerLengthV);
     }
 
     //TODO: Docs
-    public static void DrawChamferedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
+    public static void DrawChamferedCornersRelativeLines(this Quad quad, float lineThickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
     {
         //TODO: Implement
     }
@@ -1567,6 +1758,7 @@ public static class QuadDrawing
     #region Helper
     
     //TODO: Rework and Check if it can be implemented easier
+    //TODO: Does not properly check if lineThickness is to big for the inside of the quad!
     private static void DrawLinesHelper(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
     {
         var offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
