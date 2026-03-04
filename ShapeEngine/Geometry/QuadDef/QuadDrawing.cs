@@ -745,18 +745,26 @@ public static class QuadDrawing
     }
     #endregion
     
-    
-    
-    
-    #region Draw Slanted Corners
-    //TODO: Docs
-    public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float cornerLength)
+    #region Draw Chamfered Corners
+    /// <summary>
+    /// Draws the quad with chamfered corners of equal length.
+    /// </summary>
+    /// <param name="quad">The quad to draw.</param>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLength">The length of the slant for all corners.</param>
+    public static void DrawChamferedCorners(this Quad quad, ColorRgba color, float cornerLength)
     {
-        DrawSlantedCorners(quad, color, cornerLength, cornerLength);
+        DrawChamferedCorners(quad, color, cornerLength, cornerLength);
     }
     
-    //TODO: Docs
-    public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    /// <summary>
+    /// Draws the quad with chamfered corners with separate horizontal and vertical slant lengths.
+    /// </summary>
+    /// <param name="quad">The quad to draw.</param>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLengthHorizontal">The horizontal length of the slant.</param>
+    /// <param name="cornerLengthVertical">The vertical length of the slant.</param>
+    public static void DrawChamferedCorners(this Quad quad, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
@@ -851,8 +859,16 @@ public static class QuadDrawing
         }
     }
     
-    //TODO: Docs
-    public static void DrawSlantedCorners(this Quad quad, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
+    /// <summary>
+    /// Draws the quad with independently chamfered corners.
+    /// </summary>
+    /// <param name="quad">The quad to draw.</param>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="tlCorner">The slant length for the top-left corner.</param>
+    /// <param name="trCorner">The slant length for the top-right corner.</param>
+    /// <param name="brCorner">The slant length for the bottom-right corner.</param>
+    /// <param name="blCorner">The slant length for the bottom-left corner.</param>
+    public static void DrawChamferedCorners(this Quad quad, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
         if (tlCorner <= 0 && trCorner <= 0 && brCorner <= 0 && blCorner <= 0)
         {
@@ -1021,10 +1037,14 @@ public static class QuadDrawing
     
     #endregion
 
-    #region Draw Slanted Corners Relative
-   
-    //TODO: Docs
-    public static void DrawSlantedCornersRelative(this Quad quad, ColorRgba color, float cornerLengthFactor)
+    #region Draw Chamfered Corners Relative
+    /// <summary>
+    /// Draws the quad with slanted (chamfered) corners relative to the quad's dimensions.
+    /// </summary>
+    /// <param name="quad">The quad to draw.</param>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLengthFactor">The slant factor (0-1) relative to half the quad's size.</param>
+    public static void DrawChamferedCornersRelative(this Quad quad, ColorRgba color, float cornerLengthFactor)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
@@ -1038,11 +1058,17 @@ public static class QuadDrawing
         float halfHeight = size.Height / 2f;
 
         if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
-        DrawSlantedCorners(quad, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
+        DrawChamferedCorners(quad, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
     }
     
-    //TODO: Docs
-    public static void DrawSlantedCornersRelative(this Quad quad, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    /// <summary>
+    /// Draws the quad with slanted (chamfered) corners relative to the quad's dimensions, specifying horizontal and vertical factors.
+    /// </summary>
+    /// <param name="quad">The quad to draw.</param>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLengthFactorHorizontal">The horizontal slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="cornerLengthFactorVertical">The vertical slant factor (0-1) relative to half the quad's height.</param>
+    public static void DrawChamferedCornersRelative(this Quad quad, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
@@ -1057,39 +1083,205 @@ public static class QuadDrawing
         
         float cornerLengthH = cornerLengthFactorHorizontal * size.Width * 0.5f;
         float cornerLengthV = cornerLengthFactorVertical * size.Height * 0.5f;
-        DrawSlantedCorners(quad, color, cornerLengthH, cornerLengthV);
+        DrawChamferedCorners(quad, color, cornerLengthH, cornerLengthV);
     }
 
-    //TODO: Docs
-    public static void DrawSlantedCornersRelative(this Quad quad, ColorRgba color, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
+    /// <summary>
+    /// Draws the quad with independently slanted (chamfered) corners relative to the quad's dimensions.
+    /// </summary>
+    /// <param name="quad">The quad to draw.</param>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="tlCornerFactor">Top-left corner slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="trCornerFactor">Top-right corner slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="brCornerFactor">Bottom-right corner slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="blCornerFactor">Bottom-left corner slant factor (0-1) relative to half the quad's width.</param>
+    public static void DrawChamferedCornersRelative(this Quad quad, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
     {
-        var size = quad.GetSize();
-        if(size.Width <= 0 || size.Height <= 0) return;
         if (tlCornerFactor <= 0 && trCornerFactor <= 0 && brCornerFactor <= 0 && blCornerFactor <= 0)
         {
             quad.Draw(color);
             return;
         }
 
-        if (tlCornerFactor >= 1f) tlCornerFactor = 1f;
+        if(tlCornerFactor >= 1f) tlCornerFactor = 1f;
         if(trCornerFactor >= 1f) trCornerFactor = 1f;
         if(brCornerFactor >= 1f) brCornerFactor = 1f;
         if(blCornerFactor >= 1f) blCornerFactor = 1f;
         
-        //todo: implement
+        Vector2 nU = quad.NormalUp;
+        Vector2 nR = quad.NormalRight;
+        
+        Vector2 center = quad.Center;
+        
+        var size = quad.GetSize();
+        var halfWidth = size.Width * 0.5f;
+        var halfHeight = size.Height * 0.5f;
+        
+        Vector2 prev, start;
+        bool startMaxed, prevMaxed;
+        
+        var rayColor = color.ToRayColor();
+        
+        if (tlCornerFactor > 0)
+        {
+            var cornerLengthH = tlCornerFactor * halfWidth;
+            var cornerLengthV = tlCornerFactor * halfHeight;
+            Vector2 a = quad.TopLeft + nR * cornerLengthH;
+            Vector2 b = quad.TopLeft - nU * cornerLengthV;
+
+            start = a;
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+
+            startMaxed = prevMaxed = tlCornerFactor >= 1f;
+        }
+        else
+        {
+            Vector2 b = quad.TopLeft;
+            Vector2 a = b + nR * halfWidth;
+            Vector2 c = b - nU * halfHeight;
+            
+            start = a;
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+            
+            startMaxed = true;
+            prevMaxed = true;
+        }
+        
+        if (blCornerFactor > 0)
+        {
+            var cornerLengthH = blCornerFactor * halfWidth;
+            var cornerLengthV = blCornerFactor * halfHeight;
+            Vector2 a = quad.BottomLeft + nU * cornerLengthV;
+            Vector2 b = quad.BottomLeft + nR * cornerLengthH;
+
+            if (!prevMaxed || blCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            prevMaxed = blCornerFactor >= 1f;
+            
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+        }
+        else
+        {
+            Vector2 b = quad.BottomLeft;
+            Vector2 a = b + nU * halfHeight;
+            Vector2 c = b + nR * halfWidth;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+
+            prevMaxed = true;
+            
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+        }
+
+        if (brCornerFactor > 0)
+        {
+            var cornerLengthH = brCornerFactor * halfWidth;
+            var cornerLengthV = brCornerFactor * halfHeight;
+            Vector2 a = quad.BottomRight - nR * cornerLengthH;
+            Vector2 b = quad.BottomRight + nU * cornerLengthV;
+
+            if (!prevMaxed || brCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            prevMaxed = brCornerFactor >= 1f;
+            
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+        }
+        else
+        {
+            Vector2 b = quad.BottomRight;
+            Vector2 a = b - nR * halfWidth;
+            Vector2 c = b + nU * halfHeight;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+
+            prevMaxed = true;
+            
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+        }
+        
+        if (trCornerFactor > 0)
+        {
+            var cornerLengthH = trCornerFactor * halfWidth;
+            var cornerLengthV = trCornerFactor * halfHeight;
+            Vector2 a = quad.TopRight - nU * cornerLengthV;
+            Vector2 b = quad.TopRight - nR * cornerLengthH;
+
+            if (!prevMaxed || trCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+            
+            if(!startMaxed || trCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(b, start, center, rayColor);
+            }
+        }
+        else
+        {
+            Vector2 b = quad.TopRight;
+            Vector2 a = b - nU * halfHeight;
+            Vector2 c = b - nR * halfWidth;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+
+            if (!startMaxed)
+            {
+                Raylib.DrawTriangle(c, start, center, rayColor);
+            }
+        }
     }
     #endregion
+    
+    
 
-    #region Draw Slanted Corners Lines
+    #region Draw Chamfered Corners Lines
     //NOTE: just calculate the points and offset them by thickness to the inside and outside
     // - or offset the quad by thickness to the outside and inside and then calculate the points on the bigger and smaller quad
     // - check if lineThickness is bigger than haldWidth/halfHeight for special cases
-    public static void DrawSlantedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLength)
+    
+    //TODO: Docs
+    public static void DrawChamferedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLength)
     {
-        DrawSlantedCornersLines(quad, thickness, color, cornerLength, cornerLength);
+        DrawChamferedCornersLines(quad, thickness, color, cornerLength, cornerLength);
     }
     
-    public static void DrawSlantedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    //TODO: Docs
+    public static void DrawChamferedCornersLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
@@ -1160,7 +1352,8 @@ public static class QuadDrawing
         polygonHelper.DrawLines(thickness, color);
     }
     
-    public static void DrawSlantedCornersLines(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
+    //TODO: Docs
+    public static void DrawChamferedCornersLines(this Quad quad, LineDrawingInfo lineInfo, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
         if(tlCorner <= 0f && trCorner <= 0f && brCorner <= 0f && blCorner <= 0f)
         {
@@ -1175,9 +1368,11 @@ public static class QuadDrawing
     
     #endregion
 
-    #region Draw Slanted Corners Relative Lines
+    #region Draw Chamfered Corners Relative Lines
     //NOTE: Correct (still needs testing)
-    public static void DrawSlantedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactor)
+    
+    //TODO: Docs
+    public static void DrawChamferedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactor)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
@@ -1191,11 +1386,13 @@ public static class QuadDrawing
         float halfHeight = size.Height / 2f;
 
         if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
-        DrawSlantedCornersLines(quad, thickness, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
+        DrawChamferedCornersLines(quad, thickness, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
     }
     
     //NOTE: Correct (still needs testing)
-    public static void DrawSlantedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    
+    //TODO: Docs
+    public static void DrawChamferedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
@@ -1210,10 +1407,14 @@ public static class QuadDrawing
         if(cornerLengthFactorVertical >= 1f) cornerLengthFactorVertical = 1f;
         float cornerLengthH = cornerLengthFactorHorizontal * halfWidth;
         float cornerLengthV = cornerLengthFactorVertical * halfHeight;
-        DrawSlantedCornersLines(quad, thickness, color, cornerLengthH, cornerLengthV);
+        DrawChamferedCornersLines(quad, thickness, color, cornerLengthH, cornerLengthV);
     }
 
-    //TODO: add overload with 4 corner factors
+    //TODO: Docs
+    public static void DrawChamferedCornersRelativeLines(this Quad quad, float thickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
+    {
+        //TODO: Implement
+    }
     #endregion
     
     
