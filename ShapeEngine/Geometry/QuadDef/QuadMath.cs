@@ -300,6 +300,8 @@ public readonly partial struct Quad
     /// <returns>A new <see cref="Quad"/> with its center at the new position.</returns>
     public Quad SetPosition(Vector2 newPosition) => SetPosition(newPosition, AnchorPoint.Center);
 
+    
+    //TODO: Rework ---------------------------
     /// <summary>
     /// Scales the size of the quad uniformly by a scalar value, relative to the origin.
     /// </summary>
@@ -412,6 +414,29 @@ public readonly partial struct Quad
         return new(newA, newB, newC, newD);
     }
 
+    //TODO: New ChangeSize function that changes width and height based on amount (current ones do not!)
+    //NOTE: I think this is the correct way to do it, look at the others and rework them?
+    // - this actually changes the size correct, the others change width/height differently
+    public Quad ChangeSize(float widthAmount, float heightAmount)
+    {
+        // var size = GetSize();
+        // var newSize = new Size(size.Width + widthAmount, size.Height + heightAmount);
+        // var w = newSize.Width;
+        // var h = newSize.Height;
+        
+        var up = NormalUp * heightAmount;
+        var right = NormalRight * widthAmount;
+        var down = NormalDown * heightAmount;
+        var left = NormalLeft * widthAmount;
+        
+        var newA = A + up + left ;
+        var newB = B + down + left;
+        var newC = C + down + right;
+        var newD = D + up + right;
+        return new(newA, newB, newC, newD);
+    }
+    
+    
     /// <summary>
     /// Sets the size of the quad to a specific value, relative to its center.
     /// </summary>
@@ -473,8 +498,12 @@ public readonly partial struct Quad
 
         return new(newA, newB, newC, newD);
     }
-
-      /// <summary>
+    
+    //TODO: Rework End --------------------------------
+    
+    
+    
+    /// <summary>
       /// Applies a transform to the quad by:
       /// <list type="bullet">
       /// <item>Moving it by <paramref name="offset"/>.Position</item>
