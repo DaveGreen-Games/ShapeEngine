@@ -643,6 +643,84 @@ public readonly partial struct Triangle
         return MathF.Abs(cross) < narrowValue;
     }
     #endregion
+    
+    #region Right Triangle Math (Static)
+
+    /// <summary>
+    /// Calculates the length of the hypotenuse given two legs using the Pythagorean theorem.
+    /// </summary>
+    public static float RightTriangleGetHypotenuse(float legA, float legB) => MathF.Sqrt(legA * legA + legB * legB);
+
+    /// <summary>
+    /// Calculates the length of a leg given the hypotenuse and the other leg.
+    /// </summary>
+    /// <returns>The length of the leg, or 0 if the hypotenuse is shorter than the provided leg.</returns>
+    public static float RightTriangleGetLeg(float hypotenuse, float otherLeg)
+    {
+        var val = hypotenuse * hypotenuse - otherLeg * otherLeg;
+        return val <= 0f ? 0f : MathF.Sqrt(val);
+    }
+
+    /// <summary>
+    /// Calculates the opposite side length given an angle (radians) and the hypotenuse (Sin).
+    /// </summary>
+    public static float RightTriangleGetOpposite(float angleRad, float hypotenuse) => MathF.Sin(angleRad) * hypotenuse;
+
+    /// <summary>
+    /// Calculates the opposite side length given an angle (radians) and the adjacent side (Tan).
+    /// </summary>
+    public static float RightTriangleGetOppositeFromAdjacent(float angleRad, float adjacent) => MathF.Tan(angleRad) * adjacent;
+
+    /// <summary>
+    /// Calculates the adjacent side length given an angle (radians) and the hypotenuse (Cos).
+    /// </summary>
+    public static float RightTriangleGetAdjacent(float angleRad, float hypotenuse) => MathF.Cos(angleRad) * hypotenuse;
+
+    /// <summary>
+    /// Calculates the adjacent side length given an angle (radians) and the opposite side (Cot).
+    /// </summary>
+    public static float RightTriangleGetAdjacentFromOpposite(float angleRad, float opposite) => opposite / MathF.Tan(angleRad);
+
+    /// <summary>
+    /// Calculates the hypotenuse length given an angle (radians) and the opposite side (Csc).
+    /// </summary>
+    public static float RightTriangleGetHypotenuseFromOpposite(float angleRad, float opposite) => opposite / MathF.Sin(angleRad);
+
+    /// <summary>
+    /// Calculates the hypotenuse length given an angle (radians) and the adjacent side (Sec).
+    /// </summary>
+    public static float RightTriangleGetHypotenuseFromAdjacent(float angleRad, float adjacent) => adjacent / MathF.Cos(angleRad);
+
+    /// <summary>
+    /// Calculates the angle (radians) given the opposite and adjacent sides (ArcTan).
+    /// </summary>
+    public static float RightTriangleGetAngle(float opposite, float adjacent) => MathF.Atan(opposite / adjacent);
+
+    /// <summary>
+    /// Calculates the angle (radians) given the opposite side and the hypotenuse (ArcSin).
+    /// </summary>
+    public static float RightTriangleGetAngleFromOpposite(float opposite, float hypotenuse)
+    {
+        if (hypotenuse <= 0f) return 0f;
+        var val = opposite / hypotenuse;
+        if (val < -1f) val = -1f;
+        else if (val > 1f) val = 1f;
+        return MathF.Asin(val);
+    }
+
+    /// <summary>
+    /// Calculates the angle (radians) given the adjacent side and the hypotenuse (ArcCos).
+    /// </summary>
+    public static float RightTriangleGetAngleFromAdjacent(float adjacent, float hypotenuse)
+    {
+        if (hypotenuse <= 0f) return 0f;
+        var val = adjacent / hypotenuse;
+        if (val < -1f) val = -1f;
+        else if (val > 1f) val = 1f;
+        return MathF.Acos(val);
+    }
+
+    #endregion
 }
 
 // /// <summary>
