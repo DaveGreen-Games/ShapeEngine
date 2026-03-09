@@ -644,6 +644,32 @@ public readonly partial struct Triangle
     }
     #endregion
     
+    //TODO: Add more functions here as needed, such as:
+    // - Functions to calculate angles at each vertex
+    // - Functions to calculate side lengths
+    #region Isoscele Triangle Math (Static)
+    public static float GetIsoscelesSideLength(float baseLength, Vector2 dir1, Vector2 dir2)
+    {
+        float dot = Vector2.Dot(dir1, dir2);
+        // Identity: 2 * sin(theta/2) = sqrt(2 * (1 - cos(theta)))
+        float denom = MathF.Sqrt(2f * (1f - dot)); 
+            
+        // Avoid division by zero
+        if (denom < 0.0001f) return 0;
+            
+        return baseLength / denom;
+    }
+        
+    public static float GetIsoscelesBaseLength(float sideLength, Vector2 dir1, Vector2 dir2)
+    {
+        float dot = Vector2.Dot(dir1, dir2);
+        // Identity: 2 * sin(theta/2) = sqrt(2 * (1 - cos(theta)))
+        float denom = MathF.Sqrt(2f * (1f - dot)); 
+            
+        return sideLength * denom;
+    }
+    #endregion
+    
     #region Right Triangle Math (Static)
 
     /// <summary>
