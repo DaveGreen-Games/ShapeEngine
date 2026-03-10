@@ -1350,7 +1350,7 @@ public static class QuadDrawing
             var dir = -ChamferEdgeDir;
             var rad = dir.AngleRad(normal);
             var miterLength = Triangle.RightTriangleGetHypotenuseFromOpposite(rad, lineThickness);
-            // var miterLength2 = Triangle.RightTriangleGetOppositeFromAdjacent(rad, bcL / 2f);
+            // var miterLength2 = Triangle.RightTriangleGetOppositeFromAdjacent(rad, l / 2f);
             var miterLength2 = Triangle.RightTriangleGetAdjacentFromOpposite(rad, l / 2f);
             miterLength = miterLength - miterLength2;
             return MathF.Min(miterLength, sizeHalf);
@@ -1381,8 +1381,9 @@ public static class QuadDrawing
         float halfHeight = size.Height * 0.5f;
         
         lineThickness = MathF.Min(lineThickness, MathF.Min(halfWidth, halfHeight));
-        var cornerLengthW = MathF.Min(cornerLength, halfWidth);
-        var cornerLengthH = MathF.Min(cornerLength, halfHeight);
+        cornerLength = MathF.Min(cornerLength, MathF.Min(halfWidth, halfHeight));
+        var cornerLengthW = cornerLength;// MathF.Min(cornerLength, halfWidth);
+        var cornerLengthH = cornerLength;// MathF.Min(cornerLength, halfHeight);
         
         var nR = quad.NormalRight;
         var nD = quad.NormalDown;
@@ -1420,22 +1421,23 @@ public static class QuadDrawing
         }
         else if (widthEdgeClamped || heightEdgeClamped)
         {
-            if (widthEdgeClamped && heightEdgeClamped)
-            {
-                float miterLengthWidth = chamferB.CalculateMiterLengthTo(chamferC, nU, lineThickness, halfHeight);
-                float miterLengthHeight = chamferA.CalculateMiterLengthTo(chamferB, nR, lineThickness, halfWidth);
-                
-                var bNextInner = chamferB.GetInnerTo(chamferC, miterLengthWidth, nU);
-                var dNextInner = chamferD.GetInnerTo(chamferA, miterLengthWidth, nD);
-                var aNextInner = chamferA.GetInnerTo(chamferB, miterLengthHeight, nR);
-                var cNextInner = chamferC.GetInnerTo(chamferD, miterLengthHeight, nL);
-                
-                chamferAInner = (dNextInner, aNextInner);
-                chamferBInner = (aNextInner, bNextInner);
-                chamferCInner = (bNextInner, cNextInner);
-                chamferDInner = (cNextInner, dNextInner);
-            }
-            else if (widthEdgeClamped)
+            // if (widthEdgeClamped && heightEdgeClamped)
+            // {
+            //     float miterLengthWidth = chamferB.CalculateMiterLengthTo(chamferC, nU, lineThickness, halfHeight);
+            //     float miterLengthHeight = chamferA.CalculateMiterLengthTo(chamferB, nR, lineThickness, halfWidth);
+            //     
+            //     var bNextInner = chamferB.GetInnerTo(chamferC, miterLengthWidth, nU);
+            //     var dNextInner = chamferD.GetInnerTo(chamferA, miterLengthWidth, nD);
+            //     var aNextInner = chamferA.GetInnerTo(chamferB, miterLengthHeight, nR);
+            //     var cNextInner = chamferC.GetInnerTo(chamferD, miterLengthHeight, nL);
+            //     
+            //     chamferAInner = (dNextInner, aNextInner);
+            //     chamferBInner = (aNextInner, bNextInner);
+            //     chamferCInner = (bNextInner, cNextInner);
+            //     chamferDInner = (cNextInner, dNextInner);
+            // }
+            // else
+            if (widthEdgeClamped)
             {
                 float miterLength = chamferB.CalculateMiterLengthTo(chamferC, nU, lineThickness, halfHeight);
                 
@@ -1502,37 +1504,6 @@ public static class QuadDrawing
         DrawEdgeTo(chamferBInner, chamferBOuter, chamferCInner, chamferCOuter, true);
         DrawEdgeTo(chamferCInner, chamferCOuter, chamferDInner, chamferDOuter, false);
         DrawEdgeTo(chamferDInner, chamferDOuter, chamferAInner, chamferAOuter, true);
-        
-        
-        
-        // chamferA.Prev.Draw(2f, ColorRgba.White);
-        // chamferA.Next.Draw(2f, ColorRgba.White);
-        // chamferB.Prev.Draw(2f, ColorRgba.White);
-        // chamferB.Next.Draw(2f, ColorRgba.White);
-        // chamferC.Prev.Draw(2f, ColorRgba.White);
-        // chamferC.Next.Draw(2f, ColorRgba.White);
-        // chamferD.Prev.Draw(2f, ColorRgba.White);
-        // chamferD.Next.Draw(2f, ColorRgba.White);
-        //
-        // chamferAOuter.Prev.Draw(4f, ColorRgba.Red);
-        // chamferAOuter.Next.Draw(4f, ColorRgba.Red);
-        // chamferAInner.Prev.Draw(4f, ColorRgba.Crimson);
-        // chamferAInner.Next.Draw(4f, ColorRgba.Crimson);
-        //
-        // chamferBOuter.Prev.Draw(4f, ColorRgba.Yellow);
-        // chamferBOuter.Next.Draw(4f, ColorRgba.Yellow);
-        // chamferBInner.Prev.Draw(4f, ColorRgba.Orange);
-        // chamferBInner.Next.Draw(4f, ColorRgba.Orange);
-        //
-        // chamferCOuter.Prev.Draw(4f, ColorRgba.Green);
-        // chamferCOuter.Next.Draw(4f, ColorRgba.Green);
-        // chamferCInner.Prev.Draw(4f, ColorRgba.ForestGreen);
-        // chamferCInner.Next.Draw(4f, ColorRgba.ForestGreen);
-        //
-        // chamferDOuter.Prev.Draw(4f, ColorRgba.Blue);
-        // chamferDOuter.Next.Draw(4f, ColorRgba.Blue);
-        // chamferDInner.Prev.Draw(4f, ColorRgba.DodgerBlue);
-        // chamferDInner.Next.Draw(4f, ColorRgba.DodgerBlue);
     }
     
     //TODO: Docs
