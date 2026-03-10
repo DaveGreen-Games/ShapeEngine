@@ -1271,9 +1271,7 @@ public static class QuadDrawing
     
 
     #region Draw Chamfered Corners Lines
-    //Note: Simplify and optimize!
-    //TODO: Docs
-
+    
     private readonly struct ChamferedCorner
     {
         #region Fields
@@ -1349,8 +1347,6 @@ public static class QuadDrawing
         public float CalculateMiterLengthTo(ChamferedCorner other, Vector2 normal, float lineThickness, float sizeHalf)
         {
             var l = (other.Prev - Next).Length();
-            // var dir = (Prev - Next).Normalize();
-            // var rad = dir.AngleRad(normal);
             var dir = -ChamferEdgeDir;
             var rad = dir.AngleRad(normal);
             var miterLength = Triangle.RightTriangleGetHypotenuseFromOpposite(rad, lineThickness);
@@ -1362,6 +1358,7 @@ public static class QuadDrawing
         #endregion
     }
     
+    //TODO: Docs
     public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLength)
     {
         if (lineThickness <= 0)
@@ -1395,43 +1392,14 @@ public static class QuadDrawing
         var rayColor = color.ToRayColor();
             
         var chamferA = new ChamferedCorner(quad.A, cornerLengthW, cornerLengthH, nR, nD);
-        // var aPrev = quad.A + nR * cornerLengthW;
-        // var aNext = quad.A + nD * cornerLengthH;
-        // var chamferDirA = (aNext - aPrev).Normalize().GetPerpendicularRight();
-        // var chamferDirAPrev = (chamferDirA + nU).Normalize();
-        // var chamferDirANext = (chamferDirA + nL).Normalize();
-        
         var chamferB = new ChamferedCorner(quad.B, cornerLengthH, cornerLengthW, nU, nR);
-        // var bPrev = quad.B + nU * cornerLengthH;
-        // var bNext = quad.B + nR * cornerLengthW;
-        // var chamferDirB = (bNext - bPrev).Normalize().GetPerpendicularRight();
-        // var chamferDirBPrev = (chamferDirB + nL).Normalize();
-        // var chamferDirBNext = (chamferDirB + nD).Normalize();
-        
         var chamferC = new ChamferedCorner(quad.C, cornerLengthW, cornerLengthH, nL, nU, -chamferA.ChamferDirPrev, -chamferA.ChamferDirNext);
-        // var cPrev = quad.C + nL * cornerLengthW;
-        // var cNext = quad.C + nU * cornerLengthH;
-        // var chamferDirCPrev = -chamferDirAPrev;
-        // var chamferDirCNext = -chamferDirANext;
-        
         var chamferD = new ChamferedCorner(quad.D, cornerLengthH, cornerLengthW, nD, nL, -chamferB.ChamferDirPrev, -chamferB.ChamferDirNext);
-        // var dPrev = quad.D + nD * cornerLengthH;
-        // var dNext = quad.D + nL * cornerLengthW;
-        // var chamferDirDPrev = -chamferDirBPrev;
-        // var chamferDirDNext = -chamferDirBNext; 
         
-        // var angleRad = ShapeVec.AngleRad(chamferDirANext, nL);
-        // var chamferLength = Triangle.RightTriangleGetHypotenuseFromAdjacent(lineThickness, angleRad);
         var chamferLength = chamferA.GetChamferLength(nL, lineThickness);
-        
-        // var baseLengthCorner = (aPrev - aNext).Length();
-        // var maxChamferLength = Triangle.GetIsoscelesSideLength(baseLengthCorner, chamferDirANext, chamferDirAPrev);
         var maxChamferLength = chamferA.GetMaxChamferLength;
-        
-        // var baseLengthHeight = chamferA.GetLengthTo(chamferB);//  (chamferA.Next - chamferB.Prev).Length(); //(aNext - bPrev).Length();
-        // var baseLengthWidth = chamferB.GetLengthTo(chamferC); // (chamferB.Next - chamferC.Prev).Length(); //(bNext - cPrev).Length();
-        var maxChamferLengthHeight = chamferA.GetMaxChamferLengthTo(chamferB); //Triangle.GetIsoscelesSideLength(baseLengthHeight, chamferDirANext, chamferDirBPrev);
-        var maxChamferLengthWidth = chamferB.GetMaxChamferLengthTo(chamferC); //Triangle.GetIsoscelesSideLength(baseLengthWidth, chamferDirBNext, chamferDirCPrev);
+        var maxChamferLengthHeight = chamferA.GetMaxChamferLengthTo(chamferB);
+        var maxChamferLengthWidth = chamferB.GetMaxChamferLengthTo(chamferC);
         
         bool insideCornerClamped = chamferLength > maxChamferLength;
         bool widthEdgeClamped = chamferLength > maxChamferLengthWidth;
@@ -1442,84 +1410,24 @@ public static class QuadDrawing
         var chamferCOuter = chamferC.GetOuterPoints(chamferLength); 
         var chamferDOuter = chamferD.GetOuterPoints(chamferLength);
         
-        // var aPrevOuter = aPrev + chamferDirAPrev * chamferLength;
-        // var aNextOuter = aNext + chamferDirANext * chamferLength;
-        //
-        // var bPrevOuter = bPrev + chamferDirBPrev * chamferLength;
-        // var bNextOuter = bNext + chamferDirBNext * chamferLength;
-        //
-        // var cPrevOuter = cPrev + chamferDirCPrev * chamferLength;
-        // var cNextOuter = cNext + chamferDirCNext * chamferLength;
-        //
-        // var dPrevOuter = dPrev + chamferDirDPrev * chamferLength;
-        // var dNextOuter = dNext + chamferDirDNext * chamferLength;
-        
         ChamferPoints chamferAInner, chamferBInner, chamferCInner, chamferDInner;
-        // Vector2 aPrevInner, aNextInner, bPrevInner, bNextInner, cPrevInner, cNextInner, dPrevInner, dNextInner;
         if (insideCornerClamped)
         {
-            // var aChamferCenter = (Prev + aNext) * 0.5f;
-            // var bChamferCenter = (bPrev + bNext) * 0.5f;
-            // var cChamferCenter = (cPrev + cNext) * 0.5f;
-            // var dChamferCenter = (dPrev + dNext) * 0.5f;
-            //
-            // aPrevInner = aChamferCenter - chamferDirA * lineThickness;
-            // aNextInner = aPrevInner;
-            //
-            // bPrevInner = bChamferCenter - chamferDirB * lineThickness;
-            // bNextInner = bPrevInner;
-            //
-            // cPrevInner = cChamferCenter + chamferDirA * lineThickness;
-            // cNextInner = cPrevInner;
-            //
-            // dPrevInner = dChamferCenter + chamferDirB * lineThickness;
-            // dNextInner = dPrevInner;
             chamferAInner = chamferA.GetInnerPointsClamped(lineThickness);
             chamferBInner = chamferB.GetInnerPointsClamped(lineThickness);
             chamferCInner = chamferC.GetInnerPointsClamped(lineThickness);
             chamferDInner = chamferD.GetInnerPointsClamped(lineThickness);
-
         }
         else if (widthEdgeClamped || heightEdgeClamped)
         {
             if (widthEdgeClamped && heightEdgeClamped)
             {
                 float miterLengthWidth = chamferB.CalculateMiterLengthTo(chamferC, nU, lineThickness, halfHeight);
-                // var bcL = (chamferC.Prev - chamferB.Next).Length();
-                // var dirWidth = (chamferB.Prev - chamferB.Next).Normalize();
-                // var radWidth = dirWidth.AngleRad(nU);
-                // var miterLengthWidth = Triangle.RightTriangleGetHypotenuseFromOpposite(radWidth, lineThickness);
-                // var miterLengthWidth2 = Triangle.RightTriangleGetOppositeFromAdjacent(radWidth, bcL / 2f);
-                // miterLengthWidth = miterLengthWidth - miterLengthWidth2;
-                // miterLengthWidth = MathF.Min(miterLengthWidth, halfHeight);
-                
                 float miterLengthHeight = chamferA.CalculateMiterLengthTo(chamferB, nR, lineThickness, halfWidth);
-                // var abL = (chamferB.Prev - chamferA.Next).Length();
-                // var dirHeight = (chamferA.Prev - chamferA.Next).Normalize();
-                // var radHeight = dirHeight.AngleRad(nR);
-                // var miterLengthHeight = Triangle.RightTriangleGetHypotenuseFromOpposite(radHeight, lineThickness);
-                // var miterLengthHeight2 = Triangle.RightTriangleGetOppositeFromAdjacent(radHeight, abL / 2f);
-                // miterLengthHeight = miterLengthHeight - miterLengthHeight2;
-                // miterLengthHeight = MathF.Min(miterLengthHeight, halfWidth);
                 
-                //b to c
-                // var bcCenter = (chamferB.Next + chamferC.Prev) * 0.5f;
-                // var bNextInner = bcCenter + nU * miterLengthWidth;
                 var bNextInner = chamferB.GetInnerTo(chamferC, miterLengthWidth, nU);
-                
-                //d to a
-                // var daCenter = (chamferD.Next + chamferA.Prev) * 0.5f;
-                // var dNextInner = daCenter + nD * miterLengthWidth;
                 var dNextInner = chamferD.GetInnerTo(chamferA, miterLengthWidth, nD);
-                
-                //a to b
-                // var abCenter = (chamferA.Next + chamferB.Prev) * 0.5f;
-                // var aNextInner = abCenter + nR * miterLengthHeight;
                 var aNextInner = chamferA.GetInnerTo(chamferB, miterLengthHeight, nR);
-                
-                //c to d
-                // var cdCenter = (chamferC.Next + chamferD.Prev) * 0.5f;
-                // var cNextInner = cdCenter + nL * miterLengthHeight;
                 var cNextInner = chamferC.GetInnerTo(chamferD, miterLengthHeight, nL);
                 
                 chamferAInner = (dNextInner, aNextInner);
@@ -1530,30 +1438,11 @@ public static class QuadDrawing
             else if (widthEdgeClamped)
             {
                 float miterLength = chamferB.CalculateMiterLengthTo(chamferC, nU, lineThickness, halfHeight);
-                // var bcL = (chamferC.Prev - chamferB.Next).Length();
-                // var dir = (chamferB.Prev - chamferB.Next).Normalize();
-                // var rad = dir.AngleRad(nU);
-                // var miterLength = Triangle.RightTriangleGetHypotenuseFromOpposite(rad, lineThickness);
-                // var miterLength2 = Triangle.RightTriangleGetOppositeFromAdjacent(rad, bcL / 2f);
-                // miterLength = miterLength - miterLength2;
-                // miterLength = MathF.Min(miterLength, halfHeight);
                 
-                //b to c
-                // var bcCenter = (chamferB.Next + chamferC.Prev) * 0.5f;
-                // var bNextInner = bcCenter + nU * miterLength;
-                // cPrevInner = bNextInner;
-                
-                //b to c
                 var bNextInner = chamferB.GetInnerTo(chamferC, miterLength, nU);
                 chamferBInner = (chamferB.GetInnerPrev(chamferLength), bNextInner);
                 chamferCInner = (bNextInner, chamferC.GetInnerNext(chamferLength));
                 
-                //d to a
-                // var daCenter = (chamferD.Next + chamferA.Prev) * 0.5f;
-                // var dNextInner = daCenter + nD * miterLength;
-                // aPrevInner = dNextInner;
-                
-                //d to a
                 var dNextInner = chamferD.GetInnerTo(chamferA, miterLength, nD);
                 chamferDInner = (chamferD.GetInnerPrev(chamferLength), dNextInner);
                 chamferAInner = (dNextInner, chamferA.GetInnerNext(chamferLength));
@@ -1561,135 +1450,23 @@ public static class QuadDrawing
             else
             {
                 float miterLength = chamferA.CalculateMiterLengthTo(chamferB, nR, lineThickness, halfWidth);
-                // var abL = (chamferB.Prev - chamferA.Next).Length();
-                // var dir = (chamferA.Prev - chamferA.Next).Normalize();
-                // var rad = dir.AngleRad(nR);
-                // var miterLength = Triangle.RightTriangleGetHypotenuseFromOpposite(rad, lineThickness);
-                // var miterLength2 = Triangle.RightTriangleGetOppositeFromAdjacent(rad, abL / 2f);
-                // miterLength = miterLength - miterLength2;
-                // miterLength = MathF.Min(miterLength, halfWidth);
                 
-                
-                //a to b
-                // var abCenter = (chamferA.Next + chamferB.Prev) * 0.5f;
-                // var aNextInner = abCenter + nR * miterLength;
-
-                //a to b
                 var aNextInner = chamferA.GetInnerTo(chamferB, miterLength, nR);
                 chamferAInner = (chamferA.GetInnerPrev(chamferLength), aNextInner);
                 chamferBInner = (aNextInner, chamferB.GetInnerNext(chamferLength));
                 
-                //c to d
-                // var cdCenter = (chamferC.Next + chamferD.Prev) * 0.5f;
-                // var cNextInner = cdCenter + nL * miterLength;
-                
-                //c to d
                 var cNextInner = chamferC.GetInnerTo(chamferD, miterLength, nL);
                 chamferCInner = (chamferC.GetInnerPrev(chamferLength), cNextInner);
                 chamferDInner = (cNextInner, chamferD.GetInnerNext(chamferLength));
             }
-            
-            /*if (heightEdgeClamped)
-            {
-                var abL = (chamferB.Prev - chamferA.Next).Length();
-                var dir = (chamferA.Prev - chamferA.Next).Normalize();
-                var rad = dir.AngleRad(nR);
-                var miterLength = Triangle.RightTriangleGetHypotenuseFromOpposite(rad, lineThickness);
-                var miterLength2 = Triangle.RightTriangleGetOppositeFromAdjacent(rad, abL / 2f);
-                miterLength = miterLength - miterLength2;
-                miterLength = MathF.Min(miterLength, halfWidth);
-                //a to b
-                var abCenter = (chamferA.Next + chamferB.Prev) * 0.5f;
-                var aNextInner = abCenter + nR * miterLength;
-                // var bPrevInner = aNextInner;
-
-                chamferAInner = (new(), aNextInner);
-                chamferBInner = (aNextInner, new());
-                
-                //c to d
-                var cdCenter = (chamferC.Next + chamferD.Prev) * 0.5f;
-                var cNextInner = cdCenter + nL * miterLength;
-                // var dPrevInner = cNextInner;
-                chamferCInner = (new(), cNextInner);
-                chamferDInner = (cNextInner, new());
-            }
-            else
-            {
-                //a to b
-                chamferAInner = (new(), chamferA.GetInnerNext(chamferLength));
-                chamferBInner = (chamferB.GetInnerPrev(chamferLength), new());
-                //c to d
-                chamferCInner = (new(), chamferC.GetInnerNext(chamferLength));
-                chamferDInner = (chamferD.GetInnerPrev(chamferLength), new());
-                
-                // //a to b
-                // aNextInner = aNext - chamferDirANext * chamferLength;
-                // bPrevInner = bPrev - chamferDirBPrev * chamferLength;
-                //
-                // //c to d
-                // cNextInner = cNext - chamferDirCNext * chamferLength;
-                // dPrevInner = dPrev - chamferDirDPrev * chamferLength;
-            }
-            
-            if (widthEdgeClamped)
-            {
-                var bcL = (chamferC.Prev - chamferB.Next).Length();
-                var dir = (chamferB.Prev - chamferB.Next).Normalize();
-                var rad = dir.AngleRad(nU);
-                var miterLength = Triangle.RightTriangleGetHypotenuseFromOpposite(rad, lineThickness);
-                var miterLength2 = Triangle.RightTriangleGetOppositeFromAdjacent(rad, bcL / 2f);
-                miterLength = miterLength - miterLength2;
-                miterLength = MathF.Min(miterLength, halfHeight);
-                
-                //b to c
-                var bcCenter = (chamferB.Next + chamferC.Prev) * 0.5f;
-                var bNextInner = bcCenter + nU * miterLength;
-                // cPrevInner = bNextInner;
-                chamferBInner = (chamferBInner.Prev, bNextInner);
-                chamferCInner = (bNextInner, chamferCInner.next);
-                
-                //d to a
-                var daCenter = (chamferD.Next + chamferA.Prev) * 0.5f;
-                var dNextInner = daCenter + nD * miterLength;
-                // aPrevInner = dNextInner;
-                chamferDInner = (chamferDInner.Prev, dNextInner);
-                chamferAInner = (dNextInner, chamferAInner.next);
-            }
-            else
-            {
-                //b to c
-                // bNextInner = bNext - chamferDirBNext * chamferLength;
-                // cPrevInner = cPrev - chamferDirCPrev * chamferLength;
-                chamferBInner = (chamferBInner.Prev, chamferB.GetInnerNext(chamferLength));
-                chamferCInner = (chamferC.GetInnerPrev(chamferLength), chamferCInner.next);
-                
-                //d to a
-                // aPrevInner = Prev - chamferDirAPrev * chamferLength;
-                // dNextInner = dNext - chamferDirDNext * chamferLength;
-                chamferAInner = (chamferA.GetInnerPrev(chamferLength), chamferAInner.next);
-                chamferDInner = (chamferDInner.Prev, chamferD.GetInnerNext(chamferLength));
-            }*/
-            
         }
         else
         {
-            // aPrevInner = Prev - chamferDirAPrev * chamferLength;
-            // aNextInner = aNext - chamferDirANext * chamferLength;
-            // bPrevInner = bPrev - chamferDirBPrev * chamferLength;
-            // bNextInner = bNext - chamferDirBNext * chamferLength;
-            // cPrevInner = cPrev - chamferDirCPrev * chamferLength;
-            // cNextInner = cNext - chamferDirCNext * chamferLength;
-            // dPrevInner = dPrev - chamferDirDPrev * chamferLength;
-            // dNextInner = dNext - chamferDirDNext * chamferLength;
             chamferAInner = chamferA.GetInnerPoints(chamferLength);
             chamferBInner = chamferB.GetInnerPoints(chamferLength);
             chamferCInner = chamferC.GetInnerPoints(chamferLength);
             chamferDInner = chamferD.GetInnerPoints(chamferLength);
-            
         }
-
-        
-        
         
         void DrawCorner(ChamferPoints inner, ChamferPoints outer, bool clamped)
         {
@@ -1728,171 +1505,34 @@ public static class QuadDrawing
         
         
         
-        chamferA.Prev.Draw(2f, ColorRgba.White);
-        chamferA.Next.Draw(2f, ColorRgba.White);
-        chamferB.Prev.Draw(2f, ColorRgba.White);
-        chamferB.Next.Draw(2f, ColorRgba.White);
-        chamferC.Prev.Draw(2f, ColorRgba.White);
-        chamferC.Next.Draw(2f, ColorRgba.White);
-        chamferD.Prev.Draw(2f, ColorRgba.White);
-        chamferD.Next.Draw(2f, ColorRgba.White);
-        
-        chamferAOuter.Prev.Draw(4f, ColorRgba.Red);
-        chamferAOuter.Next.Draw(4f, ColorRgba.Red);
-        chamferAInner.Prev.Draw(4f, ColorRgba.Crimson);
-        chamferAInner.Next.Draw(4f, ColorRgba.Crimson);
-        
-        chamferBOuter.Prev.Draw(4f, ColorRgba.Yellow);
-        chamferBOuter.Next.Draw(4f, ColorRgba.Yellow);
-        chamferBInner.Prev.Draw(4f, ColorRgba.Orange);
-        chamferBInner.Next.Draw(4f, ColorRgba.Orange);
-        
-        chamferCOuter.Prev.Draw(4f, ColorRgba.Green);
-        chamferCOuter.Next.Draw(4f, ColorRgba.Green);
-        chamferCInner.Prev.Draw(4f, ColorRgba.ForestGreen);
-        chamferCInner.Next.Draw(4f, ColorRgba.ForestGreen);
-        
-        chamferDOuter.Prev.Draw(4f, ColorRgba.Blue);
-        chamferDOuter.Next.Draw(4f, ColorRgba.Blue);
-        chamferDInner.Prev.Draw(4f, ColorRgba.DodgerBlue);
-        chamferDInner.Next.Draw(4f, ColorRgba.DodgerBlue);
-        
-        
-        /*//Draw corners
-        if (insideCornerClamped)
-        {
-            //a corner
-            Raylib.DrawTriangle(aPrevInner, aPrevOuter, aNextOuter, rayColor);
-            
-            //b corner
-            Raylib.DrawTriangle(bPrevInner, bPrevOuter, bNextOuter, rayColor);
-            
-            //c corner
-            Raylib.DrawTriangle(cPrevInner, cPrevOuter, cNextOuter, rayColor);
-            
-            //d corner
-            Raylib.DrawTriangle(dPrevInner, dPrevOuter, dNextOuter, rayColor);
-        }
-        else
-        {
-            //a corner
-            Raylib.DrawTriangle(aPrevOuter, aNextOuter, aPrevInner, rayColor);
-            Raylib.DrawTriangle(aPrevInner, aNextOuter, aNextInner, rayColor);
-        
-            //b corner
-            Raylib.DrawTriangle(bPrevOuter, bNextOuter, bPrevInner, rayColor);
-            Raylib.DrawTriangle(bPrevInner, bNextOuter, bNextInner, rayColor);
-        
-            //c corner
-            Raylib.DrawTriangle(cPrevOuter, cNextOuter, cPrevInner, rayColor);
-            Raylib.DrawTriangle(cPrevInner, cNextOuter, cNextInner, rayColor);
-        
-            //d corner
-            Raylib.DrawTriangle(dPrevOuter, dNextOuter, dPrevInner, rayColor);
-            Raylib.DrawTriangle(dPrevInner, dNextOuter, dNextInner, rayColor);
-        }*/
-        /*//Draw Edges
-        if (heightEdgeClamped || widthEdgeClamped)
-        {
-            if (heightEdgeClamped && widthEdgeClamped)
-            {
-                //all edges are affected
-                
-                //edge a to b
-                Raylib.DrawTriangle(aNextInner, aNextOuter, bPrevOuter, rayColor);
-                
-                //edge c to d
-                Raylib.DrawTriangle(cNextInner, cNextOuter, dPrevOuter, rayColor);
-                
-                //edge b to c
-                Raylib.DrawTriangle(bNextInner, bNextOuter, cPrevOuter, rayColor);
-                
-                //edge d to a
-                Raylib.DrawTriangle(dNextInner, dNextOuter, aPrevOuter, rayColor);
-            }
-            else if (heightEdgeClamped)
-            {
-                //a to b and c to d is affected
-                
-                //edge a to b
-                Raylib.DrawTriangle(aNextInner, aNextOuter, bPrevOuter, rayColor);
-                
-                //edge c to d
-                Raylib.DrawTriangle(cNextInner, cNextOuter, dPrevOuter, rayColor);
-                
-                //edge b to c
-                Raylib.DrawTriangle(bNextOuter, cPrevInner, bNextInner, rayColor);
-                Raylib.DrawTriangle(bNextOuter, cPrevOuter, cPrevInner, rayColor);
-                
-                //edge d to a
-                Raylib.DrawTriangle(dNextOuter, aPrevInner, dNextInner, rayColor);
-                Raylib.DrawTriangle(dNextOuter, aPrevOuter, aPrevInner, rayColor); 
-            }
-            else
-            {
-                //b to c and d to a is affected
-                
-                //edge b to c
-                Raylib.DrawTriangle(bNextInner, bNextOuter, cPrevOuter, rayColor);
-                
-                //edge d to a
-                Raylib.DrawTriangle(dNextInner, dNextOuter, aPrevOuter, rayColor);
-                
-                //edge a to b
-                Raylib.DrawTriangle(aNextOuter, bPrevInner, aNextInner, rayColor);
-                Raylib.DrawTriangle(aNextOuter, bPrevOuter, bPrevInner, rayColor);
-                
-                //edge c to d
-                Raylib.DrawTriangle(cNextOuter, dPrevInner, cNextInner, rayColor);
-                Raylib.DrawTriangle(cNextOuter, dPrevOuter, dPrevInner, rayColor);
-            }
-            
-        }
-        else
-        {
-           //edge a to b
-           Raylib.DrawTriangle(aNextOuter, bPrevInner, aNextInner, rayColor);
-           Raylib.DrawTriangle(aNextOuter, bPrevOuter, bPrevInner, rayColor);
-           
-           //edge b to c
-           Raylib.DrawTriangle(bNextOuter, cPrevInner, bNextInner, rayColor);
-           Raylib.DrawTriangle(bNextOuter, cPrevOuter, cPrevInner, rayColor);
-           
-           //edge c to d
-           Raylib.DrawTriangle(cNextOuter, dPrevInner, cNextInner, rayColor);
-           Raylib.DrawTriangle(cNextOuter, dPrevOuter, dPrevInner, rayColor);
-           
-           //edge d to a
-           Raylib.DrawTriangle(dNextOuter, aPrevInner, dNextInner, rayColor);
-           Raylib.DrawTriangle(dNextOuter, aPrevOuter, aPrevInner, rayColor); 
-        }*/
-        // float GetHypotenuseLength(float adjacentLength, float angleRadians)
-        // {
-        //     // Ensure the angle is not 90 degrees (PI/2) to avoid division by zero
-        //     // Hypotenuse = Adjacent / Cos(angle)
-        //     return adjacentLength / MathF.Cos(angleRadians);
-        // }
-        
-        // float GetIsoscelesSideLength(float baseLength, Vector2 dir1, Vector2 dir2)
-        // {
-        //     float dot = Vector2.Dot(dir1, dir2);
-        //     // Identity: 2 * sin(theta/2) = sqrt(2 * (1 - cos(theta)))
-        //     float denom = MathF.Sqrt(2f * (1f - dot)); 
-        //     
-        //     // Avoid division by zero
-        //     if (denom < 0.0001f) return 0;
-        //     
-        //     return baseLength / denom;
-        // }
+        // chamferA.Prev.Draw(2f, ColorRgba.White);
+        // chamferA.Next.Draw(2f, ColorRgba.White);
+        // chamferB.Prev.Draw(2f, ColorRgba.White);
+        // chamferB.Next.Draw(2f, ColorRgba.White);
+        // chamferC.Prev.Draw(2f, ColorRgba.White);
+        // chamferC.Next.Draw(2f, ColorRgba.White);
+        // chamferD.Prev.Draw(2f, ColorRgba.White);
+        // chamferD.Next.Draw(2f, ColorRgba.White);
         //
-        // float GetIsoscelesBaseLength(float sideLength, Vector2 dir1, Vector2 dir2)
-        // {
-        //     float dot = Vector2.Dot(dir1, dir2);
-        //     // Identity: 2 * sin(theta/2) = sqrt(2 * (1 - cos(theta)))
-        //     float denom = MathF.Sqrt(2f * (1f - dot)); 
-        //     
-        //     return sideLength * denom;
-        // }
+        // chamferAOuter.Prev.Draw(4f, ColorRgba.Red);
+        // chamferAOuter.Next.Draw(4f, ColorRgba.Red);
+        // chamferAInner.Prev.Draw(4f, ColorRgba.Crimson);
+        // chamferAInner.Next.Draw(4f, ColorRgba.Crimson);
+        //
+        // chamferBOuter.Prev.Draw(4f, ColorRgba.Yellow);
+        // chamferBOuter.Next.Draw(4f, ColorRgba.Yellow);
+        // chamferBInner.Prev.Draw(4f, ColorRgba.Orange);
+        // chamferBInner.Next.Draw(4f, ColorRgba.Orange);
+        //
+        // chamferCOuter.Prev.Draw(4f, ColorRgba.Green);
+        // chamferCOuter.Next.Draw(4f, ColorRgba.Green);
+        // chamferCInner.Prev.Draw(4f, ColorRgba.ForestGreen);
+        // chamferCInner.Next.Draw(4f, ColorRgba.ForestGreen);
+        //
+        // chamferDOuter.Prev.Draw(4f, ColorRgba.Blue);
+        // chamferDOuter.Next.Draw(4f, ColorRgba.Blue);
+        // chamferDInner.Prev.Draw(4f, ColorRgba.DodgerBlue);
+        // chamferDInner.Next.Draw(4f, ColorRgba.DodgerBlue);
     }
     
     //TODO: Docs
