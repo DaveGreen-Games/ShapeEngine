@@ -1275,6 +1275,9 @@ public static class QuadDrawing
     private readonly struct ChamferedCorner
     {
         #region Fields
+
+        public readonly bool SharpCorner;
+        public readonly Vector2 Corner;
         public readonly Vector2 Prev;
         public readonly Vector2 Next;
         public readonly Vector2 ChamferDir;
@@ -1284,39 +1287,74 @@ public static class QuadDrawing
         #endregion
         
         #region Constructors
+        public ChamferedCorner(Vector2 p, float cornerLength, Vector2 nW, Vector2 nH)
+        {
+            Corner = p;
+            if (cornerLength <= 0f)
+            {
+                Prev = p;
+                Next = p;
+                ChamferEdgeDir = Vector2.Zero;
+                ChamferDir = -(nW + nH).Normalize();
+                ChamferDirPrev = ChamferDir;
+                ChamferDirNext = ChamferDir;
+                SharpCorner = true;
+            }
+            else
+            {
+                Prev = p + nW * cornerLength;
+                Next = p + nH * cornerLength;
+                ChamferEdgeDir = (Next - Prev).Normalize();
+                ChamferDir = ChamferEdgeDir.GetPerpendicularRight();
+                ChamferDirPrev = (ChamferDir + (-nH)).Normalize();
+                ChamferDirNext = (ChamferDir + (-nW)).Normalize();
+                SharpCorner = false;
+            }
+            
+        }
         public ChamferedCorner(Vector2 p, float cornerLengthW, float cornerLengthH, Vector2 nW, Vector2 nH)
         {
+            Corner = p;
             Prev = p + nW * cornerLengthW;
             Next = p + nH * cornerLengthH;
             ChamferEdgeDir = (Next - Prev).Normalize();
             ChamferDir = ChamferEdgeDir.GetPerpendicularRight();
             ChamferDirPrev = (ChamferDir + (-nH)).Normalize();
             ChamferDirNext = (ChamferDir + (-nW)).Normalize();
+            SharpCorner = false;
         }
         
         public ChamferedCorner(Vector2 p, float cornerLengthW, float cornerLengthH, Vector2 nW, Vector2 nH, Vector2 chamferDirPrev, Vector2 chamferDirNext)
         {
+            Corner = p;
             Prev = p + nW * cornerLengthW;
             Next = p + nH * cornerLengthH;
             ChamferEdgeDir = (Next - Prev).Normalize();
             ChamferDir = ChamferEdgeDir.GetPerpendicularRight();
             ChamferDirPrev = chamferDirPrev;
             ChamferDirNext = chamferDirNext;
+            SharpCorner = false;
         }
         #endregion
         
         #region Functions
         public Vector2 ChamferCenter => (Prev + Next) * 0.5f;
         public float GetCornerLength => (Next - Prev).Length();
-        public float GetMaxChamferLength => Triangle.GetIsoscelesSideLength(GetCornerLength, ChamferDirNext, ChamferDirPrev);
+        public float GetMaxChamferLength => SharpCorner ? float.MaxValue : Triangle.GetIsoscelesSideLength(GetCornerLength, ChamferDirNext, ChamferDirPrev);
+
         public Vector2 GetCenterTo(ChamferedCorner other) => (Next + other.Prev) * 0.5f;
         public float GetMaxChamferLengthTo(ChamferedCorner other)
         {
+            if (SharpCorner || other.SharpCorner) return 0f;
             float baseLength = GetLengthTo(other);
             return Triangle.GetIsoscelesSideLength(baseLength, ChamferDirNext, other.ChamferDirPrev);
         }
         public float GetChamferLength(Vector2 normal, float lineThickness)
         {
+            if (SharpCorner)
+            {
+                return MathF.Sqrt(2f * lineThickness * lineThickness);
+            }
             var angleRad = ShapeVec.AngleRad(ChamferDirNext, normal);
             return Triangle.RightTriangleGetHypotenuseFromAdjacent(angleRad, lineThickness);
         }
@@ -1326,6 +1364,11 @@ public static class QuadDrawing
         }
         public ChamferPoints GetOuterPoints(float chamferLength)
         {
+            if (SharpCorner)
+            {
+                var outer = Prev + ChamferDir * chamferLength;
+                return (outer, outer);
+            }
             var outerPrev = Prev + ChamferDirPrev * chamferLength;
             var outerNext = Next + ChamferDirNext * chamferLength;
             return (outerPrev, outerNext);
@@ -1343,12 +1386,24 @@ public static class QuadDrawing
             var center = GetCenterTo(other);
             return center + dir * chamferLength;
         }
-        public ChamferPoints GetInnerPoints(float chamferLength) => (GetInnerPrev(chamferLength), GetInnerNext(chamferLength));
+        public ChamferPoints GetInnerPoints(float chamferLength)
+        {
+            if (SharpCorner)
+            {
+                var p = Next - ChamferDir * chamferLength;
+                return (p, p);
+            }
+            return (GetInnerPrev(chamferLength), GetInnerNext(chamferLength));
+        }
+
         public ChamferPoints GetInnerPoints(float chamferLengthH, float chamferLengthV) => (GetInnerPrev(chamferLengthH), GetInnerNext(chamferLengthV));
         public ChamferPoints GetInnerPointsClamped(float chamferLength)
         {
-            var center = ChamferCenter;
-            var prev = center - ChamferDir * chamferLength;
+            // var center = SharpCorner ? Next : ChamferCenter;
+            // var prev = center - ChamferDir * chamferLength;
+            // return (prev, prev);
+            
+            var prev = Corner - ChamferDir * chamferLength;
             return (prev, prev);
         }
         public float CalculateMiterLengthTo(ChamferedCorner other, Vector2 normal, float lineThickness, float sizeHalf)
@@ -1445,10 +1500,11 @@ public static class QuadDrawing
         ChamferPoints chamferAInner, chamferBInner, chamferCInner, chamferDInner;
         if (insideCornerClamped)
         {
-            chamferAInner = chamferA.GetInnerPointsClamped(lineThickness);
-            chamferBInner = chamferB.GetInnerPointsClamped(lineThickness);
-            chamferCInner = chamferC.GetInnerPointsClamped(lineThickness);
-            chamferDInner = chamferD.GetInnerPointsClamped(lineThickness);
+            var offset = MathF.Sqrt(2f * lineThickness * lineThickness);
+            chamferAInner = chamferA.GetInnerPointsClamped(offset);
+            chamferBInner = chamferB.GetInnerPointsClamped(offset);
+            chamferCInner = chamferC.GetInnerPointsClamped(offset);
+            chamferDInner = chamferD.GetInnerPointsClamped(offset);
         }
         else if (widthEdgeClamped || heightEdgeClamped)
         {
@@ -1592,23 +1648,23 @@ public static class QuadDrawing
         ChamferPoints chamferAInner, chamferBInner, chamferCInner, chamferDInner;
         if (insideCornerClamped)
         {
-            lineThickness = MathF.Min(lineThickness, minHalfSize);
+            // lineThickness = MathF.Min(lineThickness, minHalfSize);
+            // var offset = MathF.Sqrt(2f * lineThickness * lineThickness);
+            // var aDir = (nR + nD).Normalize();
+            // var bDir = (nU + nR).Normalize();
+            // var aInner = quad.A + aDir * offset;
+            // var bInner = quad.B + bDir * offset;
+            // var cInner = quad.C - aDir * offset;
+            // var dInner = quad.D - bDir * offset;
+            // chamferAInner = (aInner, aInner);
+            // chamferBInner = (bInner, bInner);
+            // chamferCInner = (cInner, cInner);
+            // chamferDInner = (dInner, dInner);
             var offset = MathF.Sqrt(2f * lineThickness * lineThickness);
-            var aDir = (nR + nD).Normalize();
-            var bDir = (nU + nR).Normalize();
-            var aInner = quad.A + aDir * offset;
-            var bInner = quad.B + bDir * offset;
-            var cInner = quad.C - aDir * offset;
-            var dInner = quad.D - bDir * offset;
-            chamferAInner = (aInner, aInner);
-            chamferBInner = (bInner, bInner);
-            chamferCInner = (cInner, cInner);
-            chamferDInner = (dInner, dInner);
-            
-            // chamferAInner = chamferA.GetInnerPointsClamped(lineThickness);
-            // chamferBInner = chamferB.GetInnerPointsClamped(lineThickness);
-            // chamferCInner = chamferC.GetInnerPointsClamped(lineThickness);
-            // chamferDInner = chamferD.GetInnerPointsClamped(lineThickness);
+            chamferAInner = chamferA.GetInnerPointsClamped(offset);
+            chamferBInner = chamferB.GetInnerPointsClamped(offset);
+            chamferCInner = chamferC.GetInnerPointsClamped(offset);
+            chamferDInner = chamferD.GetInnerPointsClamped(offset);
         }
         else if (widthEdgeClamped || heightEdgeClamped)
         {
@@ -1676,7 +1732,208 @@ public static class QuadDrawing
     //TODO: Implement + Docs
     public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
+        tlCorner = MathF.Max(0, tlCorner);
+        blCorner = MathF.Max(0, blCorner);
+        brCorner = MathF.Max(0, brCorner);
+        trCorner = MathF.Max(0, trCorner);
+        var cornerSum = tlCorner + blCorner + brCorner + trCorner;
+       
+        if(lineThickness <= 0 && cornerSum <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
         
+        if (cornerSum <= 0)
+        {
+            quad.DrawLines(lineThickness, color);
+            return;
+        }
+        
+        if (lineThickness <= 0)
+        {
+            quad.DrawChamferedCorners(color, tlCorner, blCorner, brCorner, trCorner);
+            return;
+        }
+        
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        var minHalfSize = MathF.Min(halfWidth, halfHeight);
+        lineThickness = MathF.Min(lineThickness, minHalfSize);
+        
+        var cornerLengthTl = MathF.Min(tlCorner, minHalfSize);
+        var cornerLengthBl = MathF.Min(blCorner, minHalfSize);
+        var cornerLengthBr = MathF.Min(brCorner, minHalfSize);
+        var cornerLengthTr = MathF.Min(trCorner, minHalfSize);
+        
+        var nR = quad.NormalRight;
+        var nD = quad.NormalDown;
+        var nL = -nR;
+        var nU = -nD;
+        
+        var rayColor = color.ToRayColor();
+            
+        var chamferA = new ChamferedCorner(quad.A, cornerLengthTl, nR, nD);
+        var chamferB = new ChamferedCorner(quad.B, cornerLengthBl, nU, nR);
+        var chamferC = new ChamferedCorner(quad.C, cornerLengthBr, nL, nU);
+        var chamferD = new ChamferedCorner(quad.D, cornerLengthTr, nD, nL);
+        
+        var chamferLengthA = chamferA.GetChamferLength(nL, lineThickness);
+        var chamferLengthB = chamferB.GetChamferLength(nD, lineThickness);
+        var chamferLengthC = chamferC.GetChamferLength(nR, lineThickness);
+        var chamferLengthD = chamferD.GetChamferLength(nU, lineThickness);
+        
+        var maxChamferLengthA = chamferA.GetMaxChamferLength;
+        var maxChamferLengthB = chamferB.GetMaxChamferLength;
+        var maxChamferLengthC = chamferC.GetMaxChamferLength;
+        var maxChamferLengthD = chamferD.GetMaxChamferLength;
+        //
+        // var maxChamferLengthAB = chamferA.GetMaxChamferLengthTo(chamferB);
+        // var maxChamferLengthBC = chamferB.GetMaxChamferLengthTo(chamferC);
+        // var maxChamferLengthCD = chamferC.GetMaxChamferLengthTo(chamferD);
+        // var maxChamferLengthDA = chamferD.GetMaxChamferLengthTo(chamferA);
+        
+        bool insideCornerClampedA = chamferLengthA > maxChamferLengthA;
+        bool insideCornerClampedB = chamferLengthB > maxChamferLengthB;
+        bool insideCornerClampedC = chamferLengthC > maxChamferLengthC;
+        bool insideCornerClampedD = chamferLengthD > maxChamferLengthD;
+        //
+        // bool edgeABClamed = chamferLengthA > maxChamferLengthAB || chamferLengthB > maxChamferLengthAB;
+        // bool edgeBCClamed = chamferLengthB > maxChamferLengthBC || chamferLengthC > maxChamferLengthBC;
+        // bool edgeCDClamed = chamferLengthC > maxChamferLengthCD || chamferLengthD > maxChamferLengthCD;
+        // bool edgeDAClamed = chamferLengthD > maxChamferLengthDA || chamferLengthA > maxChamferLengthDA;
+        
+        var chamferAOuter = chamferA.GetOuterPoints(chamferLengthA);
+        var chamferBOuter = chamferB.GetOuterPoints(chamferLengthB);
+        var chamferCOuter = chamferC.GetOuterPoints(chamferLengthC); 
+        var chamferDOuter = chamferD.GetOuterPoints(chamferLengthD);
+        
+        ChamferPoints chamferAInner, chamferBInner, chamferCInner, chamferDInner;
+        // if (insideCornerClamped)
+        // {
+        //     lineThickness = MathF.Min(lineThickness, minHalfSize);
+        //     var offset = MathF.Sqrt(2f * lineThickness * lineThickness);
+        //     var aDir = (nR + nD).Normalize();
+        //     var bDir = (nU + nR).Normalize();
+        //     var aInner = quad.A + aDir * offset;
+        //     var bInner = quad.B + bDir * offset;
+        //     var cInner = quad.C - aDir * offset;
+        //     var dInner = quad.D - bDir * offset;
+        //     chamferAInner = (aInner, aInner);
+        //     chamferBInner = (bInner, bInner);
+        //     chamferCInner = (cInner, cInner);
+        //     chamferDInner = (dInner, dInner);
+        //     
+        //     // chamferAInner = chamferA.GetInnerPointsClamped(lineThickness);
+        //     // chamferBInner = chamferB.GetInnerPointsClamped(lineThickness);
+        //     // chamferCInner = chamferC.GetInnerPointsClamped(lineThickness);
+        //     // chamferDInner = chamferD.GetInnerPointsClamped(lineThickness);
+        // }
+        // else if (widthEdgeClamped || heightEdgeClamped)
+        // {
+        //     // if (widthEdgeClamped && heightEdgeClamped)
+        //     // {
+        //     //     float miterLengthWidth = chamferB.CalculateMiterLengthTo(chamferC, nU, lineThickness, halfHeight);
+        //     //     float miterLengthHeight = chamferA.CalculateMiterLengthTo(chamferB, nR, lineThickness, halfWidth);
+        //     //     
+        //     //     var bNextInner = chamferB.GetInnerTo(chamferC, miterLengthWidth, nU);
+        //     //     var dNextInner = chamferD.GetInnerTo(chamferA, miterLengthWidth, nD);
+        //     //     var aNextInner = chamferA.GetInnerTo(chamferB, miterLengthHeight, nR);
+        //     //     var cNextInner = chamferC.GetInnerTo(chamferD, miterLengthHeight, nL);
+        //     //     
+        //     //     chamferAInner = (dNextInner, aNextInner);
+        //     //     chamferBInner = (aNextInner, bNextInner);
+        //     //     chamferCInner = (bNextInner, cNextInner);
+        //     //     chamferDInner = (cNextInner, dNextInner);
+        //     // }
+        //     // else
+        //     if (widthEdgeClamped)
+        //     {
+        //         float miterLength = chamferB.CalculateMiterLengthTo(chamferC, nU, lineThickness, halfHeight);
+        //         
+        //         var bNextInner = chamferB.GetInnerTo(chamferC, miterLength, nU);
+        //         chamferBInner = (chamferB.GetInnerPrev(chamferLengthV), bNextInner);
+        //         chamferCInner = (bNextInner, chamferC.GetInnerNext(chamferLengthV));
+        //         
+        //         var dNextInner = chamferD.GetInnerTo(chamferA, miterLength, nD);
+        //         chamferDInner = (chamferD.GetInnerPrev(chamferLengthV), dNextInner);
+        //         chamferAInner = (dNextInner, chamferA.GetInnerNext(chamferLengthV));
+        //     }
+        //     else
+        //     {
+        //         float miterLength = chamferA.CalculateMiterLengthTo(chamferB, nR, lineThickness, halfWidth);
+        //         
+        //         var aNextInner = chamferA.GetInnerTo(chamferB, miterLength, nR);
+        //         chamferAInner = (chamferA.GetInnerPrev(chamferLengthH), aNextInner);
+        //         chamferBInner = (aNextInner, chamferB.GetInnerNext(chamferLengthH));
+        //         
+        //         var cNextInner = chamferC.GetInnerTo(chamferD, miterLength, nL);
+        //         chamferCInner = (chamferC.GetInnerPrev(chamferLengthH), cNextInner);
+        //         chamferDInner = (cNextInner, chamferD.GetInnerNext(chamferLengthH));
+        //     }
+        // }
+        // else
+        // {
+        //     chamferAInner = chamferA.GetInnerPoints(chamferLengthH, chamferLengthV);
+        //     chamferBInner = chamferB.GetInnerPoints(chamferLengthV, chamferLengthH);
+        //     chamferCInner = chamferC.GetInnerPoints(chamferLengthH, chamferLengthV);
+        //     chamferDInner = chamferD.GetInnerPoints(chamferLengthV, chamferLengthH);
+        // }
+
+        
+        var clampedOffset = MathF.Sqrt(2f * lineThickness * lineThickness);
+        if (insideCornerClampedA)
+        {
+            chamferAInner = chamferA.GetInnerPointsClamped(clampedOffset);
+        }
+        else
+        {
+            chamferAInner = chamferA.GetInnerPoints(chamferLengthA);
+        }
+        
+        if (insideCornerClampedB)
+        {
+            chamferBInner = chamferB.GetInnerPointsClamped(clampedOffset);
+        }
+        else
+        {
+            chamferBInner = chamferB.GetInnerPoints(chamferLengthB);
+        }
+        
+        if (insideCornerClampedC)
+        {
+            chamferCInner = chamferC.GetInnerPointsClamped(clampedOffset);
+        }
+        else
+        {
+            
+            chamferCInner = chamferC.GetInnerPoints(chamferLengthC);
+        }
+        
+        if (insideCornerClampedD)
+        {
+            chamferDInner = chamferD.GetInnerPointsClamped(clampedOffset);
+        }
+        else
+        {
+            
+            chamferDInner = chamferD.GetInnerPoints(chamferLengthD);
+        }
+        
+        
+        
+        DrawChamferedCorner(chamferAInner, chamferAOuter, insideCornerClampedA, rayColor);
+        DrawChamferedCorner(chamferBInner, chamferBOuter, insideCornerClampedB, rayColor);
+        DrawChamferedCorner(chamferCInner, chamferCOuter, insideCornerClampedC, rayColor);
+        DrawChamferedCorner(chamferDInner, chamferDOuter, insideCornerClampedD, rayColor);
+        
+        DrawChamferedEdgeTo(chamferAInner, chamferAOuter, chamferBInner, chamferBOuter, false, false, false, rayColor);
+        DrawChamferedEdgeTo(chamferBInner, chamferBOuter, chamferCInner, chamferCOuter, false, false, true, rayColor);
+        DrawChamferedEdgeTo(chamferCInner, chamferCOuter, chamferDInner, chamferDOuter, false, false, false, rayColor);
+        DrawChamferedEdgeTo(chamferDInner, chamferDOuter, chamferAInner, chamferAOuter, false, false, true, rayColor);
     }
     
     #endregion
