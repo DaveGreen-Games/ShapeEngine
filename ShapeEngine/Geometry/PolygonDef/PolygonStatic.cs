@@ -391,40 +391,47 @@ public partial class Polygon
     }
     
     
-    #region Inset Convex
+    //NOTE: Inset and Triangulate will be replaced by a deticated solution for polygon/polyline offsetting and polygon outline triangulation
     
-    public static bool InsetConvexInPlace(List<Vector2> poly, float inset, float eps = 1e-6f)
+    #region Inset Convex
+    /// <summary>
+    /// Normal convenience function: allocates and returns a new list.
+    /// Thread-safe.
+    /// </summary>
+    public static List<Vector2> InsetConvex(IReadOnlyList<Vector2> poly, float inset, float eps = 1e-6f)
     {
         if (poly == null) throw new ArgumentNullException(nameof(poly));
-        if (poly.Count < 3) return false;
-        if (inset < 0) return false;
-
-        var tmp = s_tempBuffer;
-        tmp.Clear();
-
-        if (!InsetConvex(poly, tmp, inset, eps))
-            return false;
-
-        // Copy result back into poly (no new list object; capacity reuse)
-        poly.Clear();
-        if (poly.Capacity < tmp.Count) poly.Capacity = tmp.Count;
-        for (int i = 0; i < tmp.Count; i++) poly.Add(tmp[i]);
-        return true;
+        // Allocate output (garbage-producing variant)
+        var result = new List<Vector2>(Math.Max(4, poly.Count));
+        // Use low-gc core with temporary buffers allocated here (still allocations, but contained)
+        var tmp = new List<Vector2>(Math.Max(4, poly.Count));
+        InsetConvex(poly, inset, result, tmp, eps);
+        return result;
     }
-    
-    public static bool InsetConvex(IReadOnlyList<Vector2> poly, List<Vector2> result, float inset, float eps = 1e-6f)
+
+    /// <summary>
+    /// Lowest-garbage variant:
+    /// - Writes output into 'result' (cleared first).
+    /// - Uses 'temp' as scratch (cleared first).
+    /// - Thread-safe because caller owns buffers.
+    ///
+    /// After the first time the lists grow to sufficient capacity, this produces zero GC.
+    /// </summary>
+    public static bool InsetConvex(IReadOnlyList<Vector2> poly, float inset, List<Vector2> result, List<Vector2> temp, float eps = 1e-6f)
     {
         if (poly == null) throw new ArgumentNullException(nameof(poly));
         if (result == null) throw new ArgumentNullException(nameof(result));
+        if (temp == null) throw new ArgumentNullException(nameof(temp));
+
         int n = poly.Count;
         if (n < 3) return false;
         if (inset < 0) return false;
 
         result.Clear();
+        temp.Clear();
 
         if (inset <= eps)
         {
-            // Copy input to result (no allocations if capacity is sufficient)
             EnsureCapacity(result, n);
             for (int i = 0; i < n; i++) result.Add(poly[i]);
             return true;
@@ -432,14 +439,13 @@ public partial class Polygon
 
         bool ccw = SignedArea2(poly) > 0f;
 
-        // We'll do Sutherland–Hodgman clipping but using two reusable buffers
-        // and a reusable "big box" start polygon.
         float scale = EstimateScale(poly);
         float big = MathF.Max(1f, scale) * 10000f;
 
-        // Buffer A and B reused across edges
-        var a = result;              // use caller's list as buffer A
-        var b = s_tempBuffer;        // static [ThreadStatic] buffer B (see below)
+        // We'll clip a big box by each inset half-plane.
+        // Use result/temp alternately as buffers 'a' and 'b'.
+        List<Vector2> a = result;
+        List<Vector2> b = temp;
 
         a.Clear();
         EnsureCapacity(a, 4);
@@ -463,11 +469,10 @@ public partial class Polygon
             Vector2 inwardN = ccw ? leftN : -leftN;
             float c = Vector2.Dot(inwardN, p0) + inset;
 
-            // Clip polygon 'a' into 'b'
-            ClipByHalfPlane(a, b, inwardN, c, eps);
+            ClipByHalfPlane(input: a, output: b, n: inwardN, c: c, eps: eps);
 
-            // swap a <-> b (no allocations)
-            var tmp = a; a = b; b = tmp;
+            // swap buffers (no allocations)
+            var t = a; a = b; b = t;
             b.Clear();
 
             if (a.Count == 0)
@@ -478,15 +483,19 @@ public partial class Polygon
             }
         }
 
-        // Ensure winding matches input
+        // Degenerate/tiny outcomes -> collapse to single point.
         if (a.Count >= 3)
         {
-            bool outCcw = SignedArea2(a) > 0f;
-            if (outCcw != ccw) a.Reverse();
+            float a2 = MathF.Abs(SignedArea2(a));
+            if (a2 <= eps)
+            {
+                Vector2 p = CentroidOfVertices(a);
+                a.Clear();
+                a.Add(p);
+            }
         }
         else if (a.Count == 2)
         {
-            // collapse segment -> midpoint
             Vector2 mid = 0.5f * (a[0] + a[1]);
             a.Clear();
             a.Add(mid);
@@ -496,7 +505,15 @@ public partial class Polygon
             a.Add(PolygonAreaCentroid(poly, eps));
         }
 
-        // If we ended up in the temp buffer, copy back into 'result'
+        // Preserve original winding (only meaningful for polygons with 3+ vertices)
+        if (a.Count >= 3)
+        {
+            bool outCcw = SignedArea2(a) > 0f;
+            if (outCcw != ccw) a.Reverse();
+        }
+
+        // If final buffer is temp, copy it back into result.
+        // (This copy is still allocation-free; it's just element copies.)
         if (!ReferenceEquals(a, result))
         {
             result.Clear();
@@ -507,12 +524,9 @@ public partial class Polygon
         return true;
     }
 
-    // --------- low-gc helpers (reusing buffers) ---------
+    // ------------------- Clipping core -------------------
 
-    // Thread-static to avoid contention; reuse between calls => no per-call GC.
-    [ThreadStatic] private static List<Vector2>? t_temp;
-    private static List<Vector2> s_tempBuffer => t_temp ??= new List<Vector2>(16);
-
+    // Clips 'input' by half-plane dot(n, p) >= c into 'output'
     private static void ClipByHalfPlane(List<Vector2> input, List<Vector2> output, Vector2 n, float c, float eps)
     {
         output.Clear();
@@ -547,133 +561,13 @@ public partial class Polygon
         Cleanup(output, eps);
     }
 
-    private static void EnsureCapacity(List<Vector2> list, int needed)
-    {
-        if (list.Capacity < needed) list.Capacity = needed;
-    }
-    
-    
-    
-    public static List<Vector2> InsetConvex(IReadOnlyList<Vector2> poly, float inset, float eps = 1e-6f)
-    {
-        if (poly == null) throw new ArgumentNullException(nameof(poly));
-        int n = poly.Count;
-        if (n < 3) throw new ArgumentException("Polygon must have at least 3 points.", nameof(poly));
-        if (inset < 0) throw new ArgumentException("Inset must be >= 0 (positive shrinks).", nameof(inset));
-        if (inset <= eps) return new List<Vector2>(poly);
-
-        float area2 = SignedArea2(poly);
-        bool ccw = area2 > 0f;
-
-        // Start from a big box, then clip by each inset half-plane.
-        float scale = EstimateScale(poly);
-        float big = MathF.Max(1f, scale) * 10000f;
-
-        var subject = new List<Vector2>(4)
-        {
-            new Vector2(-big, -big),
-            new Vector2( big, -big),
-            new Vector2( big,  big),
-            new Vector2(-big,  big),
-        };
-
-        for (int i = 0; i < n; i++)
-        {
-            Vector2 a = poly[i];
-            Vector2 b = poly[(i + 1) % n];
-            Vector2 e = b - a;
-
-            if (e.LengthSquared() <= eps * eps)
-                continue;
-
-            // Left normal of edge (perp CCW)
-            Vector2 leftN = new Vector2(-e.Y, e.X);
-            leftN = NormalizeSafe(leftN, eps);
-
-            // For CCW polygon, inside is to the left of each directed edge.
-            // For CW polygon, inside is to the right -> inward is -leftN.
-            Vector2 inwardN = ccw ? leftN : -leftN;
-
-            // Inset constraint: dot(inwardN, p) >= dot(inwardN, a) + inset
-            float c = Vector2.Dot(inwardN, a) + inset;
-
-            subject = ClipByHalfPlane(subject, inwardN, c, eps);
-
-            if (subject.Count == 0)
-            {
-                // No feasible region remains -> treat as collapsed.
-                return new List<Vector2> { PolygonAreaCentroid(poly, eps) };
-            }
-        }
-
-        // Degenerate/tiny outcomes: collapse to a point.
-        if (subject.Count >= 3)
-        {
-            float a2 = MathF.Abs(SignedArea2(subject));
-            if (a2 <= eps)
-                return new List<Vector2> { CentroidOfVertices(subject) };
-        }
-        else if (subject.Count == 2)
-        {
-            return new List<Vector2> { 0.5f * (subject[0] + subject[1]) };
-        }
-        else if (subject.Count == 1)
-        {
-            return new List<Vector2> { subject[0] };
-        }
-
-        // Preserve original winding
-        bool outCcw = SignedArea2(subject) > 0f;
-        if (outCcw != ccw) subject.Reverse();
-
-        return subject;
-    }
-    
-    // --- Half-plane clipping (Sutherland–Hodgman against dot(n, p) >= c) ---
-
-    private static List<Vector2> ClipByHalfPlane(List<Vector2> poly, Vector2 n, float c, float eps)
-    {
-        var output = new List<Vector2>();
-        int count = poly.Count;
-        if (count == 0) return output;
-
-        Vector2 prev = poly[count - 1];
-        float prevD = Vector2.Dot(n, prev) - c;
-        bool prevInside = prevD >= -eps;
-
-        for (int i = 0; i < count; i++)
-        {
-            Vector2 curr = poly[i];
-            float currD = Vector2.Dot(n, curr) - c;
-            bool currInside = currD >= -eps;
-
-            if (currInside)
-            {
-                if (!prevInside)
-                    output.Add(IntersectSegmentWithLine(prev, curr, n, c, eps));
-                output.Add(curr);
-            }
-            else if (prevInside)
-            {
-                output.Add(IntersectSegmentWithLine(prev, curr, n, c, eps));
-            }
-
-            prev = curr;
-            prevInside = currInside;
-        }
-
-        Cleanup(output, eps);
-        return output;
-    }
-
     private static Vector2 IntersectSegmentWithLine(Vector2 p0, Vector2 p1, Vector2 n, float c, float eps)
     {
-        // Segment p(t)=p0 + t*(p1-p0) intersects line dot(n,p)=c.
         Vector2 d = p1 - p0;
         float denom = Vector2.Dot(n, d);
 
         if (MathF.Abs(denom) <= eps)
-            return p0; // nearly parallel; stable fallback
+            return p0; // nearly parallel fallback
 
         float t = (c - Vector2.Dot(n, p0)) / denom;
         t = Clamp01(t);
@@ -691,12 +585,13 @@ public partial class Polygon
             if ((poly[i] - poly[i - 1]).LengthSquared() <= eps2)
                 poly.RemoveAt(i);
         }
+
         // Remove closing near-duplicate
         if (poly.Count > 1 && (poly[0] - poly[poly.Count - 1]).LengthSquared() <= eps2)
             poly.RemoveAt(poly.Count - 1);
     }
 
-    // --- Geometry helpers ---
+    // ------------------- Geometry helpers -------------------
 
     private static float SignedArea2(IReadOnlyList<Vector2> poly)
     {
@@ -738,6 +633,11 @@ public partial class Polygon
 
     private static float Clamp01(float x) => x < 0f ? 0f : (x > 1f ? 1f : x);
 
+    private static void EnsureCapacity(List<Vector2> list, int needed)
+    {
+        if (list.Capacity < needed) list.Capacity = needed;
+    }
+
     private static Vector2 CentroidOfVertices(IReadOnlyList<Vector2> poly)
     {
         Vector2 c = Vector2.Zero;
@@ -745,15 +645,12 @@ public partial class Polygon
         return c / Math.Max(1, poly.Count);
     }
 
-    /// <summary>
-    /// Standard area-weighted polygon centroid (valid for simple polygons).
-    /// For convex polygons, this is guaranteed inside.
-    /// </summary>
+    // Area-weighted centroid (guaranteed inside for convex polygons)
     private static Vector2 PolygonAreaCentroid(IReadOnlyList<Vector2> poly, float eps)
     {
         double a2 = 0;     // 2*area
-        double cx6a = 0;   // 6A * Cx
-        double cy6a = 0;   // 6A * Cy
+        double cx6a = 0;   // 6A*Cx
+        double cy6a = 0;   // 6A*Cy
 
         int n = poly.Count;
         for (int i = 0; i < n; i++)
@@ -775,9 +672,197 @@ public partial class Polygon
         double cy = cy6a / (6.0 * A);
         return new Vector2((float)cx, (float)cy);
     }
-    
-    
-    
     #endregion
     
+    #region Triangulate Convex Outline
+    public static bool TriangulateConvexOutline(IReadOnlyList<Vector2> outerCCW, IReadOnlyList<Vector2> innerCCW, List<Vector2> vertices, List<int> indices, float eps = 1e-6f)
+    {
+        int nO = outerCCW.Count;
+        int nI = innerCCW.Count;
+
+        if (nO < 3 || nI < 3)
+        {
+            Console.WriteLine("[TriangulateConvexOutlineYDown] Warning: outer/inner must have at least 3 points.");
+            return false;
+        }
+
+        vertices.Clear();
+        indices.Clear();
+
+        // Pack vertices as [outer..., inner...]
+        int outerBase = 0;
+        EnsureCapacity(vertices, nO + nI);
+        for (int i = 0; i < nO; i++) vertices.Add(outerCCW[i]);
+        int innerBase = vertices.Count;
+        for (int i = 0; i < nI; i++) vertices.Add(innerCCW[i]);
+
+        // Screen-space CCW (Y-down) means SignedArea2 (math Y-up) will be NEGATIVE.
+        // We'll just detect and if either is not in the expected orientation, warn and proceed anyway.
+        // If winding is wrong, triangles may be flipped; caller can fix their input order.
+        float outerArea2 = SignedArea2_MathYUp(outerCCW);
+        float innerArea2 = SignedArea2_MathYUp(innerCCW);
+        if (outerArea2 >= 0 || innerArea2 >= 0)
+        {
+            Console.WriteLine("[TriangulateConvexOutlineYDown] Warning: expected CCW in Y-down. (SignedArea2 should be < 0 in math-Y-up test). Proceeding anyway.");
+        }
+
+        // Start at rightmost points (max X, tie max Y) on both loops.
+        int iO = IndexOfRightmost(outerCCW);
+        int iI = IndexOfRightmost(innerCCW);
+
+        // We will advance exactly nO + nI times, producing that many triangles.
+        // This is the correct triangle count for a convex ring: nO + nI triangles.
+        // (Think of it as triangulating a convex polygon with a convex hole -> nO + nI triangles.)
+        int stepsO = 0, stepsI = 0;
+
+        // Pre-ensure index capacity (avoid growth GC in hot loops)
+        EnsureCapacity(indices, (nO + nI) * 3);
+
+        // Helper local to map loop index -> vertex buffer index
+        int O(int idx) => outerBase + idx;
+        int I(int idx) => innerBase + idx;
+
+        for (int guard = 0; guard < nO + nI; guard++)
+        {
+            int nextO = (iO + 1) % nO;
+            int nextI = (iI + 1) % nI;
+
+            Vector2 o = outerCCW[iO];
+            Vector2 oN = outerCCW[nextO];
+            Vector2 i = innerCCW[iI];
+            Vector2 iN = innerCCW[nextI];
+
+            Vector2 dO = oN - o;
+            Vector2 dI = iN - i;
+
+            // Decide which boundary to advance.
+            // We need an ordering of edge directions around the loop.
+            // In Y-down coordinates, the sign of cross is flipped relative to math Y-up.
+            // We'll compute cross in math sense (X right, Y up) by negating Y to get Y-up vectors.
+            // Equivalent: crossYDown(a,b) = -crossMath(a,b).
+            float crossMath = Cross(new Vector2(dO.X, -dO.Y), new Vector2(dI.X, -dI.Y));
+
+            bool advanceOuter;
+            if (MathF.Abs(crossMath) <= eps)
+            {
+                // Nearly parallel; advance shorter edge for stability
+                advanceOuter = dO.LengthSquared() <= dI.LengthSquared();
+            }
+            else
+            {
+                // If dO comes "before" dI in CCW (Y-down), advance outer.
+                // Because we converted to math-Y-up via (x, -y), we can use crossMath > 0 as CCW ordering there.
+                advanceOuter = crossMath > 0;
+            }
+
+            if (advanceOuter)
+            {
+                if (stepsO >= nO) advanceOuter = false; // outer already fully advanced
+            }
+            else
+            {
+                if (stepsI >= nI) advanceOuter = true;  // inner already fully advanced
+            }
+
+            if (advanceOuter)
+            {
+                // Emit triangle between inner current and outer edge (iI, iO, nextO)
+                // Must be CCW in Y-down. We'll enforce by checking signed area in Y-down and swapping if needed.
+                int a = I(iI);
+                int b = O(iO);
+                int c = O(nextO);
+                AddTriangleCCW_YDown(vertices, indices, a, b, c, eps);
+
+                iO = nextO;
+                stepsO++;
+            }
+            else
+            {
+                // Emit triangle between outer current and inner edge (iO, nextI, iI) or similar.
+                int a = O(iO);
+                int b = I(nextI);
+                int c = I(iI);
+                AddTriangleCCW_YDown(vertices, indices, a, b, c, eps);
+
+                iI = nextI;
+                stepsI++;
+            }
+        }
+
+        // Validate we produced a multiple of 3 indices
+        if ((indices.Count % 3) != 0)
+        {
+            Console.WriteLine("[TriangulateConvexOutlineYDown] Warning: produced non-multiple-of-3 indices. Clearing.");
+            indices.Clear();
+            return false;
+        }
+
+        return true;
+    }
+
+    // --- Triangle winding enforcement (Y-down CCW) ---
+
+    private static void AddTriangleCCW_YDown(List<Vector2> v, List<int> idx, int i0, int i1, int i2, float eps)
+    {
+        Vector2 a = v[i0];
+        Vector2 b = v[i1];
+        Vector2 c = v[i2];
+
+        // In Y-down, "CCW" corresponds to negative cross in math coordinates.
+        // Compute signed area *2 in Y-down directly:
+        // crossYDown = crossMath( (b-a) with Y flipped? ) but easiest:
+        // Use math cross with actual coordinates and then negate.
+        float crossMath = Cross(b - a, c - a);
+        float crossYDown = -crossMath;
+
+        if (crossYDown <= eps)
+        {
+            // swap to flip winding
+            idx.Add(i0);
+            idx.Add(i2);
+            idx.Add(i1);
+        }
+        else
+        {
+            idx.Add(i0);
+            idx.Add(i1);
+            idx.Add(i2);
+        }
+    }
+
+    // --- Helpers ---
+
+    private static int IndexOfRightmost(IReadOnlyList<Vector2> poly)
+    {
+        int best = 0;
+        for (int i = 1; i < poly.Count; i++)
+        {
+            var p = poly[i];
+            var b = poly[best];
+            if (p.X > b.X || (p.X == b.X && p.Y > b.Y))
+                best = i;
+        }
+        return best;
+    }
+
+    // Signed area *2 in standard math coords (Y-up).
+    private static float SignedArea2_MathYUp(IReadOnlyList<Vector2> poly)
+    {
+        double sum = 0;
+        for (int i = 0; i < poly.Count; i++)
+        {
+            Vector2 a = poly[i];
+            Vector2 b = poly[(i + 1) % poly.Count];
+            sum += (double)a.X * b.Y - (double)a.Y * b.X;
+        }
+        return (float)sum;
+    }
+
+    private static float Cross(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
+
+    private static void EnsureCapacity<T>(List<T> list, int needed)
+    {
+        if (list.Capacity < needed) list.Capacity = needed;
+    }
+    #endregion
 }
