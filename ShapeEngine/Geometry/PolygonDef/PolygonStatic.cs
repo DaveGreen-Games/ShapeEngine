@@ -426,7 +426,7 @@ public partial class Polygon
         int n = poly.Count;
         if (n < 3) return false;
         if (inset < 0) return false;
-
+        
         result.Clear();
         temp.Clear();
 
@@ -523,7 +523,7 @@ public partial class Polygon
 
         return true;
     }
-
+    
     // ------------------- Clipping core -------------------
 
     // Clips 'input' by half-plane dot(n, p) >= c into 'output'

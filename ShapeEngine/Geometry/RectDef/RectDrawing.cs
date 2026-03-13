@@ -436,14 +436,14 @@ public static class RectDrawing
     public static void DrawChamferedCornersRelativeLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactor)
     {
         var q = rect.ToQuad();
-        q.DrawChamferedCornersRelativeLines(lineThickness, color, cornerLengthFactor);
+        q.DrawChamferedCornersLinesRelative(lineThickness, color, cornerLengthFactor);
         // DrawChamferedCornersRelativeLines(rect, thickness, color, cornerLengthFactor, cornerLengthFactor);
     }
  
     public static void DrawChamferedCornersRelativeLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var q = rect.ToQuad();
-        q.DrawChamferedCornersRelativeLines(lineThickness, color, cornerLengthFactorHorizontal, cornerLengthFactorVertical);
+        q.DrawChamferedCornersLinesRelative(lineThickness, color, cornerLengthFactorHorizontal, cornerLengthFactorVertical);
         // var halfWidth = rect.Width / 2f;
         // var halfHeight = rect.Height / 2f;
         // if(cornerLengthFactorHorizontal >= 1f) cornerLengthFactorHorizontal = 1f;
@@ -456,7 +456,7 @@ public static class RectDrawing
     public static void DrawChamferedCornersRelativeLines(this Rect rect, float lineThickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
     {
        var q = rect.ToQuad();
-       q.DrawChamferedCornersRelativeLines(lineThickness, color, tlCornerFactor, blCornerFactor, brCornerFactor, trCornerFactor);
+       q.DrawChamferedCornersLinesRelative(lineThickness, color, tlCornerFactor, blCornerFactor, brCornerFactor, trCornerFactor);
     }
     #endregion
     
