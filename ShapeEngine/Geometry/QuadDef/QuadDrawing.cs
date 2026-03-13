@@ -1,16 +1,13 @@
 
-using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
-using ChamferPoints = (System.Numerics.Vector2 Prev, System.Numerics.Vector2 Next);
 
 namespace ShapeEngine.Geometry.QuadDef;
 
@@ -98,12 +95,72 @@ public static class QuadDrawing
     
     public static void DrawLines(this Quad q, LineDrawingInfo lineInfo)
     {
-        DrawLinesHelper(q.A, q.B, q.C, q.D, lineInfo.Thickness, lineInfo.Color);
+        q.DrawLines(lineInfo.Thickness, lineInfo.Color);
     }
     
     public static void DrawLines(this Quad q, float lineThickness, ColorRgba color)
     {
-        DrawLinesHelper(q.A, q.B, q.C, q.D, lineThickness, color);
+        
+        var horizontal = q.C - q.B;
+        var vertical = q.A - q.B;
+        var w = horizontal.Length();
+        var h = vertical.Length();
+        if (w <= 0 || h <= 0) return;
+        var bA = horizontal / w;
+        var bC = vertical / h;
+
+        lineThickness = MathF.Min(lineThickness, MathF.Min(w, h) * 0.5f);
+        
+        var offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
+        
+        var internalBisectorB = bA + bC;
+        if (internalBisectorB.LengthSquared() < 1e-8f)
+        {
+            // edges are colinear; pick a perpendicular as fallback
+            internalBisectorB = new Vector2(-bA.Y, bA.X);
+        }
+        else
+        {
+            internalBisectorB = Vector2.Normalize(internalBisectorB);
+        }
+        
+        var aB = Vector2.Normalize(q.B - q.A);
+        var aD = Vector2.Normalize(q.D - q.A);
+
+        var internalBisectorA = aB + aD;
+        if (internalBisectorA.LengthSquared() < 1e-8f)
+        {
+            // edges are colinear; pick a perpendicular as fallback
+            internalBisectorA = new Vector2(-aB.Y, aB.X);
+        }
+        else
+        {
+            internalBisectorA = Vector2.Normalize(internalBisectorA);
+        }
+        
+        var outsideA = q.A - internalBisectorA * offsetDistance;
+        var insideA = q.A + internalBisectorA * offsetDistance;
+        
+        var outsideB = q.B - internalBisectorB * offsetDistance;
+        var insideB = q.B + internalBisectorB * offsetDistance;
+        
+        var outsideC = q.C + internalBisectorA * offsetDistance;
+        var insideC = q.C - internalBisectorA * offsetDistance;
+        
+        var outsideD = q.D + internalBisectorB * offsetDistance;
+        var insideD = q.D - internalBisectorB * offsetDistance;
+        
+        TriangleDrawing.DrawTriangle(outsideA, outsideB, insideA, color);
+        TriangleDrawing.DrawTriangle(insideA, outsideB, insideB, color);
+        
+        TriangleDrawing.DrawTriangle(outsideB, outsideC, insideB, color);
+        TriangleDrawing.DrawTriangle(insideB, outsideC, insideC, color);
+        
+        TriangleDrawing.DrawTriangle(outsideC, outsideD, insideC, color);
+        TriangleDrawing.DrawTriangle(insideC, outsideD, insideD, color);
+        
+        TriangleDrawing.DrawTriangle(outsideD, outsideA, insideD, color);
+        TriangleDrawing.DrawTriangle(insideD, outsideA, insideA, color);
     }
     
     #endregion
@@ -131,14 +188,207 @@ public static class QuadDrawing
     
     #region Draw Lines Percentage
 
-    public static void DrawLinesPercentage(this Quad q, float f, int startIndex, LineDrawingInfo lineInfo)
+    public static void DrawLinesPercentage(this Quad quad, float f, int startIndex, LineDrawingInfo lineInfo)
     {
-        DrawLinesPercentageHelper(q.A, q.B, q.C, q.D, f, startIndex, lineInfo.Thickness, lineInfo.Color);
+        quad.DrawLinesPercentage(f, startIndex, lineInfo.Thickness, lineInfo.Color);
     }
     
-    public static void DrawLinesPercentage(this Quad q, float f, int startIndex, float lineThickness, ColorRgba color)
+    public static void DrawLinesPercentage(this Quad quad, float f, int startIndex, float lineThickness, ColorRgba color)
     {
-        DrawLinesPercentageHelper(q.A, q.B, q.C, q.D, f, startIndex, lineThickness, color);
+        if (f == 0f || lineThickness <= 0) return;
+        var order = GetDrawLinePercentageOrder(quad, f, startIndex);
+        if(order.p <= 0f) return;
+        if(order.p >= 1f)
+        {
+            quad.DrawLines(lineThickness, color);
+            return;
+        }
+        
+        var p1 = order.a;
+        var p2 = order.b;
+        var p3 = order.c;
+        var p4 = order.d;
+        var percentage = order.p;
+        bool ccw = order.ccw;
+        var edge1 = p2 - p1;
+        var edge4 = p1 - p4;
+        float size1 = edge1.Length();
+        float size2 = edge4.Length();
+
+        var rayColor = color.ToRayColor();
+        lineThickness = MathF.Min(lineThickness, MathF.Min(size1, size2) * 0.5f);
+        float offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
+        float totalPerimeter = (size1 + size2) * 2f;
+        float perimeter = totalPerimeter * percentage;
+        float perimeterRemaining = perimeter;
+        
+        var edge2 = p3 - p2;
+        var edge3 = p4 - p3;
+        var n1 = edge1.Normalize();
+        var n2 = edge2.Normalize();
+        var n3 = edge3.Normalize();
+        var n4 = edge4.Normalize();
+        
+        var dir1 = (n1 - n4).Normalize();
+        var dir2 = (n2 - n1).Normalize();
+        var dir3 = (n3 - n2).Normalize();
+        var dir4 = (n4 - n3).Normalize();
+
+        var curPoint = p1;
+        var curInner = curPoint + dir1 * offsetDistance;
+        var curOuter = curPoint- dir1 * offsetDistance;
+
+        var nextPoint = p2;
+        var nextInner= nextPoint + dir2 * offsetDistance;
+        var nextOuter = nextPoint - dir2 * offsetDistance;
+
+        if (perimeterRemaining >= size1)
+        {
+            perimeterRemaining -= size1;
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle(nextInner, curOuter, curInner, rayColor);
+                Raylib.DrawTriangle(nextOuter, curOuter, nextInner, rayColor);
+            }
+        }
+        else
+        {
+            float factor = perimeterRemaining / size1;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+            return;
+        }
+        
+        curInner = nextInner;
+        curOuter = nextOuter;
+        nextPoint = p3;
+        nextInner= nextPoint + dir3 * offsetDistance;
+        nextOuter = nextPoint - dir3 * offsetDistance;
+
+        if (perimeterRemaining >= size2)
+        {
+            perimeterRemaining -= size2;
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( nextInner,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( nextOuter,curOuter, nextInner, rayColor);
+            }
+        }
+        else
+        {
+            float factor = perimeterRemaining / size2;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+            
+            return;
+        }
+        
+        curInner = nextInner;
+        curOuter = nextOuter;
+        nextPoint = p4;
+        nextInner= nextPoint + dir4 * offsetDistance;
+        nextOuter = nextPoint - dir4 * offsetDistance;
+
+        if (perimeterRemaining >= size1)
+        {
+            perimeterRemaining -= size1;
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( nextInner,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( nextOuter,curOuter, nextInner, rayColor);
+            }
+            
+        }
+        else
+        {
+            float factor = perimeterRemaining / size1;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+            
+            return;
+        }
+        
+        curInner = nextInner;
+        curOuter = nextOuter;
+        nextPoint = p1;
+        nextInner= nextPoint + dir1 * offsetDistance;
+        nextOuter = nextPoint - dir1 * offsetDistance;
+
+        if (perimeterRemaining >= size2)
+        {
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle(nextInner,curOuter,  curInner, rayColor);
+                Raylib.DrawTriangle(nextOuter,curOuter,  nextInner, rayColor);
+            }
+            
+        }
+        else
+        {
+            float factor = perimeterRemaining / size2;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+        }
     }
     #endregion
  
@@ -1712,280 +1962,9 @@ public static class QuadDrawing
     #endregion
     
     #region Helper
-    
-    //TODO: Rework and Check if it can be implemented easier
-    //Probably move to quad.DrawLines and remove the helper function with 4 vectors as parameters
-    private static void DrawLinesHelper(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color)
+    private static (Vector2 a, Vector2 b, Vector2 c, Vector2 d, float p, bool ccw) GetDrawLinePercentageOrder(Quad quad, float percentage, int startIndex)
     {
-        var horizontal = c - b;
-        var vertical = a - b;
-        var w = horizontal.Length();
-        var h = vertical.Length();
-        if (w <= 0 || h <= 0) return;
-        var bA = horizontal / w;
-        var bC = vertical / h;
-
-        lineThickness = MathF.Min(lineThickness, MathF.Min(w, h) * 0.5f);
-        
-        var offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
-        
-        // corner at b, adjacent vertices a and c
-        // var bA = Vector2.Normalize(a - b); // direction from corner toward A
-        // var bC = Vector2.Normalize(c - b); // direction from corner toward C
-
-        var internalBisectorB = bA + bC;
-        if (internalBisectorB.LengthSquared() < 1e-8f)
-        {
-            // edges are colinear; pick a perpendicular as fallback
-            internalBisectorB = new Vector2(-bA.Y, bA.X);
-        }
-        else
-        {
-            internalBisectorB = Vector2.Normalize(internalBisectorB);
-        }
-        
-        var aB = Vector2.Normalize(b - a);
-        var aD = Vector2.Normalize(d - a);
-
-        var internalBisectorA = aB + aD;
-        if (internalBisectorA.LengthSquared() < 1e-8f)
-        {
-            // edges are colinear; pick a perpendicular as fallback
-            internalBisectorA = new Vector2(-aB.Y, aB.X);
-        }
-        else
-        {
-            internalBisectorA = Vector2.Normalize(internalBisectorA);
-        }
-        
-        var outsideA = a - internalBisectorA * offsetDistance;
-        var insideA = a + internalBisectorA * offsetDistance;
-        
-        var outsideB = b - internalBisectorB * offsetDistance;
-        var insideB = b + internalBisectorB * offsetDistance;
-        
-        var outsideC = c + internalBisectorA * offsetDistance;
-        var insideC = c - internalBisectorA * offsetDistance;
-        
-        var outsideD = d + internalBisectorB * offsetDistance;
-        var insideD = d - internalBisectorB * offsetDistance;
-        
-        TriangleDrawing.DrawTriangle(outsideA, outsideB, insideA, color);
-        TriangleDrawing.DrawTriangle(insideA, outsideB, insideB, color);
-        
-        TriangleDrawing.DrawTriangle(outsideB, outsideC, insideB, color);
-        TriangleDrawing.DrawTriangle(insideB, outsideC, insideC, color);
-        
-        TriangleDrawing.DrawTriangle(outsideC, outsideD, insideC, color);
-        TriangleDrawing.DrawTriangle(insideC, outsideD, insideD, color);
-        
-        TriangleDrawing.DrawTriangle(outsideD, outsideA, insideD, color);
-        TriangleDrawing.DrawTriangle(insideD, outsideA, insideA, color);
-    }
-    
-    //TODO: Rework and Check if it can be implemented easier    
-    private static void DrawLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, int startIndex, float lineThickness, ColorRgba color)
-    {
-        if (percentage == 0f || lineThickness <= 0) return;
-        var order = GetDrawLinePercentageOrder(p1, p2, p3, p4, percentage, startIndex);
-        if(order.p <= 0f) return;
-        if(order.p >= 1f)
-        {
-            DrawLinesHelper(p1, p2, p3, p4, lineThickness, color);
-            return;
-        }
-        
-        p1 = order.a;
-        p2 = order.b;
-        p3 = order.c;
-        p4 = order.d;
-        percentage = order.p;
-        bool ccw = order.ccw;
-        var edge1 = p2 - p1;
-        var edge4 = p1 - p4;
-        float size1 = edge1.Length();
-        float size2 = edge4.Length();
-
-        var rayColor = color.ToRayColor();
-        
-        float offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
-        float totalPerimeter = (size1 + size2) * 2f;
-        float perimeter = totalPerimeter * percentage;
-        float perimeterRemaining = perimeter;
-        
-        var edge2 = p3 - p2;
-        var edge3 = p4 - p3;
-        var n1 = edge1.Normalize();
-        var n2 = edge2.Normalize();
-        var n3 = edge3.Normalize();
-        var n4 = edge4.Normalize();
-        
-        var dir1 = (n1 - n4).Normalize();
-        var dir2 = (n2 - n1).Normalize();
-        var dir3 = (n3 - n2).Normalize();
-        var dir4 = (n4 - n3).Normalize();
-
-        var curPoint = p1;
-        var curInner = curPoint + dir1 * offsetDistance;
-        var curOuter = curPoint- dir1 * offsetDistance;
-
-        var nextPoint = p2;
-        var nextInner= nextPoint + dir2 * offsetDistance;
-        var nextOuter = nextPoint - dir2 * offsetDistance;
-
-        if (perimeterRemaining >= size1)
-        {
-            perimeterRemaining -= size1;
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle(nextInner, curOuter, curInner, rayColor);
-                Raylib.DrawTriangle(nextOuter, curOuter, nextInner, rayColor);
-            }
-        }
-        else
-        {
-            float f = perimeterRemaining / size1;
-            var innerEnd = Vector2.Lerp(curInner, nextInner, f);
-            var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
-                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
-            }
-            return;
-        }
-        
-        curInner = nextInner;
-        curOuter = nextOuter;
-        nextPoint = p3;
-        nextInner= nextPoint + dir3 * offsetDistance;
-        nextOuter = nextPoint - dir3 * offsetDistance;
-
-        if (perimeterRemaining >= size2)
-        {
-            perimeterRemaining -= size2;
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle( nextInner,curOuter, curInner, rayColor);
-                Raylib.DrawTriangle( nextOuter,curOuter, nextInner, rayColor);
-            }
-        }
-        else
-        {
-            float f = perimeterRemaining / size2;
-            var innerEnd = Vector2.Lerp(curInner, nextInner, f);
-            var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
-                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
-            }
-            
-            return;
-        }
-        
-        curInner = nextInner;
-        curOuter = nextOuter;
-        nextPoint = p4;
-        nextInner= nextPoint + dir4 * offsetDistance;
-        nextOuter = nextPoint - dir4 * offsetDistance;
-
-        if (perimeterRemaining >= size1)
-        {
-            perimeterRemaining -= size1;
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle( nextInner,curOuter, curInner, rayColor);
-                Raylib.DrawTriangle( nextOuter,curOuter, nextInner, rayColor);
-            }
-            
-        }
-        else
-        {
-            float f = perimeterRemaining / size1;
-            var innerEnd = Vector2.Lerp(curInner, nextInner, f);
-            var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
-                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
-            }
-            
-            return;
-        }
-        
-        curInner = nextInner;
-        curOuter = nextOuter;
-        nextPoint = p1;
-        nextInner= nextPoint + dir1 * offsetDistance;
-        nextOuter = nextPoint - dir1 * offsetDistance;
-
-        if (perimeterRemaining >= size2)
-        {
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle(nextInner,curOuter,  curInner, rayColor);
-                Raylib.DrawTriangle(nextOuter,curOuter,  nextInner, rayColor);
-            }
-            
-        }
-        else
-        {
-            float f = perimeterRemaining / size2;
-            var innerEnd = Vector2.Lerp(curInner, nextInner, f);
-            var outerEnd = Vector2.Lerp(curOuter, nextOuter, f);
-            if (ccw)
-            {
-                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
-                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
-            }
-            else
-            {
-                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
-                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
-            }
-        }
-    }
-    
-    //TODO: Possibly Remove
-    private static (Vector2 a, Vector2 b, Vector2 c, Vector2 d, float p, bool ccw) GetDrawLinePercentageOrder(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float percentage, int startIndex)
-    {
-        if (percentage == 0f) return (a, b, c, d, 0f, true);
+        if (percentage == 0f) return (quad.A, quad.B, quad.C, quad.D, 0f, true);
         bool ccw = true;
         if (percentage < 0f)
         {
@@ -1997,18 +1976,18 @@ public static class QuadDrawing
         
         if (corner == 0)
         {
-            return ccw ? (a, b, c, d, perc, ccw) : (a, d, c, b, perc, ccw);
+            return ccw ? (quad.A, quad.B, quad.C, quad.D, perc, ccw) : (quad.A, quad.D, quad.C, quad.B, perc, ccw);
         }
         if (corner == 1)
         {
-            return ccw ? (b, c, d, a, perc, ccw) : (b, a, d, c, perc, ccw);
+            return ccw ? (quad.B, quad.C, quad.D, quad.A, perc, ccw) : (quad.B, quad.A, quad.D, quad.C, perc, ccw);
         }
         if (corner == 2)
         {
-            return ccw ? (c, d, a, b, perc, ccw) : (c, b, a, d, perc, ccw);
+            return ccw ? (quad.C, quad.D, quad.A, quad.B, perc, ccw) : (quad.C, quad.B, quad.A, quad.D, perc, ccw);
         }
         
-        return ccw ? (d, a, b, c, perc, ccw) : (d, c, b, a, perc, ccw);
+        return ccw ? (quad.D, quad.A, quad.B, quad.C, perc, ccw) : (quad.D, quad.C, quad.B, quad.A, perc, ccw);
     }
     #endregion
     
