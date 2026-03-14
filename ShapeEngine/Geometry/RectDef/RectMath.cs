@@ -12,23 +12,6 @@ public readonly partial struct Rect
     #region Transform
 
     /// <summary>
-    /// Scales the size of the rectangle by the specified horizontal and vertical amounts, keeping the center fixed.
-    /// </summary>
-    /// <param name="horizontalAmount">The amount to scale horizontally (positive to expand, negative to shrink).</param>
-    /// <param name="verticalAmount">The amount to scale vertically (positive to expand, negative to shrink).</param>
-    /// <returns>A new rectangle with the scaled size.</returns>
-    public Rect ScaleSize(float horizontalAmount, float verticalAmount)
-    {
-        return new
-        (
-            X - horizontalAmount,
-            Y - verticalAmount,
-            Width + horizontalAmount * 2f,
-            Height + verticalAmount * 2f
-        );
-    }
-
-    /// <summary>
     /// Scales the size of the rectangle by a uniform factor, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="scale">The uniform scale factor.</param>
@@ -70,6 +53,23 @@ public readonly partial struct Rect
     /// <returns>A new rectangle with the specified size and alignment.</returns>
     public Rect SetSize(float newSize, AnchorPoint alignment) => new(GetPoint(alignment), new Size(newSize), alignment);
 
+    /// <summary>
+    /// Changes the size of the rectangle by the specified horizontal and vertical amounts, keeping it centered.
+    /// </summary>
+    /// <param name="horizontalAmount">The amount to add to the width.</param>
+    /// <param name="verticalAmount">The amount to add to the height.</param>
+    /// <returns>A new rectangle with the adjusted size.</returns>
+    public Rect ChangeSize(float horizontalAmount, float verticalAmount)
+    {
+        return new
+        (
+            X - horizontalAmount * 0.5f,
+            Y - verticalAmount * 0.5f,
+            Width + horizontalAmount,
+            Height + verticalAmount
+        );
+    }
+    
     /// <summary>
     /// Changes the size of the rectangle by a uniform amount, using the specified anchor point for alignment.
     /// </summary>
@@ -442,11 +442,11 @@ public readonly partial struct Rect
     /// <summary>
     /// Gets the length of the diagonal connecting corner A and corner C.
     /// </summary>
-    public float DiagonalLengt => (A - C).Length();
+    public float GetDiagonalLengt() => (A - C).Length();
 
     /// <summary>
     /// Gets the squared length of the diagonal connecting corner A and corner C.
     /// </summary>
-    public float DiagonalLengthSquare => (A - C).LengthSquared();
+    public float GetDiagonalLengthSquare() => (A - C).LengthSquared();
     #endregion
 }
