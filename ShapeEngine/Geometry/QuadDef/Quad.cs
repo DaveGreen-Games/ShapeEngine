@@ -59,15 +59,11 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// Points are expected in counter-clockwise order.
     /// </summary>
     public Vector2 BottomLeft => B;
-    
+
     /// <summary>
     /// Gets the center point of the quad.
     /// </summary>
-    public Vector2 Center => GetPoint(0.5f);
-    /// <summary>
-    /// Gets the angle in radians of the BC edge.
-    /// </summary>
-    public float AngleRad => BC.AngleRad();
+    public Vector2 Center => (A + C) * 0.5f;
     /// <summary>
     /// Gets the vector from A to B.
     /// </summary>
@@ -84,6 +80,23 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// Gets the vector from D to A.
     /// </summary>
     public Vector2 DA => A - D;
+    
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>A</c> to <c>B</c>.
+    /// </summary>
+    public Vector2 ABCenter => (A + B) * 0.5f;
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>B</c> to <c>C</c>.
+    /// </summary>
+    public Vector2 BCCenter => (B + C) * 0.5f;
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>C</c> to <c>D</c>.
+    /// </summary>
+    public Vector2 CDCenter => (C + D) * 0.5f;
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>D</c> to <c>A</c>.
+    /// </summary>
+    public Vector2 DACenter => (D + A) * 0.5f;
 
     /// <summary>
     /// Gets the segment from A to B.

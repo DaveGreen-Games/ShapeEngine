@@ -158,79 +158,47 @@ public readonly partial struct Quad
     }
 
     /// <summary>
-    /// Gets the approximate size of the quad by measuring the lengths of two orthogonal edges
-    /// originating from corner A: AB as the height and AD as the width.
-    /// </summary>
-    /// <returns>
-    /// A <see cref="Size"/> where Width is the length of vector (B - A) and Height is the length of vector (D - A).
-    /// </returns>
-    public Size GetSize()
-    {
-        var e1 = B - A;
-        var e2 = D - A;
-        float height = e1.Length();
-        float width = e2.Length();
-        return new Size(width, height);
-    }
-    
-    /// <summary>
-    /// Gets the approximate size of the quad.
-    /// </summary>
-    /// <remarks>
-    /// This property wraps <see cref="GetSize"/>, measuring the width and height based on the edges connected to corner A.
-    /// </remarks>
-    public Size Size => GetSize();
-
-    /// <summary>
     /// Gets the length of the diagonal connecting corner A and corner C.
     /// </summary>
-    public float DiagonalLengt => (A - C).Length();
+    public float GetDiagonalLengt() => (A - C).Length();
 
     /// <summary>
     /// Gets the squared length of the diagonal connecting corner A and corner C.
     /// </summary>
-    public float DiagonalLengthSquare => (A - C).LengthSquared();
+    public float GetDiagonalLengthSquare() => (A - C).LengthSquared();
 
     #endregion
 
-    #region Transform
+    //TODO: Check if functions are correct and test them!
+    #region Rotation Methods
     
-    /// <summary>
-    /// Gets the current rotation of the quad in radians.
-    /// </summary>
-    /// <remarks>
-    /// The rotation is calculated based on the angle of the vector from the <see cref="Center"/> to vertex A.
-    /// </remarks>
-    public float RotationRad
+    //TODO: Docs
+    public float GetRotationRad()
     {
-        get
-        {
-            var w = A - Center;
-            return ShapeVec.AngleRad(w);
-        }
+        //A quad with 0 rotation should equal a standard rect.
+        //If the vector from the center to the right side center is 0 the quad is not rotated
+        return ShapeVec.AngleRad(CDCenter - Center);
     }
-
-    /// <summary>
-    /// Gets the current rotation of the quad in degrees.
-    /// </summary>
-    public float RotationDeg => RotationRad * ShapeMath.RADTODEG;
+    //TODO: Docs
+    public float GetRotationDeg() => GetRotationRad() * ShapeMath.RADTODEG;
     
     /// <summary>
     /// Rotates the quad by a specified angle in radians around a given anchor point.
     /// </summary>
-    /// <param name="rad">The angle in radians to rotate.</param>
+    /// <param name="amountRad">The angle in radians to rotate.</param>
     /// <param name="alignment">The anchor point for rotation.</param>
     /// <returns>A new <see cref="Quad"/> rotated by the specified angle.</returns>
-    public Quad ChangeRotation(float rad, AnchorPoint alignment)
+    public Quad ChangeRotation(float amountRad, AnchorPoint alignment)
     {
         var pivotPoint = GetPoint(alignment);
-        var a = pivotPoint + (A - pivotPoint).Rotate(rad);
-        var b = pivotPoint + (B - pivotPoint).Rotate(rad);
-        var c = pivotPoint + (C - pivotPoint).Rotate(rad);
-        var d = pivotPoint + (D - pivotPoint).Rotate(rad);
+        var a = pivotPoint + (A - pivotPoint).Rotate(amountRad);
+        var b = pivotPoint + (B - pivotPoint).Rotate(amountRad);
+        var c = pivotPoint + (C - pivotPoint).Rotate(amountRad);
+        var d = pivotPoint + (D - pivotPoint).Rotate(amountRad);
         return new(a, b, c, d);
     }
 
+    //TODO: Test if it works!
     /// <summary>
     /// Rotates the quad to a specific angle in radians around a given anchor point.
     /// </summary>
@@ -240,7 +208,7 @@ public readonly partial struct Quad
     /// <remarks>Uses the shortest rotation path to reach the target angle.</remarks>
     public Quad SetRotation(float angleRad, AnchorPoint alignment)
     {
-        float amount = ShapeMath.GetShortestAngleRad(AngleRad, angleRad);
+        float amount = ShapeMath.GetShortestAngleRad(GetRotationRad(), angleRad);
         return ChangeRotation(amount, alignment);
     }
 
@@ -257,7 +225,10 @@ public readonly partial struct Quad
     /// <param name="angleRad">The target angle in radians.</param>
     /// <returns>A new <see cref="Quad"/> with the specified rotation.</returns>
     public Quad SetRotation(float angleRad) => SetRotation(angleRad, AnchorPoint.Center);
-
+    #endregion
+    
+    //TODO: Check if functions are correct and test them!
+    #region Position Methods
     /// <summary>
     /// Moves the quad by the specified offset vector.
     /// </summary>
@@ -299,73 +270,65 @@ public readonly partial struct Quad
     /// <param name="newPosition">The new position for the center.</param>
     /// <returns>A new <see cref="Quad"/> with its center at the new position.</returns>
     public Quad SetPosition(Vector2 newPosition) => SetPosition(newPosition, AnchorPoint.Center);
-
+    #endregion
     
-    //TODO: Rework ---------------------------
+    //TODO: Check if functions are correct and test them!
+    #region Size Methods
+    
     /// <summary>
-    /// Scales the size of the quad uniformly by a scalar value, relative to the origin.
+    /// Gets the approximate size of the quad by measuring the lengths of two orthogonal edges
+    /// originating from corner A: AB as the height and AD as the width.
     /// </summary>
-    /// <param name="scale">The scale factor.</param>
-    /// <returns>A new <see cref="Quad"/> scaled by the given factor.</returns>
-    public Quad ScaleSize(float scale) => this * scale;
+    /// <returns>
+    /// A <see cref="Size"/> where Width is the length of vector (B - A) and Height is the length of vector (D - A).
+    /// </returns>
+    public Size GetSize()
+    {
+        var e1 = B - A;
+        var e2 = D - A;
+        float height = e1.Length();
+        float width = e2.Length();
+        return new Size(width, height);
+    }
+    
+    public Quad ScaleSize(float scale)
+    {
+        return ScaleSize(scale, AnchorPoint.Center);
+    }
 
-    /// <summary>
-    /// Scales the size of the quad component-wise by a <see cref="Size"/>, relative to the origin.
-    /// </summary>
-    /// <param name="scale">The scale factors for width and height.</param>
-    /// <returns>A new <see cref="Quad"/> scaled by the given size.</returns>
-    public Quad ScaleSize(Size scale) => new Quad(A * scale, B * scale, C * scale, D * scale);
-
-    /// <summary>
-    /// Scales the size of the quad uniformly by a scalar value, relative to a specified anchor point.
-    /// </summary>
-    /// <param name="scale">The scale factor.</param>
-    /// <param name="alignment">The anchor point for scaling.</param>
-    /// <returns>A new <see cref="Quad"/> scaled by the given factor around the anchor point.</returns>
+    public Quad ScaleSize(Size scale)
+    {
+        return ScaleSize(scale, AnchorPoint.Center);
+    }
+    
     public Quad ScaleSize(float scale, AnchorPoint alignment)
     {
         var p = GetPoint(alignment);
-        return new
-        (
-            A + (A - p) * scale,
-            B + (B - p) * scale,
-            C + (C - p) * scale,
-            D + (D - p) * scale
-        );
+        return new(p, GetSize() * scale, GetRotationRad(), alignment);
+        // return new
+        // (
+        //     p + (A - p) * scale,
+        //     p + (B - p) * scale,
+        //     p + (C - p) * scale,
+        //     p + (D - p) * scale
+        // );
     }
 
-    /// <summary>
-    /// Scales the size of the quad component-wise by a <see cref="Size"/>, relative to a specified anchor point.
-    /// </summary>
-    /// <param name="scale">The scale factors for width and height.</param>
-    /// <param name="alignment">The anchor point for scaling.</param>
-    /// <returns>A new <see cref="Quad"/> scaled by the given size around the anchor point.</returns>
     public Quad ScaleSize(Size scale, AnchorPoint alignment)
     {
         var p = GetPoint(alignment);
-        return new
-        (
-            A + (A - p) * scale,
-            B + (B - p) * scale,
-            C + (C - p) * scale,
-            D + (D - p) * scale
-        );
+        return new(p, GetSize() * scale, GetRotationRad(), alignment);
+        // return new
+        // (
+        //     p + (A - p) * scale,
+        //     p + (B - p) * scale,
+        //     p + (C - p) * scale,
+        //     p + (D - p) * scale
+        // );
     }
 
-    /// <summary>
-    /// Changes the size of the quad by a specified amount, relative to its center.
-    /// </summary>
-    /// <param name="amount">The amount to change the size by.</param>
-    /// <returns>A new <see cref="Quad"/> with the size changed by the specified amount.</returns>
-    public Quad ChangeSize(float amount) => ChangeSize(amount, AnchorPoint.Center);
-
-    /// <summary>
-    /// Changes the size of the quad by a specified amount, relative to a specified anchor point.
-    /// </summary>
-    /// <param name="amount">The amount to change the size by.</param>
-    /// <param name="alignment">The anchor point for resizing.</param>
-    /// <returns>A new <see cref="Quad"/> with the size changed by the specified amount around the anchor point.</returns>
-    public Quad ChangeSize(float amount, AnchorPoint alignment)
+    
+    public Quad ChangeDiagonalSize(float amount, AnchorPoint alignment)
     {
         Vector2 newA, newB, newC, newD;
 
@@ -413,96 +376,108 @@ public readonly partial struct Quad
 
         return new(newA, newB, newC, newD);
     }
+    
+    
+    public Quad ChangeSize(float amount) => ChangeSize(amount, AnchorPoint.Center);
 
-    //TODO: New ChangeSize function that changes width and height based on amount (current ones do not!)
-    //NOTE: I think this is the correct way to do it, look at the others and rework them?
-    // - this actually changes the size correct, the others change width/height differently
+    public Quad ChangeSize(float amount, AnchorPoint alignment)
+    {
+        var p = GetPoint(alignment);
+        return new(p, GetSize() + amount, GetRotationRad(), alignment);
+    }
+
+    public Quad ChangeSize(Size amount) => ChangeSize(amount, AnchorPoint.Center);
+    
+    public Quad ChangeSize(Size amount, AnchorPoint alignment)
+    {
+        var p = GetPoint(alignment);
+        return new(p, GetSize() + amount, GetRotationRad(), alignment);
+    }
+    
     public Quad ChangeSize(float widthAmount, float heightAmount)
     {
-        // var size = GetSize();
-        // var newSize = new Size(size.Width + widthAmount, size.Height + heightAmount);
-        // var w = newSize.Width;
-        // var h = newSize.Height;
-        
-        var up = NormalUp * heightAmount;
-        var right = NormalRight * widthAmount;
-        var down = NormalDown * heightAmount;
-        var left = NormalLeft * widthAmount;
-        
-        var newA = A + up + left ;
-        var newB = B + down + left;
-        var newC = C + down + right;
-        var newD = D + up + right;
-        return new(newA, newB, newC, newD);
+        return ChangeSize(new Size(widthAmount, heightAmount), AnchorPoint.Center);
+        // var up = NormalUp * heightAmount;
+        // var right = NormalRight * widthAmount;
+        // var down = NormalDown * heightAmount;
+        // var left = NormalLeft * widthAmount;
+        //
+        // var newA = A + up + left ;
+        // var newB = B + down + left;
+        // var newC = C + down + right;
+        // var newD = D + up + right;
+        // return new(newA, newB, newC, newD);
+    }
+    
+    public Quad ChangeSize(float widthAmount, float heightAmount, AnchorPoint alignment)
+    {
+        return ChangeSize(new Size(widthAmount, heightAmount), alignment);
     }
     
     
-    /// <summary>
-    /// Sets the size of the quad to a specific value, relative to its center.
-    /// </summary>
-    /// <param name="size">The new size for the quad.</param>
-    /// <returns>A new <see cref="Quad"/> with the specified size.</returns>
     public Quad SetSize(float size) => SetSize(size, AnchorPoint.Center);
-
-    /// <summary>
-    /// Sets the size of the quad to a specific value, relative to a specified anchor point.
-    /// </summary>
-    /// <param name="size">The new size for the quad.</param>
-    /// <param name="alignment">The anchor point for resizing.</param>
-    /// <returns>A new <see cref="Quad"/> with the specified size around the anchor point.</returns>
+    
     public Quad SetSize(float size, AnchorPoint alignment)
     {
-        Vector2 newA, newB, newC, newD;
-
-        var origin = GetPoint(alignment);
-
-        var wA = (A - origin);
-        var lSqA = wA.LengthSquared();
-        if (lSqA <= 0f) newA = A;
-        else
-        {
-            var l = MathF.Sqrt(lSqA);
-            var dir = wA / l;
-            newA = origin + dir * size;
-        }
-
-        var wB = (B - origin);
-        var lSqB = wB.LengthSquared();
-        if (lSqB <= 0f) newB = B;
-        else
-        {
-            var l = MathF.Sqrt(lSqB);
-            var dir = wB / l;
-            newB = origin + dir * size;
-        }
-
-        var wC = (C - origin);
-        var lSqC = wC.LengthSquared();
-        if (lSqC <= 0f) newC = C;
-        else
-        {
-            var l = MathF.Sqrt(lSqC);
-            var dir = wC / l;
-            newC = origin + dir * size;
-        }
-
-        var wD = (D - origin);
-        var lSqD = wD.LengthSquared();
-        if (lSqD <= 0f) newD = D;
-        else
-        {
-            var l = MathF.Sqrt(lSqD);
-            var dir = wD / l;
-            newD = origin + dir * size;
-        }
-
-        return new(newA, newB, newC, newD);
+        var p = GetPoint(alignment);
+        return new(p, new Size(size, size), GetRotationRad(), alignment);
+        // Vector2 newA, newB, newC, newD;
+        //
+        // var origin = GetPoint(alignment);
+        //
+        // var wA = (A - origin);
+        // var lSqA = wA.LengthSquared();
+        // if (lSqA <= 0f) newA = A;
+        // else
+        // {
+        //     var l = MathF.Sqrt(lSqA);
+        //     var dir = wA / l;
+        //     newA = origin + dir * size;
+        // }
+        //
+        // var wB = (B - origin);
+        // var lSqB = wB.LengthSquared();
+        // if (lSqB <= 0f) newB = B;
+        // else
+        // {
+        //     var l = MathF.Sqrt(lSqB);
+        //     var dir = wB / l;
+        //     newB = origin + dir * size;
+        // }
+        //
+        // var wC = (C - origin);
+        // var lSqC = wC.LengthSquared();
+        // if (lSqC <= 0f) newC = C;
+        // else
+        // {
+        //     var l = MathF.Sqrt(lSqC);
+        //     var dir = wC / l;
+        //     newC = origin + dir * size;
+        // }
+        //
+        // var wD = (D - origin);
+        // var lSqD = wD.LengthSquared();
+        // if (lSqD <= 0f) newD = D;
+        // else
+        // {
+        //     var l = MathF.Sqrt(lSqD);
+        //     var dir = wD / l;
+        //     newD = origin + dir * size;
+        // }
+        //
+        // return new(newA, newB, newC, newD);
     }
+
+    public Quad SetSize(Size size) => SetSize(size, AnchorPoint.Center);
+   
+    public Quad SetSize(Size size, AnchorPoint alignment)
+    {
+        var p = GetPoint(alignment);
+        return new(p, size, GetRotationRad(), alignment);
+    }
+    #endregion
     
-    //TODO: Rework End --------------------------------
-    
-    
-    
+    #region Transform Methods
     /// <summary>
       /// Applies a transform to the quad by:
       /// <list type="bullet">

@@ -414,7 +414,7 @@ public static class QuadDrawing
         }
 
         // Clamp radius to ensure at least some vignette is drawn
-        var minDimension = q.Size.Min();
+        var minDimension = q.GetSize().Min();
         var maxRadius = minDimension * 0.5f - 1f;
         if (circleRadius > maxRadius)
         {
