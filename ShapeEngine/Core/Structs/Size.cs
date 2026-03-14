@@ -81,6 +81,13 @@ public readonly struct Size : IEquatable<Size>
     #endregion
     
     #region Public Functions
+    
+    /// <summary>
+    /// Returns a new <see cref="Size"/> where each component is the reciprocal of the original.
+    /// </summary>
+    /// <returns>A <see cref="Size"/> with <c>Width = 1 / Width</c> and <c>Height = 1 / Height</c>.</returns>
+    public Size Inverse() => new(Width == 0f ? 0f :  1f / Width, Height == 0f ? 0f : 1f / Height);
+
     /// <summary>
     /// Returns the greater of the width or height.
     /// </summary>
