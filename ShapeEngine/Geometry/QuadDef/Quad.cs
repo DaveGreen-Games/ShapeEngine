@@ -171,6 +171,20 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// <remarks>Rotates the rectangle around the specified pivot to form the quad.</remarks>
     public Quad(Rect rect, float rotRad, AnchorPoint pivot)
     {
+        var sin = MathF.Sin(rotRad);
+        var cos = MathF.Cos(rotRad);
+
+        var right = new Vector2(cos * rect.Width, sin * rect.Width);
+        var down = new Vector2(-sin * rect.Height, cos * rect.Height);
+        var topLeft = -right * pivot.X - down * pivot.Y;
+
+        A = topLeft;
+        B = topLeft + down;
+        C = topLeft + right + down;
+        D = topLeft + right;
+        
+        /*
+        //OLD
         var pivotPoint = rect.GetPoint(pivot);
         var topLeft = rect.TopLeft;
         var bottomRight = rect.BottomRight;
@@ -179,6 +193,8 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
         B = (new Vector2(topLeft.X, bottomRight.Y) - pivotPoint).Rotate(rotRad);
         C = (bottomRight - pivotPoint).Rotate(rotRad);
         D = (new Vector2(bottomRight.X, topLeft.Y) - pivotPoint).Rotate(rotRad);
+        */
+        
     }
     /// <summary>
     /// Initializes a new <see cref="Quad"/> from a <see cref="Rect"/>, applying a rotation around the specified pivot.
@@ -190,6 +206,20 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// <param name="pivot">The point used as the rotation origin.</param>
     public Quad(Rect rect, float rotRad, Vector2 pivot)
     {
+        var sin = MathF.Sin(rotRad);
+        var cos = MathF.Cos(rotRad);
+
+        var right = new Vector2(cos * rect.Width, sin * rect.Width);
+        var down = new Vector2(-sin * rect.Height, cos * rect.Height);
+        var topLeft = (rect.TopLeft - pivot).Rotate(rotRad);
+
+        A = topLeft;
+        B = topLeft + down;
+        C = topLeft + right + down;
+        D = topLeft + right;
+        
+        /*
+        //OLD
         var topLeft = rect.TopLeft;
         var bottomRight = rect.BottomRight;
 
@@ -197,6 +227,7 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
         B = (new Vector2(topLeft.X, bottomRight.Y) - pivot).Rotate(rotRad);
         C = (bottomRight - pivot).Rotate(rotRad);
         D = (new Vector2(bottomRight.X, topLeft.Y) - pivot).Rotate(rotRad);
+        */
     }
     /// <summary>
     /// Initializes a new <see cref="Quad"/> from a position, size, rotation, and alignment.
@@ -208,6 +239,20 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// <remarks>Creates a quad with the specified alignment and rotation.</remarks>
     public Quad(Vector2 pos, Size size, float rotRad, AnchorPoint alignment)
     {
+        var sin = MathF.Sin(rotRad);
+        var cos = MathF.Cos(rotRad);
+
+        var right = new Vector2(cos * size.Width, sin * size.Width);
+        var down = new Vector2(-sin * size.Height, cos * size.Height);
+        var topLeft = pos - right * alignment.X - down * alignment.Y;
+
+        A = topLeft;
+        B = topLeft + down;
+        C = topLeft + right + down;
+        D = topLeft + right;
+        
+        /*
+        //Old
         var offset = size * alignment.ToVector2();
         var topLeft = pos - offset;
         
@@ -219,7 +264,7 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
         A = pos + (a - pos).Rotate(rotRad);
         B = pos + (b - pos).Rotate(rotRad);
         C = pos + (c - pos).Rotate(rotRad);
-        D = pos + (d - pos).Rotate(rotRad);
+        D = pos + (d - pos).Rotate(rotRad);*/
         
     }
     #endregion
