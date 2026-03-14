@@ -1506,7 +1506,21 @@ public static class QuadDrawing
     #endregion
     
     #region Draw Chamfered Corners Lines
-    //TODO: Docs
+    /// <summary>
+    /// Draws the outline of a quad with equally chamfered corners using the specified line thickness.
+    /// </summary>
+    /// <param name="quad">The quad whose chamfered outline is drawn.</param>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the chamfered quad is filled instead of outlined.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLength">
+    /// The chamfer length applied uniformly to all four corners. If less than or equal to zero, the regular quad outline is drawn.
+    /// </param>
+    /// <remarks>
+    /// The chamfer length and line thickness are clamped to the quad's minimum half-size to avoid invalid geometry.
+    /// Internally, this method builds inner and outer chamfer polygons and triangulates the outline area.
+    /// </remarks>
     public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLength)
     {
         if (lineThickness <= 0)
@@ -1557,8 +1571,28 @@ public static class QuadDrawing
         
         DrawChamferedOutline(lineThickness, color);
     }
-    
-    //TODO: Docs
+   
+    /// <summary>
+    /// Draws the outline of a quad with chamfered corners using separate horizontal and vertical chamfer lengths.
+    /// </summary>
+    /// <param name="quad">The quad whose chamfered outline is drawn.</param>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the chamfered quad is filled instead of outlined.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLengthHorizontal">
+    /// The chamfer length measured along horizontal edges. If less than or equal to zero while the vertical value is positive,
+    /// the method falls back to the uniform chamfer overload using the vertical value.
+    /// </param>
+    /// <param name="cornerLengthVertical">
+    /// The chamfer length measured along vertical edges. If less than or equal to zero while the horizontal value is positive,
+    /// the method falls back to the uniform chamfer overload using the horizontal value.
+    /// </param>
+    /// <remarks>
+    /// When both chamfer lengths are effectively equal, this method forwards to the single-length overload.
+    /// Chamfer lengths are clamped against the corresponding quad half-dimensions, and line thickness is clamped
+    /// against the minimum half-size of the quad.
+    /// </remarks>
     public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         if(lineThickness <= 0 && cornerLengthHorizontal <= 0 && cornerLengthVertical <= 0)
@@ -1635,7 +1669,22 @@ public static class QuadDrawing
         DrawChamferedOutline(lineThickness, color);
     }
     
-    //TODO: Docs
+    /// <summary>
+    /// Draws the outline of a quad with independently chamfered corners.
+    /// </summary>
+    /// <param name="quad">The quad whose chamfered outline is drawn.</param>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the chamfered quad is filled instead of outlined.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="tlCorner">Chamfer length for the top-left corner.</param>
+    /// <param name="blCorner">Chamfer length for the bottom-left corner.</param>
+    /// <param name="brCorner">Chamfer length for the bottom-right corner.</param>
+    /// <param name="trCorner">Chamfer length for the top-right corner.</param>
+    /// <remarks>
+    /// Negative corner values are clamped to zero. Each corner length is also clamped to the quad's minimum half-size
+    /// before geometry is generated. If all corner lengths are zero, the method falls back to drawing a regular quad outline.
+    /// </remarks>
     public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
         tlCorner = MathF.Max(0, tlCorner);
@@ -1711,7 +1760,21 @@ public static class QuadDrawing
     #endregion
 
     #region Draw Chamfered Corners Relative Lines
-    //TODO: Docs
+    /// <summary>
+    /// Draws the outline of a quad with uniformly chamfered corners specified as a relative factor of the quad size.
+    /// </summary>
+    /// <param name="quad">The quad whose chamfered outline is drawn.</param>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the filled chamfered quad is drawn instead.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLengthFactor">
+    /// A normalized factor in the range [0, 1] that determines the chamfer amount relative to the quad half-size.
+    /// </param>
+    /// <remarks>
+    /// The factor is clamped to the range [0, 1]. The resulting horizontal and vertical chamfer lengths are derived
+    /// from half the quad width and half the quad height respectively.
+    /// </remarks>
     public static void DrawChamferedCornersLinesRelative(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthFactor)
     {
         var size = quad.GetSize();
@@ -1722,7 +1785,23 @@ public static class QuadDrawing
         DrawChamferedCornersLines(quad, lineThickness, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
     }
     
-    //TODO: Docs
+    /// <summary>
+    /// Draws the outline of a quad with chamfered corners specified by separate relative horizontal and vertical factors.
+    /// </summary>
+    /// <param name="quad">The quad whose chamfered outline is drawn.</param>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the filled chamfered quad is drawn instead.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLengthFactorHorizontal">
+    /// A normalized factor in the range [0, 1] that scales the chamfer amount relative to half the quad width.
+    /// </param>
+    /// <param name="cornerLengthFactorVertical">
+    /// A normalized factor in the range [0, 1] that scales the chamfer amount relative to half the quad height.
+    /// </param>
+    /// <remarks>
+    /// Both factors are clamped independently to the range [0, 1] before being converted into absolute chamfer lengths.
+    /// </remarks>
     public static void DrawChamferedCornersLinesRelative(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var size = quad.GetSize();
@@ -1735,7 +1814,22 @@ public static class QuadDrawing
         DrawChamferedCornersLines(quad, lineThickness, color, cornerLengthH, cornerLengthV);
     }
 
-    //TODO: Docs
+    /// <summary>
+    /// Draws the outline of a quad with independently chamfered corners specified as relative factors.
+    /// </summary>
+    /// <param name="quad">The quad whose chamfered outline is drawn.</param>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the filled chamfered quad is drawn instead.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="tlCornerFactor">Normalized chamfer factor for the top-left corner.</param>
+    /// <param name="blCornerFactor">Normalized chamfer factor for the bottom-left corner.</param>
+    /// <param name="brCornerFactor">Normalized chamfer factor for the bottom-right corner.</param>
+    /// <param name="trCornerFactor">Normalized chamfer factor for the top-right corner.</param>
+    /// <remarks>
+    /// Each factor is clamped to the range [0, 1]. The effective chamfer distances are derived from the quad half-width
+    /// or half-height depending on the corner edge direction used to construct the chamfer geometry.
+    /// </remarks>
     public static void DrawChamferedCornersLinesRelative(this Quad quad, float lineThickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
     {
         tlCornerFactor = ShapeMath.Clamp(tlCornerFactor, 0f, 1f);
