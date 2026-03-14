@@ -296,6 +296,21 @@ public readonly struct Size : IEquatable<Size>
     }
     
     /// <summary>
+    /// Returns a new <see cref="Size"/> with both width and height negated.
+    /// </summary>
+    public Size Negate() => new(-Width, -Height);
+    
+    /// <summary>
+    /// Returns a new <see cref="Size"/> with the width negated and the height unchanged.
+    /// </summary>
+    public Size NegateWidth() => new(-Width, Height);
+    
+    /// <summary>
+    /// Returns a new <see cref="Size"/> with the height negated and the width unchanged.
+    /// </summary>
+    public Size NegateHeight() => new(Width, -Height);
+    
+    /// <summary>
     /// Returns a new <see cref="Size"/> with the width set to the specified value.
     /// </summary>
     /// <param name="newRadius">The new width value.</param>
@@ -346,6 +361,14 @@ public readonly struct Size : IEquatable<Size>
 
     #region Operators
 
+    /// <summary>
+    /// Negates both the width and height of the specified <see cref="Size"/>.
+    /// </summary>
+    public static Size operator -(Size size)
+    {
+        return new Size(-size.Width, -size.Height);
+    }
+    
     /// <summary>
     /// Determines whether two <see cref="Size"/> instances are equal.
     /// </summary>
