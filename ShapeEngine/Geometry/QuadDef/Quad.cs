@@ -491,70 +491,6 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     
     #region Operators
     /// <summary>
-    /// Adds two <see cref="Quad"/> instances component-wise.
-    /// </summary>
-    /// <param name="left">The first quad.</param>
-    /// <param name="right">The second quad.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the sum of the corresponding vertices.</returns>
-    public static Quad operator +(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A + right.A,
-            left.B + right.B,
-            left.C + right.C,
-            left.D + right.D
-        );
-    }
-    /// <summary>
-    /// Subtracts one <see cref="Quad"/> from another component-wise.
-    /// </summary>
-    /// <param name="left">The first quad.</param>
-    /// <param name="right">The quad to subtract.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the difference of the corresponding vertices.</returns>
-    public static Quad operator -(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A - right.A,
-            left.B - right.B,
-            left.C - right.C,
-            left.D - right.D
-        );
-    }
-    /// <summary>
-    /// Multiplies two <see cref="Quad"/> instances component-wise.
-    /// </summary>
-    /// <param name="left">The first quad.</param>
-    /// <param name="right">The second quad.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the product of the corresponding vertices.</returns>
-    public static Quad operator *(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A * right.A,
-            left.B * right.B,
-            left.C * right.C,
-            left.D * right.D
-        );
-    }
-    /// <summary>
-    /// Divides one <see cref="Quad"/> by another component-wise.
-    /// </summary>
-    /// <param name="left">The numerator quad.</param>
-    /// <param name="right">The denominator quad.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the quotient of the corresponding vertices.</returns>
-    public static Quad operator /(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A / right.A,
-            left.B / right.B,
-            left.C / right.C,
-            left.D / right.D
-        );
-    }
-    /// <summary>
     /// Adds a <see cref="Vector2"/> to each vertex of the <see cref="Quad"/>.
     /// </summary>
     /// <param name="left">The quad.</param>
@@ -618,40 +554,96 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
             left.D / right
         );
     }
+    
     /// <summary>
-    /// Multiplies each vertex of the <see cref="Quad"/> by a scalar.
+    /// Increases the size of the <see cref="Quad"/> uniformly by the specified amount.
     /// </summary>
-    /// <param name="left">The quad.</param>
-    /// <param name="right">The scalar value.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex multiplied by the scalar.</returns>
+    /// <param name="left">The quad to resize.</param>
+    /// <param name="right">The amount to add to the quad's size.</param>
+    /// <returns>A new <see cref="Quad"/> with the modified size.</returns>
+    public static Quad operator +(Quad left, float right)
+    {
+        return left.ChangeSize(right);
+    }
+    /// <summary>
+    /// Decreases the size of the <see cref="Quad"/> uniformly by the specified amount.
+    /// </summary>
+    /// <param name="left">The quad to resize.</param>
+    /// <param name="right">The amount to subtract from the quad's size.</param>
+    /// <returns>A new <see cref="Quad"/> with the modified size.</returns>
+    public static Quad operator -(Quad left, float right)
+    {
+        return left.ChangeSize(-right);
+    }
+    /// <summary>
+    /// Scales the size of the <see cref="Quad"/> uniformly by the specified factor.
+    /// </summary>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The scale factor.</param>
+    /// <returns>A new <see cref="Quad"/> with the scaled size.</returns>
     public static Quad operator *(Quad left, float right)
     {
-        return new
-        (
-            left.A * right,
-            left.B * right,
-            left.C * right,
-            left.D * right
-        );
+        return left.ScaleSize(right);
     }
     /// <summary>
-    /// Divides each vertex of the <see cref="Quad"/> by a scalar.
+    /// Scales the size of the <see cref="Quad"/> uniformly by the inverse of the specified factor.
     /// </summary>
-    /// <param name="left">The quad.</param>
-    /// <param name="right">The scalar value.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex divided by the scalar.
-    /// Returns an empty Quad if right is 0.</returns>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The divisor.</param>
+    /// <returns>
+    /// A new <see cref="Quad"/> with the scaled size, or a quad scaled to zero if
+    /// <paramref name="right"/> is <c>0</c>.
+    /// </returns>
     public static Quad operator /(Quad left, float right)
     {
-        if (right == 0) return new();
-        return new
-        (
-            left.A / right,
-            left.B / right,
-            left.C / right,
-            left.D / right
-        );
+        if (right == 0)
+        {
+            return left.ScaleSize(0f);
+        }
+        return left.ScaleSize(1f / right);
     }
+    
+    /// <summary>
+    /// Adds a <see cref="Size"/> to the quad, increasing its size accordingly.
+    /// </summary>
+    /// <param name="left">The quad to modify.</param>
+    /// <param name="right">The size to add.</param>
+    /// <returns>A new <see cref="Quad"/> with the increased size.</returns>
+    public static Quad operator +(Quad left, Size right)
+    {
+        return left.ChangeSize(right);
+    }
+    /// <summary>
+    /// Subtracts a <see cref="Size"/> from the quad, decreasing its size accordingly.
+    /// </summary>
+    /// <param name="left">The quad to modify.</param>
+    /// <param name="right">The size to subtract.</param>
+    /// <returns>A new <see cref="Quad"/> with the decreased size.</returns>
+    public static Quad operator -(Quad left, Size right)
+    {
+        return left.ChangeSize(-right);
+    }
+    /// <summary>
+    /// Scales the quad´s size by <see cref="Size"/> as factor. (component-wise multiplication).
+    /// </summary>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The size to scale by.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the given size.</returns>
+    public static Quad operator *(Quad left, Size right)
+    {
+        return left.ScaleSize(right);
+    }
+    /// <summary>
+    /// Divides the quad's size by <see cref="Size"/> as a factor (component-wise division).
+    /// </summary>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The size to divide by.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the inverse of the given size.</returns>
+    public static Quad operator /(Quad left, Size right)
+    {
+        return left.ScaleSize(right.Inverse());
+    }
+    
     /// <summary>
     /// Determines whether two <see cref="Quad"/> instances are equal.
     /// </summary>
