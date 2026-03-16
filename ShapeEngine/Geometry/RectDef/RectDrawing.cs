@@ -8,9 +8,10 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RectDef;
+
+
 /// <summary>
 /// Provides static extension methods for drawing rectangles and grids, including advanced features such as nine-patch, rounded corners, slanted corners, partial outlines, and more.
 /// </summary>
@@ -22,11 +23,22 @@ public static class RectDrawing
 {
     #region Draw
     
+    /// <summary>
+    /// Draws a filled axis-aligned rectangle from two corner points.
+    /// </summary>
+    /// <param name="topLeft">The rectangle's top-left corner.</param>
+    /// <param name="bottomRight">The rectangle's bottom-right corner.</param>
+    /// <param name="color">The fill color.</param>
     public static void DrawRect(Vector2 topLeft, Vector2 bottomRight, ColorRgba color)
     {
         Raylib.DrawRectangleV(topLeft, bottomRight - topLeft, color.ToRayColor());
     }
     
+    /// <summary>
+    /// Draws a filled rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
     public static void Draw(this Rect rect, ColorRgba color)
     {
         Raylib.DrawRectangleV(rect.TopLeft, rect.BottomRight - rect.TopLeft, color.ToRayColor());
@@ -34,7 +46,16 @@ public static class RectDrawing
     #endregion
 
     #region Draw Rounded
-    //TODO: Docs
+    /// <summary>
+    /// Draws a filled rectangle with rounded corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="roundness">The normalized corner roundness passed to Raylib.</param>
+    /// <param name="segments">The number of segments used for each rounded corner.</param>
+    /// <remarks>
+    /// This method forwards to Raylib's rounded rectangle drawing API.
+    /// </remarks>
     public static void DrawRounded(this Rect rect, ColorRgba color, float roundness, int segments)
     {
         Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color);
@@ -42,8 +63,40 @@ public static class RectDrawing
 
     #endregion
     
+    #region Draw Scaled
+    /// <summary>
+    /// Draws a rect with scaled sides based on a specific draw type.
+    /// </summary>
+    /// <param name="r">The rect to draw.</param>
+    /// <param name="color">The color of the drawn shape.</param>
+    /// <param name="sideScaleFactor">The scale factor of the sides (0 to 1). If >= 1, the full quad is drawn. If &lt;= 0, nothing is drawn.</param>
+    /// <param name="sideScaleOrigin">The origin point for scaling the sides (0 = start, 1 = end, 0.5 = center).</param>
+    /// <param name="drawType">
+    /// The style of drawing:
+    /// <list type="bullet">
+    /// <item><description>0: [Filled] Drawn as 6 filled triangles, effectivly cutting of corners.</description></item>
+    /// <item><description>1: [Sides] Each side is connected to the quad's center.</description></item>
+    /// <item><description>2: [Sides Inverse] The start of 1 side is connected to the end of the next side and is connected to the quad's center.</description></item>
+    /// </list>
+    /// </param>
+    public static void DrawScaled(this Rect r, ColorRgba color, float sideScaleFactor, float sideScaleOrigin, int drawType)
+    {
+        var q = r.ToQuad();
+        q.DrawScaled(color, sideScaleFactor, sideScaleOrigin, drawType);
+    }
+    #endregion
+    
     #region Draw Lines
     
+    /// <summary>
+    /// Draws the outline of a rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle to outline.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad line rendering.
+    /// </remarks>
     public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color)
     {
         var q = rect.ToQuad();
@@ -53,6 +106,14 @@ public static class RectDrawing
         // Raylib.DrawRectangleLinesEx(rect.Rectangle, thickness * 2f, color);
     }
     
+    /// <summary>
+    /// Draws the outline of a rectangle using a <see cref="LineDrawingInfo"/> configuration.
+    /// </summary>
+    /// <param name="rect">The rectangle to outline.</param>
+    /// <param name="lineInfo">The line drawing settings to use.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad line rendering.
+    /// </remarks>
     public static void DrawLines(this Rect rect, LineDrawingInfo lineInfo)
     {
         var q  = rect.ToQuad();
@@ -65,6 +126,17 @@ public static class RectDrawing
     
     #region Draw Rounded Lines
     
+    /// <summary>
+    /// Draws a rounded rectangle outline.
+    /// </summary>
+    /// <param name="rect">The rectangle to outline.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <param name="roundness">The normalized corner roundness passed to Raylib.</param>
+    /// <param name="segments">The number of segments used for each rounded corner.</param>
+    /// <remarks>
+    /// If <paramref name="roundness"/> or <paramref name="segments"/> is not positive, this falls back to <see cref="DrawLines(Rect,float,ColorRgba)"/>.
+    /// </remarks>
     public static void DrawLinesRounded(this Rect rect, float lineThickness, ColorRgba color, float roundness, int segments)
     {
         if (roundness <= 0f || segments <= 0)
@@ -125,12 +197,33 @@ public static class RectDrawing
     
     #region Draw Lines Percentage
     
+    /// <summary>
+    /// Draws part of the rectangle outline based on a perimeter percentage.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="f">The fraction of the perimeter to draw.</param>
+    /// <param name="startIndex">The starting edge index used by the underlying quad draw order.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <remarks>
+    /// This method converts the rectangle to a <see cref="Quad"/> and delegates to quad percentage line drawing.
+    /// </remarks>
     public static void DrawLinesPercentage(this Rect rect, float f, int startIndex, float lineThickness, ColorRgba color)
     {
         var quad = new Quad(rect);
         quad.DrawLinesPercentage(f, startIndex, new LineDrawingInfo(lineThickness, color));
     }
     
+    /// <summary>
+    /// Draws part of the rectangle outline based on a perimeter percentage using line settings.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="f">The fraction of the perimeter to draw.</param>
+    /// <param name="startIndex">The starting edge index used by the underlying quad draw order.</param>
+    /// <param name="lineInfo">The line drawing settings to use.</param>
+    /// <remarks>
+    /// This method converts the rectangle to a <see cref="Quad"/> and delegates to quad percentage line drawing.
+    /// </remarks>
     public static void DrawLinesPercentage(this Rect rect, float f, int startIndex, LineDrawingInfo lineInfo)
     {
         var quad = new Quad(rect);
@@ -203,18 +296,49 @@ public static class RectDrawing
     
     #region Draw Chamfered Corners
     
+    /// <summary>
+    /// Draws a filled rectangle with equally chamfered corners.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="cornerLength">The chamfer length applied to all corners.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad chamfer rendering.
+    /// </remarks>
     public static void DrawChamferedCorners(this Rect rect, ColorRgba color, float cornerLength)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCorners(color, cornerLength);
     }
     
+    /// <summary>
+    /// Draws a filled rectangle with chamfered corners using separate horizontal and vertical chamfer lengths.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="cornerLengthHorizontal">The chamfer length measured along horizontal edges.</param>
+    /// <param name="cornerLengthVertical">The chamfer length measured along vertical edges.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad chamfer rendering.
+    /// </remarks>
     public static void DrawChamferedCorners(this Rect rect, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCorners(color, cornerLengthHorizontal, cornerLengthVertical);
     }
     
+    /// <summary>
+    /// Draws a filled rectangle with independent chamfer lengths for each corner.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="tlCorner">The chamfer length for the top-left corner.</param>
+    /// <param name="blCorner">The chamfer length for the bottom-left corner.</param>
+    /// <param name="brCorner">The chamfer length for the bottom-right corner.</param>
+    /// <param name="trCorner">The chamfer length for the top-right corner.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad chamfer rendering.
+    /// </remarks>
     public static void DrawChamferedCorners(this Rect rect, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
         var q = rect.ToQuad();
@@ -223,18 +347,49 @@ public static class RectDrawing
     #endregion
     
     #region Draw Chamfered Corners Relative
+    /// <summary>
+    /// Draws a filled rectangle with equally chamfered corners using a relative factor.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="cornerLengthFactor">The normalized chamfer factor applied to all corners.</param>
+    /// <remarks>
+    /// The factor is interpreted by the underlying <see cref="Quad"/> implementation relative to the rectangle size.
+    /// </remarks>
     public static void DrawChamferedCornersRelative(this Rect rect, ColorRgba color, float cornerLengthFactor)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCornersRelative(color, cornerLengthFactor);
     }
     
+    /// <summary>
+    /// Draws a filled rectangle with chamfered corners using separate relative horizontal and vertical factors.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="cornerLengthFactorHorizontal">The normalized chamfer factor relative to the rectangle width.</param>
+    /// <param name="cornerLengthFactorVertical">The normalized chamfer factor relative to the rectangle height.</param>
+    /// <remarks>
+    /// The factors are interpreted by the underlying <see cref="Quad"/> implementation relative to the rectangle size.
+    /// </remarks>
     public static void DrawChamferedCornersRelative(this Rect rect, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCornersRelative(color, cornerLengthFactorHorizontal, cornerLengthFactorVertical);
     }
     
+    /// <summary>
+    /// Draws a filled rectangle with independent relative chamfer factors for each corner.
+    /// </summary>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="color">The fill color.</param>
+    /// <param name="tlCornerFactor">The normalized chamfer factor for the top-left corner.</param>
+    /// <param name="blCornerFactor">The normalized chamfer factor for the bottom-left corner.</param>
+    /// <param name="brCornerFactor">The normalized chamfer factor for the bottom-right corner.</param>
+    /// <param name="trCornerFactor">The normalized chamfer factor for the top-right corner.</param>
+    /// <remarks>
+    /// The factors are interpreted by the underlying <see cref="Quad"/> implementation relative to the rectangle size.
+    /// </remarks>
     public static void DrawChamferedCornersRelative(this Rect rect, ColorRgba color,float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
     {
         var q = rect.ToQuad();
@@ -244,18 +399,52 @@ public static class RectDrawing
     
     #region Draw Chamfered Corners Lines
     
+    /// <summary>
+    /// Draws a rectangle outline with equally chamfered corners.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <param name="cornerLength">The chamfer length applied to all corners.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad chamfer outline rendering.
+    /// </remarks>
     public static void DrawChamferedCornersLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLength)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCornersLines(lineThickness, color, cornerLength);
     }
     
+    /// <summary>
+    /// Draws a rectangle outline with chamfered corners using separate horizontal and vertical chamfer lengths.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <param name="cornerLengthHorizontal">The chamfer length measured along horizontal edges.</param>
+    /// <param name="cornerLengthVertical">The chamfer length measured along vertical edges.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad chamfer outline rendering.
+    /// </remarks>
     public static void DrawChamferedCornersLines(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCornersLines(lineThickness, color, cornerLengthHorizontal, cornerLengthVertical);
     }
     
+    /// <summary>
+    /// Draws a rectangle outline with independent chamfer lengths for each corner.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <param name="tlCorner">The chamfer length for the top-left corner.</param>
+    /// <param name="blCorner">The chamfer length for the bottom-left corner.</param>
+    /// <param name="brCorner">The chamfer length for the bottom-right corner.</param>
+    /// <param name="trCorner">The chamfer length for the top-right corner.</param>
+    /// <remarks>
+    /// The rectangle is converted to a <see cref="Quad"/> and drawn using quad chamfer outline rendering.
+    /// </remarks>
     public static void DrawChamferedCornersLines(this Rect rect, float lineThickness, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
     {
         var q = rect.ToQuad();
@@ -266,18 +455,52 @@ public static class RectDrawing
     
     #region Draw Chamfered Corners Relative Lines
     
+    /// <summary>
+    /// Draws a rectangle outline with equally chamfered corners using a relative factor.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <param name="cornerLengthFactor">The normalized chamfer factor applied to all corners.</param>
+    /// <remarks>
+    /// The factor is interpreted by the underlying <see cref="Quad"/> implementation relative to the rectangle size.
+    /// </remarks>
     public static void DrawChamferedCornersLinesRelative(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactor)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCornersLinesRelative(lineThickness, color, cornerLengthFactor);
     }
  
+    /// <summary>
+    /// Draws a rectangle outline with chamfered corners using separate relative horizontal and vertical factors.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <param name="cornerLengthFactorHorizontal">The normalized chamfer factor relative to the rectangle width.</param>
+    /// <param name="cornerLengthFactorVertical">The normalized chamfer factor relative to the rectangle height.</param>
+    /// <remarks>
+    /// The factors are interpreted by the underlying <see cref="Quad"/> implementation relative to the rectangle size.
+    /// </remarks>
     public static void DrawChamferedCornersLinesRelative(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
     {
         var q = rect.ToQuad();
         q.DrawChamferedCornersLinesRelative(lineThickness, color, cornerLengthFactorHorizontal, cornerLengthFactorVertical);
     }
     
+    /// <summary>
+    /// Draws a rectangle outline with independent relative chamfer factors for each corner.
+    /// </summary>
+    /// <param name="rect">The rectangle whose outline is drawn.</param>
+    /// <param name="lineThickness">The outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <param name="tlCornerFactor">The normalized chamfer factor for the top-left corner.</param>
+    /// <param name="blCornerFactor">The normalized chamfer factor for the bottom-left corner.</param>
+    /// <param name="brCornerFactor">The normalized chamfer factor for the bottom-right corner.</param>
+    /// <param name="trCornerFactor">The normalized chamfer factor for the top-right corner.</param>
+    /// <remarks>
+    /// The factors are interpreted by the underlying <see cref="Quad"/> implementation relative to the rectangle size.
+    /// </remarks>
     public static void DrawChamferedCornersLinesRelative(this Rect rect, float lineThickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
     {
        var q = rect.ToQuad();
