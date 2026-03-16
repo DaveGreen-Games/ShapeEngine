@@ -40,9 +40,6 @@ public class ShapeDrawingTestExample : ExampleScene
         StartIndex,
         CornerLength,
         CornerFactor,
-        Gaps,
-        GapPercentage,
-        StartOffset,
         RotationDeg,
         Roundness,
         Segments,
@@ -170,9 +167,6 @@ public class ShapeDrawingTestExample : ExampleScene
         paramSliders[ParamId.StartIndex].SetCurValue(0);
         paramSliders[ParamId.CornerLength].SetCurValue(50f);
         paramSliders[ParamId.CornerFactor].SetCurValue(0.2f);
-        paramSliders[ParamId.Gaps].SetCurValue(4);
-        paramSliders[ParamId.GapPercentage].SetCurValue(0.5f);
-        paramSliders[ParamId.StartOffset].SetCurValue(0f);
         paramSliders[ParamId.RotationDeg].SetCurValue(45f);
         paramSliders[ParamId.Roundness].SetCurValue(0.25f);
         paramSliders[ParamId.Segments].SetCurValue(8);
@@ -210,7 +204,7 @@ public class ShapeDrawingTestExample : ExampleScene
 
         if (active.Count > 0)
         {
-            var rects = bottomRect.SplitH(active.Count);
+            var rects = bottomRect.SplitV(active.Count);
             for (int i = 0; i < active.Count; i++)
             {
                 var slider = paramSliders[active[i]];
@@ -231,14 +225,27 @@ public class ShapeDrawingTestExample : ExampleScene
 
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
-        shapeSlider.Label = GetCurrentShape().ToString();
-        methodSlider.Label = GetCurrentCase().Name;
+        var shapeLabel = GetCurrentShape().ToString();
+        var methodLabel = GetCurrentCase().Name;
+
+        shapeSlider.Label = string.Empty;
+        methodSlider.Label = string.Empty;
 
         shapeSlider.ShowValue = false;
         methodSlider.ShowValue = false;
 
         shapeSlider.Draw();
         methodSlider.Draw();
+
+        var leftRect = ui.Area.ApplyMargins(0.01f, 0.92f, 0.14f, 0.18f);
+        var rightRect = ui.Area.ApplyMargins(0.92f, 0.01f, 0.14f, 0.18f);
+        var leftLabelRect = leftRect;
+        var rightLabelRect = rightRect;
+
+        textFont.ColorRgba = Colors.Highlight;
+        textFont.Draw(shapeLabel, leftLabelRect, 90f, new AnchorPoint(0.5f, 0.5f));
+        textFont.Draw(methodLabel, rightLabelRect, -90f, new AnchorPoint(0.5f, 0.5f));
+        
 
         var active = GetCurrentCase().Params.ToList();
         if (UsesRotationSlider()) active.Add(ParamId.RotationDeg);
@@ -285,9 +292,6 @@ public class ShapeDrawingTestExample : ExampleScene
         paramSliders[ParamId.StartIndex] = new("Start", 0, 0, 15) { Integer = true };
         paramSliders[ParamId.CornerLength] = new("Corner", 50f, 1f, 120f);
         paramSliders[ParamId.CornerFactor] = new("Corner", 0.2f, 0f, 1f) { Percentage = true };
-        paramSliders[ParamId.Gaps] = new("Gaps", 4, 1, 30) { Integer = true };
-        paramSliders[ParamId.GapPercentage] = new("Gap %", 0.5f, 0f, 1f) { Percentage = true };
-        paramSliders[ParamId.StartOffset] = new("Offset", 0f, 0f, 1f) { Percentage = true };
         paramSliders[ParamId.RotationDeg] = new("Rotation", 45f, 0f, 360f);
         paramSliders[ParamId.Roundness] = new("Roundness", 0.25f, 0f, 1f) { Percentage = true };
         paramSliders[ParamId.Segments] = new("Segments", 8, 1, 32) { Integer = true };
@@ -312,7 +316,6 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Scaled", () => segment.DrawScaled(LineInfo, Scale, Origin), ParamId.Thickness, ParamId.Scale, ParamId.Origin),
             new("Draw Glow", () => segment.DrawGlow(Width, EndWidth, DrawColor, DrawColor.SetAlpha(0), Steps, LineCapType.CappedExtended, 4), ParamId.Width, ParamId.EndWidth, ParamId.Steps),
             new("Draw Vertices", () => { segment.Draw(LineInfo); segment.DrawVertices(VertexRadius, DrawColor, Smoothness); }, ParamId.Thickness, ParamId.VertexRadius, ParamId.Smoothness),
-            new("Draw Gapped", () => segment.DrawGapped(-1f, LineInfo, GapInfo), ParamId.Thickness, ParamId.StartOffset, ParamId.Gaps, ParamId.GapPercentage),
         ];
 
         cases[ShapeType.Circle] =
@@ -322,19 +325,14 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Scaled", () => circle.DrawScaled(0f, DrawColor, Smoothness, Scale, Origin), ParamId.Smoothness, ParamId.Scale, ParamId.Origin),
             new("Draw Percentage", () => circle.DrawPercentage(Percentage, 0f, DrawColor, Smoothness), ParamId.Smoothness, ParamId.Percentage),
             new("Draw Lines", () => circle.DrawLines(LineInfo, Smoothness), ParamId.Thickness, ParamId.Smoothness),
-            new("Draw Lines Scaled", () => circle.DrawLinesScaled(0f, LineInfo, Smoothness, Scale, Origin), ParamId.Thickness, ParamId.Smoothness, ParamId.Scale, ParamId.Origin),
             new("Draw Lines Percentage", () => circle.DrawLinesPercentage(Percentage, 0f, LineInfo, Smoothness), ParamId.Thickness, ParamId.Smoothness, ParamId.Percentage),
             new("Draw Sector", () => circle.DrawSector(StartAngleDeg, EndAngleDeg, 0f, DrawColor, Smoothness), ParamId.StartAngleDeg, ParamId.EndAngleDeg, ParamId.Smoothness),
             new("Draw Sector Scaled", () => circle.DrawSectorScaled(StartAngleDeg, EndAngleDeg, 0f, DrawColor, Smoothness, Scale, Origin), ParamId.StartAngleDeg, ParamId.EndAngleDeg, ParamId.Smoothness, ParamId.Scale, ParamId.Origin),
             new("Draw Sector Lines", () => circle.DrawSectorLines(StartAngleDeg, EndAngleDeg, 0f, LineInfo, Smoothness), ParamId.StartAngleDeg, ParamId.EndAngleDeg, ParamId.Thickness, ParamId.Smoothness),
             new("Draw Sector Lines Closed", () => circle.DrawSectorLinesClosed(StartAngleDeg, EndAngleDeg, 0f, LineInfo, Smoothness), ParamId.StartAngleDeg, ParamId.EndAngleDeg, ParamId.Thickness, ParamId.Smoothness),
-            new("Draw Sector Lines Scaled", () => circle.DrawSectorLinesScaled(StartAngleDeg, EndAngleDeg, 0f, LineInfo, Smoothness, Scale, Origin), ParamId.StartAngleDeg, ParamId.EndAngleDeg, ParamId.Thickness, ParamId.Smoothness, ParamId.Scale, ParamId.Origin),
-            new("Draw Sector Lines Scaled Closed", () => circle.DrawSectorLinesScaledClosed(StartAngleDeg, EndAngleDeg, 0f, LineInfo, Smoothness, Scale, Origin), ParamId.StartAngleDeg, ParamId.EndAngleDeg, ParamId.Thickness, ParamId.Smoothness, ParamId.Scale, ParamId.Origin),
             new("Draw Ring Lines", () => circle.DrawRingLines(RingThickness, 0f, LineInfo, Smoothness), ParamId.RingThickness, ParamId.Thickness, ParamId.Smoothness),
-            new("Draw Ring Lines Scaled", () => circle.DrawRingLinesScaled(RingThickness, 0f, LineInfo, Smoothness, Scale, Origin), ParamId.RingThickness, ParamId.Thickness, ParamId.Smoothness, ParamId.Scale, ParamId.Origin),
             new("Draw Ring Lines Percentage", () => circle.DrawRingLinesPercentage(RingThickness, Percentage, 0f, LineInfo, Smoothness), ParamId.RingThickness, ParamId.Thickness, ParamId.Smoothness, ParamId.Percentage),
             new("Draw Ring Sector Lines", () => circle.DrawRingSectorLines(RingThickness, StartAngleDeg, EndAngleDeg, 0f, LineInfo, Smoothness), ParamId.RingThickness, ParamId.StartAngleDeg, ParamId.EndAngleDeg, ParamId.Thickness, ParamId.Smoothness),
-            new("Draw Gapped Outline", () => circle.DrawGappedOutline(LineInfo, GapInfo, 0f, Smoothness), ParamId.Thickness, ParamId.Smoothness, ParamId.StartOffset, ParamId.Gaps, ParamId.GapPercentage),
         ];
 
         cases[ShapeType.Triangle] =
@@ -343,7 +341,6 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Scaled", () => triangle.DrawScaled(DrawColor, Scale, Origin, DrawType), ParamId.Scale, ParamId.Origin, ParamId.DrawType),
             new("Draw Lines", () => triangle.DrawLines(LineThickness, DrawColor, MiterLimit), ParamId.Thickness, ParamId.MiterLimit),
             new("Draw Lines Percentage", () => triangle.DrawLinesPercentage(Percentage, StartIndex, LineThickness, DrawColor, MiterLimit), ParamId.Thickness, ParamId.Percentage, ParamId.StartIndex, ParamId.MiterLimit),
-            new("Draw Lines Scaled", () => triangle.DrawLinesScaled(LineInfo, Scale, Origin), ParamId.Thickness, ParamId.Scale, ParamId.Origin),
             new("Draw Corners", () => triangle.DrawCorners(LineThickness, DrawColor, CornerLength, MiterLimit), ParamId.Thickness, ParamId.CornerLength, ParamId.MiterLimit),
             new("Draw Corners Relative", () => triangle.DrawCornersRelative(LineThickness, DrawColor, CornerFactor, MiterLimit), ParamId.Thickness, ParamId.CornerFactor, ParamId.MiterLimit),
             new("Draw Vertices", () =>
@@ -351,7 +348,6 @@ public class ShapeDrawingTestExample : ExampleScene
                 triangle.DrawLines(LineThickness, DrawColor, MiterLimit);
                 triangle.DrawVertices(VertexRadius, DrawColor, Smoothness);
             }, ParamId.Thickness, ParamId.VertexRadius, ParamId.Smoothness, ParamId.MiterLimit),
-            new("Draw Gapped Outline", () => triangle.DrawGappedOutline(-1f, LineInfo, GapInfo), ParamId.Thickness, ParamId.StartOffset, ParamId.Gaps, ParamId.GapPercentage),
         ];
 
         cases[ShapeType.Rect] =
@@ -361,7 +357,6 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Scaled", () => rect.DrawScaled(DrawColor, Scale, Origin, DrawType), ParamId.Scale, ParamId.Origin, ParamId.DrawType),
             new("Draw Lines", () => rect.DrawLines(LineInfo), ParamId.Thickness),
             new("Draw Lines Rounded", () => rect.DrawLinesRounded(LineThickness, DrawColor, Roundness, Segments), ParamId.Thickness, ParamId.Roundness, ParamId.Segments),
-            new("Draw Lines Scaled", () => rect.DrawLinesScaled(LineInfo, Scale, Origin), ParamId.Thickness, ParamId.Scale, ParamId.Origin),
             new("Draw Lines Percentage", () => rect.DrawLinesPercentage(Percentage, StartIndex, LineInfo), ParamId.Thickness, ParamId.Percentage, ParamId.StartIndex),
             new("Draw Corners", () => rect.DrawCorners(LineThickness, DrawColor, CornerLength), ParamId.Thickness, ParamId.CornerLength),
             new("Draw Corners Relative", () => rect.DrawCornersRelative(LineThickness, DrawColor, CornerFactor), ParamId.Thickness, ParamId.CornerFactor),
@@ -369,7 +364,6 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Chamfered Corners Relative", () => rect.DrawChamferedCornersRelative(DrawColor, CornerFactor), ParamId.CornerFactor),
             new("Draw Chamfered Corners Lines", () => rect.DrawChamferedCornersLines(LineThickness, DrawColor, CornerLength), ParamId.Thickness, ParamId.CornerLength),
             new("Draw Chamfered Corners Lines Relative", () => rect.DrawChamferedCornersLinesRelative(LineThickness, DrawColor, CornerFactor), ParamId.Thickness, ParamId.CornerFactor),
-            new("Draw Gapped Outline", () => rect.DrawGappedOutline(-1f, LineInfo, GapInfo), ParamId.Thickness, ParamId.StartOffset, ParamId.Gaps, ParamId.GapPercentage),
         ];
 
         cases[ShapeType.Quad] =
@@ -377,7 +371,6 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw", () => quad.Draw(DrawColor)),
             new("Draw Scaled", () => quad.DrawScaled(DrawColor, Scale, Origin, DrawType), ParamId.Scale, ParamId.Origin, ParamId.DrawType),
             new("Draw Lines", () => quad.DrawLines(LineInfo), ParamId.Thickness),
-            new("Draw Lines Scaled", () => quad.DrawLinesScaled(LineInfo, Scale, Origin), ParamId.Thickness, ParamId.Scale, ParamId.Origin),
             new("Draw Lines Percentage", () => quad.DrawLinesPercentage(Percentage, StartIndex, LineInfo), ParamId.Thickness, ParamId.Percentage, ParamId.StartIndex),
             new("Draw Vignette", () => quad.DrawVignette(CornerLength, RotationDeg, DrawColor, Smoothness), ParamId.CornerLength, ParamId.Smoothness),
             new("Draw Corners", () => quad.DrawCorners(LineThickness, DrawColor, CornerLength), ParamId.Thickness, ParamId.CornerLength),
@@ -386,7 +379,6 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Chamfered Corners Relative", () => quad.DrawChamferedCornersRelative(DrawColor, CornerFactor), ParamId.CornerFactor),
             new("Draw Chamfered Corners Lines", () => quad.DrawChamferedCornersLines(LineThickness, DrawColor, CornerLength), ParamId.Thickness, ParamId.CornerLength),
             new("Draw Chamfered Corners Lines Relative", () => quad.DrawChamferedCornersLinesRelative(LineThickness, DrawColor, CornerFactor), ParamId.Thickness, ParamId.CornerFactor),
-            new("Draw Gapped Outline", () => quad.DrawGappedOutline(-1f, LineInfo, GapInfo), ParamId.Thickness, ParamId.StartOffset, ParamId.Gaps, ParamId.GapPercentage),
         ];
 
         cases[ShapeType.Polygon] =
@@ -399,11 +391,9 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Lines Percentage", () => polygon.DrawLinesPercentage(Percentage, StartIndex, LineThickness, DrawColor, MiterLimit), ParamId.Thickness, ParamId.Percentage, ParamId.StartIndex, ParamId.MiterLimit),
             new("Draw Lines Perimeter Capped", () => polygon.DrawLinesPerimeterCapped(polygon.GetPerimeter() * Percentage, StartIndex, LineThickness, DrawColor, LineCapType.CappedExtended, 4), ParamId.Thickness, ParamId.Percentage, ParamId.StartIndex),
             new("Draw Lines Percentage Capped", () => polygon.DrawLinesPercentageCapped(Percentage, StartIndex, LineInfo), ParamId.Thickness, ParamId.Percentage, ParamId.StartIndex),
-            new("Draw Lines Scaled", () => polygon.DrawLinesScaled(LineInfo, Scale, Origin), ParamId.Thickness, ParamId.Scale, ParamId.Origin),
             new("Draw Cornered Absolute Transparent", () => polygon.DrawCorneredAbsoluteTransparent(CornerLength, LineInfo, MiterLimit), ParamId.Thickness, ParamId.CornerLength, ParamId.MiterLimit),
             new("Draw Cornered Relative Transparent", () => polygon.DrawCorneredRelativeTransparent(CornerFactor, LineInfo, MiterLimit), ParamId.Thickness, ParamId.CornerFactor, ParamId.MiterLimit),
             new("Draw Cornered", () => polygon.DrawCornered(CornerLength, LineInfo), ParamId.Thickness, ParamId.CornerLength),
-            new("Draw Gapped Outline", () => polygon.DrawGappedOutline(-1f, LineInfo, GapInfo), ParamId.Thickness, ParamId.StartOffset, ParamId.Gaps, ParamId.GapPercentage),
         ];
 
         cases[ShapeType.Polyline] =
@@ -411,9 +401,7 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw", () => polyline.Draw(LineInfo), ParamId.Thickness),
             new("Draw Perimeter", () => polyline.DrawPerimeter(polyline.GetLength() * Percentage, LineInfo), ParamId.Thickness, ParamId.Percentage),
             new("Draw Percentage", () => polyline.DrawPercentage(Percentage, LineInfo), ParamId.Thickness, ParamId.Percentage),
-            new("Draw Lines Scaled", () => polyline.DrawLinesScaled(LineInfo, Scale, Origin), ParamId.Thickness, ParamId.Scale, ParamId.Origin),
             new("Draw Glow", () => polyline.DrawGlow(Width, EndWidth, DrawColor, DrawColor.SetAlpha(0), Steps, LineCapType.CappedExtended, 4), ParamId.Width, ParamId.EndWidth, ParamId.Steps),
-            new("Draw Gapped Outline", () => polyline.DrawGappedOutline(-1f, LineInfo, GapInfo), ParamId.Thickness, ParamId.StartOffset, ParamId.Gaps, ParamId.GapPercentage),
         ];
     }
 
@@ -456,6 +444,4 @@ public class ShapeDrawingTestExample : ExampleScene
     private float MiterLimit => paramSliders[ParamId.MiterLimit].CurValue;
 
     private LineDrawingInfo LineInfo => new(LineThickness, DrawColor, LineCapType.CappedExtended, 4);
-    private GappedOutlineDrawingInfo GapInfo =>
-        new((int)paramSliders[ParamId.Gaps].CurValue, paramSliders[ParamId.StartOffset].CurValue, paramSliders[ParamId.GapPercentage].CurValue);
 }
