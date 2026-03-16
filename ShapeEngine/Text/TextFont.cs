@@ -3,6 +3,7 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Text;
 
@@ -184,12 +185,58 @@ public class TextFont
     /// <param name="alignment">The alignment of the text within the rectangle.</param>
     public void Draw(string text, Rect rect, float rotDeg, AnchorPoint alignment)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
-        var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
+        //OLD INCORRECT SCALING VERSION
+        //if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
+        //var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
+        //var textSize = scaledFont.GetTextSize(text);
+        //Rect r = new(rect.GetPoint(alignment), textSize, alignment);
+        //var originOffset = (alignment * textSize).ToVector2();
+        //Raylib.DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.Size, scaledFont.Spacing, ColorRgba.ToRayColor());
+        
+        if (Math.Abs(FontSizeModifier - 1f) > 0.0001f)
+            rect = rect.ScaleSize(FontSizeModifier, alignment);
+    
+        // Measure text at base size first
+        var baseTextSize = FontDimensions.GetTextBaseSize(text);
+    
+        float rad = rotDeg * ShapeMath.DEGTORAD;
+        float c = MathF.Abs(MathF.Cos(rad));
+        float s = MathF.Abs(MathF.Sin(rad));
+    
+        // Rotated axis-aligned bounds for the text at base size
+        float rotatedBaseWidth = baseTextSize.Width * c + baseTextSize.Height * s;
+        float rotatedBaseHeight = baseTextSize.Width * s + baseTextSize.Height * c;
+    
+        if (rotatedBaseWidth <= 0f || rotatedBaseHeight <= 0f) return;
+    
+        float fX = rect.Width / rotatedBaseWidth;
+        float fY = rect.Height / rotatedBaseHeight;
+        float f = MathF.Min(fX, fY);
+    
+        float scaledFontSize = FontDimensions.FontSizeRange.Clamp(FontDimensions.BaseSize * f);
+        f = scaledFontSize / FontDimensions.BaseSize;
+    
+        var scaledFont = new FontDimensions(
+            FontDimensions.Font,
+            scaledFontSize,
+            FontDimensions.Spacing * f,
+            FontDimensions.LineSpacing * f
+        );
+    
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignment), textSize, alignment);
         var originOffset = (alignment * textSize).ToVector2();
-        Raylib.DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.Size, scaledFont.Spacing, ColorRgba.ToRayColor());
+    
+        Raylib.DrawTextPro(
+            scaledFont.Font,
+            text,
+            r.TopLeft + originOffset,
+            originOffset,
+            rotDeg,
+            scaledFont.Size,
+            scaledFont.Spacing,
+            ColorRgba.ToRayColor()
+        );
     }
     /// <summary>
     /// Draws a word at the specified top-left position.
