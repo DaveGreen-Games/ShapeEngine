@@ -44,6 +44,7 @@ namespace Examples.Scenes
         {
             examples.Add(new OutlineDrawingExample());
             examples.Add(new StripedShapeDrawingExample());
+            examples.Add(new ShapeDrawingTestExample());
             examples.Add(new ShapeIntersectionExample());
             examples.Add(new CurveDataExample());
             examples.Add(new PhysicsExample());
