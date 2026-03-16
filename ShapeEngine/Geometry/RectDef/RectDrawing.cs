@@ -20,8 +20,6 @@ namespace ShapeEngine.Geometry.RectDef;
 /// </remarks>
 public static class RectDrawing
 {
-    //TODO: Docs
-    
     #region Draw
     
     public static void DrawRect(Vector2 topLeft, Vector2 bottomRight, ColorRgba color)
@@ -344,8 +342,7 @@ public static class RectDrawing
     }
 
     #endregion
-
-    //TODO: Test
+    
     #region Draw Nine Patch Rect
     /// <summary>
     /// Draws a <see cref="NinePatchRect"/> using a single color for all patches.
@@ -555,7 +552,6 @@ public static class RectDrawing
         q.DrawVignette(circleRadius, circleRotDeg, color, circleSmoothness);
     }
     #endregion
-    
 }
     
    
