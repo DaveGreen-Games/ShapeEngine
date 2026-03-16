@@ -304,18 +304,19 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     #region Shapes
 
     /// <summary>
-    /// Rotates this rectangle by <paramref name="angleDeg"/> around a pivot computed from the given <paramref name="alignment"/>
+    /// Rotates this rectangle by <paramref name="angleDeg"/> around a pivot computed from the given <paramref name="pivot"/>
     /// and returns the resulting quadrilateral as a <see cref="Quad"/>.
     /// </summary>
     /// <param name="angleDeg">Rotation angle in degrees.</param>
-    /// <param name="alignment">Anchor point that determines the rotation pivot relative to the rectangle's top-left and size.</param>
+    /// <param name="pivot">Anchor point that determines the rotation pivot relative to the rectangle's top-left and size.</param>
     /// <returns>
     /// A <see cref="Quad"/> representing the four corners of the rotated rectangle in the same corner ordering as the source rect.
     /// </returns>
-    public Quad RotateToQuad(float angleDeg, AnchorPoint alignment)
+    public Quad RotateToQuad(float angleDeg, AnchorPoint pivot)
     {
-        var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
-        return RotateToQuad(angleDeg, pivot);
+        // var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
+        // return RotateToQuad(angleDeg, pivot);
+        return new Quad(this, angleDeg, pivot);
     }
     
     /// <summary>
@@ -328,16 +329,17 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <returns>A <see cref="Quad"/> representing the rotated rectangle.</returns>
     public Quad RotateToQuad(float angleDeg, Vector2 pivot)
     {
-        var rotRad = angleDeg * ShapeMath.DEGTORAD;
-        var w = TopLeft - pivot;
-        var p1 = pivot + w.Rotate(rotRad);
-        w = BottomLeft - pivot;
-        var p2 = pivot + w.Rotate(rotRad);
-        w = BottomRight - pivot;
-        var p3 = pivot + w.Rotate(rotRad);
-        w = TopRight - pivot;
-        var p4 = pivot + w.Rotate(rotRad);
-        return new Quad(p1, p2, p3, p4);
+        // var rotRad = angleDeg * ShapeMath.DEGTORAD;
+        // var w = TopLeft - pivot;
+        // var p1 = pivot + w.Rotate(rotRad);
+        // w = BottomLeft - pivot;
+        // var p2 = pivot + w.Rotate(rotRad);
+        // w = BottomRight - pivot;
+        // var p3 = pivot + w.Rotate(rotRad);
+        // w = TopRight - pivot;
+        // var p4 = pivot + w.Rotate(rotRad);
+        // return new Quad(p1, p2, p3, p4);
+        return new Quad(this, angleDeg, pivot);
     }
     
     /// <summary>
