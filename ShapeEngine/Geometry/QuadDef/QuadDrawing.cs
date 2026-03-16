@@ -177,6 +177,8 @@ public static class QuadDrawing
             return;
         }
         
+        lineInfo = lineInfo.SetThickness(MathF.Min(lineInfo.Thickness, q.GetSize().Min() * 0.5f));   
+        
         SegmentDrawing.DrawSegment(q.A, q.B, lineInfo, sideScaleFactor, sideScaleOrigin);
         SegmentDrawing.DrawSegment(q.B, q.C, lineInfo, sideScaleFactor, sideScaleOrigin);
         SegmentDrawing.DrawSegment(q.C, q.D, lineInfo, sideScaleFactor, sideScaleOrigin);
@@ -1006,7 +1008,7 @@ public static class QuadDrawing
     {
         var size = quad.GetSize();
         if(size.Width <= 0 || size.Height <= 0) return;
-        if (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0)
+        if (cornerLengthHorizontal <= 0 && cornerLengthVertical <= 0)
         {
             quad.Draw(color);
             return;
@@ -1595,33 +1597,32 @@ public static class QuadDrawing
     /// </remarks>
     public static void DrawChamferedCornersLines(this Quad quad, float lineThickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
     {
-        if(lineThickness <= 0 && cornerLengthHorizontal <= 0 && cornerLengthVertical <= 0)
+        if(lineThickness <= 0 && (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0))
         {
             quad.Draw(color);
             return;
         }
         
-        if (cornerLengthHorizontal <= 0 && cornerLengthVertical <= 0)
+        if (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0)
         {
             quad.DrawLines(lineThickness, color);
             return;
         }
-        else if (cornerLengthHorizontal <= 0)
-        {
-            quad.DrawChamferedCornersLines(lineThickness, color, cornerLengthVertical);
-            return;
-        }
-        else if (cornerLengthVertical <= 0f)
-        {
-            quad.DrawChamferedCornersLines(lineThickness, color, cornerLengthHorizontal);
-            return;
-        }
-        
-        if (Math.Abs(cornerLengthHorizontal - cornerLengthVertical) < 0.0001f)
-        {
-            quad.DrawChamferedCornersLines(lineThickness, color, cornerLengthHorizontal);
-            return;
-        }
+        // else if (cornerLengthHorizontal <= 0f)
+        // {
+        //     quad.DrawChamferedCornersLines(lineThickness, color, cornerLengthVertical);
+        //     return;
+        // }
+        // else if (cornerLengthVertical <= 0f)
+        // {
+        //     quad.DrawChamferedCornersLines(lineThickness, color, cornerLengthHorizontal);
+        //     return;
+        // }
+        // if (Math.Abs(cornerLengthHorizontal - cornerLengthVertical) < 0.0001f)
+        // {
+        //     quad.DrawChamferedCornersLines(lineThickness, color, cornerLengthHorizontal);
+        //     return;
+        // }
         
         if (lineThickness <= 0)
         {
