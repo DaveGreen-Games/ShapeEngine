@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.Intrinsics.X86;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
@@ -1810,5 +1811,122 @@ public static class PolygonDrawing
         }
     }
 
+    #endregion
+    
+    #region Gapped
+    /// <summary>
+    /// Draws a gapped outline for a polygon, creating a dashed or segmented effect along the polygon's perimeter.
+    /// </summary>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="perimeter">
+    /// The total length of the polygon's perimeter.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the polygon if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
+    public static float DrawGappedOutline(this Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            poly.DrawLines(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        if (perimeter <= 0f)
+        {
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var curP = poly[i];
+                var nextP = poly[(i + 1) % poly.Count];
+
+                perimeter += (nextP - curP).Length();
+            }
+        }
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        
+        var curIndex = 0;
+        var curPoint = poly[0];
+        var nextPoint= poly[1 % poly.Count];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % poly.Count;
+                curPoint = poly[curIndex];
+                nextPoint = poly[(curIndex + 1) % poly.Count];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+
+        return perimeter;
+    }
+   
     #endregion
 }

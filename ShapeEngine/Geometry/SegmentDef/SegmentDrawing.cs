@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
@@ -1052,6 +1053,140 @@ public static class SegmentDrawing
         }
         Raylib.DrawTriangle(curStart, right, center, color.ToRayColor());
     }
+    #endregion
+    
+    #region Gapped
+    /// <summary>
+    /// Draws a line segment with gaps, creating a dashed or segmented effect.
+    /// </summary>
+    /// <param name="start">The starting point of the line segment.</param>
+    /// <param name="end">The ending point of the line segment.</param>
+    /// <param name="length">
+    /// The length of the line.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the line (e.g., color, thickness).</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration (number of gaps, gap percentage, etc.).</param>
+    /// <returns>
+    /// The length of the line if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the line is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no line is drawn.
+    /// </remarks>
+    public static float DrawGappedSegment(Vector2 start, Vector2 end, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            SegmentDrawing.DrawSegment(start, end, lineInfo);
+            return length > 0f ? length : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return length > 0f ? length : -1f;
+
+        var linePercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+        var lines = gapDrawingInfo.Gaps;
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var linePercentageRange = linePercentage / lines;
+
+        var w = end - start;
+        if (length <= 0) length = w.Length();
+        if (length <= 0) return -1f;
+        var dir = w / length;
+
+        var lineLength = length * linePercentageRange;
+        var gapLength = length * gapPercentageRange;
+
+        var curDistance = gapDrawingInfo.StartOffset < 1f ? gapDrawingInfo.StartOffset * length : 0f;
+        var curStart = start + dir * curDistance;
+        Vector2 curEnd;
+        var remainingLineLength = 0f;
+        if (curDistance + lineLength >= length)
+        {
+            curEnd = end;
+            var tempLength = (curEnd - curStart).Length();
+            curDistance = 0;
+            remainingLineLength = lineLength - tempLength;
+        }
+        else
+        {
+            curEnd = curStart + dir * lineLength;
+            curDistance += lineLength;
+        }
+
+        int drawnLines = 0;
+        while (drawnLines <= lines)
+        {
+            SegmentDrawing.DrawSegment(curStart, curEnd, lineInfo);
+
+            if (remainingLineLength > 0f)
+            {
+                curStart = start;
+                curEnd = curStart + dir * remainingLineLength;
+                curDistance = remainingLineLength;
+                remainingLineLength = 0f;
+                drawnLines++;
+            }
+            else
+            {
+                if (curDistance + gapLength >= length) //gap overshoots end
+                {
+                    var tempLength = (end - curEnd).Length();
+                    var remaining = gapLength - tempLength;
+                    curDistance = remaining;
+
+                    curStart = start + dir * curDistance;
+                }
+                else //advance gap length to find new start
+                {
+                    curStart = curEnd + dir * gapLength;
+                    curDistance += gapLength;
+                }
+
+                if (curDistance + lineLength >= length) //line overshoots end
+                {
+                    curEnd = end;
+                    var tempLength = (curEnd - curStart).Length();
+                    curDistance = 0;
+                    remainingLineLength = lineLength - tempLength;
+                }
+                else //advance line length to find new end
+                {
+                    curEnd = curStart + dir * lineLength;
+                    curDistance += lineLength;
+                    drawnLines++;
+                }
+            }
+
+        }
+
+        return length;
+    }
+    
+    /// <summary>
+    /// Draws a segment with gaps, creating a dashed or segmented effect.
+    /// </summary>
+    /// <param name="s">The segment to draw.</param>
+    /// <param name="length">
+    /// The length of the segment.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the segment.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// Returns the segment length if positive; otherwise, returns -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience wrapper for <see cref="DrawGappedSegment"/>.
+    /// </remarks>
+    public static float DrawGapped(this Segment s, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        return DrawGappedSegment(s.Start, s.End, length, lineInfo, gapDrawingInfo);
+    }
+
     #endregion
     
 }

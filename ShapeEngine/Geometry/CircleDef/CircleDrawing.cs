@@ -363,7 +363,6 @@ public static class CircleDrawing
 
     #endregion
     
-    
     #region Draw Sector
     /// <summary>
     /// Draws a filled sector of the circle.
@@ -745,7 +744,6 @@ public static class CircleDrawing
         }
     }
     #endregion
-
     
     #region Draw Masked
     /// <summary>
@@ -989,7 +987,6 @@ public static class CircleDrawing
         }
     }
     #endregion
-    
     
     #region Draw Ring Lines
 
@@ -1438,6 +1435,155 @@ public static class CircleDrawing
     
     #endregion 
     
+    #region Gapped
+    /// <summary>
+    /// Draws a gapped outline for a circle, creating a dashed or segmented circular outline.
+    /// </summary>
+    /// <param name="circle">The circle to draw.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
+    public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, float smoothness)
+    {
+        if (!CircleDrawing.CalculateCircleDrawingParameters(circle.Radius, smoothness, out float angleStep, out int sides)) return;
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            circle.DrawLines(rotDeg, lineInfo, smoothness);
+            return;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+        
+        float angleRad = rotDeg * ShapeMath.DEGTORAD;
+        Vector2[] circlePoints = new Vector2[sides];
+        
+        float circumference = 0f;
+        for (int i = 0; i < sides; i++)
+        {
+            var curP = circle.GetVertex(angleRad, angleStep, i);
+            circlePoints[i] = curP;
+            var nextP = circle.GetVertex(angleRad, angleStep, (i + 1) % sides); 
+            circumference += (nextP - curP).Length();
+        }
+
+        var startDistance = circumference * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        var curIndex = 0;
+        var curPoint = circlePoints[0];
+        var nextPoint= circlePoints[1];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * circumference;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * circumference;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % sides;
+                curPoint = circlePoints[curIndex];
+                nextPoint = circlePoints[(curIndex + 1) % sides];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+    }
+   
+    /// <summary>
+    /// Draws a gapped outline for a ring (annulus), creating dashed or segmented outlines for both inner and outer circles.
+    /// </summary>
+    /// <param name="center">The center of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner circle. If zero or negative, only the outer circle is drawn.</param>
+    /// <param name="outerRadius">The radius of the outer circle. If zero or negative, only the inner circle is drawn.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the outlines.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <param name="rotDeg">The rotation of the ring in degrees.</param>
+    /// <param name="sideLength">The approximate length of each side used to approximate the circles.</param>
+    /// <remarks>
+    /// - If both radii are zero or negative, nothing is drawn.
+    /// - The number of sides for each circle is determined by the radius and <paramref name="sideLength"/>.
+    /// </remarks>
+    public static void DrawGappedRing(Vector2 center, float innerRadius, float outerRadius, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, float sideLength = 8f)
+    {
+        if (innerRadius <= 0 && outerRadius <= 0) return;
+        
+        
+        int outerSides = CircleDrawing.GetCircleSideCount(outerRadius, sideLength);
+        if (innerRadius <= 0)
+        {
+            DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+            return;
+        }
+
+        int innerSides = CircleDrawing.GetCircleSideCount(innerRadius, sideLength);
+        if (outerRadius <= 0)
+        {
+            DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+            return;
+        }
+        
+        DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+        DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+    }
+    
+    #endregion
     
     #region Math
     /// <summary>
