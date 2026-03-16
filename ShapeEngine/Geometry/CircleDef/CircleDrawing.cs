@@ -1585,6 +1585,50 @@ public static class CircleDrawing
     
     #endregion
     
+    #region UI
+    /// <summary>
+    /// Draws an outline bar along the circumference of a circle, filling the outline based on the specified progress value.
+    /// </summary>
+    /// <param name="c">The circle to draw the outline on.</param>
+    /// <param name="thickness">The thickness of the outline.</param>
+    /// <param name="f">The progress value (0 to 1) indicating how much of the outline to draw (as a fraction of the circle).</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// The outline is drawn as a sector of the circle, starting from 0 degrees.
+    /// </remarks>
+    public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color, float smoothness = 0.5f)
+    {
+        c.DrawSectorLines(0, 360 * f, 0f, thickness, color, smoothness);
+    }
+
+    /// <summary>
+    /// Draws an outline bar along the circumference of a circle, starting at a specified angle offset, and filling based on the progress value.
+    /// </summary>
+    /// <param name="c">The circle to draw the outline on.</param>
+    /// <param name="startOffsetDeg">The starting angle offset in degrees.</param>
+    /// <param name="thickness">The thickness of the outline.</param>
+    /// <param name="f">The progress value (0 to 1) indicating how much of the outline to draw (as a fraction of the circle).</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// The outline is drawn as a sector of the circle, starting from the specified angle offset.
+    /// </remarks>
+    public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color, float smoothness = 0.5f)
+    {
+        c.DrawSectorLines(0, 360 * f, startOffsetDeg, thickness, color, smoothness);
+    }
+
+    #endregion
+    
     #region Math
     /// <summary>
     /// Defines the minimum and maximum allowed side lengths for circle approximation.
