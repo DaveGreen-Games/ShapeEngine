@@ -12,7 +12,6 @@ using Ray = ShapeEngine.Geometry.RayDef.Ray;
 
 namespace ShapeEngine.Geometry.TriangleDef;
 
-
 /// <summary>
 /// Provides static methods for drawing triangles and collections of triangles with various styles and options.
 /// </summary>
