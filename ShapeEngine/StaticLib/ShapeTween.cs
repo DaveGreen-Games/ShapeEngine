@@ -468,6 +468,11 @@ public static class ShapeTween
             : (1f + BounceOut(2f * p - 1f)) / 2f;
     }
 
+    /// <summary>
+    /// Returns a value that oscillates between <c>0</c> and <c>1</c> as the input increases.
+    /// </summary>
+    /// <param name="p">The input value. Has to be positive but can increase until float.MaxValue (theoretically)</param>
+    /// <returns>A ping\-ponged value in the range <c>\[0, 1\]</c>.</returns>
     public static float PingPong(float p)
     {
         p %= 2f;
