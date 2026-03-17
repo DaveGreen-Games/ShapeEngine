@@ -1,12 +1,8 @@
 using System.Numerics;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.UI;
-
-//TODO: Make it possible for sliders to work inside and outside as long as the mouse was pressed inside and is not yet released (see ShapeDrawingTestExample)
-// - Might have to change ControlNode! (wich can be dangerous)
 
 /// <summary>
 /// A slider control node for UI, supporting horizontal or vertical orientation, value range, and user interaction.
