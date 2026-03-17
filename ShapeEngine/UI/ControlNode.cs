@@ -100,7 +100,7 @@ public abstract class ControlNode
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode, bool>? OnPressedChanged;
-
+    public event Action<ControlNode, bool>? OnIsDownChanged;
     /// <summary>
     /// Occurs when the navigable state changes.
     /// Parameters: Invoker, Value
@@ -371,6 +371,8 @@ public abstract class ControlNode
     /// Gets whether this node is currently pressed.
     /// </summary>
     public bool Pressed { get; private set; }
+    
+    public bool IsDown { get; private set; }
     
     /// <summary>
     /// Gets the parent node, or null if this is a root node.
@@ -929,24 +931,60 @@ public abstract class ControlNode
 
             if (InputFilter != InputFilter.None)
             {
-                var pressed = false;
+                var pressed = Pressed;
                 if (InputFilter == InputFilter.MouseOnly)
                 {
-                    pressed = MouseInside && GetMousePressedState();
+                    if (GetMouseButtonPressedState())
+                    {
+                        if (MouseInside) pressed = true;
+                    }
+                    else if (GetMouseButtonReleasedState())
+                    {
+                        pressed = false;
+                    }
+                    
                 } 
                 else if (InputFilter == InputFilter.MouseNever)
                 {
-                    pressed = GetPressedState();
+                    if (GetButtonPressedState()) pressed = true;
+                    else if (GetButtonReleasedState()) pressed = false;
                 }
                 else if (InputFilter == InputFilter.All)
                 {
-                    pressed = (MouseInside && GetMousePressedState()) || GetPressedState();
+                    if (GetMouseButtonPressedState() || GetButtonPressedState())
+                    {
+                        pressed = (GetMouseButtonPressedState() && MouseInside) || GetButtonPressedState();
+                    }
+                    else if (GetMouseButtonReleasedState() || GetButtonReleasedState())
+                    {
+                        pressed = false;
+                    }
                 }
 
                 if (Pressed != pressed)
                 {
                     Pressed = pressed;
                     ResolvePressedChanged();
+                }
+                
+                var down = false;
+                if (InputFilter == InputFilter.MouseOnly)
+                {
+                    down = MouseInside && GetMouseButtonDownState();
+                } 
+                else if (InputFilter == InputFilter.MouseNever)
+                {
+                    down = GetButtonDownState();
+                }
+                else if (InputFilter == InputFilter.All)
+                {
+                    down = (MouseInside && GetMouseButtonDownState()) || GetButtonDownState();
+                }
+
+                if (IsDown != down)
+                {
+                    IsDown = down;
+                    ResolveIsDownChanged();
                 }
             
             }
@@ -974,15 +1012,22 @@ public abstract class ControlNode
     /// Override this method to handle custom input logic.
     /// </summary>
     /// <returns>Returns false per default.</returns>
-    protected virtual bool GetPressedState() => false;
+    protected virtual bool GetButtonPressedState() => false;
     
     /// <summary>
     /// Return if the mouse button for the pressed state is down (only is called when mouse is inside).
     /// Override this method to handle custom input logic.
     /// </summary>
     /// <returns>Returns false per default.</returns>   
-    protected virtual bool GetMousePressedState() => false;
+    protected virtual bool GetMouseButtonPressedState() => false;
 
+    protected virtual bool GetButtonReleasedState() => false;
+    protected virtual bool GetMouseButtonReleasedState() => false;
+    
+    protected virtual bool GetButtonDownState() => false;
+    protected virtual bool GetMouseButtonDownState() => false;
+    
+    
     /// <summary>
     /// Return the direction to move to another element.
     /// Override this method to handle custom navigation direction.
@@ -1146,6 +1191,7 @@ public abstract class ControlNode
     /// </summary>
     /// <param name="value">The new pressed state.</param>
     protected virtual void PressedWasChanged(bool value) { }
+    protected virtual void IsDownWasChanged(bool value) { }
 
     /// <summary>
     /// Called when the mouse filter changes.
@@ -1279,6 +1325,11 @@ public abstract class ControlNode
     {
         PressedWasChanged(Pressed);
         OnPressedChanged?.Invoke(this, Pressed);
+    }
+    private void ResolveIsDownChanged()
+    {
+        IsDownWasChanged(Pressed);
+        OnIsDownChanged?.Invoke(this, Pressed);
     }
     private void ResolveOnMouseFilterChanged(MouseFilter old, MouseFilter cur)
     {

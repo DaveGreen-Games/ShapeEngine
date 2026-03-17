@@ -69,8 +69,12 @@ public class ShapeDrawingTestExample : ExampleScene
             font = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrains), 1f, ColorRgba.White);
         }
 
-        protected override bool GetPressedState() => ShapeKeyboardButton.SPACE.GetInputState().Down;
-        protected override bool GetMousePressedState() => ShapeMouseButton.LEFT.GetInputState().Down;
+        protected override bool GetButtonPressedState() => ShapeKeyboardButton.SPACE.GetInputState().Pressed;
+        protected override bool GetMouseButtonPressedState() => ShapeMouseButton.LEFT.GetInputState().Pressed;
+        
+        protected override bool GetButtonReleasedState() => ShapeKeyboardButton.SPACE.GetInputState().Released;
+        protected override bool GetMouseButtonReleasedState() => ShapeMouseButton.LEFT.GetInputState().Released;
+
         protected override bool GetDecreaseValuePressed() => ShapeKeyboardButton.LEFT.GetInputState().Pressed;
         protected override bool GetIncreaseValuePressed() => ShapeKeyboardButton.RIGHT.GetInputState().Pressed;
 

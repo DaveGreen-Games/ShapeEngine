@@ -73,24 +73,39 @@ namespace Examples.Scenes.ExampleScenes
             this.InputFilter = InputFilter.All;
         }
 
-        protected override bool GetPressedState()
+        protected override bool GetButtonPressedState()
         {
             if (!Selected) return false;
-            var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
-            return acceptState is { Consumed: false, Pressed: true };
-            
-            // if (!Selected) return false;
-            // return Raylib.IsKeyDown(KeyboardKey.Space);
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
+            // return acceptState is { Consumed: false, Pressed: true };
+            return GameloopExamples.Instance.InputActionUIAccept.State.Pressed;
         }
 
-        protected override bool GetMousePressedState()
+        protected override bool GetMouseButtonPressedState()
         {
             if (!MouseInside) return false;
-            var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
-            return acceptState is { Consumed: false, Pressed: true };
-            
-            // if (!MouseInside) return false;
-            // return Raylib.IsMouseButtonDown(MouseButton.Left);
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
+            // return acceptState is { Consumed: false, Pressed: true };
+            return GameloopExamples.Instance.InputActionUIAcceptMouse.State.Pressed;
+        }
+        protected override bool GetButtonReleasedState()
+        {
+            if (!Selected) return false;
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
+            // return acceptState is { Consumed: false, Released: true };
+            return GameloopExamples.Instance.InputActionUIAccept.State.Released;
+        }
+
+        protected override bool GetMouseButtonReleasedState()
+        {
+            if (!MouseInside) return false;
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
+            // return acceptState is { Consumed: false, Released: true };
+            return GameloopExamples.Instance.InputActionUIAcceptMouse.State.Released;
         }
 
         public override Direction GetNavigationDirection()

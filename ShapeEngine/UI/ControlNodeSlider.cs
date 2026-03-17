@@ -1,8 +1,12 @@
 using System.Numerics;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.UI;
+
+//TODO: Make it possible for sliders to work inside and outside as long as the mouse was pressed inside and is not yet released (see ShapeDrawingTestExample)
+// - Might have to change ControlNode! (wich can be dangerous)
 
 /// <summary>
 /// A slider control node for UI, supporting horizontal or vertical orientation, value range, and user interaction.
@@ -17,6 +21,8 @@ public class ControlNodeSlider : ControlNode
     /// Occurs when the slider value changes.
     /// </summary>
     public event Action<float, float>? OnValueChanged;
+
+    // public bool AlternativeMode = true;
     
     /// <summary>
     /// Gets or sets whether the slider is horizontal (true) or vertical (false).
@@ -37,7 +43,7 @@ public class ControlNodeSlider : ControlNode
     /// <summary>
     /// Gets the current normalized value (0-1) of the slider.
     /// </summary>
-    public float CurF { get; private set; }
+    public float CurF { get; protected set; }
     /// <summary>
     /// The step size (normalized) for keyboard/gamepad value changes.
     /// </summary>
@@ -49,7 +55,7 @@ public class ControlNodeSlider : ControlNode
     /// <summary>
     /// Gets the fill rectangle representing the current value.
     /// </summary>
-    public Rect Fill { get; private set; }
+    public Rect Fill { get; protected set; }
 
     /// <summary>
     /// Initializes a new horizontal slider with default range 0-100.
@@ -204,25 +210,22 @@ public class ControlNodeSlider : ControlNode
     protected virtual void HandleFill(Vector2 mousePos)
     {
         // if (!Active) return;
-        if (MouseInside)
+        if (IsDown || Pressed)
         {
-            if (Pressed)
+            float f = Horizontal ? Rect.GetWidthFactor(mousePos.X) : Rect.GetHeightFactor(mousePos.Y);
+            if (MouseSnapF > 0)
             {
-                float f = Horizontal ? Rect.GetWidthFactor(mousePos.X) : Rect.GetHeightFactor(mousePos.Y);
-                if (MouseSnapF > 0)
+                var snap = (f % MouseSnapF);
+                if (snap > MouseSnapF / 2) //snap to next bigger value
                 {
-                    var snap = (f % MouseSnapF);
-                    if (snap > MouseSnapF / 2) //snap to next bigger value
-                    {
-                        f = (f - snap) + MouseSnapF;
-                    }
-                    else //snap to lower value
-                    {
-                        f -= snap;
-                    }
+                    f = (f - snap) + MouseSnapF;
                 }
-                SetCurF(f);
+                else //snap to lower value
+                {
+                    f -= snap;
+                }
             }
+            SetCurF(f);
         }
         Fill = Rect.SetSize(Rect.Size * GetSizeFactor());
     }
@@ -239,5 +242,5 @@ public class ControlNodeSlider : ControlNode
         OnValueChanged?.Invoke(prevValue, curValue);
     }
     
-    private Vector2 GetSizeFactor() => Horizontal ? new Vector2(CurF, 1f) : new Vector2(1f, CurF);
+    protected Vector2 GetSizeFactor() => Horizontal ? new Vector2(CurF, 1f) : new Vector2(1f, CurF);
 }

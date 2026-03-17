@@ -33,15 +33,26 @@ public class OutlineDrawingExample : ExampleScene
             this.title = title;
         }
 
-        protected override bool GetPressedState()
+        protected override bool GetButtonPressedState()
         {
-            return ShapeKeyboardButton.SPACE.GetInputState().Down;
+            return ShapeKeyboardButton.SPACE.GetInputState().Pressed;
         }
 
-        protected override bool GetMousePressedState()
+        protected override bool GetMouseButtonPressedState()
         {
-            return ShapeMouseButton.LEFT.GetInputState().Down;
+            return ShapeMouseButton.LEFT.GetInputState().Pressed;
         }
+        
+        protected override bool GetButtonReleasedState()
+        {
+            return ShapeKeyboardButton.SPACE.GetInputState().Released;
+        }
+
+        protected override bool GetMouseButtonReleasedState()
+        {
+            return ShapeMouseButton.LEFT.GetInputState().Released;
+        }
+        
 
         protected override bool GetDecreaseValuePressed()
         {
