@@ -11,7 +11,7 @@ namespace ShapeEngine.Timing
         /// <summary>
         /// Delegate for the tween function, called with the interpolated value.
         /// </summary>
-        /// <param name="f">The interpolated value (0 to 1).</param>
+        /// <param name="f">The interpolated value.</param>
         /// <returns>True if the tween should finish, otherwise false.</returns>
         public delegate bool TweenFunc(float f);
 
@@ -60,11 +60,22 @@ namespace ShapeEngine.Timing
         public bool Update(float dt)
         {
             if (duration <= 0f) return true;
-            float t = ShapeMath.Clamp(timer / duration, 0f, 1f);
-            float f = ShapeTween.Tween(t, tweenType);
+            if (tweenType == TweenType.Ping_Pong)
+            {
+                float t = timer / duration;
+                float f = ShapeTween.Tween(t, tweenType);
 
-            timer += dt;
-            return func(f) || t >= 1f;
+                timer += dt;
+                return func(f);
+            }
+            else
+            {
+                float t = ShapeMath.Clamp(timer / duration, 0f, 1f);
+                float f = ShapeTween.Tween(t, tweenType);
+
+                timer += dt;
+                return func(f) || t >= 1f;
+            }
         }
 
         /// <summary>
