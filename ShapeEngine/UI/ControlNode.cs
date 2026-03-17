@@ -4,6 +4,8 @@ using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.UI;
 
+//TODO: Add missing docs.
+
 /// <summary>
 /// Represents an abstract base class for UI control nodes, providing core functionality for hierarchy, state, events, and input handling.
 /// </summary>
@@ -1020,11 +1022,29 @@ public abstract class ControlNode
     /// </summary>
     /// <returns>Returns false per default.</returns>   
     protected virtual bool GetMouseButtonPressedState() => false;
-
+    /// <summary>
+    /// Returns whether the key for the released state is down.
+    /// Override this method to handle custom input logic for button release.
+    /// </summary>
+    /// <returns>Returns false by default.</returns>
     protected virtual bool GetButtonReleasedState() => false;
+    /// <summary>
+    /// Returns whether the mouse button for the released state is down (only called when mouse is inside).
+    /// Override this method to handle custom input logic for mouse button release.
+    /// </summary>
+    /// <returns>Returns false by default.</returns>
     protected virtual bool GetMouseButtonReleasedState() => false;
-    
+    /// <summary>
+    /// Returns whether the key for the down state is currently held down.
+    /// Override this method to handle custom input logic for button down.
+    /// </summary>
+    /// <returns>Returns false by default.</returns>
     protected virtual bool GetButtonDownState() => false;
+    /// <summary>
+    /// Returns whether the mouse button for the down state is currently held down (only called when mouse is inside).
+    /// Override this method to handle custom input logic for mouse button down.
+    /// </summary>
+    /// <returns>Returns false by default.</returns>
     protected virtual bool GetMouseButtonDownState() => false;
     
     
@@ -1191,6 +1211,10 @@ public abstract class ControlNode
     /// </summary>
     /// <param name="value">The new pressed state.</param>
     protected virtual void PressedWasChanged(bool value) { }
+    /// <summary>
+    /// Called when the IsDown state changes.
+    /// </summary>
+    /// <param name="value">The new IsDown state.</param>
     protected virtual void IsDownWasChanged(bool value) { }
 
     /// <summary>
@@ -1241,19 +1265,27 @@ public abstract class ControlNode
     #endregion
 
     #region Private
+    /// <summary>
+    /// Resolves changes to the active-in-hierarchy state and triggers related events.
+    /// </summary>
     private void ResolveOnActiveInHierarchyChanged()
     {
         if (prevIsActiveInHierarchy == IsActiveInHierarchy) return;
         ActiveInHierarchyChanged(IsActiveInHierarchy);
         OnActiveInHierarchyChanged?.Invoke(this, IsActiveInHierarchy);
     }
-
+    /// <summary>
+    /// Resolves changes to the visible-in-hierarchy state and triggers related events.
+    /// </summary>
     private void ResolveOnVisibleInHierarchyChanged()
     {
         if (prevIsVisibleInHierarchy == IsVisibleInHierarchy) return;
         VisibleInHierarchyChanged(IsVisibleInHierarchy);
         OnVisibleInHierarchyChanged?.Invoke(this, IsVisibleInHierarchy);
     }
+    /// <summary>
+    /// Resolves changes to the displayed state and triggers related events.
+    /// </summary>
     private void ResolveOnDisplayedChanged()
     {
         DisplayedWasChanged(displayed);
@@ -1261,6 +1293,9 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnVisibleInHierarchyChanged();
     }
+    /// <summary>
+    /// Resolves changes to the active state and triggers related events.
+    /// </summary>
     private void ResolveActiveChanged()
     {
         ActiveWasChanged(active);
@@ -1268,6 +1303,9 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnActiveInHierarchyChanged();
     }
+    /// <summary>
+    /// Resolves changes to the visible state and triggers related events.
+    /// </summary>
     private void ResolveVisibleChanged()
     {
         VisibleWasChanged(visible);
@@ -1275,6 +1313,9 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnVisibleInHierarchyChanged();
     }
+    /// <summary>
+    /// Resolves changes to the parent visible state and triggers related events.
+    /// </summary>
     private void ResolveParentVisibleChanged()
     {
         ParentVisibleWasChanged(parentVisible);
@@ -1282,6 +1323,9 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnVisibleInHierarchyChanged();
     }
+    /// <summary>
+    /// Resolves changes to the parent active state and triggers related events.
+    /// </summary>
     private void ResolveParentActiveChanged()
     {
         ParentActiveWasChanged(parentActive);
@@ -1289,65 +1333,113 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnActiveInHierarchyChanged();
     }
+    /// <summary>
+    /// Resolves changes to the parent node and triggers related events.
+    /// </summary>
+    /// <param name="oldParent">The previous parent node.</param>
+    /// <param name="newParent">The new parent node.</param>
     private void ResolveParentChanged(ControlNode? oldParent, ControlNode? newParent)
     {
         ParentWasChanged(oldParent, newParent);
         OnParentChanged?.Invoke(this, oldParent, newParent);
         // ResolveOnNavigableChanged(Navigable);
     }
+    /// <summary>
+    /// Resolves the addition of a child node and triggers related events.
+    /// </summary>
+    /// <param name="newChild">The child node that was added.</param>
     private void ResolveChildAdded(ControlNode newChild)
     {
         ChildWasAdded(newChild);
         OnChildAdded?.Invoke(this, newChild);
     }
+    /// <summary>
+    /// Resolves the removal of a child node and triggers related events.
+    /// </summary>
+    /// <param name="oldChild">The child node that was removed.</param>
     private void ResolveChildRemoved(ControlNode oldChild)
     {
         ChildWasRemoved(oldChild);
         OnChildRemoved?.Invoke(this, oldChild);
     }
+    /// <summary>
+    /// Resolves the mouse entering this node and triggers related events.
+    /// </summary>
+    /// <param name="mousePos">The mouse position at entry.</param>
     private void ResolveMouseEntered(Vector2 mousePos)
     {
         MouseHasEntered(mousePos);
         OnMouseEntered?.Invoke(this, mousePos);
     }
+    /// <summary>
+    /// Resolves the mouse exiting this node and triggers related events.
+    /// </summary>
+    /// <param name="mousePos">The last mouse position inside the node.</param>
     private void ResolveMouseExited(Vector2 mousePos)
     {
         MouseHasExited(mousePos);
         OnMouseExited?.Invoke(this, mousePos);
     }
+    /// <summary>
+    /// Resolves changes to the selected state and triggers related events.
+    /// </summary>
     private void ResolveSelectedChanged()
     {
         // Console.WriteLine($"Selected Changed to {selected} in {this.Anchor}");
         SelectedWasChanged(selected);
         OnSelectedChanged?.Invoke(this, selected);
     }
+    /// <summary>
+    /// Resolves changes to the pressed state and triggers related events.
+    /// </summary>
     private void ResolvePressedChanged()
     {
         PressedWasChanged(Pressed);
         OnPressedChanged?.Invoke(this, Pressed);
     }
+    /// <summary>
+    /// Resolves changes to the IsDown state and triggers related events.
+    /// </summary>
     private void ResolveIsDownChanged()
     {
         IsDownWasChanged(Pressed);
         OnIsDownChanged?.Invoke(this, Pressed);
     }
+    /// <summary>
+    /// Resolves changes to the mouse filter and triggers related events.
+    /// </summary>
+    /// <param name="old">The previous mouse filter.</param>
+    /// <param name="cur">The current mouse filter.</param>
     private void ResolveOnMouseFilterChanged(MouseFilter old, MouseFilter cur)
     {
         MouseFilterWasChanged(old, cur);
         OnMouseFilterChanged?.Invoke(this, old, cur);
     }
+    /// <summary>
+    /// Resolves changes to the selection filter and triggers related events.
+    /// </summary>
+    /// <param name="old">The previous selection filter.</param>
+    /// <param name="cur">The current selection filter.</param>
     private void ResolveOnSelectionFilterChanged(SelectFilter old, SelectFilter cur)
     {
         SelectionFilterWasChanged(old, cur);
         OnSelectionFilterChanged?.Invoke(this, old, cur);
         ResolveOnNavigableChanged();
     }
+    /// <summary>
+    /// Resolves changes to the input filter and triggers related events.
+    /// </summary>
+    /// <param name="old">The previous input filter.</param>
+    /// <param name="cur">The current input filter.</param>
     private void ResolveOnInputFilterChanged(InputFilter old, InputFilter cur)
     {
         InputFilterWasChanged(old, cur);
         OnInputFilterChanged?.Invoke(this, old, cur);
         ResolveOnNavigableChanged();
     }
+    /// <summary>
+    /// Resolves changes to the navigable state and triggers related events.
+    /// </summary>
     private void ResolveOnNavigableChanged()
     {
         if (prevNavigable == Navigable) return;
