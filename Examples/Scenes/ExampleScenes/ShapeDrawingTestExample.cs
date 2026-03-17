@@ -345,9 +345,8 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Corners Relative", () => triangle.DrawCornersRelative(LineThickness, DrawColor, CornerFactor, MiterLimit), ParamId.Thickness, ParamId.CornerFactor, ParamId.MiterLimit),
             new("Draw Vertices", () =>
             {
-                triangle.DrawLines(LineThickness, DrawColor, MiterLimit);
                 triangle.DrawVertices(VertexRadius, DrawColor, Smoothness);
-            }, ParamId.Thickness, ParamId.VertexRadius, ParamId.Smoothness, ParamId.MiterLimit),
+            },  ParamId.VertexRadius, ParamId.Smoothness),
         ];
 
         cases[ShapeType.Rect] =
