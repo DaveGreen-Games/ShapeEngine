@@ -1061,6 +1061,7 @@ public partial class Polygon
 
     #endregion
 
+    //TODO: Remove if ClipperImmediate2D works correctly
     #region Triangulation
 
     //TODO: optimize triangulation to O(n log n) using Delaunay or other advanced methods
@@ -1397,7 +1398,7 @@ public partial class Polygon
     }
 
     #endregion
-
+    
     #region Outline Perimeter Triangulation
 
     /// <summary>
@@ -1625,4 +1626,5 @@ public partial class Polygon
     }
 
     #endregion
+    //TODO: ---------------------------------------
 }

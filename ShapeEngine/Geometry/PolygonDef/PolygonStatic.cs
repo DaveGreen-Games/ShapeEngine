@@ -391,7 +391,7 @@ public partial class Polygon
     }
     
     
-    //NOTE: Inset and Triangulate will be replaced by a deticated solution for polygon/polyline offsetting and polygon outline triangulation
+    //TODO: Move this to quad and make private / internal
     
     #region Inset Convex
     /// <summary>
