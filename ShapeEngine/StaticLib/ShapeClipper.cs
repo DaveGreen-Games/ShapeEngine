@@ -128,6 +128,13 @@ public enum ShapeClipperFillRule
     Negative
 }
 
+
+//TODO: Using ClipperOffset class and Clipper64 class creates less garbage (see ClipperImmediate2D)
+//TODO: Overhaul this class to be as memory efficient as ClipperImmediate2D
+//TODO: Convert to Path64, Paths64 from PathD, PathsD for better accuracy and stability?
+//TODO: How to unify ClipperImmediate2D and ShapeClipper? I dont want 2 wrapper classes.
+
+
 /// <summary>
 /// Provides static methods for performing geometric clipping and polygon operations using Clipper2.
 /// </summary>
