@@ -1063,10 +1063,6 @@ public partial class Polygon
 
     //TODO: Remove if ClipperImmediate2D works correctly
     #region Triangulation
-
-    //TODO: optimize triangulation to O(n log n) using Delaunay or other advanced methods
-    // - Use clipper triangulation ?
-
     /// <summary>
     /// Triangulates the polygon using an ear-clipping approach with randomized ear selection.
     /// Produces a set of non-overlapping triangles that cover the polygon interior.

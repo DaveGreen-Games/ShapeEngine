@@ -3,15 +3,38 @@ using Clipper2Lib;
 using Raylib_cs;
 using ShapeEngine.Color;
 
-//NOTE:
-// - Triangulation should return Triangulation
-// - TriMesh to Triangulation function
-// - How to make it work with Polygon/Polyline without creating extra garbage?
-// - Test and see its performance and GC performance
+//CHECK: Why does ShapeClipper need to flip y and ClipperImmediate does not?!
+//CHECK: PolygonMath Triangulation & OutlineTriangulation vs ClipperImmediate Triangultion & OutlineTriangulation performance wise
 
-//TODO: In all public functions make sure that JoinType, FillRule, EndType use ShapeEngine wrapper enums!
-//TODO: Add Path64 and Paths64 Conversions to ShapeClipper or to here
-//TODO: Should I add this class to ShapeClipper instead of having its own class for it? I could make this a partial ShapeClipper class to keep it seperate
+//TODO: 
+// - Reimplement all functions from ShapeClipper here with optimizing memory allocation in mind
+// - Reimplement all functions regarding Triangulation from PolygonMath here with optimizing memory allocation in mind
+// - Implement an instance class that uses Clipper64 / ClipperOffset internally with automatic buffers etc. -> use those classes here as static engines
+// - Use Clipper64 / ClipperOffset static classes or new wrapped classes if possible
+// - Create seperate files for ShapeClipper enum wrappers
+// - Move all clipper related wrapper classes to a seperate namespace
+// - All functions should use Path64 / Paths64 instead of PathD / PathsD
+// - Add conversion functions for Path64 / Paths64
+// - All fuctions that return any sort of collection should use a parameter called result instead of a return value!
+// - All major functions should have 1 variant that returns clipper based classes (Paths64 for instance) and 1 variant that returns shape engine based classes (Polygon for instance)
+// - Functions that use result Parameter like Polygon/Polyline etc should use internal buffers for calculating everything and then transforming the result to expexted output format once at the end
+// - Major Functions:
+//  - [] Clip
+//  - [] Intersect
+//  - [] Difference
+//  - [] Union
+//  - [] Offset (instead of inflate)
+//  - [] TriangulateOutlinePolygon
+//  - [] TriangulateOutlinePerimeterPolygon
+//  - [] TriangulateOutlinePercentagePolygon
+//  - [] TriangulatePolygon (polygons with and without holes) -> Paths64/Polygons is with holes and Path64/Polygon is without holes
+//  - [] TriangulateOutlinePolyline
+// - How to handle Triangulation vs TriMesh? -> I would opt for having both and just add explicit and implicit conversion functions (internally only TriMesh is used and there are optional overloads with Triangulation as result)
+// - At the end Rename this class to ShapeClipper and remove old ShapeClipper
+
+
+
+
 public static class ClipperImmediate2D
 {
     #region Public Settings

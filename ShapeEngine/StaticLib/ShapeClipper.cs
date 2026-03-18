@@ -9,6 +9,7 @@ using ShapeEngine.Geometry.SegmentsDef;
 
 namespace ShapeEngine.StaticLib;
 
+//TODO: Move to seperate namespace/folder
 /// <summary>
 /// Specifies how convex angled joins are handled when offsetting (inflating/shrinking) paths.
 /// This enumeration is only required for offset operations (e.g. ClipperOffset) and is not used
@@ -42,6 +43,7 @@ public enum ShapeClipperJoinType
     Round
 }
 
+//TODO: Move to seperate namespace/folder
 /// <summary>
 /// The ShapeClipperEndType enumerator controls how the ends of paths are handled when performing
 /// offset (inflating/shrinking) operations. This enumeration is only required for
@@ -79,6 +81,7 @@ public enum ShapeClipperEndType
     Round
 }
 
+//TODO: Move to seperate namespace/folder
 /// <summary>
 /// Filling rules determine which sub-regions of complex polygons are considered "inside".
 /// Complex polygons are defined by one or more closed contours; only portions of these contours
@@ -128,12 +131,8 @@ public enum ShapeClipperFillRule
     Negative
 }
 
-
-//TODO: Using ClipperOffset class and Clipper64 class creates less garbage (see ClipperImmediate2D)
-//TODO: Overhaul this class to be as memory efficient as ClipperImmediate2D
-//TODO: Convert to Path64, Paths64 from PathD, PathsD for better accuracy and stability?
-//TODO: How to unify ClipperImmediate2D and ShapeClipper? I dont want 2 wrapper classes.
-
+//TODO: Move to seperate namespace/folder
+//TODO: See ClipperImmediate2D todos -> Reimplement everything here there
 
 /// <summary>
 /// Provides static methods for performing geometric clipping and polygon operations using Clipper2.
