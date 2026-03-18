@@ -43,16 +43,14 @@ public static class ClipperImmediate2D
     // Public outputs
     // ---------------------------
 
-    /// <summary>
-    /// Allocation-friendly triangle mesh: vertices + indices (3 per triangle).
-    /// Vertices are world-space Vector2.
-    /// Indices reference Vertices.
-    /// </summary>
     public sealed class TriMesh
     {
-        public readonly List<Vector2> Vertices = new(256);
-        public readonly List<int> Indices = new(512);
-        public void Clear() { Vertices.Clear(); Indices.Clear(); }
+        /// <summary>
+        /// Flat list of triangles: every 3 consecutive vertices form one CCW triangle.
+        /// </summary>
+        public readonly List<Vector2> Triangles = new(512);
+
+        public void Clear() => Triangles.Clear();
     }
 
     // ---------------------------
@@ -103,12 +101,12 @@ public static class ClipperImmediate2D
         IReadOnlyList<Vector2> polygonCCW,
         float thickness,
         Color color,
-        float miterLimit,
-        bool beveled,
-        bool useDelaunay,
-        bool cached)
+        float miterLimit = 2f,
+        bool beveled = false,
+        bool useDelaunay = false,
+        bool cached = false)
     {
-        if (polygonCCW == null || polygonCCW.Count < 3 || thickness <= 0f) return;
+        if (polygonCCW.Count < 3 || thickness <= 0f) return;
 
         if (cached)
         {
@@ -131,13 +129,13 @@ public static class ClipperImmediate2D
         IReadOnlyList<Vector2> polyline,
         float thickness,
         Color color,
-        float miterLimit,
-        bool beveled,
-        EndType endType,
-        bool useDelaunay,
-        bool cached)
+        float miterLimit = 2f,
+        bool beveled = false,
+        EndType endType = EndType.Butt,
+        bool useDelaunay = false,
+        bool cached = false)
     {
-        if (polyline == null || polyline.Count < 2 || thickness <= 0f) return;
+        if (polyline.Count < 2 || thickness <= 0f) return;
 
         if (cached)
         {
@@ -178,11 +176,19 @@ public static class ClipperImmediate2D
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
 
-        if (polygonCCW == null || polygonCCW.Count < 3 || thickness <= 0f) return;
+        if (polygonCCW.Count < 3 || thickness <= 0f)
+        {
+            Console.WriteLine("Triangulating failed - Count less than 3 or thickness less than 0");
+            return;
+        }
 
         OffsetPolygonToPaths64(polygonCCW, +thickness, miterLimit, beveled, _tmpOuter);
         OffsetPolygonToPaths64(polygonCCW, -thickness, miterLimit, beveled, _tmpInner);
-        if (_tmpOuter.Count == 0) return;
+        if (_tmpOuter.Count == 0)
+        {
+            Console.WriteLine("Offsetting failed");
+            return;
+        }
 
         // ring = outer - inner (allocation-free using Clipper64 engine)
         _tmpRing.Clear();
@@ -191,7 +197,11 @@ public static class ClipperImmediate2D
         _clipper.AddClip(_tmpInner);
         _clipper.Execute(ClipType.Difference, FillRule, _tmpRing);
 
-        if (_tmpRing.Count == 0) return;
+        if (_tmpRing.Count == 0)
+        {
+            Console.WriteLine("Clipping failed");
+            return;
+        }
 
         TriangulatePaths64ToMesh(_tmpRing, useDelaunay, result);
     }
@@ -418,53 +428,38 @@ public static class ClipperImmediate2D
     private static void TriangulatePaths64ToMesh(Paths64 subject, bool useDelaunay, TriMesh mesh)
     {
         mesh.Clear();
-        _tmpTriangles.Clear();
 
         TriangulateResult res = Clipper.Triangulate(subject, out Paths64 tris, useDelaunay);
-        if (res != TriangulateResult.success || tris == null || tris.Count == 0)
+        if (res != TriangulateResult.success || tris.Count == 0)
+        {
+            Console.WriteLine("TriangulatePaths64ToMesh failed");
             return;
+        }
 
-        // Keep a reusable reference list; this is optional (you can iterate tris directly).
-        _tmpTriangles.EnsureCapacity(tris.Count);
-        for (int i = 0; i < tris.Count; i++)
-            _tmpTriangles.Add(tris[i]);
-
-        BuildMeshFromTrianglePaths(_tmpTriangles, mesh);
-    }
-
-    private static void BuildMeshFromTrianglePaths(Paths64 triangles, TriMesh mesh)
-    {
-        mesh.Vertices.Clear();
-        mesh.Indices.Clear();
-
-        int triCount = triangles.Count;
-        mesh.Vertices.Capacity = Math.Max(mesh.Vertices.Capacity, triCount * 3);
-        mesh.Indices.Capacity = Math.Max(mesh.Indices.Capacity, triCount * 3);
+        // Each Path64 in tris is a triangle with 3 points (CCW).
+        int triCount = tris.Count;
+        mesh.Triangles.Capacity = Math.Max(mesh.Triangles.Capacity, triCount * 3);
 
         for (int i = 0; i < triCount; i++)
         {
-            var t = triangles[i];
-            if (t.Count < 3) continue;
+            var tri = tris[i];
+            if (tri.Count < 3) continue;
 
-            int baseIndex = mesh.Vertices.Count;
+            // Convert int coords back to world coords
+            Vector2 a = ToV2(tri[0]);
+            Vector2 b = ToV2(tri[1]);
+            Vector2 c = ToV2(tri[2]);
 
-            Vector2 a = ToV2(t[0]);
-            Vector2 b = ToV2(t[1]);
-            Vector2 c = ToV2(t[2]);
+            // // enforce CCW (defensive)
+            // if (Cross(b - a, c - a) > 0f)
+            // {
+            //     Console.WriteLine("Enforce CCW triangle vertices");
+            //     var tmp = b; b = c; c = tmp;
+            // }
 
-            // enforce CCW (should already be CCW)
-            if (Cross(b - a, c - a) < 0f)
-            {
-                var tmp = b; b = c; c = tmp;
-            }
-
-            mesh.Vertices.Add(a);
-            mesh.Vertices.Add(b);
-            mesh.Vertices.Add(c);
-
-            mesh.Indices.Add(baseIndex);
-            mesh.Indices.Add(baseIndex + 1);
-            mesh.Indices.Add(baseIndex + 2);
+            mesh.Triangles.Add(a);
+            mesh.Triangles.Add(b);
+            mesh.Triangles.Add(c);
         }
     }
 
@@ -488,7 +483,10 @@ public static class ClipperImmediate2D
     }
 
     private static Vector2 ToV2(Point64 p)
-        => new((float)(p.X * _invScale), (float)(p.Y * _invScale));
+    {
+        // Console.WriteLine($"Point64 {p.X}, {p.Y} -> Vector2 {(float)(p.X * _invScale)}, {-(float)(p.Y * _invScale)}");
+        return new Vector2((float)(p.X * _invScale), (float)(p.Y * _invScale));
+    }
 
     // ---------------------------
     // Internal: Cache
@@ -676,19 +674,17 @@ public static class ClipperImmediate2D
 
     private static void DrawMesh(TriMesh mesh, Color color)
     {
-        var verts = mesh.Vertices;
-        var inds = mesh.Indices;
-
-        for (int i = 0; i + 2 < inds.Count; i += 3)
+        var t = mesh.Triangles;
+        for (int i = 0; i + 2 < t.Count; i += 3)
         {
-            Vector2 a = verts[inds[i]];
-            Vector2 b = verts[inds[i + 1]];
-            Vector2 c = verts[inds[i + 2]];
+            Vector2 a = t[i];
+            Vector2 b = t[i + 1];
+            Vector2 c = t[i + 2];
 
-            // enforce CCW
-            if (Cross(b - a, c - a) < 0f)
+            // enforce CCW (defensive)
+            if (Cross(b - a, c - a) > 0f)
             {
-                var t = b; b = c; c = t;
+                var tmp = b; b = c; c = tmp;
             }
 
             Raylib.DrawTriangle(a, b, c, color);
