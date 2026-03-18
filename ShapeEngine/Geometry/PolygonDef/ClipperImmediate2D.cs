@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Clipper2Lib;
 using Raylib_cs;
+using ShapeEngine.Color;
 
 //NOTE:
 // - Triangulation should return Triangulation
@@ -10,12 +9,12 @@ using Raylib_cs;
 // - How to make it work with Polygon/Polyline without creating extra garbage?
 // - Test and see its performance and GC performance
 
+//TODO: In all public functions make sure that JoinType, FillRule, EndType use ShapeEngine wrapper enums!
+//TODO: Add Path64 and Paths64 Conversions to ShapeClipper or to here
+//TODO: Should I add this class to ShapeClipper instead of having its own class for it? I could make this a partial ShapeClipper class to keep it seperate
 public static class ClipperImmediate2D
 {
-    // ---------------------------
-    // Public settings
-    // ---------------------------
-
+    #region Public Settings
     /// <summary>
     /// Decimal places used for:
     /// 1) Scaling Vector2 (world) -> Point64 (Clipper) by Scale = 10^DecimalPlaces
@@ -34,15 +33,17 @@ public static class ClipperImmediate2D
     }
 
     /// <summary>Hard requirement from you: use NonZero fill rule.</summary>
-    public static FillRule FillRule = FillRule.NonZero;
+    public static FillRule FillRule = FillRule.NonZero; //TODO: Change to ShapeClipperFillRule!
 
     /// <summary>Max cached triangulations (simple cap; cache clears when exceeded).</summary>
     public static int MaxTriangulationCacheEntries = 512;
-
-    // ---------------------------
-    // Public outputs
-    // ---------------------------
-
+    #endregion
+    
+    #region Public Outputs
+    //TODO: I could keep TriMesh and not use Triangulation here? 
+    //TODO: I could also rework Triangulation to work like TriMesh?
+    //TODO: I could also keep both and have conversion between the 2?
+    //TODO: If I keep TriMesh then I have to add Translation, Rotation, Scaling methods and more to it
     public sealed class TriMesh
     {
         /// <summary>
@@ -51,12 +52,24 @@ public static class ClipperImmediate2D
         public readonly List<Vector2> Triangles = new(512);
 
         public void Clear() => Triangles.Clear();
+
+        public void Draw(ColorRgba color)
+        {
+            var t = Triangles;
+            var rayColor = color.ToRayColor();
+            for (int i = 0; i + 2 < t.Count; i += 3)
+            {
+                Vector2 a = t[i];
+                Vector2 b = t[i + 1];
+                Vector2 c = t[i + 2];
+
+                Raylib.DrawTriangle(a, b, c, rayColor);
+            }
+        }
     }
-
-    // ---------------------------
-    // Private settings (derived)
-    // ---------------------------
-
+    #endregion
+    
+    #region Private Settings
     private static int _decimalPlaces = 4;
     private static double _scale = Pow10(4);
     private static double _invScale = 1.0 / Pow10(4);
@@ -66,45 +79,31 @@ public static class ClipperImmediate2D
         // ensure derived values set for default
         DecimalPlaces = 4;
     }
-
-    // ---------------------------
-    // Reused engines (avoid per-call allocations)
-    // ---------------------------
-
+    #endregion
+    
+    #region Reused Clipper Engines
     private static readonly ClipperOffset _offset = new();
     private static readonly Clipper64 _clipper = new();
-
-    // ---------------------------
-    // Reused buffers
-    // ---------------------------
-
+    #endregion
+    
+    #region Reused Buffers
     private static readonly Path64 _tmpPath64 = new(256);
-
     private static readonly Paths64 _tmpOuter = new();
     private static readonly Paths64 _tmpInner = new();
     private static readonly Paths64 _tmpRing = new();
     private static readonly Paths64 _tmpStroke = new();
+    #endregion
 
-    private static readonly Paths64 _tmpTriangles = new();
-
-    // Cache
+    #region Cache
     private static int _nextTriId = 1;
     private static readonly Dictionary<TriKey, int> _keyToId = new(256);
     private static readonly Dictionary<int, TriMesh> _idToMesh = new(256);
     private static readonly Stack<TriMesh> _meshPool = new();
-
-    // ---------------------------
-    // Public: Drawing
-    // ---------------------------
-
-    public static void DrawPolygonOutline(
-        IReadOnlyList<Vector2> polygonCCW,
-        float thickness,
-        Color color,
-        float miterLimit = 2f,
-        bool beveled = false,
-        bool useDelaunay = false,
-        bool cached = false)
+    #endregion
+    
+    #region Drawing
+    //Info: Caching should be used for static polygons / polylines only! Otherwise create triangulation and then move, scale, rotate triangulation and then draw triangulation each frame
+    public static void DrawPolygonOutline(IReadOnlyList<Vector2> polygonCCW, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false, bool cached = false)
     {
         if (polygonCCW.Count < 3 || thickness <= 0f) return;
 
@@ -119,21 +118,13 @@ public static class ClipperImmediate2D
             try
             {
                 CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, mesh);
-                DrawMesh(mesh, color);
+                mesh.Draw(color);
             }
             finally { ReturnMesh(mesh); }
         }
     }
 
-    public static void DrawPolyline(
-        IReadOnlyList<Vector2> polyline,
-        float thickness,
-        Color color,
-        float miterLimit = 2f,
-        bool beveled = false,
-        EndType endType = EndType.Butt,
-        bool useDelaunay = false,
-        bool cached = false)
+    public static void DrawPolyline(IReadOnlyList<Vector2> polyline, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, EndType endType = EndType.Butt, bool useDelaunay = false, bool cached = false)
     {
         if (polyline.Count < 2 || thickness <= 0f) return;
 
@@ -148,30 +139,22 @@ public static class ClipperImmediate2D
             try
             {
                 CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, mesh);
-                DrawMesh(mesh, color);
+                mesh.Draw(color);
             }
             finally { ReturnMesh(mesh); }
         }
     }
 
-    public static void DrawCachedTriangulation(int triangulationId, Color color)
+    public static void DrawCachedTriangulation(int triangulationId, ColorRgba color)
     {
         if (triangulationId == 0) return;
         if (!_idToMesh.TryGetValue(triangulationId, out var mesh)) return;
-        DrawMesh(mesh, color);
+        mesh.Draw(color);
     }
-
-    // ---------------------------
-    // Public: Create triangulations (no caching)
-    // ---------------------------
-
-    public static void CreatePolygonOutlineTriangulation(
-        IReadOnlyList<Vector2> polygonCCW,
-        float thickness,
-        float miterLimit,
-        bool beveled,
-        bool useDelaunay,
-        TriMesh result)
+    #endregion
+    
+    #region Triangulation
+    public static void CreatePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
@@ -206,21 +189,13 @@ public static class ClipperImmediate2D
         TriangulatePaths64ToMesh(_tmpRing, useDelaunay, result);
     }
 
-    public static void CreatePolylineTriangulation(
-        IReadOnlyList<Vector2> polyline,
-        float thickness,
-        float miterLimit,
-        bool beveled,
-        EndType endType,
-        bool useDelaunay,
-        TriMesh result)
+    public static void CreatePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, EndType endType, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
 
-        if (polyline == null || polyline.Count < 2 || thickness <= 0f) return;
+        if (polyline.Count < 2 || thickness <= 0f) return;
 
-        //TODO: thickness * 2 needed here?
         OffsetPolylineToPaths64(polyline, thickness, miterLimit, beveled, endType, _tmpStroke);
         if (_tmpStroke.Count == 0) return;
 
@@ -232,22 +207,15 @@ public static class ClipperImmediate2D
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
 
-        if (polygonWithHoles == null || polygonWithHoles.Count == 0) return;
+        if (polygonWithHoles.Count == 0) return;
         TriangulatePaths64ToMesh(polygonWithHoles, useDelaunay, result);
     }
-
-    // ---------------------------
-    // Public: Cache triangulations (returns id)
-    // ---------------------------
-
-    public static int CachePolygonOutlineTriangulation(
-        IReadOnlyList<Vector2> polygonCCW,
-        float thickness,
-        float miterLimit,
-        bool beveled,
-        bool useDelaunay)
+    #endregion
+    
+    #region Cached Triangulation
+    public static int CachePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay)
     {
-        if (polygonCCW == null || polygonCCW.Count < 3 || thickness <= 0f) return 0;
+        if (polygonCCW.Count < 3 || thickness <= 0f) return 0;
 
         var key = TriKey.FromPolygonOutline(polygonCCW, thickness, miterLimit, beveled, useDelaunay, DecimalPlaces);
         if (_keyToId.TryGetValue(key, out int id)) return id;
@@ -263,15 +231,9 @@ public static class ClipperImmediate2D
         return id;
     }
 
-    public static int CachePolylineTriangulation(
-        IReadOnlyList<Vector2> polyline,
-        float thickness,
-        float miterLimit,
-        bool beveled,
-        EndType endType,
-        bool useDelaunay)
+    public static int CachePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, EndType endType, bool useDelaunay)
     {
-        if (polyline == null || polyline.Count < 2 || thickness <= 0f) return 0;
+        if (polyline.Count < 2 || thickness <= 0f) return 0;
 
         var key = TriKey.FromPolyline(polyline, thickness, miterLimit, beveled, endType, useDelaunay, DecimalPlaces);
         if (_keyToId.TryGetValue(key, out int id)) return id;
@@ -289,7 +251,7 @@ public static class ClipperImmediate2D
 
     public static int CachePolygonTriangulation(Paths64 polygonWithHoles, bool useDelaunay)
     {
-        if (polygonWithHoles == null || polygonWithHoles.Count == 0) return 0;
+        if (polygonWithHoles.Count == 0) return 0;
 
         var key = TriKey.FromPaths64(polygonWithHoles, useDelaunay, DecimalPlaces);
         if (_keyToId.TryGetValue(key, out int id)) return id;
@@ -306,7 +268,9 @@ public static class ClipperImmediate2D
     }
 
     public static bool GetCachedTriangulation(int triangulationId, out TriMesh mesh)
-        => _idToMesh.TryGetValue(triangulationId, out mesh!);
+    {
+        return _idToMesh.TryGetValue(triangulationId, out mesh!);
+    }
 
     public static void ClearTriangulationCache()
     {
@@ -319,22 +283,15 @@ public static class ClipperImmediate2D
         }
         _idToMesh.Clear();
     }
-
-    // ---------------------------
-    // Public: Offsetting wrappers (allocation-friendly result parameter)
-    // ---------------------------
-
-    public static void OffsetPolygon(
-        IReadOnlyList<Vector2> polygonCCW,
-        float offset,
-        float miterLimit,
-        bool beveled,
-        Paths64 result)
+    #endregion
+    
+    #region Offsetting
+    public static void OffsetPolygon(IReadOnlyList<Vector2> polygonCCW, float offset, float miterLimit, bool beveled, Paths64 result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
 
-        if (polygonCCW == null || polygonCCW.Count < 3) return;
+        if (polygonCCW.Count < 3) return;
 
         if (offset == 0f)
         {
@@ -347,32 +304,20 @@ public static class ClipperImmediate2D
         OffsetPolygonToPaths64(polygonCCW, offset, miterLimit, beveled, result);
     }
 
-    public static void OffsetPolyline(
-        IReadOnlyList<Vector2> polyline,
-        float offsetPositive,
-        float miterLimit,
-        bool beveled,
-        EndType endType,
-        Paths64 result)
+    public static void OffsetPolyline(IReadOnlyList<Vector2> polyline, float offsetPositive, float miterLimit, bool beveled, EndType endType, Paths64 result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
 
-        if (polyline == null || polyline.Count < 2 || offsetPositive <= 0f) return;
+        if (polyline.Count < 2 || offsetPositive <= 0f) return;
 
         OffsetPolylineToPaths64(polyline, offsetPositive, miterLimit, beveled, endType, result);
     }
-
-    // ---------------------------
-    // Internal: Offset
-    // ---------------------------
-
-    private static void OffsetPolygonToPaths64(
-        IReadOnlyList<Vector2> polygonCCW,
-        float offsetWorld,
-        float miterLimit,
-        bool beveled,
-        Paths64 outPaths)
+    #endregion
+    
+    #region Internal Offset
+    
+    private static void OffsetPolygonToPaths64(IReadOnlyList<Vector2> polygonCCW, float offsetWorld, float miterLimit, bool beveled, Paths64 outPaths)
     {
         outPaths.Clear();
 
@@ -390,13 +335,7 @@ public static class ClipperImmediate2D
         _offset.Execute(delta, outPaths);
     }
 
-    private static void OffsetPolylineToPaths64(
-        IReadOnlyList<Vector2> polyline,
-        float offsetWorldPositive,
-        float miterLimit,
-        bool beveled,
-        EndType endType,
-        Paths64 outPaths)
+    private static void OffsetPolylineToPaths64(IReadOnlyList<Vector2> polyline, float offsetWorldPositive, float miterLimit, bool beveled, EndType endType, Paths64 outPaths)
     {
         outPaths.Clear();
 
@@ -420,11 +359,9 @@ public static class ClipperImmediate2D
         if (miterLimit > 2f) return JoinType.Miter;
         return beveled ? JoinType.Bevel : JoinType.Square;
     }
-
-    // ---------------------------
-    // Internal: Triangulation
-    // ---------------------------
-
+    #endregion
+    
+    #region Internal Triangulation
     private static void TriangulatePaths64ToMesh(Paths64 subject, bool useDelaunay, TriMesh mesh)
     {
         mesh.Clear();
@@ -436,37 +373,64 @@ public static class ClipperImmediate2D
             return;
         }
 
+        FillMesh(mesh, tris);
+        // // Each Path64 in tris is a triangle with 3 points (CCW).
+        // int triCount = tris.Count;
+        // mesh.Triangles.Capacity = Math.Max(mesh.Triangles.Capacity, triCount * 3);
+        //
+        // for (int i = 0; i < triCount; i++)
+        // {
+        //     var tri = tris[i];
+        //     if (tri.Count < 3) continue;
+        //
+        //     // Convert int coords back to world coords
+        //     Vector2 a = ToV2(tri[0]);
+        //     Vector2 b = ToV2(tri[1]);
+        //     Vector2 c = ToV2(tri[2]);
+        //
+        //     // // enforce CCW (defensive)
+        //     // if (Cross(b - a, c - a) > 0f)
+        //     // {
+        //     //     Console.WriteLine("Enforce CCW triangle vertices");
+        //     //     var tmp = b; b = c; c = tmp;
+        //     // }
+        //
+        //     mesh.Triangles.Add(a);
+        //     mesh.Triangles.Add(b);
+        //     mesh.Triangles.Add(c);
+        // }
+    }
+
+    private static void FillMesh(TriMesh mesh, Paths64 tris)
+    {
         // Each Path64 in tris is a triangle with 3 points (CCW).
         int triCount = tris.Count;
         mesh.Triangles.Capacity = Math.Max(mesh.Triangles.Capacity, triCount * 3);
-
+        
         for (int i = 0; i < triCount; i++)
         {
             var tri = tris[i];
             if (tri.Count < 3) continue;
-
+        
             // Convert int coords back to world coords
             Vector2 a = ToV2(tri[0]);
             Vector2 b = ToV2(tri[1]);
             Vector2 c = ToV2(tri[2]);
-
-            // // enforce CCW (defensive)
-            // if (Cross(b - a, c - a) > 0f)
-            // {
-            //     Console.WriteLine("Enforce CCW triangle vertices");
-            //     var tmp = b; b = c; c = tmp;
-            // }
-
+        
+            // enforce CCW (defensive)
+            if (Cross(b - a, c - a) > 0f)
+            {
+                var tmp = b; b = c; c = tmp;
+            }
+        
             mesh.Triangles.Add(a);
             mesh.Triangles.Add(b);
             mesh.Triangles.Add(c);
         }
     }
-
-    // ---------------------------
-    // Internal: Conversion
-    // ---------------------------
-
+    #endregion
+    
+    #region Internal Conversion
     private static void ToPath64(IReadOnlyList<Vector2> src, Path64 dst)
     {
         dst.Clear();
@@ -487,11 +451,9 @@ public static class ClipperImmediate2D
         // Console.WriteLine($"Point64 {p.X}, {p.Y} -> Vector2 {(float)(p.X * _invScale)}, {-(float)(p.Y * _invScale)}");
         return new Vector2((float)(p.X * _invScale), (float)(p.Y * _invScale));
     }
-
-    // ---------------------------
-    // Internal: Cache
-    // ---------------------------
-
+    #endregion
+    
+    #region Internal Cache
     private static void EnsureCacheSpace()
     {
         if (_idToMesh.Count < MaxTriangulationCacheEntries) return;
@@ -501,25 +463,19 @@ public static class ClipperImmediate2D
     private readonly struct TriKey : IEquatable<TriKey>
     {
         public readonly ulong Hash;
-        public readonly int DecimalPlaces;
+        public readonly int DP;
         public readonly byte Kind;
         public readonly bool UseDelaunay;
 
         private TriKey(ulong hash, int dp, byte kind, bool useDelaunay)
         {
             Hash = hash;
-            DecimalPlaces = dp;
+            DP = dp;
             Kind = kind;
             UseDelaunay = useDelaunay;
         }
 
-        public static TriKey FromPolygonOutline(
-            IReadOnlyList<Vector2> polygon,
-            float thickness,
-            float miterLimit,
-            bool beveled,
-            bool useDelaunay,
-            int dp)
+        public static TriKey FromPolygonOutline(IReadOnlyList<Vector2> polygon, float thickness, float miterLimit, bool beveled, bool useDelaunay, int dp)
         {
             ulong h = HashPoints(polygon, dp);
             h = HashFloat(h, thickness, dp);
@@ -528,14 +484,7 @@ public static class ClipperImmediate2D
             return new TriKey(h, dp, kind: 1, useDelaunay);
         }
 
-        public static TriKey FromPolyline(
-            IReadOnlyList<Vector2> polyline,
-            float thickness,
-            float miterLimit,
-            bool beveled,
-            EndType endType,
-            bool useDelaunay,
-            int dp)
+        public static TriKey FromPolyline(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, EndType endType, bool useDelaunay, int dp)
         {
             ulong h = HashPoints(polyline, dp);
             h = HashFloat(h, thickness, dp);
@@ -552,7 +501,7 @@ public static class ClipperImmediate2D
         }
 
         public bool Equals(TriKey other) =>
-            Hash == other.Hash && DecimalPlaces == other.DecimalPlaces && Kind == other.Kind && UseDelaunay == other.UseDelaunay;
+            Hash == other.Hash && DP == other.DP && Kind == other.Kind && UseDelaunay == other.UseDelaunay;
 
         public override bool Equals(object? obj) => obj is TriKey k && Equals(k);
 
@@ -561,7 +510,7 @@ public static class ClipperImmediate2D
             unchecked
             {
                 int hc = (int)(Hash ^ (Hash >> 32));
-                hc = (hc * 397) ^ DecimalPlaces;
+                hc = (hc * 397) ^ DP;
                 hc = (hc * 397) ^ Kind;
                 hc = (hc * 397) ^ (UseDelaunay ? 1 : 0);
                 return hc;
@@ -578,7 +527,7 @@ public static class ClipperImmediate2D
             {
                 h ^= (ulong)pts.Count; h *= FNV_PRIME;
 
-                double scale = Pow10(dp);
+                double scale = ToScale(dp);
                 for (int i = 0; i < pts.Count; i++)
                 {
                     long qx = (long)Math.Round(pts[i].X * scale);
@@ -619,7 +568,7 @@ public static class ClipperImmediate2D
         private static ulong HashFloat(ulong h, float v, int dp)
         {
             const ulong FNV_PRIME = 1099511628211UL;
-            double scale = Pow10(dp);
+            double scale = ToScale(dp);
             long q = (long)Math.Round(v * scale);
             unchecked { h ^= (ulong)q; h *= FNV_PRIME; }
             return h;
@@ -639,7 +588,7 @@ public static class ClipperImmediate2D
             return h;
         }
 
-        private static double Pow10(int dp)
+        private static double ToScale(int dp)
         {
             if (dp <= 0) return 1.0;
             double s = 1.0;
@@ -647,11 +596,9 @@ public static class ClipperImmediate2D
             return s;
         }
     }
-
-    // ---------------------------
-    // Internal: Pooling + draw
-    // ---------------------------
-
+    #endregion
+    
+    #region Internal Pooling + Draw
     private static TriMesh RentMesh()
     {
         if (_meshPool.Count > 0)
@@ -671,26 +618,7 @@ public static class ClipperImmediate2D
             _meshPool.Push(mesh);
         }
     }
-
-    private static void DrawMesh(TriMesh mesh, Color color)
-    {
-        var t = mesh.Triangles;
-        for (int i = 0; i + 2 < t.Count; i += 3)
-        {
-            Vector2 a = t[i];
-            Vector2 b = t[i + 1];
-            Vector2 c = t[i + 2];
-
-            // enforce CCW (defensive)
-            if (Cross(b - a, c - a) > 0f)
-            {
-                var tmp = b; b = c; c = tmp;
-            }
-
-            Raylib.DrawTriangle(a, b, c, color);
-        }
-    }
-
+    
     private static float Cross(in Vector2 a, in Vector2 b) => a.X * b.Y - a.Y * b.X;
 
     private static double Pow10(int dp)
@@ -700,4 +628,5 @@ public static class ClipperImmediate2D
         for (int i = 0; i < dp; i++) s *= 10.0;
         return s;
     }
+    #endregion
 }
