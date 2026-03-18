@@ -1060,9 +1060,10 @@ public partial class Polygon
     }
 
     #endregion
-
-    //TODO: Remove if ClipperImmediate2D works correctly
+    
     #region Triangulation
+    
+    //TODO: REMOVE
     /// <summary>
     /// Triangulates the polygon using an ear-clipping approach with randomized ear selection.
     /// Produces a set of non-overlapping triangles that cover the polygon interior.
@@ -1141,6 +1142,7 @@ public partial class Polygon
         return triangles;
     }
 
+    //TODO: REMOVE
     /// <summary>
     /// Triangulates this polygon and appends the resulting triangles into the provided <see cref="Triangulation"/>.
     /// This function aims to minimize memory allocations by reusing internal buffers and filling the provided collection instead of creating a new one.
@@ -1232,6 +1234,7 @@ public partial class Polygon
         return count;
     }
 
+    //TODO: Reimplement in ClipperImmediate2D
     /// <summary>
     /// Generates a triangulation for the polygon's outline when the polygon is inflated by a given <paramref name="thickness"/>.
     /// The outline is produced by inflating the polygon (using round, miter, bevel or square joins depending on parameters)
@@ -1307,7 +1310,7 @@ public partial class Polygon
 
         return null;
     }
-
+    //TODO: Reimplement in ClipperImmediate2D
     /// <summary>
     /// Generates a triangulation for the polygon's inflated outline and appends the resulting triangles
     /// into the provided <see cref="Triangulation"/> instance.
@@ -1397,6 +1400,7 @@ public partial class Polygon
     
     #region Outline Perimeter Triangulation
 
+    //TODO: Reimplement in ClipperImmediate2D
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's outline measured by a perimeter length.
     /// The method inflates the polygon by <paramref name="thickness"/> (using the specified join type and miter limit)
@@ -1449,6 +1453,7 @@ public partial class Polygon
         return polygon.GenerateOutlineTriangulation(thickness, cornerPoints, miterLimit, beveled, useDelaunay);
     }
 
+    //TODO: Reimplement in ClipperImmediate2D
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's inflated outline and appends the resulting triangles
     /// into the provided <see cref="Triangulation"/> instance.
@@ -1516,6 +1521,7 @@ public partial class Polygon
 
     #region Outline Percentage Triangulation
 
+    //TODO: Reimplement in ClipperImmediate2D
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter.
     /// The method inflates the polygon by <paramref name="thickness"/> and produces triangles that cover the outline segment
@@ -1568,6 +1574,7 @@ public partial class Polygon
         return GenerateOutlinePerimeterTriangulation(perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
     }
 
+    //TODO: Reimplement in ClipperImmediate2D
     /// <summary>
     /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter,
     /// appending the resulting triangles into <paramref name="result"/>.
@@ -1622,5 +1629,4 @@ public partial class Polygon
     }
 
     #endregion
-    //TODO: ---------------------------------------
 }

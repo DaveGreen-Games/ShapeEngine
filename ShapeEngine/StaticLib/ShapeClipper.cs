@@ -361,6 +361,8 @@ public static class ShapeClipper
     /// <returns>True if the path is a hole; otherwise, false.</returns>
     public static bool IsHole(this PathD path)
     {
+        //!!!: because y is flipped PathD is in clipper orientation -> positive winding order = ccw and negative winding order = cw, where negative/cw is defined as a hole
+        // if y is not flipped than the orientation flips, meaning that now a positive winding order is cw and considered a hole!
         return !Clipper.IsPositive(path);
     }
 

@@ -42,6 +42,8 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     #region Helper Members
     private static IntersectionPoints intersectionPointsReference = new(4);
     private Polygon? compoundHelperPolygon = null;
+    
+    //TODO: Remove if no longer needed
     private static readonly List<Vector2> triangulateTempVertices = [];
     private static readonly List<int> triangulateTempValidIndices = [];
     private static readonly Polygon triangulateTempPolygon = [];

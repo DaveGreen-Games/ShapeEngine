@@ -3,22 +3,25 @@ using Clipper2Lib;
 using Raylib_cs;
 using ShapeEngine.Color;
 
-//CHECK: Why does ShapeClipper need to flip y and ClipperImmediate does not?!
-//CHECK: PolygonMath Triangulation & OutlineTriangulation vs ClipperImmediate Triangultion & OutlineTriangulation performance wise
+//CHECK: [DONE] Why does ShapeClipper need to flip y and ClipperImmediate does not?! -> Flipping is not needed, output triangles vertices are just in cw order if y is not flipped
+//CHECK: [DONE] PolygonMath Triangulation & OutlineTriangulation vs ClipperImmediate Triangultion & OutlineTriangulation performance wise
+// - Result they are about the same performance (so I dont need the old ones)
 
 //TODO: 
-// - Reimplement all functions from ShapeClipper here with optimizing memory allocation in mind
-// - Reimplement all functions regarding Triangulation from PolygonMath here with optimizing memory allocation in mind
-// - Implement an instance class that uses Clipper64 / ClipperOffset internally with automatic buffers etc. -> use those classes here as static engines
-// - Use Clipper64 / ClipperOffset static classes or new wrapped classes if possible
-// - Create seperate files for ShapeClipper enum wrappers
-// - Move all clipper related wrapper classes to a seperate namespace
-// - All functions should use Path64 / Paths64 instead of PathD / PathsD
-// - Add conversion functions for Path64 / Paths64
-// - All fuctions that return any sort of collection should use a parameter called result instead of a return value!
-// - All major functions should have 1 variant that returns clipper based classes (Paths64 for instance) and 1 variant that returns shape engine based classes (Polygon for instance)
-// - Functions that use result Parameter like Polygon/Polyline etc should use internal buffers for calculating everything and then transforming the result to expexted output format once at the end
-// - Major Functions:
+// - [] Reimplement all functions from ShapeClipper here with optimizing memory allocation in mind
+// - [] Clipper2 -> positive winding order = ccw/ filled shape and negative winding order = cw/hole -> if y is not flipped for using in clipper2 than this orientation changes where positive = cw/hole and negative = ccw/filled!
+// - [] Reimplement all functions regarding Triangulation from PolygonMath here with optimizing memory allocation in mind
+// - [] Implement functions for turning a Polygon/List<Vector2> into a polyline by percentage/perimeter values -> use cached buffer to write new polyline into and use that buffer for generating the outline triangulation
+// - [] Implement an instance class that uses Clipper64 / ClipperOffset internally with automatic buffers etc. -> use those classes here as static engines
+// - [] Use Clipper64 / ClipperOffset static classes or new wrapped classes if possible
+// - [] Create seperate files for ShapeClipper enum wrappers
+// - [] Move all clipper related wrapper classes to a seperate namespace
+// - [] All functions should use Path64 / Paths64 instead of PathD / PathsD
+// - [] Add conversion functions for Path64 / Paths64
+// - [] All fuctions that return any sort of collection should use a parameter called result instead of a return value!
+// - [] All major functions should have 1 variant that returns clipper based classes (Paths64 for instance) and 1 variant that returns shape engine based classes (Polygon for instance)
+// - [] Functions that use result Parameter like Polygon/Polyline etc should use internal buffers for calculating everything and then transforming the result to expexted output format once at the end
+// - [] Major Functions:
 //  - [] Clip
 //  - [] Intersect
 //  - [] Difference
@@ -29,12 +32,16 @@ using ShapeEngine.Color;
 //  - [] TriangulateOutlinePercentagePolygon
 //  - [] TriangulatePolygon (polygons with and without holes) -> Paths64/Polygons is with holes and Path64/Polygon is without holes
 //  - [] TriangulateOutlinePolyline
-// - How to handle Triangulation vs TriMesh? -> I would opt for having both and just add explicit and implicit conversion functions (internally only TriMesh is used and there are optional overloads with Triangulation as result)
-// - At the end Rename this class to ShapeClipper and remove old ShapeClipper
+// - [] How to handle Triangulation vs TriMesh? -> I would opt for having both and just add explicit and implicit conversion functions (internally only TriMesh is used and there are optional overloads with Triangulation as result)
+// - [] At the end Rename this class to ShapeClipper and remove old ShapeClipper
 
 
-
-
+//Note: Implement instance class wrappers for Clipper64 / ClipperOffset/ ClipperTriangulation
+// - Clipper64 can do Intersection, Union, Difference, xor, and no clip
+// - ClipperOffset can offset (inflate, deflate)
+// - ClipperTriangulation can do triangulation (with and without holes)
+// - Classes should come with internal buffers
+// - All public functions should use paramters for solution instead of returning new collections
 public static class ClipperImmediate2D
 {
     #region Public Settings
@@ -392,36 +399,10 @@ public static class ClipperImmediate2D
         TriangulateResult res = Clipper.Triangulate(subject, out Paths64 tris, useDelaunay);
         if (res != TriangulateResult.success || tris.Count == 0)
         {
-            Console.WriteLine("TriangulatePaths64ToMesh failed");
             return;
         }
 
         FillMesh(mesh, tris);
-        // // Each Path64 in tris is a triangle with 3 points (CCW).
-        // int triCount = tris.Count;
-        // mesh.Triangles.Capacity = Math.Max(mesh.Triangles.Capacity, triCount * 3);
-        //
-        // for (int i = 0; i < triCount; i++)
-        // {
-        //     var tri = tris[i];
-        //     if (tri.Count < 3) continue;
-        //
-        //     // Convert int coords back to world coords
-        //     Vector2 a = ToV2(tri[0]);
-        //     Vector2 b = ToV2(tri[1]);
-        //     Vector2 c = ToV2(tri[2]);
-        //
-        //     // // enforce CCW (defensive)
-        //     // if (Cross(b - a, c - a) > 0f)
-        //     // {
-        //     //     Console.WriteLine("Enforce CCW triangle vertices");
-        //     //     var tmp = b; b = c; c = tmp;
-        //     // }
-        //
-        //     mesh.Triangles.Add(a);
-        //     mesh.Triangles.Add(b);
-        //     mesh.Triangles.Add(c);
-        // }
     }
 
     private static void FillMesh(TriMesh mesh, Paths64 tris)
@@ -436,8 +417,9 @@ public static class ClipperImmediate2D
             if (tri.Count < 3) continue;
         
             // Convert int coords back to world coords
-            Vector2 a = ToV2(tri[0]);
-            Vector2 b = ToV2(tri[1]);
+            // because y is never flipped - return triangles are in cw order and flipping 0 with 1 turns them into ccw order!
+            Vector2 a = ToV2(tri[1]);
+            Vector2 b = ToV2(tri[0]);
             Vector2 c = ToV2(tri[2]);
         
             // enforce CCW (defensive)
@@ -471,7 +453,6 @@ public static class ClipperImmediate2D
 
     private static Vector2 ToV2(Point64 p)
     {
-        // Console.WriteLine($"Point64 {p.X}, {p.Y} -> Vector2 {(float)(p.X * _invScale)}, {-(float)(p.Y * _invScale)}");
         return new Vector2((float)(p.X * _invScale), (float)(p.Y * _invScale));
     }
     #endregion
