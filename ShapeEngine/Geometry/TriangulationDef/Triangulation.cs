@@ -260,4 +260,15 @@ public partial class Triangulation : ShapeList<Triangle>
         return final;
     }
     #endregion
+
+    public void ToTriMesh(TriMesh dst)
+    {
+        dst.Clear();
+        foreach (var t in this)
+        {
+            dst.Triangles.Add(t.A);
+            dst.Triangles.Add(t.B);
+            dst.Triangles.Add(t.C);
+        }
+    }
 }

@@ -132,6 +132,17 @@ public enum ShapeClipperFillRule
 }
 
 //TODO: Move to seperate namespace/folder
+public enum ShapeClipperClipType
+{
+    NoClip,
+    Intersection,
+    Union,
+    Difference,
+    Xor,
+}
+
+
+//TODO: Move to seperate namespace/folder
 //TODO: See ClipperImmediate2D todos -> Reimplement everything here there
 
 /// <summary>
@@ -142,6 +153,8 @@ public enum ShapeClipperFillRule
 /// </remarks>
 public static class ShapeClipper
 {
+    //NOTE: Done
+    
     #region Clip
     /// <summary>
     /// Clips a polygon to a rectangle.
@@ -352,137 +365,6 @@ public static class ShapeClipper
         return cur;
     }
     #endregion
-
-    #region Holes
-    /// <summary>
-    /// Determines if a path is a hole (negative orientation).
-    /// </summary>
-    /// <param name="path">The path to check.</param>
-    /// <returns>True if the path is a hole; otherwise, false.</returns>
-    public static bool IsHole(this PathD path)
-    {
-        //!!!: because y is flipped PathD is in clipper orientation -> positive winding order = ccw and negative winding order = cw, where negative/cw is defined as a hole
-        // if y is not flipped than the orientation flips, meaning that now a positive winding order is cw and considered a hole!
-        return !Clipper.IsPositive(path);
-    }
-
-    /// <summary>
-    /// Determines if a polygon is a hole (negative orientation).
-    /// </summary>
-    /// <param name="p">The polygon to check.</param>
-    /// <returns>True if the polygon is a hole; otherwise, false.</returns>
-    public static bool IsHole(this Polygon p)
-    {
-        return p.ToClipperPath().IsHole();
-    }
-
-    /// <summary>
-    /// Removes all holes from the given paths in-place.
-    /// </summary>
-    /// <param name="paths">The paths to process.</param>
-    /// <returns>The modified <see cref="PathsD"/> with holes removed.</returns>
-    /// <remarks>This method modifies the input collection.</remarks>
-    public static PathsD RemoveAllHoles(this PathsD paths)
-    {
-        paths.RemoveAll((p) => p.IsHole()); return paths;
-    }
-
-    /// <summary>
-    /// Removes all holes from the given polygons in-place.
-    /// </summary>
-    /// <param name="polygons">The polygons to process.</param>
-    /// <returns>The modified <see cref="Polygons"/> with holes removed.</returns>
-    /// <remarks>This method modifies the input collection.</remarks>
-    public static Polygons RemoveAllHoles(this Polygons polygons)
-    {
-        polygons.RemoveAll((p) => p.IsHole()); 
-        return polygons;
-    }
-
-    /// <summary>
-    /// Keeps only the holes in the given paths in-place.
-    /// </summary>
-    /// <param name="paths">The paths to process.</param>
-    /// <returns>The modified <see cref="PathsD"/> containing only holes.</returns>
-    /// <remarks>This method modifies the input collection.</remarks>
-    public static PathsD GetAllHoles(this PathsD paths)
-    {
-        paths.RemoveAll((p) => !p.IsHole()); 
-        return paths;
-    }
-
-    /// <summary>
-    /// Keeps only the holes in the given polygons in-place.
-    /// </summary>
-    /// <param name="polygons">The polygons to process.</param>
-    /// <returns>The modified <see cref="Polygons"/> containing only holes.</returns>
-    /// <remarks>This method modifies the input collection.</remarks>
-    public static Polygons GetAllHoles(this Polygons polygons)
-    {
-        polygons.RemoveAll((p) => !p.IsHole());
-        return polygons;
-    }
-    
-    /// <summary>
-    /// Returns a copy of the given paths with all holes removed.
-    /// </summary>
-    /// <param name="paths">The paths to process.</param>
-    /// <returns>A new <see cref="PathsD"/> with holes removed.</returns>
-    public static PathsD RemoveAllHolesCopy(this PathsD paths)
-    {
-        var result = new PathsD();
-        foreach (var p in paths)
-        {
-            if(!IsHole(p)) result.Add(p);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Returns a copy of the given polygons with all holes removed.
-    /// </summary>
-    /// <param name="polygons">The polygons to process.</param>
-    /// <returns>A new <see cref="Polygons"/> with holes removed.</returns>
-    public static Polygons RemoveAllHolesCopy(this Polygons polygons)
-    {
-        var result = new Polygons();
-        foreach (var p in polygons)
-        {
-            if (!IsHole(p)) result.Add(p);
-        }
-        return result;
-    }
-   
-    /// <summary>
-    /// Returns a copy of the given paths containing only holes.
-    /// </summary>
-    /// <param name="paths">The paths to process.</param>
-    /// <returns>A new <see cref="PathsD"/> containing only holes.</returns>
-    public static PathsD GetAllHolesCopy(this PathsD paths)
-    {
-        var result = new PathsD();
-        foreach (var p in paths)
-        {
-            if (IsHole(p)) result.Add(p);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Returns a copy of the given polygons containing only holes.
-    /// </summary>
-    /// <param name="polygons">The polygons to process.</param>
-    /// <returns>A new <see cref="Polygons"/> containing only holes.</returns>
-    public static Polygons GetAllHolesCopy(this Polygons polygons)
-    {
-        var result = new Polygons();
-        foreach (var p in polygons)
-        {
-            if (IsHole(p)) result.Add(p);
-        }
-        return result;
-    }
-    #endregion
     
     #region Inflate
     /// <summary>
@@ -622,6 +504,142 @@ public static class ShapeClipper
     public static PathsD InflateMany(this Polylines polylines, float delta, ShapeClipperJoinType joinType = ShapeClipperJoinType.Square, ShapeClipperEndType endType = ShapeClipperEndType.Polygon, float miterLimit = 2f, int precision = 2)
     {
         return Clipper.InflatePaths(polylines.ToClipperPaths(), delta, joinType.ToClipperJoinType(), endType.ToClipperEndType(), miterLimit, precision);
+    }
+    #endregion
+    
+    //NOTE: ---
+    
+    
+    //TODO: Copy / Reimplement to ClipperImmediate2D
+    
+    #region Holes
+    /// <summary>
+    /// Determines if a path is a hole (negative orientation).
+    /// </summary>
+    /// <param name="path">The path to check.</param>
+    /// <returns>True if the path is a hole; otherwise, false.</returns>
+    public static bool IsHole(this PathD path)
+    {
+        //!!!: because y is flipped PathD is in clipper orientation -> positive winding order = ccw and negative winding order = cw, where negative/cw is defined as a hole
+        // if y is not flipped than the orientation flips, meaning that now a positive winding order is cw and considered a hole!
+        return !Clipper.IsPositive(path);
+    }
+
+    /// <summary>
+    /// Determines if a polygon is a hole (negative orientation).
+    /// </summary>
+    /// <param name="p">The polygon to check.</param>
+    /// <returns>True if the polygon is a hole; otherwise, false.</returns>
+    public static bool IsHole(this Polygon p)
+    {
+        return p.ToClipperPath().IsHole();
+    }
+
+    /// <summary>
+    /// Removes all holes from the given paths in-place.
+    /// </summary>
+    /// <param name="paths">The paths to process.</param>
+    /// <returns>The modified <see cref="PathsD"/> with holes removed.</returns>
+    /// <remarks>This method modifies the input collection.</remarks>
+    public static PathsD RemoveAllHoles(this PathsD paths)
+    {
+        paths.RemoveAll((p) => p.IsHole()); return paths;
+    }
+
+    /// <summary>
+    /// Removes all holes from the given polygons in-place.
+    /// </summary>
+    /// <param name="polygons">The polygons to process.</param>
+    /// <returns>The modified <see cref="Polygons"/> with holes removed.</returns>
+    /// <remarks>This method modifies the input collection.</remarks>
+    public static Polygons RemoveAllHoles(this Polygons polygons)
+    {
+        polygons.RemoveAll((p) => p.IsHole()); 
+        return polygons;
+    }
+
+    /// <summary>
+    /// Keeps only the holes in the given paths in-place.
+    /// </summary>
+    /// <param name="paths">The paths to process.</param>
+    /// <returns>The modified <see cref="PathsD"/> containing only holes.</returns>
+    /// <remarks>This method modifies the input collection.</remarks>
+    public static PathsD GetAllHoles(this PathsD paths)
+    {
+        paths.RemoveAll((p) => !p.IsHole()); 
+        return paths;
+    }
+
+    /// <summary>
+    /// Keeps only the holes in the given polygons in-place.
+    /// </summary>
+    /// <param name="polygons">The polygons to process.</param>
+    /// <returns>The modified <see cref="Polygons"/> containing only holes.</returns>
+    /// <remarks>This method modifies the input collection.</remarks>
+    public static Polygons GetAllHoles(this Polygons polygons)
+    {
+        polygons.RemoveAll((p) => !p.IsHole());
+        return polygons;
+    }
+    
+    /// <summary>
+    /// Returns a copy of the given paths with all holes removed.
+    /// </summary>
+    /// <param name="paths">The paths to process.</param>
+    /// <returns>A new <see cref="PathsD"/> with holes removed.</returns>
+    public static PathsD RemoveAllHolesCopy(this PathsD paths)
+    {
+        var result = new PathsD();
+        foreach (var p in paths)
+        {
+            if(!IsHole(p)) result.Add(p);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Returns a copy of the given polygons with all holes removed.
+    /// </summary>
+    /// <param name="polygons">The polygons to process.</param>
+    /// <returns>A new <see cref="Polygons"/> with holes removed.</returns>
+    public static Polygons RemoveAllHolesCopy(this Polygons polygons)
+    {
+        var result = new Polygons();
+        foreach (var p in polygons)
+        {
+            if (!IsHole(p)) result.Add(p);
+        }
+        return result;
+    }
+   
+    /// <summary>
+    /// Returns a copy of the given paths containing only holes.
+    /// </summary>
+    /// <param name="paths">The paths to process.</param>
+    /// <returns>A new <see cref="PathsD"/> containing only holes.</returns>
+    public static PathsD GetAllHolesCopy(this PathsD paths)
+    {
+        var result = new PathsD();
+        foreach (var p in paths)
+        {
+            if (IsHole(p)) result.Add(p);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Returns a copy of the given polygons containing only holes.
+    /// </summary>
+    /// <param name="polygons">The polygons to process.</param>
+    /// <returns>A new <see cref="Polygons"/> containing only holes.</returns>
+    public static Polygons GetAllHolesCopy(this Polygons polygons)
+    {
+        var result = new Polygons();
+        foreach (var p in polygons)
+        {
+            if (IsHole(p)) result.Add(p);
+        }
+        return result;
     }
     #endregion
     
@@ -791,6 +809,84 @@ public static class ShapeClipper
     }
     #endregion
     
+    #region Enum Conversion
+    /// <summary>
+    /// Converts a <see cref="ShapeClipperFillRule"/> to the Clipper <see cref="FillRule"/> enum.
+    /// </summary>
+    /// <param name="fillRule">The ShapeClipper fill rule to convert.</param>
+    /// <returns>The equivalent <see cref="FillRule"/> value.</returns>
+    public static FillRule ToClipperFillRule(this ShapeClipperFillRule fillRule)
+    {
+        return (FillRule)fillRule;
+    }
+    
+    /// <summary>
+    /// Converts a <see cref="ShapeClipperJoinType"/> to the Clipper <see cref="JoinType"/> enum.
+    /// </summary>
+    /// <param name="joinType">The ShapeClipper join type to convert.</param>
+    /// <returns>The equivalent <see cref="JoinType"/> value.</returns>
+    public static JoinType ToClipperJoinType(this ShapeClipperJoinType joinType)
+    {
+        return (JoinType)joinType;
+    }
+    
+    /// <summary>
+    /// Converts a <see cref="ShapeClipperEndType"/> to the Clipper <see cref="EndType"/> enum.
+    /// </summary>
+    /// <param name="endType">The ShapeClipper end type to convert.</param>
+    /// <returns>The equivalent <see cref="EndType"/> value.</returns>
+    public static EndType ToClipperEndType(this ShapeClipperEndType endType)
+    {
+        return (EndType)endType;
+    }
+
+    //TODO: Docs
+    public static ClipType ToClipperClipType(this ShapeClipperClipType clipType)
+    {
+        return (ClipType)clipType;
+    }
+    
+    /// <summary>
+    /// Converts a Clipper <see cref="FillRule"/> to the local <see cref="ShapeClipperFillRule"/> enum.
+    /// </summary>
+    /// <param name="fillRule">The Clipper fill rule to convert.</param>
+    /// <returns>The equivalent <see cref="ShapeClipperFillRule"/> value.</returns>
+    public static ShapeClipperFillRule ToShapeClipperFillRule(this FillRule fillRule)
+    {
+        return (ShapeClipperFillRule)fillRule;
+    }
+    
+    /// <summary>
+    /// Converts a Clipper <see cref="JoinType"/> to the local <see cref="ShapeClipperJoinType"/> enum.
+    /// </summary>
+    /// <param name="joinType">The Clipper join type to convert.</param>
+    /// <returns>The equivalent <see cref="ShapeClipperJoinType"/> value.</returns>
+    public static ShapeClipperJoinType ToShapeClipperJoinType(this JoinType joinType)
+    {
+        return (ShapeClipperJoinType)joinType;
+    }
+    
+    /// <summary>
+    /// Converts a Clipper <see cref="EndType"/> to the local <see cref="ShapeClipperEndType"/> enum.
+    /// </summary>
+    /// <param name="endType">The Clipper end type to convert.</param>
+    /// <returns>The equivalent <see cref="ShapeClipperEndType"/> value.</returns>
+    public static ShapeClipperEndType ToShapeClipperEndType(this EndType endType)
+    {
+        return (ShapeClipperEndType)endType;
+    }
+    
+    //TODO: Docs
+    public static ShapeClipperClipType ToShapeClipperClipType(this ClipType clipType)
+    {
+        return (ShapeClipperClipType)clipType;
+    }
+    #endregion
+    
+    //TODO: ---
+    
+    
+    //NOTE: Done
     #region Struct Conversion
     /// <summary>
     /// Converts a <see cref="PointD"/> to a <see cref="Vector2"/>.
@@ -835,68 +931,6 @@ public static class ShapeClipper
     public static Rect ToRect(this RectD r)
     {
         return new Rect((float)r.left, (float)(-r.top-r.Height), (float)r.Width, (float)r.Height);
-    }
-    #endregion
-    
-    #region Enum Conversion
-    /// <summary>
-    /// Converts a <see cref="ShapeClipperFillRule"/> to the Clipper <see cref="FillRule"/> enum.
-    /// </summary>
-    /// <param name="fillRule">The ShapeClipper fill rule to convert.</param>
-    /// <returns>The equivalent <see cref="FillRule"/> value.</returns>
-    public static FillRule ToClipperFillRule(this ShapeClipperFillRule fillRule)
-    {
-        return (FillRule)fillRule;
-    }
-    
-    /// <summary>
-    /// Converts a <see cref="ShapeClipperJoinType"/> to the Clipper <see cref="JoinType"/> enum.
-    /// </summary>
-    /// <param name="joinType">The ShapeClipper join type to convert.</param>
-    /// <returns>The equivalent <see cref="JoinType"/> value.</returns>
-    public static JoinType ToClipperJoinType(this ShapeClipperJoinType joinType)
-    {
-        return (JoinType)joinType;
-    }
-    
-    /// <summary>
-    /// Converts a <see cref="ShapeClipperEndType"/> to the Clipper <see cref="EndType"/> enum.
-    /// </summary>
-    /// <param name="endType">The ShapeClipper end type to convert.</param>
-    /// <returns>The equivalent <see cref="EndType"/> value.</returns>
-    public static EndType ToClipperEndType(this ShapeClipperEndType endType)
-    {
-        return (EndType)endType;
-    }
-    
-    /// <summary>
-    /// Converts a Clipper <see cref="FillRule"/> to the local <see cref="ShapeClipperFillRule"/> enum.
-    /// </summary>
-    /// <param name="fillRule">The Clipper fill rule to convert.</param>
-    /// <returns>The equivalent <see cref="ShapeClipperFillRule"/> value.</returns>
-    public static ShapeClipperFillRule ToShapeClipperFillRule(this FillRule fillRule)
-    {
-        return (ShapeClipperFillRule)fillRule;
-    }
-    
-    /// <summary>
-    /// Converts a Clipper <see cref="JoinType"/> to the local <see cref="ShapeClipperJoinType"/> enum.
-    /// </summary>
-    /// <param name="joinType">The Clipper join type to convert.</param>
-    /// <returns>The equivalent <see cref="ShapeClipperJoinType"/> value.</returns>
-    public static ShapeClipperJoinType ToShapeClipperJoinType(this JoinType joinType)
-    {
-        return (ShapeClipperJoinType)joinType;
-    }
-    
-    /// <summary>
-    /// Converts a Clipper <see cref="EndType"/> to the local <see cref="ShapeClipperEndType"/> enum.
-    /// </summary>
-    /// <param name="endType">The Clipper end type to convert.</param>
-    /// <returns>The equivalent <see cref="ShapeClipperEndType"/> value.</returns>
-    public static ShapeClipperEndType ToShapeClipperEndType(this EndType endType)
-    {
-        return (ShapeClipperEndType)endType;
     }
     #endregion
     
@@ -1391,4 +1425,6 @@ public static class ShapeClipper
     }
     
     #endregion
+    
+    //NOTE: ---
 }
