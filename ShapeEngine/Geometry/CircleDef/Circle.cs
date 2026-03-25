@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -401,7 +402,21 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// Triangulates the circle into a set of triangles.
     /// </summary>
     /// <returns>A <see cref="Triangulation"/> representing the triangulated circle.</returns>
-    public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
+    public void Triangulate(Triangulation result, int pointCount = 16)
+    {
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        result.Clear();
+        var cur = Center + new Vector2(Radius, 0f);
+        
+        for (int i = 0; i < pointCount; i++)
+        {
+            // Vector2 p1 = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+            Vector2 next = Center + new Vector2(Radius, 0f).Rotate(angleStep * (i + 1));
+            var t = new Triangle(Center, next, cur);
+            result.Add(t);
+            cur = next;
+        }
+    }
     /// <summary>
     /// Gets the bounding box of the circle.
     /// </summary>

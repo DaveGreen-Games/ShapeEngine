@@ -1,5 +1,4 @@
 using System.Numerics;
-using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
@@ -28,6 +27,7 @@ public static class PolylineDrawing
     // - Use PolygonDrawing for functions that need to be overhauled here
     // - Add DrawFast methods that dont work with alpha color (just draw segments between vertices with endcaps)
     
+    //TODO: Rework all below with new ClipperImmediate2d system!
     
     /// <summary>
     /// Draws the polyline using a single color and specified thickness.

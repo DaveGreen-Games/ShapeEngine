@@ -142,12 +142,12 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         return r;
     }
 
-   /// <summary>
-   /// Returns the segments (edges) of the polyline as a <see cref="Segments"/> collection.
-   /// If the points are in counter-clockwise (CCW) order, the segment normals face to the right of the segment direction.
-   /// If <c>InsideNormals</c> is true, the normals face to the left of the segment direction.
-   /// </summary>
-   /// <returns>A <see cref="Segments"/> collection representing the polyline's edges.</returns>
+    /// <summary>
+    /// Returns the segments (edges) of the polyline as a <see cref="Segments"/> collection.
+    /// If the points are in counter-clockwise (CCW) order, the segment normals face to the right of the segment direction.
+    /// If <c>InsideNormals</c> is true, the normals face to the left of the segment direction.
+    /// </summary>
+    /// <returns>A <see cref="Segments"/> collection representing the polyline's edges.</returns>
     public Segments GetEdges()
     {
         if (Count <= 1) return new();
@@ -166,6 +166,25 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     /// <returns>A new <see cref="Points"/> instance with the points from this polyline.</returns>
     public Points ToPoints() { return new(this); }
 
+    public bool GetEdgeDirections(List<Vector2> result, bool normalized = false)
+    {
+        if (Count <= 1) return false;
+        result.Clear();
+        if (Count == 2)
+        {
+            result.Add(this[1] - this[0]);
+            return true;
+        }
+        for (var i = 0; i < Count - 1; i++)
+        {
+            var start = this[i];
+            var end = this[i + 1];
+            var a = end - start;
+            result.Add(normalized ? a.Normalize() : a);
+        }
+
+        return true;
+    }
     #endregion
     
     #region Points & Vertex
@@ -223,6 +242,8 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         
         return result;
     }
+    
+    //TODO: Make buffers static in polyline main file?
     /// <summary>
     /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
     /// </summary>
@@ -235,26 +256,25 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         if (steps <= 1) return InterpolatedEdgePoints(t);
 
         int remainingSteps = steps;
-        var result = new Points();
-        var buffer = new Points();
+        var pointsResult = new Points();
+        var pointsBuffer = new Points();
+        
         while (remainingSteps > 0)
         {
-            var target = result.Count <= 0 ? this : result;
+            var target = pointsResult.Count <= 0 ? this : pointsResult;
             for (int i = 0; i < target.Count; i++)
             {
                 var cur = target[i];
                 var next = target[i + 1];
                 var interpolated = cur.Lerp(next, t);
-                buffer.Add(interpolated);
+                pointsBuffer.Add(interpolated);
             }
 
-            (result, buffer) = (buffer, result);//switch buffer and result
-            buffer.Clear();
+            (pointsResult, pointsBuffer) = (pointsBuffer, pointsResult);//switch buffer and result
+            pointsBuffer.Clear();
             remainingSteps--;
         }
-
-        
-        return result;
+        return pointsResult;
     }
     #endregion
     

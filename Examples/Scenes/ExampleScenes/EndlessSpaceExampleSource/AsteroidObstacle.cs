@@ -8,10 +8,10 @@ using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.StripedDrawingDef;
-using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
+using ShapeEngine.ShapeClipper;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
@@ -26,8 +26,8 @@ internal class AsteroidObstacle : CollisionObject
     
     private PolygonCollider collider;
     private readonly Polygon? outsideShape;
-    public Triangulation Triangulation;
-    public Triangulation OutlineTriangulation;
+    public Triangulation Triangulation = new();
+    public Triangulation OutlineTriangulation = new();
     private Rect bb;
 
     private float damageFlashTimer = 0f;
@@ -84,8 +84,8 @@ internal class AsteroidObstacle : CollisionObject
         AddCollider(collider);
         var shape = collider.GetPolygonShape(); 
         bb = shape.GetBoundingBox();
-        Triangulation = shape.Triangulate();
-        OutlineTriangulation = shape.GenerateOutlineTriangulation(EndlessSpaceCollision.AsteroidLineThickness, 0, 2f, false, false)?? [];
+        shape.Triangulate(Triangulation);
+        shape.TriangulateOutline(OutlineTriangulation, EndlessSpaceCollision.AsteroidLineThickness, 2f, false, false);
         
         if (big)
         {
@@ -224,8 +224,8 @@ internal class AsteroidObstacle : CollisionObject
         if (EndlessSpaceCollision.AsteroidLineThickness > 1 && outsideShape != null)
         {
             var c = damageFlashTimer > 0f ? Colors.PcWarm.ColorRgba : Colors.PcHighlight.ColorRgba;
-            OutlineTriangulation.Draw(c);//this works with transparent colors as well
-            // collider.GetPolygonShape().DrawLines(EndlessSpaceCollision.AsteroidLineThickness, c);
+            OutlineTriangulation.Draw(c);
+            // ClipperImmediate2D.DrawPolygonOutline(collider.GetPolygonShape(), EndlessSpaceCollision.AsteroidLineThickness, c, 4f, false, true, false);
             if (Big)
             {
                 perimeter = outsideShape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);

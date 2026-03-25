@@ -1,15 +1,17 @@
 ﻿using System.Numerics;
+using Clipper2Lib;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolylineDef;
-using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Random;
+using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
 using Game = ShapeEngine.Core.GameDef.Game;
 using Size = ShapeEngine.Core.Structs.Size;
@@ -41,12 +43,14 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 {
     #region Helper Members
     private static IntersectionPoints intersectionPointsReference = new(4);
-    private Polygon? compoundHelperPolygon = null;
+
+    private static Triangulation triangulationBuffer = new();
+    private static Polyline polylinePerimeterBuffer = new();
+    private static Paths64 clipResultBuffer = new();
+    private static Polygon clipPolygonBuffer = new();
+    private static Paths64PooledBuffer clipPooledBuffer = new();
     
-    //TODO: Remove if no longer needed
-    private static readonly List<Vector2> triangulateTempVertices = [];
-    private static readonly List<int> triangulateTempValidIndices = [];
-    private static readonly Polygon triangulateTempPolygon = [];
+    
     #endregion
     
     #region Getters
@@ -779,6 +783,29 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// </summary>
     /// <returns>A convex polygon containing all the original points.</returns>
     public Polygon? ToConvex() => Polygon.FindConvexHull(this);
+    
+    
+    public bool GetEdgeDirections(List<Vector2> result, bool normalized = false)
+    {
+        if (Count <= 1) return false;
+        result.Clear();
+        if (Count == 2)
+        {
+            result.Add(this[1] - this[0]);
+            return true;
+        }
+        for (var i = 0; i < Count; i++)
+        {
+            var start = this[i];
+            var end = this[(i + 1) % Count];
+            var a = end - start;
+            result.Add(normalized ? a.Normalize() : a);
+        }
+
+        return true;
+    }
+
+
     #endregion
 
     #region Random
@@ -788,9 +815,9 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// <returns>A random point inside the polygon.</returns>
     public Vector2 GetRandomPointInside()
     {
-        var triangles = Triangulate();
+        Triangulate(triangulationBuffer);
         List<WeightedItem<Triangle>> items = new();
-        foreach (var t in triangles)
+        foreach (var t in triangulationBuffer)
         {
             items.Add(new(t, (int)t.GetArea()));
         }
@@ -804,15 +831,14 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// <returns>A set of random points inside the polygon.</returns>
     public Points GetRandomPointsInside(int amount)
     {
-        var triangles = Triangulate();
-        var items = new WeightedItem<Triangle>[triangles.Count];
+        Triangulate(triangulationBuffer);
+        var items = new WeightedItem<Triangle>[triangulationBuffer.Count];
         for (var i = 0; i < items.Length; i++)
         {
-            var t = triangles[i];
+            var t = triangulationBuffer[i];
             items[i] = new(t, (int)t.GetArea());
         }
-
-
+        
         var pickedTriangles = Rng.Instance.PickRandomItems(amount, items);
         Points randomPoints = [];
         foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPointInside());
@@ -858,6 +884,13 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     
     #endregion
     
+    
+    
+}
+
+//TODO: Remove
+/*
+    private Polygon? compoundHelperPolygon = null;
     #region Cutout & Compound
     private bool GetPolygonShape(IShape shape, ref Polygon result)
     {
@@ -896,8 +929,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         compoundHelperPolygon ??= [];
         var valid = GetPolygonShape(shape, ref compoundHelperPolygon);
         if (!valid || compoundHelperPolygon.Count <= 2) return false;
-        return MergeShapeSelf(compoundHelperPolygon);
-    
+        return Union(compoundHelperPolygon, this);
     }
     
     /// <summary>
@@ -932,7 +964,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         compoundHelperPolygon ??= [];
         shape.ToPolygon(ref compoundHelperPolygon, pointCount);
         if(compoundHelperPolygon.Count <= 2) return false;
-        return MergeShapeSelf(compoundHelperPolygon);
+        return Union(compoundHelperPolygon, this);
     }
     
     /// <summary>
@@ -945,7 +977,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         compoundHelperPolygon ??= [];
         shape.ToPolygon(ref compoundHelperPolygon);
         if(compoundHelperPolygon.Count <= 2) return false;
-        return MergeShapeSelf(compoundHelperPolygon);
+        return Union(compoundHelperPolygon, this);
     }
     
     /// <summary>
@@ -958,7 +990,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         compoundHelperPolygon ??= [];
         shape.ToPolygon(ref compoundHelperPolygon);
         if(compoundHelperPolygon.Count <= 2) return false;
-        return MergeShapeSelf(compoundHelperPolygon);
+        return Union(compoundHelperPolygon, this);
     }
     
     /// <summary>
@@ -971,7 +1003,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         compoundHelperPolygon ??= [];
         shape.ToPolygon(ref compoundHelperPolygon);
         if(compoundHelperPolygon.Count <= 2) return false;
-        return MergeShapeSelf(compoundHelperPolygon);
+        return Union(compoundHelperPolygon, this);
     }
     
     /// <summary>
@@ -982,7 +1014,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     public bool AddCompoundShape(Polygon shape)
     {
         if (shape.Count <= 2) return false;
-        return MergeShapeSelf(shape);
+        return Union(shape, this);
     }
    
     
@@ -1113,5 +1145,4 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     }
     
     #endregion
-    
-}
+*/

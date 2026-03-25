@@ -1,631 +1,27 @@
 using System.Numerics;
 using Clipper2Lib;
-using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 
-//CHECK: [DONE] Why does ShapeClipper need to flip y and ClipperImmediate does not?! -> Flipping is not needed, output triangles vertices are just in cw order if y is not flipped
-//CHECK: [DONE] PolygonMath Triangulation & OutlineTriangulation vs ClipperImmediate Triangultion & OutlineTriangulation performance wise
-// - Result they are about the same performance (so I dont need the old ones)
-
-//TODO: 
-// - [] Implement functions for turning a Polygon/List<Vector2> into a polyline by percentage/perimeter values -> use cached buffer to write new polyline into and use that buffer for generating the outline triangulation
-// - [] Reimplement all functions from ShapeClipper here with optimizing memory allocation in mind
-// - [] Clipper2 -> positive winding order = ccw/ filled shape and negative winding order = cw/hole -> if y is not flipped for using in clipper2 than this orientation changes where positive = cw/hole and negative = ccw/filled!
-// - [] Reimplement all functions regarding Triangulation from PolygonMath here with optimizing memory allocation in mind
-// - [] Use Clipper64 / ClipperOffset static classes or new wrapped classes if possible
-// - [] Create seperate files for ShapeClipper enum wrappers
-// - [] Move all clipper related wrapper classes to a seperate namespace
-// - [] All functions should use Path64 / Paths64 instead of PathD / PathsD
-// - [] All fuctions that return any sort of collection should use a parameter called result instead of a return value!
-// - [] All major functions should have 1 variant that returns clipper based classes (Paths64 for instance) and 1 variant that returns shape engine based classes (Polygon for instance)
-// - [] Functions that use result Parameter like Polygon/Polyline etc should use internal buffers for calculating everything and then transforming the result to expexted output format once at the end
-// - [] At the end Rename this class to ShapeClipper and remove old ShapeClipper
-// - [] Major Functions:
-//  - [] TriangulateOutlinePerimeterPolygon
-//  - [] TriangulateOutlinePercentagePolygon
-//  - [DONE] Clip
-//  - [DONE] Intersect
-//  - [DONE] Difference
-//  - [DONE] Union
-//  - [DONE] Offset (instead of inflate)
-//  - [DONE] TriangulateOutlinePolygon
-//  - [DONE] TriangulatePolygon (polygons with and without holes) -> Paths64/Polygons is with holes and Path64/Polygon is without holes
-//  - [DONE] TriangulateOutlinePolyline
-// - [DONE] Implement an instance class that uses Clipper64 / ClipperOffset internally with automatic buffers etc. -> use those classes here as static engines
-// - [DONE] Add conversion functions for Path64 / Paths64
-// - [DONE] How to handle Triangulation vs TriMesh? -> I would opt for having both and just add explicit and implicit conversion functions (internally only TriMesh is used and there are optional overloads with Triangulation as result)
 
 
-public class ShapeClipperOffset
-{
-    private ClipperOffset offsetEngine;
-    public ClipperScale Scale;
-    private readonly Path64 bufferPath64 = new(256);
-    
-    public double MiterLimit
-    {
-        get => offsetEngine.MiterLimit;
-        set => offsetEngine.MiterLimit = value;
-    }
-
-    public double ArcTolerance
-    {
-        get => offsetEngine.ArcTolerance;
-        set => offsetEngine.ArcTolerance = value;
-    }
-
-    public bool PreseveCollinear
-    {
-        get => offsetEngine.PreserveCollinear;
-        set => offsetEngine.PreserveCollinear = value;
-    }
-
-    public bool ReverseSolution
-    {
-        get => offsetEngine.ReverseSolution;
-        set => offsetEngine.ReverseSolution = value;
-    }
-    
-    public ShapeClipperOffset(int decimalPlaces = 4, double miterLimit = 2.0, double arcTolerance = 0.0, bool preseveCollinear = false, bool reverseSolution = false)
-    {
-        offsetEngine = new(miterLimit, arcTolerance, preseveCollinear, reverseSolution);
-        Scale = new(decimalPlaces);
-    }
-    
-    #region Offsetting
-    public void OffsetPolygon(IReadOnlyList<Vector2> polygonCCW, float offset, float miterLimit, bool beveled, Paths64 result)
-    {
-        if (result == null) throw new ArgumentNullException(nameof(result));
-        result.Clear();
-
-        if (polygonCCW.Count < 3) return;
-
-        if (offset == 0f)
-        {
-            var path = new Path64();
-            ClipperImmediate2D.ToPath64(polygonCCW, path);
-            result.Add(path);
-            return;
-        }
-
-        OffsetPolygonToPaths64(polygonCCW, offset, miterLimit, beveled, result);
-    }
-
-    public void OffsetPolyline(IReadOnlyList<Vector2> polyline, float offsetPositive, float miterLimit, bool beveled, EndType endType, Paths64 result)
-    {
-        if (result == null) throw new ArgumentNullException(nameof(result));
-        result.Clear();
-
-        if (polyline.Count < 2 || offsetPositive <= 0f) return;
-
-        OffsetPolylineToPaths64(polyline, offsetPositive, miterLimit, beveled, endType, result);
-    }
-    #endregion
-
-    #region Private
-    
-    private void OffsetPolygonToPaths64(IReadOnlyList<Vector2> polygonCCW, float offsetWorld, float miterLimit, bool beveled, Paths64 outPaths)
-    {
-        outPaths.Clear();
-
-        bufferPath64.Clear();
-        ClipperImmediate2D.ToPath64(polygonCCW, bufferPath64);
-
-        JoinType jt = SelectJoinType(miterLimit, beveled);
-
-        offsetEngine.Clear();
-        if (miterLimit > 2f) offsetEngine.MiterLimit = miterLimit;
-
-        offsetEngine.AddPath(bufferPath64, jt, EndType.Polygon);
-
-        double delta = offsetWorld * Scale.Scale;
-        offsetEngine.Execute(delta, outPaths);
-    }
-
-    private void OffsetPolylineToPaths64(IReadOnlyList<Vector2> polyline, float offsetWorldPositive, float miterLimit, bool beveled, EndType endType, Paths64 outPaths)
-    {
-        outPaths.Clear();
-
-        bufferPath64.Clear();
-        ClipperImmediate2D.ToPath64(polyline, bufferPath64);
-
-        JoinType jt = SelectJoinType(miterLimit, beveled);
-
-        offsetEngine.Clear();
-        if (miterLimit > 2f) offsetEngine.MiterLimit = miterLimit;
-
-        offsetEngine.AddPath(bufferPath64, jt, endType);
-
-        double delta = offsetWorldPositive * Scale.Scale;
-        offsetEngine.Execute(delta, outPaths);
-    }
-
-    private JoinType SelectJoinType(float miterLimit, bool beveled)
-    {
-        if (miterLimit > 2f) return JoinType.Miter;
-        return beveled ? JoinType.Bevel : JoinType.Square;
-    }
-    
-    #endregion
-}
-
-public class ShapeClipper64
-{
-    private readonly Clipper64 clipEngine;
-    private readonly Paths64PooledBuffer paths64SubjectBuffer = new();
-    private readonly Paths64PooledBuffer paths64ClipBuffer = new();
-    private readonly Path64 path64SubjectBuffer = new();
-    private readonly Path64 path64ClipBuffer = new();
-    private readonly Paths64 paths64SolutionBuffer = new();
-    
-    public ShapeClipperFillRule FillRule = ShapeClipperFillRule.NonZero;
-
-    public bool PreserveCollinear
-    {
-        get => clipEngine.PreserveCollinear;
-        set => clipEngine.PreserveCollinear = value;
-    }
-
-    public bool ReverseSolution
-    {
-        get => clipEngine.ReverseSolution;
-        set => clipEngine.ReverseSolution = value;
-    }
-
-    public ShapeClipper64(bool preserveCollinear = true, bool reverseSolution = false)
-    {
-        clipEngine = new();
-        clipEngine.PreserveCollinear = preserveCollinear;
-        clipEngine.ReverseSolution = reverseSolution;
-    }
-    
-    public void Execute(Paths64 subject, Paths64 clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        clipEngine.AddSubject(subject);
-        clipEngine.AddClip(clip);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    public void Execute(Paths64 subject, Path64 clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        clipEngine.AddSubject(subject);
-        clipEngine.AddClip(clip);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    public void Execute(Path64 subject, Paths64 clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        clipEngine.AddSubject(subject);
-        clipEngine.AddClip(clip);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    public void Execute(Path64 subject, Path64 clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        clipEngine.AddSubject(subject);
-        clipEngine.AddClip(clip);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    
-    public void ExecuteManyClips(Paths64 subject, Paths64 clips, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        var clipperClipType = clipType.ToClipperClipType();
-        var clipperFillRule = FillRule.ToClipperFillRule();
-        bool started = false;
-        foreach (var c in clips)
-        {
-            clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
-            clipEngine.AddSubject(started ? solutionClosed : subject);
-            clipEngine.AddClip(c);
-            clipEngine.Execute(clipperClipType, clipperFillRule, solutionClosed);
-
-            if (!started) started = true;
-        }
-    }
-    
-    public void ExecuteManyClips(Path64 subject, Paths64 clips, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        var clipperClipType = clipType.ToClipperClipType();
-        var clipperFillRule = FillRule.ToClipperFillRule();
-        bool started = false;
-        foreach (var c in clips)
-        {
-            clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
-            if(started)clipEngine.AddSubject(solutionClosed);
-            else clipEngine.AddSubject(subject);
-            clipEngine.AddClip(c);
-            clipEngine.Execute(clipperClipType, clipperFillRule, solutionClosed);
-
-            if (!started) started = true;
-        }
-    }
-    
-    
-    public void Execute(IReadOnlyList<IReadOnlyList<Vector2>> subject, IReadOnlyList<IReadOnlyList<Vector2>> clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        paths64SubjectBuffer.PrepareBuffer(subject.Count);
-        paths64ClipBuffer.PrepareBuffer(clip.Count);
-        subject.ToPaths64(paths64SubjectBuffer.Buffer);
-        clip.ToPaths64(paths64ClipBuffer.Buffer);
-        clipEngine.AddSubject(paths64SubjectBuffer.Buffer);
-        clipEngine.AddClip(paths64ClipBuffer.Buffer);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    public void Execute(IReadOnlyList<IReadOnlyList<Vector2>> subject, IReadOnlyList<Vector2> clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        paths64SubjectBuffer.PrepareBuffer(subject.Count);
-        subject.ToPaths64(paths64SubjectBuffer.Buffer);
-        clipEngine.AddSubject(paths64SubjectBuffer.Buffer);
-        clip.ToPath64(path64ClipBuffer);
-        clipEngine.AddClip(path64ClipBuffer);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    public void Execute(IReadOnlyList<Vector2> subject, IReadOnlyList<IReadOnlyList<Vector2>> clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        subject.ToPath64(path64SubjectBuffer);
-        clipEngine.AddSubject(path64SubjectBuffer);
-        
-        paths64ClipBuffer.PrepareBuffer(clip.Count);
-        clip.ToPaths64(paths64ClipBuffer.Buffer);
-        clipEngine.AddClip(paths64ClipBuffer.Buffer);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    public void Execute(IReadOnlyList<Vector2> subject, IReadOnlyList<Vector2> clip, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        clipEngine.Clear();
-        subject.ToPath64(path64SubjectBuffer);
-        clipEngine.AddSubject(path64SubjectBuffer);
-        clip.ToPath64(path64ClipBuffer);
-        clipEngine.AddClip(path64ClipBuffer);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed);
-    }
-    
-    
-    public void ExecuteManyClips(IReadOnlyList<IReadOnlyList<Vector2>> subject, IReadOnlyList<IReadOnlyList<Vector2>> clips, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        var clipperClipType = clipType.ToClipperClipType();
-        var clipperFillRule = FillRule.ToClipperFillRule();
-        bool started = false;
-        
-        paths64SubjectBuffer.PrepareBuffer(subject.Count);
-        subject.ToPaths64(paths64SubjectBuffer.Buffer);
-        
-        paths64ClipBuffer.PrepareBuffer(clips.Count);
-        clips.ToPaths64(paths64ClipBuffer.Buffer);
-        
-        foreach (var c in paths64ClipBuffer.Buffer)
-        {
-            clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
-            clipEngine.AddSubject(started ? solutionClosed : paths64SubjectBuffer.Buffer);
-            clipEngine.AddClip(c);
-            clipEngine.Execute(clipperClipType, clipperFillRule, solutionClosed);
-
-            if (!started) started = true;
-        }
-    }
-    
-    public void ExecuteManyClips(IReadOnlyList<Vector2> subject, IReadOnlyList<IReadOnlyList<Vector2>> clips, ShapeClipperClipType clipType, Paths64 solutionClosed)
-    {
-        var clipperClipType = clipType.ToClipperClipType();
-        var clipperFillRule = FillRule.ToClipperFillRule();
-        bool started = false;
-        
-        subject.ToPath64(path64ClipBuffer);
-        
-        paths64ClipBuffer.PrepareBuffer(clips.Count);
-        clips.ToPaths64(paths64ClipBuffer.Buffer);
-        
-        foreach (var c in paths64ClipBuffer.Buffer)
-        {
-            clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
-            if(started)clipEngine.AddSubject(solutionClosed);
-            else clipEngine.AddSubject(path64ClipBuffer);
-            clipEngine.AddClip(c);
-            clipEngine.Execute(clipperClipType, clipperFillRule, solutionClosed);
-
-            if (!started) started = true;
-        }
-    }
-    
-    
-    public void Execute(IReadOnlyList<IReadOnlyList<Vector2>> subject, IReadOnlyList<IReadOnlyList<Vector2>> clip, ShapeClipperClipType clipType, List<List<Vector2>> solutionClosed)
-    {
-        clipEngine.Clear();
-        paths64SubjectBuffer.PrepareBuffer(subject.Count);
-        paths64ClipBuffer.PrepareBuffer(clip.Count);
-        subject.ToPaths64(paths64SubjectBuffer.Buffer);
-        clip.ToPaths64(paths64ClipBuffer.Buffer);
-        clipEngine.AddSubject(paths64SubjectBuffer.Buffer);
-        clipEngine.AddClip(paths64ClipBuffer.Buffer);
-        
-        paths64SolutionBuffer.Clear();
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), paths64SolutionBuffer);
-        paths64SolutionBuffer.ToVector2Lists(solutionClosed);
-    }
-    
-    public void Execute(IReadOnlyList<IReadOnlyList<Vector2>> subject, IReadOnlyList<Vector2> clip, ShapeClipperClipType clipType, List<List<Vector2>> solutionClosed)
-    {
-        clipEngine.Clear();
-        paths64SubjectBuffer.PrepareBuffer(subject.Count);
-        subject.ToPaths64(paths64SubjectBuffer.Buffer);
-        clipEngine.AddSubject(paths64SubjectBuffer.Buffer);
-        clip.ToPath64(path64ClipBuffer);
-        clipEngine.AddClip(path64ClipBuffer);
-        
-        paths64SolutionBuffer.Clear();
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), paths64SolutionBuffer);
-        paths64SolutionBuffer.ToVector2Lists(solutionClosed);
-    }
-    
-    public void Execute(IReadOnlyList<Vector2> subject, IReadOnlyList<IReadOnlyList<Vector2>> clip, ShapeClipperClipType clipType, List<List<Vector2>> solutionClosed)
-    {
-        clipEngine.Clear();
-        subject.ToPath64(path64SubjectBuffer);
-        clipEngine.AddSubject(path64SubjectBuffer);
-        
-        paths64ClipBuffer.PrepareBuffer(clip.Count);
-        clip.ToPaths64(paths64ClipBuffer.Buffer);
-        clipEngine.AddClip(paths64ClipBuffer.Buffer);
-        
-        paths64SolutionBuffer.Clear();
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), paths64SolutionBuffer);
-        paths64SolutionBuffer.ToVector2Lists(solutionClosed);
-    }
-    
-    public void Execute(IReadOnlyList<Vector2> subject, IReadOnlyList<Vector2> clip, ShapeClipperClipType clipType, List<List<Vector2>> solutionClosed)
-    {
-        clipEngine.Clear();
-        subject.ToPath64(path64SubjectBuffer);
-        clipEngine.AddSubject(path64SubjectBuffer);
-        clip.ToPath64(path64ClipBuffer);
-        clipEngine.AddClip(path64ClipBuffer);
-        
-        paths64SolutionBuffer.Clear();
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), paths64SolutionBuffer);
-        paths64SolutionBuffer.ToVector2Lists(solutionClosed);
-    }
-    
-    
-    public void ExecuteManyClips(IReadOnlyList<IReadOnlyList<Vector2>> subject, IReadOnlyList<IReadOnlyList<Vector2>> clips, ShapeClipperClipType clipType, List<List<Vector2>> solutionClosed)
-    {
-        var clipperClipType = clipType.ToClipperClipType();
-        var clipperFillRule = FillRule.ToClipperFillRule();
-        bool started = false;
-        
-        paths64SubjectBuffer.PrepareBuffer(subject.Count);
-        subject.ToPaths64(paths64SubjectBuffer.Buffer);
-        
-        paths64ClipBuffer.PrepareBuffer(clips.Count);
-        clips.ToPaths64(paths64ClipBuffer.Buffer);
-        
-        paths64SolutionBuffer.Clear();
-        
-        foreach (var c in paths64ClipBuffer.Buffer)
-        {
-            clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
-            clipEngine.AddSubject(started ? paths64SolutionBuffer : paths64SubjectBuffer.Buffer);
-            clipEngine.AddClip(c);
-            clipEngine.Execute(clipperClipType, clipperFillRule, paths64SolutionBuffer);
-
-            if (!started) started = true;
-        }
-        paths64SolutionBuffer.ToVector2Lists(solutionClosed);
-    }
-    
-    public void ExecuteManyClips(IReadOnlyList<Vector2> subject, IReadOnlyList<IReadOnlyList<Vector2>> clips, ShapeClipperClipType clipType, List<List<Vector2>> solutionClosed)
-    {
-        var clipperClipType = clipType.ToClipperClipType();
-        var clipperFillRule = FillRule.ToClipperFillRule();
-        bool started = false;
-        
-        subject.ToPath64(path64ClipBuffer);
-        
-        paths64ClipBuffer.PrepareBuffer(clips.Count);
-        clips.ToPaths64(paths64ClipBuffer.Buffer);
-        
-        paths64SolutionBuffer.Clear();
-        
-        foreach (var c in paths64ClipBuffer.Buffer)
-        {
-            clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
-            if(started)clipEngine.AddSubject(paths64SolutionBuffer);
-            else clipEngine.AddSubject(path64ClipBuffer);
-            clipEngine.AddClip(c);
-            clipEngine.Execute(clipperClipType, clipperFillRule, paths64SolutionBuffer);
-
-            if (!started) started = true;
-        }
-        paths64SolutionBuffer.ToVector2Lists(solutionClosed);
-    }
-    
-    
-    public void Execute(Paths64 subject, Paths64 clip, ShapeClipperClipType clipType, Paths64 solutionClosed, Paths64 solutionOpen)
-    {
-        clipEngine.Clear();
-        clipEngine.AddSubject(subject);
-        clipEngine.AddClip(clip);
-        clipEngine.Execute(clipType.ToClipperClipType(), FillRule.ToClipperFillRule(), solutionClosed, solutionOpen);
-    }
-    
-}
-
-public readonly struct ClipperScale
-{
-    public readonly int DecimalPlaces;
-    public readonly double Scale;
-    public readonly double InvScale;
-    
-    public ClipperScale(int decimalPlaces = 4)
-    {
-        DecimalPlaces = Math.Clamp(decimalPlaces, 0, 8);;
-        Scale = Pow10(DecimalPlaces);
-        InvScale = 1.0 / Scale;
-    }
-    
-    private double Pow10(int dp)
-    {
-        if (dp <= 0) return 1.0;
-        double s = 1.0;
-        for (int i = 0; i < dp; i++) s *= 10.0;
-        return s;
-    }
-}
-
-public sealed class TriMesh
-{
-    /// <summary>
-    /// Flat list of triangles: every 3 consecutive vertices form one CCW triangle.
-    /// </summary>
-    public readonly List<Vector2> Triangles = new(512);
-
-    public void Clear() => Triangles.Clear();
-
-    public void Draw(ColorRgba color)
-    {
-        var t = Triangles;
-        var rayColor = color.ToRayColor();
-        for (int i = 0; i + 2 < t.Count; i += 3)
-        {
-            Vector2 a = t[i];
-            Vector2 b = t[i + 1];
-            Vector2 c = t[i + 2];
-
-            Raylib.DrawTriangle(a, b, c, rayColor);
-        }
-    }
-    
-    public bool TriangulatePaths64ToMesh(Paths64 subject, bool useDelaunay)
-    {
-        Clear();
-
-        TriangulateResult res = Clipper.Triangulate(subject, out Paths64 tris, useDelaunay);
-        if (res != TriangulateResult.success || tris.Count == 0)
-        {
-            return false;
-        }
-
-        FillMesh(tris);
-        return true;
-    }
-
-    private void FillMesh(Paths64 tris)
-    {
-        // Each Path64 in tris is a triangle with 3 points (CCW).
-        int triCount = tris.Count;
-        Triangles.Capacity = Math.Max(Triangles.Capacity, triCount * 3);
-        
-        for (int i = 0; i < triCount; i++)
-        {
-            var tri = tris[i];
-            if (tri.Count < 3) continue;
-        
-            // Convert int coords back to world coords
-            // because y is never flipped - return triangles are in cw order and flipping 0 with 1 turns them into ccw order!
-            Vector2 a = ClipperImmediate2D.ToVec2(tri[1]);
-            Vector2 b = ClipperImmediate2D.ToVec2(tri[0]);
-            Vector2 c = ClipperImmediate2D.ToVec2(tri[2]);
-        
-            // enforce CCW (defensive)
-            if (Cross(b - a, c - a) > 0f)
-            {
-                var tmp = b; b = c; c = tmp;
-            }
-        
-            Triangles.Add(a);
-            Triangles.Add(b);
-            Triangles.Add(c);
-        }
-    }
-    
-    private float Cross(in Vector2 a, in Vector2 b) => a.X * b.Y - a.Y * b.X;
-
-    public void ToTriangulation(Triangulation dst)
-    {
-        dst.Clear();
-        for (int i = 0; i + 2 < Triangles.Count; i += 3)
-        {
-            Vector2 a = Triangles[i];
-            Vector2 b = Triangles[i + 1];
-            Vector2 c = Triangles[i + 2];
-            ShapeEngine.Geometry.TriangleDef.Triangle t = new(a, b, c);
-            dst.Add(t);
-        }
-    }
-}
-
-public sealed class Paths64PooledBuffer
-{
-    private Stack<Path64> path64Pool;
-
-    public Paths64 Buffer = new();
-        
-    public Paths64PooledBuffer(int poolCapacity = 64)
-    {
-        path64Pool = new Stack<Path64>(poolCapacity);
-    }
-
-    public void PrepareBuffer(int targetCount)
-    {
-        if (Buffer.Count > targetCount)
-        {
-            for (int i = Buffer.Count - 1; i >= targetCount; i--)
-            {
-                var path = Buffer[i];
-                Buffer.RemoveAt(i);
-                ReturnPath64(path);
-            }
-        }
-        else if (Buffer.Count < targetCount)
-        {
-            var diff = targetCount - Buffer.Count;
-            for (int i = 0; i < diff; i++)
-            {
-                Buffer.Add(RentPath64());
-            }
-        }
-    }
-    public void ClearBuffer()
-    {
-        foreach (var path in Buffer)
-        {
-            ReturnPath64(path);
-        }
-        Buffer.Clear();
-    }
-        
-    private Path64 RentPath64()
-    {
-        if (path64Pool.Count > 0) return path64Pool.Pop();
-        return new Path64();
-    }
-    private void ReturnPath64(Path64 path64)
-    {
-        path64Pool.Push(path64);
-    }
-}
+//TODO:
+// - Go through Polygon/Polyline/Points and clean up (no duplicates, clear naming, result parameter instead of return value, no extra static functions that could be instance functions, etc.)
+// - ClipperImmediate2D needs Draw functions for filled polygons and all types of outlines and all types of polyline drawing (so internal buffers can be used)
+// - Keep Cache System? Does it make sense? Can it be simplified? How is cache kept clean, what happens to cached triangulations of polygons that have changed?
+// - PolygonDrawing / PolylineDrawing overhaul with ClipperImmediate2d
+// - Quad/Rect Chamfered Corners using ClipperImmeadiate2D
+// - Conversion for Polyline?
 
 
+//TODO: Remove all functions that use Polygons, Polygon, Polyline, or Polylines parameter and replace it with IReadOnlyList or IReadOnlyList<IReadOnlyList>
+namespace ShapeEngine.ShapeClipper;
+
+//TODO: Rename
 public static class ClipperImmediate2D
 {
     #region Public Settings
@@ -647,7 +43,7 @@ public static class ClipperImmediate2D
     #endregion
     
     #region Private Settings
-    private static ClipperScale scale = new(4);
+    private static ShapeClipperScale scale = new(4);
     #endregion
     
     #region Reused Clipper Engines
@@ -698,7 +94,7 @@ public static class ClipperImmediate2D
         }
     }
 
-    public static void DrawPolyline(IReadOnlyList<Vector2> polyline, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, EndType endType = EndType.Butt, bool useDelaunay = false, bool cached = false)
+    public static void DrawPolyline(IReadOnlyList<Vector2> polyline, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false, bool cached = false)
     {
         if (polyline.Count < 2 || thickness <= 0f) return;
 
@@ -727,7 +123,7 @@ public static class ClipperImmediate2D
     }
     #endregion
     
-    #region Triangulation
+    #region Create Outline Triangulation
     public static void CreatePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
@@ -746,8 +142,15 @@ public static class ClipperImmediate2D
     
         result.TriangulatePaths64ToMesh(_tmpRing, useDelaunay);
     }
+    
+    public static void CreatePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay, Triangulation result)
+    {
+        _triMeshBuffer.Clear();
+        CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, _triMeshBuffer);
+        _triMeshBuffer.ToTriangulation(result);
+    }
 
-    public static void CreatePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, EndType endType, bool useDelaunay, TriMesh result)
+    public static void CreatePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
@@ -760,6 +163,17 @@ public static class ClipperImmediate2D
         result.TriangulatePaths64ToMesh(_tmpStroke, useDelaunay);
     }
     
+    public static void CreatePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay, Triangulation result)
+    {
+        _triMeshBuffer.Clear();
+        CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
+        _triMeshBuffer.ToTriangulation(result);
+    }
+
+    #endregion
+    
+    #region Triangulation
+    
     public static void CreatePolygonTriangulation(Paths64 polygonWithHoles, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
@@ -770,7 +184,14 @@ public static class ClipperImmediate2D
         result.TriangulatePaths64ToMesh(polygonWithHoles, useDelaunay);
     }
     
-    public static void CreatePolygonTriangulation(Polygons polygonWithHoles, bool useDelaunay, TriMesh result)
+    public static void CreatePolygonTriangulation(Paths64 polygonWithHoles, bool useDelaunay, Triangulation result)
+    {
+        _triMeshBuffer.Clear();
+        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, _triMeshBuffer);
+        _triMeshBuffer.ToTriangulation(result);
+    }
+    
+    public static void CreatePolygonTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
@@ -782,33 +203,31 @@ public static class ClipperImmediate2D
         result.TriangulatePaths64ToMesh(paths64ConversionBuffer.Buffer, useDelaunay);
     }
     
-    public static void CreatePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay, Triangulation result)
+    public static void CreatePolygonTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, bool useDelaunay, Triangulation result)
     {
         _triMeshBuffer.Clear();
-        CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, _triMeshBuffer);
+        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, _triMeshBuffer);
         _triMeshBuffer.ToTriangulation(result);
     }
+    
+    public static void CreatePolygonTriangulation(IReadOnlyList<Vector2> polygon, bool useDelaunay, TriMesh result)
+    {
+        if (result == null) throw new ArgumentNullException(nameof(result));
+        result.Clear();
 
-    public static void CreatePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, EndType endType, bool useDelaunay, Triangulation result)
+        paths64ConversionBuffer.PrepareBuffer(1);
+        polygon.ToPaths64(paths64ConversionBuffer.Buffer);
+        
+        result.TriangulatePaths64ToMesh(paths64ConversionBuffer.Buffer, useDelaunay);
+    }
+    
+    public static void CreatePolygonTriangulation(IReadOnlyList<Vector2> polygon, bool useDelaunay, Triangulation result)
     {
         _triMeshBuffer.Clear();
-        CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
+        CreatePolygonTriangulation(polygon, useDelaunay, _triMeshBuffer);
         _triMeshBuffer.ToTriangulation(result);
     }
     
-    public static void CreatePolygonTriangulation(Paths64 polygonWithHoles, bool useDelaunay, Triangulation result)
-    {
-        _triMeshBuffer.Clear();
-        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
-    }
-    
-    public static void CreatePolygonTriangulation(Polygons polygonWithHoles, bool useDelaunay, Triangulation result)
-    {
-        _triMeshBuffer.Clear();
-        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
-    }
     #endregion
     
     #region Cached Triangulation
@@ -831,7 +250,7 @@ public static class ClipperImmediate2D
         return id;
     }
 
-    public static int CachePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, EndType endType, bool useDelaunay)
+    public static int CachePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
         if (polyline.Count < 2 || thickness <= 0f) return 0;
 
@@ -867,7 +286,7 @@ public static class ClipperImmediate2D
         return id;
     }
 
-    public static int CachePolygonTriangulation(Polygons polygonWithHoles, bool useDelaunay)
+    public static int CachePolygonTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, bool useDelaunay)
     {
         if (polygonWithHoles.Count == 0) return 0;
         paths64ConversionBuffer.PrepareBuffer(polygonWithHoles.Count);
@@ -904,6 +323,21 @@ public static class ClipperImmediate2D
     }
     #endregion
 
+    #region Inflate
+
+    public static void InflatePolyline(this IReadOnlyList<Vector2> polyline, Polygons result,  float delta, float miterLimit, bool beveled, ShapeClipperEndType endType = ShapeClipperEndType.Butt)
+    {
+        if (delta < 0f) delta *= -1f;
+        OffsetEngine.OffsetPolyline(polyline, delta, miterLimit, beveled, endType, paths64Buffer);
+        paths64Buffer.ToPolygons(result, true);
+    }
+    public static void InflatePolygon(this IReadOnlyList<Vector2> polygon, Polygons result, float delta, float miterLimit, bool beveled)
+    {
+        OffsetEngine.OffsetPolygon(polygon, delta, miterLimit, beveled, paths64Buffer);
+        paths64Buffer.ToPolygons(result, true);
+    }
+    #endregion
+    
     #region Rect Clipping
     public static Paths64 ClipRect(this Rect rect, Paths64 poly)
     {
@@ -1190,6 +624,197 @@ public static class ClipperImmediate2D
     }
 
     #endregion
+
+    #region Winding Order & Area
+    public static double GetArea(Path64 path)
+    {
+        return Clipper.Area(path);
+    }
+
+    public static bool IsPositive(Path64 path)
+    {
+        return Clipper.IsPositive(path);
+    }
+
+    public static bool IsClockwise(Path64 path)
+    {
+        return !Clipper.IsPositive(path);
+    }
+
+    public static bool IsCounterClockwise(Path64 path)
+    {
+        return Clipper.IsPositive(path);
+    }
+    
+    public static double GetArea(this IReadOnlyList<Vector2> polygon)
+    {
+        polygon.ToPath64(path64Buffer);
+        return Clipper.Area(path64Buffer);
+    }
+
+    public static bool IsPositive(this IReadOnlyList<Vector2> polygon)
+    {
+        polygon.ToPath64(path64Buffer);
+        return Clipper.IsPositive(path64Buffer);
+    }
+
+    public static bool IsClockwise(this IReadOnlyList<Vector2> polygon)
+    {
+        polygon.ToPath64(path64Buffer);
+        return !Clipper.IsPositive(path64Buffer);
+    }
+
+    public static bool IsCounterClockwise(this IReadOnlyList<Vector2> polygon)
+    {
+        polygon.ToPath64(path64Buffer);
+        return Clipper.IsPositive(path64Buffer);
+    }
+    #endregion
+    
+    #region Holes
+
+    public static bool IsHole(this Path64 path)
+    {
+        return !Clipper.IsPositive(path);
+    }
+
+    public static bool IsHole(this IReadOnlyList<Vector2> polygon)
+    {
+        polygon.ToPath64(path64Buffer);
+        return path64Buffer.IsHole();
+    }
+
+    public static int RemoveAllHoles(this Paths64 paths)
+    {
+        return paths.RemoveAll((p) => p.IsHole()); 
+    }
+
+    public static int RemoveAllHoles(this List<List<Vector2>> polygonWithHoles)
+    {
+        int count = 0;
+        for (int i = polygonWithHoles.Count - 1; i >= 0; i--)
+        {
+            var p = polygonWithHoles[i];
+            if (p.IsHole())
+            {
+                polygonWithHoles.RemoveAt(i);
+                count++;
+            }
+        }
+        return count;
+    }
+    public static int RemoveAllHoles(this Polygons polygonWithHoles)
+    {
+        int count = 0;
+        for (int i = polygonWithHoles.Count - 1; i >= 0; i--)
+        {
+            var p = polygonWithHoles[i];
+            if (p.IsHole())
+            {
+                polygonWithHoles.RemoveAt(i);
+                count++;
+            }
+        }
+        return count;
+    }
+    public static int RemoveAllHoles(this Paths64 paths, Paths64 result)
+    {
+        int count = 0;
+        result.Clear();
+        for (int i = paths.Count - 1; i >= 0; i--)
+        {
+            var p = paths[i];
+            if (p.IsHole())
+            {
+                count++;
+            }
+            else
+            {
+                result.Add(p);
+            }
+        }
+        return count;
+    }
+
+    public static int RemoveAllHoles(this IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, List<IReadOnlyList<Vector2>> result)
+    {
+        int count = 0;
+        result.Clear();
+        for (int i = polygonWithHoles.Count - 1; i >= 0; i--)
+        {
+            var p = polygonWithHoles[i];
+            if (p.IsHole())
+            {
+                count++;
+            }
+            else
+            {
+                result.Add(p);
+            }
+        }
+        return count;
+    }
+    
+    public static int GetAllHoles(this Paths64 paths)
+    {
+        return paths.RemoveAll((p) => !p.IsHole());
+    }
+
+    public static int GetAllHoles(this List<List<Vector2>> polygonWithHoles)
+    {
+        int count = 0;
+        for (int i = polygonWithHoles.Count - 1; i >= 0; i--)
+        {
+            var p = polygonWithHoles[i];
+            if (!p.IsHole())
+            {
+                polygonWithHoles.RemoveAt(i);
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    public static int GetAllHoles(this Paths64 paths, Paths64 result)
+    {
+        int count = 0;
+        result.Clear();
+        for (int i = paths.Count - 1; i >= 0; i--)
+        {
+            var p = paths[i];
+            if (!p.IsHole())
+            {
+                count++;
+            }
+            else
+            {
+                result.Add(p);
+            }
+        }
+        return count;
+    }
+
+    public static int GetAllHoles(this IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, List<IReadOnlyList<Vector2>> result)
+    {
+        int count = 0;
+        result.Clear();
+        for (int i = polygonWithHoles.Count - 1; i >= 0; i--)
+        {
+            var p = polygonWithHoles[i];
+            if (!p.IsHole())
+            {
+                count++;
+            }
+            else
+            {
+                result.Add(p);
+            }
+        }
+        return count;
+    }
+
+
+    #endregion
     
     #region Conversion
     //Single to Single
@@ -1213,7 +838,6 @@ public static class ClipperImmediate2D
             dst.Add(src[i].ToVec2());
         }
     }
-    
     //Multi to Multi
     public static void ToPaths64(this IReadOnlyList<IReadOnlyList<Vector2>> src, Paths64 dst) 
     {
@@ -1275,7 +899,63 @@ public static class ClipperImmediate2D
             }
         }
     }
-    
+    public static void ToPolygons(this Paths64 src, Polygons dst)
+    {
+        for (int i = 0; i < src.Count; i++)
+        {
+            if(dst.Count <= i)
+            {
+                var dstItem = new Polygon();
+                dst.Add(dstItem);
+                
+                var srcItem = src[i];
+                if(srcItem.Count <= 0) continue;
+                
+                srcItem.ToVector2List(dstItem);
+            }
+            else
+            {
+                var srcItem = src[i];
+                if(srcItem.Count <= 0) continue;
+                var dstItem = dst[i];
+                srcItem.ToVector2List(dstItem);
+            }
+        }
+        if (dst.Count > src.Count)
+        {
+            for (int i = dst.Count - 1; i >= src.Count; i--)
+            {
+                dst.RemoveAt(i);
+            }
+        }
+    }
+    public static void ToPolygons(this Paths64 src, Polygons dst, bool removeHoles)
+    {
+        for (int i = 0; i < src.Count; i++)
+        {
+            var srcItem = src[i];
+            if(srcItem.Count <= 0) continue;
+            if(removeHoles && srcItem.IsHole()) continue;
+            if(dst.Count <= i)
+            {
+                var dstItem = new Polygon();
+                dst.Add(dstItem);
+                srcItem.ToVector2List(dstItem);
+            }
+            else
+            {
+                var dstItem = dst[i];
+                srcItem.ToVector2List(dstItem);
+            }
+        }
+        if (dst.Count > src.Count)
+        {
+            for (int i = dst.Count - 1; i >= src.Count; i--)
+            {
+                dst.RemoveAt(i);
+            }
+        }
+    }
     //Single to Multi
     public static void ToPaths64(this IReadOnlyList<Vector2> src, Paths64 dst)
     {
@@ -1315,21 +995,52 @@ public static class ClipperImmediate2D
             }
         }
     }
-
+    public static void ToPolygons(this Path64 src, Polygons dst)
+    {
+        if (dst.Count <= 0)
+        {
+            var dstItem = new Polygon();
+            src.ToVector2List(dstItem);
+            dst.Add(dstItem);
+        }
+        else
+        {
+            var dstItem = dst[0];
+            src.ToVector2List(dstItem);
+            if (dst.Count > 1)
+            {
+                dst.Clear();
+                dst.Add(dstItem);
+            }
+        }
+    }
     public static Rect64 ToRect64(this Rect r)
     {
+        // long left   = (long)Math.Round(r.X * Scale);
+        // long top    = (long)Math.Round(r.Y * Scale);
+        // long right  = (long)Math.Round((r.X + r.Width) * Scale);
+        // long bottom = (long)Math.Round((r.Y + r.Height) * Scale);
+        // return new Rect64(left, top, right, bottom);
+        
         long left   = (long)Math.Round(r.X * Scale);
-        long top    = (long)Math.Round(r.Y * Scale);
+        long bottom    = (long)Math.Round(-r.Y * Scale);
         long right  = (long)Math.Round((r.X + r.Width) * Scale);
-        long bottom = (long)Math.Round((r.Y + r.Height) * Scale);
+        long top = (long)Math.Round((-r.Y - r.Height) * Scale);
         return new Rect64(left, top, right, bottom);
     }
     public static Rect ToRect(this Rect64 r)
     {
+        // float x = (float)(r.left * InvScale);
+        // float y = (float)(r.top * InvScale);
+        // float w = (float)((r.right - r.left) * InvScale);
+        // float h = (float)((r.bottom - r.top) * InvScale);
+        //
+        // return new Rect(x, y, w, h);
+        
         float x = (float)(r.left * InvScale);
-        float y = (float)(r.top * InvScale);
-        float w = (float)((r.right - r.left) * InvScale);
-        float h = (float)((r.bottom - r.top) * InvScale);
+        float y = (float)((-r.top - r.Height) * InvScale);
+        float w = (float)(r.Width * InvScale);
+        float h = (float)(r.Height * InvScale);
 
         return new Rect(x, y, w, h);
     }
@@ -1337,13 +1048,13 @@ public static class ClipperImmediate2D
     public static Point64 ToPoint64(this Vector2 v)
     {
         long x = (long)Math.Round(v.X * Scale);
-        long y = (long)Math.Round(v.Y * Scale);
+        long y = (long)Math.Round(-v.Y * Scale);
         return new Point64(x,y);
     }
     
     public static Vector2 ToVec2(this Point64 p)
     {
-        return new Vector2((float)(p.X * InvScale), (float)(p.Y * InvScale));
+        return new Vector2((float)(p.X * InvScale), (float)(-p.Y * InvScale));
     }
     #endregion
     
@@ -1452,7 +1163,7 @@ public static class ClipperImmediate2D
             return new TriKey(h, dp, kind: 1, useDelaunay);
         }
 
-        public static TriKey FromPolyline(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, EndType endType, bool useDelaunay, int dp)
+        public static TriKey FromPolyline(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay, int dp)
         {
             ulong h = HashPoints(polyline, dp);
             h = HashFloat(h, thickness, dp);

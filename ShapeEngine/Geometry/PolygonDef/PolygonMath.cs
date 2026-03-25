@@ -1,13 +1,11 @@
 using System.Numerics;
-using Clipper2Lib;
-using ShapeEngine.Core.GameDef;
+using ShapeEngine.ShapeClipper;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
+using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RayDef;
-using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
-using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolygonDef;
@@ -262,6 +260,12 @@ public partial class Polygon
         }
 
         return area / 2f;
+    }
+    
+    //TODO: Docs
+    public float GetAreaAbs()
+    {
+        return MathF.Abs(GetArea());
     }
 
     /// <summary>
@@ -1062,8 +1066,201 @@ public partial class Polygon
     #endregion
     
     #region Triangulation
+    public void Triangulate(Triangulation result, bool useDelaunay = false)
+    {
+        ClipperImmediate2D.CreatePolygonTriangulation(this, useDelaunay, result);
+    }
+    public void Triangulate(TriMesh result, bool useDelaunay = false)
+    {
+        ClipperImmediate2D.CreatePolygonTriangulation(this, useDelaunay, result);
+    }
+
+    #endregion
     
+    #region Outline Triangulation
+
+    public void TriangulateOutline(Triangulation result, float thickness, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        ClipperImmediate2D.CreatePolygonOutlineTriangulation(this, thickness, miterLimit, beveled, useDelaunay, result);
+    }
+    
+    public void TriangulateOutline(TriMesh result, float thickness, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        ClipperImmediate2D.CreatePolygonOutlineTriangulation(this, thickness, miterLimit, beveled, useDelaunay, result);
+    }
+    #endregion
+    
+    #region Outline Perimeter Triangulation
+    public void PolygonToPolylinePerimeter(float perimeterToDraw, int startIndex, Polyline result)
+    {
+        if (perimeterToDraw <= 0f) return;
+        
+        if (Count <= 1) return;
+        
+        result.Clear();
+        
+        bool ccw = perimeterToDraw > 0;
+        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
+        float accumulatedPerimeter = 0f;
+        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
+
+        //create polyline based on perimeter & start index
+        while (absPerimeterToDraw > accumulatedPerimeter)
+        {
+            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
+            var cur = this[currentIndex];
+            var next = this[nextIndex];
+            currentIndex = nextIndex;
+            result.Add(cur);
+            float segmentLength = (next - cur).Length();
+
+            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
+            {
+                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
+                var end = cur.Lerp(next, f);
+                result.Add(end);
+                break;
+            }
+
+            accumulatedPerimeter += segmentLength;
+        }
+    }
+    
+    public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, int startIndex, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        PolygonToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+    
+    public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, int startIndex, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        PolygonToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+    #endregion
+
+    #region Outline Percentage Triangulation
+    public void PolygonToPolylinePercentage(float f, int startIndex, Polyline result)
+    {
+        if (f <= 0) return;
+        
+        if (Count <= 1) return;
+
+        if (f >= 1f)
+        {
+            result.Clear();
+            foreach (var p in this)
+            {
+                result.Add(p);   
+            }
+            return;
+        }
+        
+        float totalPerimeter = 0f;
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var start = this[i];
+            var end = this[(i + 1) % Count];
+            float l = (end - start).Length();
+            totalPerimeter += l;
+        }
+        PolygonToPolylinePerimeter(totalPerimeter * f, startIndex, result);
+    }
+   
+    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, int startIndex, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        PolygonToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+   
+    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, int startIndex, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        PolygonToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+    #endregion
+    
+}
+
+
+//TODO: Remove
+
     //TODO: REMOVE
+/*
+    /// <summary>
+    /// Triangulates a set of points using Delaunay triangulation. Only works with non-self-intersecting shapes.
+    /// </summary>
+    /// <param name="points">The points to triangulate. Can be any set of points, including polygons.</param>
+    /// <returns>A triangulation of the input points.</returns>
+    public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
+    {
+        var enumerable = points.ToList();
+        var supraTriangle = GetBoundingTriangle(enumerable, 2f);
+        return TriangulateDelaunay(enumerable, supraTriangle);
+    }
+
+    /// <summary>
+    /// Triangulates a set of points using Delaunay triangulation, with a custom bounding triangle. Only works with non-self-intersecting shapes.
+    /// </summary>
+    /// <param name="points">The points to triangulate. Can be any set of points, including polygons.</param>
+    /// <param name="supraTriangle">A triangle that encapsulates all the points.</param>
+    /// <returns>A triangulation of the input points.</returns>
+    public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points, Triangle supraTriangle)
+    {
+        Triangulation triangles = new() { supraTriangle };
+
+        foreach (var p in points)
+        {
+            Triangulation badTriangles = new();
+
+            //Identify 'bad triangles'
+            for (int triIndex = triangles.Count - 1; triIndex >= 0; triIndex--)
+            {
+                Triangle triangle = triangles[triIndex];
+
+                //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
+                var circumCircle = triangle.GetCircumCircle();
+                float distSq = Vector2.DistanceSquared(p, circumCircle.Center);
+                if (distSq < circumCircle.Radius * circumCircle.Radius)
+                {
+                    badTriangles.Add(triangle);
+                    triangles.RemoveAt(triIndex);
+                }
+            }
+
+            Segments allEdges = new();
+            foreach (var badTriangle in badTriangles)
+            {
+                allEdges.AddRange(badTriangle.GetEdges());
+            }
+
+            Segments uniqueEdges = GetUniqueSegmentsDelaunay(allEdges);
+            //Create new triangles
+            for (int i = 0; i < uniqueEdges.Count; i++)
+            {
+                var edge = uniqueEdges[i];
+                triangles.Add(new(p, edge));
+            }
+        }
+
+        //Remove all triangles that share a vertex with the supra triangle to recieve the final triangulation
+        for (int i = triangles.Count - 1; i >= 0; i--)
+        {
+            var t = triangles[i];
+            if (t.SharesVertex(supraTriangle)) triangles.RemoveAt(i);
+        }
+
+
+        return triangles;
+    }
+    */
+
+/*
     /// <summary>
     /// Triangulates the polygon using an ear-clipping approach with randomized ear selection.
     /// Produces a set of non-overlapping triangles that cover the polygon interior.
@@ -1141,9 +1338,9 @@ public partial class Polygon
 
         return triangles;
     }
+    */
 
-    //TODO: REMOVE
-    /// <summary>
+/*/// <summary>
     /// Triangulates this polygon and appends the resulting triangles into the provided <see cref="Triangulation"/>.
     /// This function aims to minimize memory allocations by reusing internal buffers and filling the provided collection instead of creating a new one.
     /// </summary>
@@ -1161,7 +1358,7 @@ public partial class Polygon
     /// triangle is added and 1 is returned. The algorithm uses randomized ear selection so
     /// repeated calls may produce different valid triangulations.
     /// </remarks>
-    public int Triangulate(ref Triangulation result)
+    public int TriangulatePointCloud(ref Triangulation result)
     {
         if (Count < 3) return 0;
         if (Count == 3)
@@ -1169,27 +1366,27 @@ public partial class Polygon
             result.Add(new Triangle(this[0], this[1], this[2]));
             return 1;
         }
-
+    
         triangulateTempVertices.Clear();
         triangulateTempValidIndices.Clear();
-
+    
         triangulateTempVertices.AddRange(this);
         int count = 0;
         for (var i = 0; i < triangulateTempVertices.Count; i++)
         {
             triangulateTempValidIndices.Add(i);
         }
-
+    
         while (triangulateTempVertices.Count > 3)
         {
             if (triangulateTempValidIndices.Count <= 0)
                 break;
-
+    
             int i = triangulateTempValidIndices[Rng.Instance.RandI(0, triangulateTempValidIndices.Count)];
             var a = triangulateTempVertices[i];
             var b = Game.GetItem(triangulateTempVertices, i + 1);
             var c = Game.GetItem(triangulateTempVertices, i - 1);
-
+    
             var ba = b - a;
             var ca = c - a;
             float cross = ba.Cross(ca);
@@ -1198,9 +1395,9 @@ public partial class Polygon
                 triangulateTempValidIndices.Remove(i);
                 continue;
             }
-
+    
             Triangle t = new(a, b, c);
-
+    
             var isValid = true;
             foreach (var p in this)
             {
@@ -1211,14 +1408,14 @@ public partial class Polygon
                     break;
                 }
             }
-
+    
             if (isValid)
             {
                 result.Add(t);
                 count++;
-
+    
                 triangulateTempVertices.RemoveAt(i);
-
+    
                 triangulateTempValidIndices.Clear();
                 for (int j = 0; j < triangulateTempVertices.Count; j++)
                 {
@@ -1226,15 +1423,243 @@ public partial class Polygon
                 }
             }
         }
-
-
+    
+    
         result.Add(new(triangulateTempVertices[0], triangulateTempVertices[1], triangulateTempVertices[2]));
         count++;
-
+    
         return count;
+    }*/
+
+/*
+    #region Outline Perimeter Triangulation
+
+    /// <summary>
+    /// Generates a triangulation covering a portion of the polygon's outline measured by a perimeter length.
+    /// The method inflates the polygon by <paramref name="thickness"/> (using the specified join type and miter limit)
+    /// and then produces triangles that cover the requested outline segment starting at <paramref name="startIndex"/>.
+    /// </summary>
+    /// <param name="perimeterToDraw">The length of the polygon perimeter to draw/triangulate. Must be greater than 0.</param>
+    /// <param name="startIndex">Index of the vertex at which to start drawing the outline segment.</param>
+    /// <param name="thickness">Inflation half-width applied to polygon edges when creating the outline for triangulation.</param>
+    /// <param name="cornerPoints">Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.</param>
+    /// <param name="miterLimit">Miter limit used when applying miter joins. Values &gt;= 2 prefer miter joins.</param>
+    /// <param name="beveled">When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.</param>
+    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
+    /// <returns>
+    /// A <see cref="Triangulation"/> containing triangles for the generated outline segment, or <c>null</c> if the operation fails
+    /// (for example when the polygon has insufficient vertices or the inflation/triangulation cannot produce a valid result).
+    /// </returns>
+    public Triangulation? GenerateOutlinePerimeterTriangulation(float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (perimeterToDraw <= 0f) return null;
+
+        Polygon polygon = new(Count);
+
+        bool ccw = perimeterToDraw > 0;
+        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
+        float accumulatedPerimeter = 0f;
+        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
+
+        //create polyline based on perimeter & start index
+        while (absPerimeterToDraw > accumulatedPerimeter)
+        {
+            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
+            var cur = this[currentIndex];
+            var next = this[nextIndex];
+            currentIndex = nextIndex;
+            polygon.Add(cur);
+            float segmentLength = (next - cur).Length();
+
+            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
+            {
+                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
+                var end = cur.Lerp(next, f);
+                polygon.Add(end);
+                break;
+            }
+
+            accumulatedPerimeter += segmentLength;
+        }
+
+        return polygon.GenerateOutlineTriangulation(thickness, cornerPoints, miterLimit, beveled, useDelaunay);
     }
 
-    //TODO: Reimplement in ClipperImmediate2D
+    /// <summary>
+    /// Generates a triangulation covering a portion of the polygon's inflated outline and appends the resulting triangles
+    /// into the provided <see cref="Triangulation"/> instance.
+    /// </summary>
+    /// <param name="result">
+    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles. The method appends triangles
+    /// to this collection; it does not clear it.
+    /// </param>
+    /// <param name="perimeterToDraw">
+    /// The length of the polygon perimeter to draw/triangulate. Must be greater than 0.
+    /// </param>
+    /// <param name="startIndex">Index of the vertex at which to start drawing the outline segment.</param>
+    /// <param name="thickness">Inflation half-width applied to polygon edges when creating the outline for triangulation.</param>
+    /// <param name="cornerPoints">
+    /// Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.
+    /// </param>
+    /// <param name="miterLimit">Miter limit used when applying miter joins. Values &gt;= 2 prefer miter joins.</param>
+    /// <param name="beveled">
+    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
+    /// </param>
+    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
+    /// <returns>
+    /// The number of triangles appended to <paramref name="result"/>. Returns 0 if the polygon has insufficient vertices
+    /// or if triangulation/inflation fails.
+    /// </returns>
+    public int GenerateOutlinePerimeterTriangulation(ref Triangulation result, float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0,
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (perimeterToDraw <= 0f) return 0;
+
+        Polygon polygon = new(Count);
+
+        bool ccw = perimeterToDraw > 0;
+        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
+        float accumulatedPerimeter = 0f;
+        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
+
+        //create polyline based on perimeter & start index
+        while (absPerimeterToDraw > accumulatedPerimeter)
+        {
+            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
+            var cur = this[currentIndex];
+            var next = this[nextIndex];
+            currentIndex = nextIndex;
+            polygon.Add(cur);
+            float segmentLength = (next - cur).Length();
+
+            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
+            {
+                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
+                var end = cur.Lerp(next, f);
+                polygon.Add(end);
+                break;
+            }
+
+            accumulatedPerimeter += segmentLength;
+        }
+
+        if (polygon.Count < 3) return 0;
+
+        return polygon.GenerateOutlineTriangulation(ref result, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
+    }
+
+    #endregion
+
+    #region Outline Percentage Triangulation
+
+    /// <summary>
+    /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter.
+    /// The method inflates the polygon by <paramref name="thickness"/> and produces triangles that cover the outline segment
+    /// corresponding to <paramref name="f"/> of the total perimeter length.
+    /// </summary>
+    /// <param name="f">
+    /// Fraction of the total perimeter to draw. Expected magnitude in the range [0 - 1] (e.g. 0.25 = 25% of the perimeter).
+    /// A negative value indicates drawing in the opposite winding direction.
+    /// </param>
+    /// <param name="thickness">Inflation half-width applied to polygon edges for the outline triangulation.</param>
+    /// <param name="perimeter">
+    /// Optional total perimeter length to use as the basis for <paramref name="f"/>.
+    /// If smaller or equal to 0 the polygon's computed perimeter is used.
+    /// </param>
+    /// <param name="cornerPoints">
+    /// Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.
+    /// </param>
+    /// <param name="miterLimit">Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins.</param>
+    /// <param name="beveled">
+    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
+    /// </param>
+    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
+    /// <returns>
+    /// A <see cref="Triangulation"/> containing triangles for the generated outline percentage, or <c>null</c>
+    /// if the operation fails (for example when the polygon has insufficient vertices or triangulation cannot produce a valid result).
+    /// </returns>
+    public Triangulation? GenerateOutlinePercentageTriangulation(float f, float thickness, float perimeter = 0f, int cornerPoints = 0, float miterLimit = 2f,
+        bool beveled = false, bool useDelaunay = false)
+    {
+        if (f == 0f) return null;
+
+        float absF = MathF.Abs(f);
+        var startIndex = (int)absF;
+        float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
+
+        if (f < 0f) percentage *= -1f;
+
+        if (perimeter <= 0)
+        {
+            perimeter = 0f;
+            for (var i = 0; i < Count; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                float l = (end - start).Length();
+                perimeter += l;
+            }
+        }
+
+        return GenerateOutlinePerimeterTriangulation(perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
+    }
+
+    /// <summary>
+    /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter,
+    /// appending the resulting triangles into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">
+    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles. The method appends triangles
+    /// to this collection; it does not clear it.
+    /// </param>
+    /// <param name="f">
+    /// Fraction of the total perimeter to draw. The integer part selects the start vertex index and the fractional part
+    /// selects the percentage of the perimeter to draw from that start. A negative value draws in the opposite winding direction.
+    /// A value of 0 results in no operation.
+    /// </param>
+    /// <param name="thickness">Inflation half-width applied to polygon edges for the outline triangulation.</param>
+    /// <param name="perimeter">
+    /// Optional total perimeter length to use as the basis for <paramref name="f"/>. If smaller or equal to 0 the polygon's computed perimeter is used.
+    /// </param>
+    /// <param name="cornerPoints">Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.</param>
+    /// <param name="miterLimit">Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins.</param>
+    /// <param name="beveled">
+    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
+    /// </param>
+    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
+    /// <returns>
+    /// The number of triangles appended to <paramref name="result"/>. Returns 0 if <paramref name="f"/> is 0,
+    /// the polygon has insufficient vertices, or triangulation/inflation fails.
+    /// </returns>
+    public int GenerateOutlinePercentageTriangulation(ref Triangulation result, float f, float thickness, float perimeter = 0f, int cornerPoints = 0,
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (f == 0f) return 0;
+
+        float absF = MathF.Abs(f);
+        var startIndex = (int)absF;
+        float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
+
+        if (f < 0f) percentage *= -1f;
+
+        if (perimeter <= 0)
+        {
+            perimeter = 0f;
+            for (var i = 0; i < Count; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                float l = (end - start).Length();
+                perimeter += l;
+            }
+        }
+
+        return GenerateOutlinePerimeterTriangulation(ref result, perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
+    }
+
+    #endregion*/
+
+/*
     /// <summary>
     /// Generates a triangulation for the polygon's outline when the polygon is inflated by a given <paramref name="thickness"/>.
     /// The outline is produced by inflating the polygon (using round, miter, bevel or square joins depending on parameters)
@@ -1310,7 +1735,7 @@ public partial class Polygon
 
         return null;
     }
-    //TODO: Reimplement in ClipperImmediate2D
+    
     /// <summary>
     /// Generates a triangulation for the polygon's inflated outline and appends the resulting triangles
     /// into the provided <see cref="Triangulation"/> instance.
@@ -1394,239 +1819,4 @@ public partial class Polygon
         }
 
         return 0;
-    }
-
-    #endregion
-    
-    #region Outline Perimeter Triangulation
-
-    //TODO: Reimplement in ClipperImmediate2D
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's outline measured by a perimeter length.
-    /// The method inflates the polygon by <paramref name="thickness"/> (using the specified join type and miter limit)
-    /// and then produces triangles that cover the requested outline segment starting at <paramref name="startIndex"/>.
-    /// </summary>
-    /// <param name="perimeterToDraw">The length of the polygon perimeter to draw/triangulate. Must be greater than 0.</param>
-    /// <param name="startIndex">Index of the vertex at which to start drawing the outline segment.</param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges when creating the outline for triangulation.</param>
-    /// <param name="cornerPoints">Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.</param>
-    /// <param name="miterLimit">Miter limit used when applying miter joins. Values &gt;= 2 prefer miter joins.</param>
-    /// <param name="beveled">When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.</param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// A <see cref="Triangulation"/> containing triangles for the generated outline segment, or <c>null</c> if the operation fails
-    /// (for example when the polygon has insufficient vertices or the inflation/triangulation cannot produce a valid result).
-    /// </returns>
-    public Triangulation? GenerateOutlinePerimeterTriangulation(float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0,
-        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
-    {
-        if (perimeterToDraw <= 0f) return null;
-
-        Polygon polygon = new(Count);
-
-        bool ccw = perimeterToDraw > 0;
-        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
-        float accumulatedPerimeter = 0f;
-        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
-
-        //create polyline based on perimeter & start index
-        while (absPerimeterToDraw > accumulatedPerimeter)
-        {
-            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
-            var cur = this[currentIndex];
-            var next = this[nextIndex];
-            currentIndex = nextIndex;
-            polygon.Add(cur);
-            float segmentLength = (next - cur).Length();
-
-            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
-            {
-                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
-                var end = cur.Lerp(next, f);
-                polygon.Add(end);
-                break;
-            }
-
-            accumulatedPerimeter += segmentLength;
-        }
-
-        return polygon.GenerateOutlineTriangulation(thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    //TODO: Reimplement in ClipperImmediate2D
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's inflated outline and appends the resulting triangles
-    /// into the provided <see cref="Triangulation"/> instance.
-    /// </summary>
-    /// <param name="result">
-    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles. The method appends triangles
-    /// to this collection; it does not clear it.
-    /// </param>
-    /// <param name="perimeterToDraw">
-    /// The length of the polygon perimeter to draw/triangulate. Must be greater than 0.
-    /// </param>
-    /// <param name="startIndex">Index of the vertex at which to start drawing the outline segment.</param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges when creating the outline for triangulation.</param>
-    /// <param name="cornerPoints">
-    /// Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.
-    /// </param>
-    /// <param name="miterLimit">Miter limit used when applying miter joins. Values &gt;= 2 prefer miter joins.</param>
-    /// <param name="beveled">
-    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// The number of triangles appended to <paramref name="result"/>. Returns 0 if the polygon has insufficient vertices
-    /// or if triangulation/inflation fails.
-    /// </returns>
-    public int GenerateOutlinePerimeterTriangulation(ref Triangulation result, float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0,
-        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
-    {
-        if (perimeterToDraw <= 0f) return 0;
-
-        Polygon polygon = new(Count);
-
-        bool ccw = perimeterToDraw > 0;
-        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
-        float accumulatedPerimeter = 0f;
-        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
-
-        //create polyline based on perimeter & start index
-        while (absPerimeterToDraw > accumulatedPerimeter)
-        {
-            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
-            var cur = this[currentIndex];
-            var next = this[nextIndex];
-            currentIndex = nextIndex;
-            polygon.Add(cur);
-            float segmentLength = (next - cur).Length();
-
-            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
-            {
-                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
-                var end = cur.Lerp(next, f);
-                polygon.Add(end);
-                break;
-            }
-
-            accumulatedPerimeter += segmentLength;
-        }
-
-        if (polygon.Count < 3) return 0;
-
-        return polygon.GenerateOutlineTriangulation(ref result, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    #endregion
-
-    #region Outline Percentage Triangulation
-
-    //TODO: Reimplement in ClipperImmediate2D
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter.
-    /// The method inflates the polygon by <paramref name="thickness"/> and produces triangles that cover the outline segment
-    /// corresponding to <paramref name="f"/> of the total perimeter length.
-    /// </summary>
-    /// <param name="f">
-    /// Fraction of the total perimeter to draw. Expected magnitude in the range [0 - 1] (e.g. 0.25 = 25% of the perimeter).
-    /// A negative value indicates drawing in the opposite winding direction.
-    /// </param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges for the outline triangulation.</param>
-    /// <param name="perimeter">
-    /// Optional total perimeter length to use as the basis for <paramref name="f"/>.
-    /// If smaller or equal to 0 the polygon's computed perimeter is used.
-    /// </param>
-    /// <param name="cornerPoints">
-    /// Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.
-    /// </param>
-    /// <param name="miterLimit">Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins.</param>
-    /// <param name="beveled">
-    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// A <see cref="Triangulation"/> containing triangles for the generated outline percentage, or <c>null</c>
-    /// if the operation fails (for example when the polygon has insufficient vertices or triangulation cannot produce a valid result).
-    /// </returns>
-    public Triangulation? GenerateOutlinePercentageTriangulation(float f, float thickness, float perimeter = 0f, int cornerPoints = 0, float miterLimit = 2f,
-        bool beveled = false, bool useDelaunay = false)
-    {
-        if (f == 0f) return null;
-
-        float absF = MathF.Abs(f);
-        var startIndex = (int)absF;
-        float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
-
-        if (f < 0f) percentage *= -1f;
-
-        if (perimeter <= 0)
-        {
-            perimeter = 0f;
-            for (var i = 0; i < Count; i++)
-            {
-                var start = this[i];
-                var end = this[(i + 1) % Count];
-                float l = (end - start).Length();
-                perimeter += l;
-            }
-        }
-
-        return GenerateOutlinePerimeterTriangulation(perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    //TODO: Reimplement in ClipperImmediate2D
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter,
-    /// appending the resulting triangles into <paramref name="result"/>.
-    /// </summary>
-    /// <param name="result">
-    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles. The method appends triangles
-    /// to this collection; it does not clear it.
-    /// </param>
-    /// <param name="f">
-    /// Fraction of the total perimeter to draw. The integer part selects the start vertex index and the fractional part
-    /// selects the percentage of the perimeter to draw from that start. A negative value draws in the opposite winding direction.
-    /// A value of 0 results in no operation.
-    /// </param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges for the outline triangulation.</param>
-    /// <param name="perimeter">
-    /// Optional total perimeter length to use as the basis for <paramref name="f"/>. If smaller or equal to 0 the polygon's computed perimeter is used.
-    /// </param>
-    /// <param name="cornerPoints">Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.</param>
-    /// <param name="miterLimit">Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins.</param>
-    /// <param name="beveled">
-    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// The number of triangles appended to <paramref name="result"/>. Returns 0 if <paramref name="f"/> is 0,
-    /// the polygon has insufficient vertices, or triangulation/inflation fails.
-    /// </returns>
-    public int GenerateOutlinePercentageTriangulation(ref Triangulation result, float f, float thickness, float perimeter = 0f, int cornerPoints = 0,
-        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
-    {
-        if (f == 0f) return 0;
-
-        float absF = MathF.Abs(f);
-        var startIndex = (int)absF;
-        float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
-
-        if (f < 0f) percentage *= -1f;
-
-        if (perimeter <= 0)
-        {
-            perimeter = 0f;
-            for (var i = 0; i < Count; i++)
-            {
-                var start = this[i];
-                var end = this[(i + 1) % Count];
-                float l = (end - start).Length();
-                perimeter += l;
-            }
-        }
-
-        return GenerateOutlinePerimeterTriangulation(ref result, perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    #endregion
-}
+    }*/

@@ -203,8 +203,8 @@ public class StripedShapeDrawingExample : ExampleScene
         outsideTriangle = Triangle.Generate(center, size / 2, size);
         outsideRect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
         outsideQuad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
-        var generatedPoly = Polygon.Generate(center, 16, size / 4, size);
-        outsidePoly = generatedPoly ?? [];
+        outsidePoly = new();
+        Polygon.Generate(center, 16, size / 4, size, outsidePoly);
         
         size = 100;
         radius = size / 2;
@@ -212,8 +212,8 @@ public class StripedShapeDrawingExample : ExampleScene
         insideTriangle = Triangle.Generate(center, size / 2, size);
         insideRect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
         insideQuad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
-        generatedPoly = Polygon.Generate(center, 16, size / 4, size);
-        insidePoly = generatedPoly ?? [];
+        insidePoly = new();
+        Polygon.Generate(center, 16, size / 4, size, insidePoly);
         curInsidePolygonSize = size;
 
         insideShapeRotDegSlider = new("Inside Rotation", 0, 0f, 360, true)
@@ -294,8 +294,7 @@ public class StripedShapeDrawingExample : ExampleScene
         }
         else if (outsideShapeIndex == 4)
         {
-            var shape = Polygon.Generate(center, 16, size / 4, size);
-            if (shape != null) outsidePoly = shape;
+            Polygon.Generate(center, 16, size / 4, size, outsidePoly);
         }
     }
     private void RegenerateInsideShape()
@@ -309,8 +308,7 @@ public class StripedShapeDrawingExample : ExampleScene
         }
         else if (insideShapeIndex == 4)
         {
-            var shape = Polygon.Generate(center, 16, size / 2, size);
-            if(shape != null) insidePoly = shape;
+            Polygon.Generate(center, 16, size / 2, size, insidePoly);
         }
     }
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)

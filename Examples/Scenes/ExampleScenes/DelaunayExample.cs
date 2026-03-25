@@ -1,12 +1,7 @@
-﻿
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Raylib_cs;
-using ShapeEngine.Core;
-using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
-using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.PointsDef;
@@ -15,14 +10,11 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Input;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
     public class DelaunayExample : ExampleScene
     {
-        //private const float PointDistance = 10f;
-
         private readonly Font font;
 
         private readonly Points points = new();
@@ -39,6 +31,8 @@ namespace Examples.Scenes.ExampleScenes
         private float lineThicknessBig = 0f;
         private float vertexSize = 0f;
         private float vertexSizeBig = 0f;
+
+        private static Polygon shapeBuffer = new();
         
         public DelaunayExample()
         {
@@ -68,16 +62,19 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-        private Triangle GenerateTriangle(Vector2 pos, float size)
-        {
-            var poly = Polygon.Generate(pos, 3, size / 2, size);
-            if(poly == null) 
-            {
-                Debug.WriteLine("Warning: Failed to generate polygon. Returning null.");
-                return new();
-            }
-            return new(poly[0], poly[1], poly[2]);
-        }
+        // private Triangle GenerateTriangle(Vector2 pos, float size)
+        // {
+        //     if (Polygon.Generate(pos, 3, size / 2, size, shapeBuffer))
+        //     {
+        //         if (shapeBuffer.Count >= 3)
+        //         {
+        //             return new(shapeBuffer[0], shapeBuffer[1], shapeBuffer[2]);
+        //         }
+        //     }
+        //     
+        //     Debug.WriteLine("Warning: Failed to generate polygon. Returning null.");
+        //     return new();
+        // }
         
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
@@ -147,8 +144,7 @@ namespace Examples.Scenes.ExampleScenes
         private void Triangulate()
         {
             if (points.Count < 3) return;
-            curTriangulation = Polygon.TriangulateDelaunay(points);
-
+            points.TriangulatePointCloud(curTriangulation);
         }
         
         protected override void OnDrawGameExample(ScreenInfo game)

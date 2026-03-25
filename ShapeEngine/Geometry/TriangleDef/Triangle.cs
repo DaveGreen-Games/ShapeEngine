@@ -127,6 +127,12 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         }
     }
     #endregion
+
+    #region Helper
+
+    private static Points triangulationPointList = new();
+
+    #endregion
     
     #region Shapes
 
@@ -237,13 +243,18 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         return new Triangle(p, closest.segment);
     }
 
+    
+    //TODO: Fix Docs
     /// <summary>
     /// Triangulates this triangle using its centroid as an interior point.
     /// </summary>
     /// <returns>A triangulation containing three sub-triangles formed by connecting the centroid to each vertex.</returns>
     /// <remarks>This creates a simple triangulation by connecting the triangle's centroid to each of its vertices.</remarks>
-    public Triangulation Triangulate() => this.Triangulate(GetCentroid());
+    public void Triangulate(Triangulation result) => this.Triangulate(GetCentroid(), result);
 
+    
+    
+    //TODO: Fix Docs
     /// <summary>
     /// Triangulates this triangle by adding random interior points and performing Delaunay triangulation.
     /// </summary>
@@ -253,23 +264,31 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// If pointCount is negative, returns a triangulation containing only this triangle.
     /// Random points are generated using barycentric coordinates to ensure they lie within the triangle.
     /// </remarks>
-    public Triangulation Triangulate(int pointCount)
+    public void Triangulate(int pointCount, Triangulation result)
     {
-        if (pointCount < 0) return new() { new(A, B, C) };
-
-        Points points = new() { A, B, C };
-
+        result.Clear();
+        if (pointCount < 0)
+        {
+            result.Add(new(A, B, C));
+            return;
+        }
+        triangulationPointList.Clear();
+        triangulationPointList.Add(A);
+        triangulationPointList.Add(B);
+        triangulationPointList.Add(C);
+        
         for (int i = 0; i < pointCount; i++)
         {
             float f1 = Rng.Instance.RandF();
             float f2 = Rng.Instance.RandF();
             Vector2 randPoint = GetPoint(f1, f2);
-            points.Add(randPoint);
+            triangulationPointList.Add(randPoint);
         }
 
-        return Polygon.TriangulateDelaunay(points);
+        triangulationPointList.TriangulatePointCloud(result);
     }
     
+    //TODO: Fix Docs
     /// <summary>
     /// Triangulates this triangle to achieve a target minimum area per sub-triangle.
     /// </summary>
@@ -279,16 +298,22 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// If minArea is less than or equal to zero, returns a triangulation containing only this triangle.
     /// The method calculates the number of points needed based on the ratio of triangle area to minimum area.
     /// </remarks>
-    public Triangulation Triangulate(float minArea)
+    public void Triangulate(float minArea, Triangulation result)
     {
-        if (minArea <= 0) return new() { new(A,B,C) };
+        result.Clear();
+        if (minArea <= 0)
+        {
+            result.Add(new(A, B, C));
+            return;
+        }
 
         float triArea = GetArea();
         float pieceCount = triArea / minArea;
         int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
-        return Triangulate(points);
+        Triangulate(points, result);
     }
     
+    //TODO: Fix Docs
     /// <summary>
     /// Triangulates this triangle using the specified point as an interior vertex.
     /// </summary>
@@ -298,15 +323,14 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// The resulting triangulation contains three triangles: A-B-P, B-C-P, and C-A-P.
     /// This method does not verify that the point is actually inside the triangle.
     /// </remarks>
-    public Triangulation Triangulate(Vector2 p)
+    public void Triangulate(Vector2 p, Triangulation result)
     {
-        return new()
-        {
-            new(A, B, p),
-            new(B, C, p),
-            new(C, A, p)
-        };
+        result.Clear();
+        result.Add(new(A, B, p));
+        result.Add(new(B, C, p));
+        result.Add(new(C, A, p));
     }
+    
     
     /// <summary>
     /// Creates a smaller triangle inside this triangle by interpolating along each edge.

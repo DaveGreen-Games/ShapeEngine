@@ -1,10 +1,10 @@
 using System.Numerics;
-using ShapeEngine.Core;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Random;
+using ShapeEngine.ShapeClipper;
 using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.TriangulationDef;
@@ -166,83 +166,83 @@ public partial class Triangulation : ShapeList<Triangle>
     #endregion
 
     #region Triangulation
-    /// <summary>
-    /// Creates a new triangulation containing triangles from the current triangulation that meet the specified area threshold.
-    /// </summary>
-    /// <param name="areaThreshold">The minimum area a triangle must have to be included in the new triangulation.</param>
-    /// <returns>A new <see cref="Triangulation"/> containing triangles with an area greater than or equal to the threshold.</returns>
-    public Triangulation Get(float areaThreshold)
-    {
-        Triangulation newTriangulation = new();
-        if (areaThreshold <= 0f) return newTriangulation;
 
+    private static Triangulation queueBuffer = new();
+    private static Triangulation subdivBuffer = new();
+    
+    //TODO: Docs
+    public void Get(Triangulation result, float areaThreshold)
+    {
+        if (areaThreshold <= 0f) return;
+
+        result.Clear();
         for (int i = Count - 1; i >= 0; i--)
         {
             var t = this[i];
             if (t.GetArea() >= areaThreshold)
             {
-                newTriangulation.Add(t);
+                result.Add(t);
             }
         }
-
-        return newTriangulation;
     }
-
-    /// <summary>
-    /// Subdivide the triangulation until all triangles are smaller than min area.
-    /// </summary>
-    /// <param name="minArea">A triangle will always be subdivided if the area is bigger than min area.</param>
-    /// <returns></returns>
-    public Triangulation Subdivide(float minArea)
+    
+    //TODO: Docs
+    public void Subdivide(Triangulation result, float minArea)
     {
-        Triangulation final = [];
-
-        Triangulation queue = [];
-        queue.AddRange(this);
-        while (queue.Count > 0)
+        result.Clear();
+        queueBuffer.Clear();
+        queueBuffer.AddRange(this);
+        while (queueBuffer.Count > 0)
         {
-            int endIndex = queue.Count - 1;
-            var tri = queue[endIndex];
+            int endIndex = queueBuffer.Count - 1;
+            var tri = queueBuffer[endIndex];
 
             float triArea = tri.GetArea();
-            if (triArea < minArea) final.Add(tri);
-            else queue.AddRange(tri.Triangulate(minArea));
-            queue.RemoveAt(endIndex);
+            if (triArea < minArea)
+            {
+                result.Add(tri);
+            }
+            else
+            {
+                subdivBuffer.Clear();
+                tri.Triangulate(minArea, subdivBuffer);
+                queueBuffer.AddRange(subdivBuffer);
+            }
+            queueBuffer.RemoveAt(endIndex);
         }
-        return final;
     }
-
-    /// <summary>
-    /// Subdivide the triangles further based on the parameters.
-    /// </summary>
-    /// <param name="minArea">Triangles with an area smaller than min area will never be subdivided.</param>
-    /// <param name="maxArea">Triangles with an area bigger than maxArea will always be subdivided.</param>
-    /// <param name="keepChance">The chance to keep a triangle and not subdivide it.</param>
-    /// <param name="narrowValue">Triangles that are considered narrow will not be subdivided.</param>
-    /// <returns></returns>
-    public Triangulation Subdivide(float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
+    
+    //TODO: Docs
+    public void Subdivide(Triangulation result, float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
     {
-        if (this.Count <= 0) return this;
-
-        Triangulation final = new();
-        Triangulation queue = new();
-
-        queue.AddRange(this.Count == 1 ? this[0].Triangulate(minArea) : this);
-
-
-        while (queue.Count > 0)
+        if (this.Count <= 0) return;
+        queueBuffer.Clear();
+        if (Count == 1)
         {
-            int endIndex = queue.Count - 1;
-            var tri = queue[endIndex];
+            subdivBuffer.Clear();
+            this[0].Triangulate(minArea, subdivBuffer);
+            queueBuffer.AddRange(subdivBuffer);
+        }
+        else
+        {
+            queueBuffer.AddRange(this);
+        }
+        
+        while (queueBuffer.Count > 0)
+        {
+            int endIndex = queueBuffer.Count - 1;
+            var tri = queueBuffer[endIndex];
 
             var triArea = tri.GetArea();
             if (triArea < minArea || tri.IsNarrow(narrowValue)) //too small or narrow
             {
-                final.Add(tri);
+                result.Add(tri);
             }
             else if (triArea > maxArea) //always subdivide because too big
             {
-                queue.AddRange(tri.Triangulate(minArea));
+                subdivBuffer.Clear();
+                tri.Triangulate(minArea, subdivBuffer);
+                queueBuffer.AddRange(subdivBuffer);
             }
             else //subdivde or keep
             {
@@ -252,12 +252,19 @@ public partial class Triangulation : ShapeList<Triangle>
                     chance = (triArea - minArea) / (maxArea - minArea);
                 }
 
-                if (Rng.Instance.Chance(chance)) final.Add(tri);
-                else queue.AddRange(tri.Triangulate(minArea));
+                if (Rng.Instance.Chance(chance))
+                {
+                    result.Add(tri);
+                }
+                else
+                {
+                    subdivBuffer.Clear();
+                    tri.Triangulate(minArea, subdivBuffer);
+                    queueBuffer.AddRange(subdivBuffer);
+                }
             }
-            queue.RemoveAt(endIndex);
+            queueBuffer.RemoveAt(endIndex);
         }
-        return final;
     }
     #endregion
 

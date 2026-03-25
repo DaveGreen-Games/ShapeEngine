@@ -1,250 +1,229 @@
 using System.Numerics;
 using Clipper2Lib;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Random;
+using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
-
+//TODO: Docs
 public partial class Polygon
 {
-    
-    /// <summary>
-    /// Unions this polygon with another polygon and replaces the current shape with the result.
-    /// </summary>
-    /// <param name="b">The polygon to union with.</param>
-    /// <param name="fillRule">The fill rule to use for the union operation.</param>
-    /// <remarks>
-    /// Uses the Clipper library for polygon union. The result replaces the current polygon if successful.
-    /// </remarks>
-    public void UnionShapeSelf(Polygon b, FillRule fillRule = FillRule.NonZero)
+    #region Intersection
+    public bool ClipIntersection(Polygon other, Polygon result)
     {
-        var result = Clipper.Union(this.ToClipperPaths(), b.ToClipperPaths(), fillRule);
-        if (result.Count > 0)
-        {
-            this.Clear();
-            foreach (var p in result[0])
-            {
-                this.Add(p.ToVec2());
-            }
-        }
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer[0].ToVector2List(result);
+        return true;
     }
+    public bool ClipIntersection(Polygon other, Polygons result)
+    {
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
+    }
+    public bool ClipIntersectionMany(Polygons others, Polygons result)
+    {
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Intersection, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
+    }
+    #endregion
+    
+    #region Difference
+    public bool ClipDifference(Polygon other, Polygon result)
+    {
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Difference, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer[0].ToVector2List(result);
+        return true;
+    }
+    public bool ClipDifference(Polygon other, Polygons result)
+    {
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Difference, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
+    }
+    public bool ClipDifferenceMany(Polygons others, Polygons result)
+    {
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Difference, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
+    }
+    #endregion
 
-    /// <summary>
-    /// Attempts to merge this polygon with another if their closest points are within a given distance threshold.
-    /// </summary>
-    /// <param name="other">The polygon to merge with.</param>
-    /// <param name="distanceThreshold">The maximum allowed distance between closest points to perform a merge.</param>
-    /// <returns>True if a merge was performed; otherwise, false.</returns>
-    /// <remarks>
-    /// Merges by generating a fill shape between the closest points and performing a union.
-    /// </remarks>
-    public bool MergeShapeSelf(Polygon other, float distanceThreshold)
+    #region Union
+    public bool ClipUnion(Polygon other, Polygon result)
+    {
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer[0].ToVector2List(result);
+        return true;
+    }
+    public bool ClipUnion(Polygon other, float distanceThreshold, Polygon result)
     {
         if (distanceThreshold <= 0f) return false;
         
-        var result = GetClosestPoint(other);
-        if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
+        var cp = GetClosestPoint(other);
+        if (cp.Valid && cp.DistanceSquared < distanceThreshold * distanceThreshold)
         {
-            var fillShape = Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
-            if (fillShape == null) return false;
-            UnionShapeSelf(fillShape);
-            UnionShapeSelf(other);
+            if (!Generate(cp.Self.Point, 7, distanceThreshold, distanceThreshold * 2, clipPolygonBuffer)) return false;
+            this.ClipUnion(clipPolygonBuffer, result);
+            result.ClipUnion(other, result);
             return true;
         }
 
         return false;
     }
     
-    /// <summary>
-    /// Attempts to merge this polygon with another if they overlap.
-    /// </summary>
-    /// <param name="other">The polygon to merge with.</param>
-    /// <returns>True if a merge was performed; otherwise, false.</returns>
-    public bool MergeShapeSelf(Polygon other)
+    public bool ClipUnion(Polygon other, Polygons result)
     {
-        var overlap = OverlapShape(other);
-        if (overlap)
-        {
-            UnionShapeSelf(other);
-            return true;
-        }
-
-        return false;
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
     }
-
-    /// <summary>
-    /// Subtracts the specified polygon (`cutShape`) from this polygon.
-    /// Optionally keeps only the intersected (cut-out) region if `keepCutout` is true.
-    /// Returns true if the operation resulted in a valid polygon; otherwise, false.
-    /// </summary>
-    /// <param name="cutShape">The polygon to subtract from this polygon.</param>
-    /// <param name="keepCutout">If true, keeps only the intersected region; otherwise, subtracts the cutShape.</param>
-    /// <returns>True if the difference operation produced a valid polygon; otherwise, false.</returns>
-    public bool CutShapeSelf(Polygon cutShape, bool keepCutout = false)
+    public bool ClipUnion(Polygon other, float distanceThreshold, Polygons result)
     {
-        var newShapes = keepCutout ? this.Intersect(cutShape) : this.Difference(cutShape);
+        if (distanceThreshold <= 0f) return false;
         
-        if (newShapes.Count > 0)
+        var cp = GetClosestPoint(other);
+        if (cp.Valid && cp.DistanceSquared < distanceThreshold * distanceThreshold)
         {
-            var polygons = newShapes.ToPolygons(true);
-            if (polygons.Count > 0)
-            {
-                foreach (var polygon in polygons)
-                {
-                    if(polygon.Count < 3) continue; // Skip invalid polygons
-                    this.Clear();
-
-                    if (polygon.IsClockwise())
-                    {
-                        for (int i = polygon.Count - 1; i >= 0; i--)//reverse order clockwise to counter-clockwise
-                        {
-                            Add(polygon[i]);
-                        }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < polygon.Count; i++)
-                        {
-                            Add(polygon[i]);
-                        }
-                    }
-                    
-                    return true;
-                }
-            }
+            if (!Generate(cp.Self.Point, 7, distanceThreshold, distanceThreshold * 2, clipPolygonBuffer)) return false;
+            this.ClipUnion(clipPolygonBuffer, result);
+            if (result.Count > 1) return false;
+            
+            result[0].ClipUnion(other, result);
+            return true;
         }
 
         return false;
     }
-   
     
-    /// <summary>
-    /// Attempts to merge this polygon with another and returns the merged result as a new polygon.
-    /// </summary>
-    /// <param name="other">The polygon to merge with.</param>
-    /// <param name="distanceThreshold">The maximum allowed distance between closest points to perform a merge.</param>
-    /// <returns>The merged polygon if successful; otherwise, null.</returns>
-    public Polygon? MergeShape(Polygon other, float distanceThreshold)
+    public bool ClipUnion(Polygon other, Polygons newShapesResult, Polygons overlapsResult)
     {
-        if(distanceThreshold <= 0f) return null;
-        var result = GetClosestPoint(other);
-        if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
+        clipResultBuffer.ToPolygons(overlapsResult, true);
+        
+        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
+        clipResultBuffer.ToPolygons(newShapesResult, true);
+        
+        return true;
+    }
+    
+    
+    public bool ClipUnionMany(Polygons others, Polygons result)
+    {
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Union, clipResultBuffer);
+        if (clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
+    }
+    
+    public bool ClipUnionMany(Polygons others, Polygons newShapesResult, Polygons overlapsResult)
+    {
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Intersection, clipResultBuffer);
+        clipResultBuffer.ToPolygons(overlapsResult, true);
+        
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Union, clipResultBuffer);
+        clipResultBuffer.ToPolygons(newShapesResult, true);
+        
+        return true;
+    }
+    #endregion
+
+    #region Cut
+   
+    public bool CutSelf(Polygon cutShape, Polygons? cutOutsResult, Polygons? extraShapesResult)
+    {
+        if (cutOutsResult != null)
         {
-            var fillShape = Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
-            if(fillShape == null) return null;
-            var clip =  this.Union(fillShape);
-            if (clip.Count > 0)
-            {
-                clip = clip[0].ToPolygon().Union(other);
-                if (clip.Count > 0) return clip[0].ToPolygon();
-            }
+            ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Intersection, clipResultBuffer);
+            clipResultBuffer.ToPolygons(cutOutsResult, true);
         }
-
-        return null;
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Difference, clipResultBuffer);
+        clipResultBuffer.RemoveAllHoles();
+        if(clipResultBuffer.Count <= 0) return false;
+        clipResultBuffer[0].ToVector2List(this);
+        if (clipResultBuffer.Count > 1 && extraShapesResult != null)
+        {
+            clipResultBuffer.RemoveAt(0);
+            clipResultBuffer.ToPolygons(extraShapesResult, true);
+        }
+        return true;
     }
-
-    /// <summary>
-    /// Cuts the current polygon with another polygon, returning the resulting shapes and the cut-out regions.
-    /// </summary>
-    /// <param name="cutShape">The polygon to cut with.</param>
-    /// <returns>A tuple containing the new shapes and the cut-out regions.</returns>
-    public (Polygons newShapes, Polygons cutOuts) CutShape(Polygon cutShape)
+  
+    public bool Cut(Polygon cutShape, Polygons cutOutsResult, Polygons newShapesResult)
     {
-        var cutOuts = this.Intersect(cutShape).ToPolygons(true);
-        var newShapes = this.Difference(cutShape).ToPolygons(true);
-
-        return (newShapes, cutOuts);
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Intersection, clipResultBuffer);
+        clipResultBuffer.ToPolygons(cutOutsResult, true);
+        
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Difference, clipResultBuffer);
+        clipResultBuffer.ToPolygons(newShapesResult, true);
+        Console.WriteLine($"Shape Clockwise: {this.IsClockwise()}, Cut Shape Clockwise: {cutShape.IsClockwise()}");
+        foreach (Polygon polygon in newShapesResult)
+        {
+            Console.WriteLine($"New Shape Clockwise: {polygon.IsClockwise()}");
+        }
+        return true;
     }
-
-    /// <summary>
-    /// Cuts the current polygon with multiple polygons, returning the resulting shapes and the cut-out regions.
-    /// </summary>
-    /// <param name="cutShapes">The polygons to cut with.</param>
-    /// <returns>A tuple containing the new shapes and the cut-out regions.</returns>
-    public (Polygons newShapes, Polygons cutOuts) CutShapeMany(Polygons cutShapes)
+    
+    public bool CutMany(Polygons cutShapes, Polygons cutOutsResult, Polygons newShapesResult)
     {
-        var cutOuts = this.IntersectMany(cutShapes).ToPolygons(true);
-        var newShapes = this.DifferenceMany(cutShapes).ToPolygons(true);
-        return (newShapes, cutOuts);
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, cutShapes, ShapeClipperClipType.Intersection, clipResultBuffer);
+        clipResultBuffer.ToPolygons(cutOutsResult, true);
+        
+        clipResultBuffer.Clear();
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, cutShapes, ShapeClipperClipType.Difference, clipResultBuffer);
+        clipResultBuffer.ToPolygons(newShapesResult, true);
+        return true;
     }
-
-    /// <summary>
-    /// Combines this polygon with another, returning the union and the overlapping regions.
-    /// </summary>
-    /// <param name="other">The polygon to combine with.</param>
-    /// <returns>A tuple containing the new shapes and the overlapping regions.</returns>
-    public (Polygons newShapes, Polygons overlaps) CombineShape(Polygon other)
+    
+    public bool CutSimple(Vector2 cutPos, Polygons newShapesResult, Polygons cutOutsResult, float minCutRadius, float maxCutRadius, int pointCount = 16)
     {
-        var overlaps = this.Intersect(other).ToPolygons(true);
-        var newShapes = this.Union(other).ToPolygons(true);
-        return (newShapes, overlaps);
+        if (!Generate(cutPos, pointCount, minCutRadius, maxCutRadius, clipPolygonBuffer)) return false;
+        return Cut(clipPolygonBuffer, cutOutsResult, newShapesResult);
     }
-
-    /// <summary>
-    /// Combines this polygon with multiple polygons, returning the union and the overlapping regions.
-    /// </summary>
-    /// <param name="others">The polygons to combine with.</param>
-    /// <returns>A tuple containing the new shapes and the overlapping regions.</returns>
-    public (Polygons newShapes, Polygons overlaps) CombineShape(Polygons others)
+    
+    public bool CutSimple(Segment cutLine, Polygons newShapesResult, Polygons cutOutsResult, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
     {
-        var overlaps = this.IntersectMany(others).ToPolygons(true);
-        var newShapes = this.UnionMany(others).ToPolygons(true);
-        return (newShapes, overlaps);
+        if(!Generate(cutLine, clipPolygonBuffer, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength)) return false;
+        return Cut(clipPolygonBuffer, cutOutsResult, newShapesResult);
     }
-
-    /// <summary>
-    /// Cuts the current polygon with a simple generated shape at a position, returning the resulting shapes and the cut-out regions.
-    /// </summary>
-    /// <param name="cutPos">The center position for the cut shape.</param>
-    /// <param name="minCutRadius">The minimum radius for the cut shape.</param>
-    /// <param name="maxCutRadius">The maximum radius for the cut shape.</param>
-    /// <param name="pointCount">The number of points for the generated cut shape. Default is 16.</param>
-    /// <returns>A tuple containing the new shapes and the cut-out regions.</returns>
-    public (Polygons newShapes, Polygons cutOuts)? CutShapeSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
-    {
-        var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
-        return cut == null ? null : CutShape(cut);
-    }
-
-    /// <summary>
-    /// Cuts the current polygon with a simple generated shape along a segment, returning the resulting shapes and the cut-out regions.
-    /// </summary>
-    /// <param name="cutLine">The segment along which to generate the cut shape.</param>
-    /// <param name="minSectionLength">Minimum section length for the generated cut. Default is 0.025.</param>
-    /// <param name="maxSectionLength">Maximum section length for the generated cut. Default is 0.1.</param>
-    /// <param name="minMagnitude">Minimum magnitude for the cut. Default is 0.05.</param>
-    /// <param name="maxMagnitude">Maximum magnitude for the cut. Default is 0.25.</param>
-    /// <returns>A tuple containing the new shapes and the cut-out regions.</returns>
-    public (Polygons newShapes, Polygons cutOuts)? CutShapeSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f,
-        float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
-    {
-        var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
-        if (cut == null) return null;
-        return CutShape(cut);
-    }
-
-    /// <summary>
-    /// Splits the polygon using a line defined by a point and direction.
-    /// </summary>
-    /// <param name="point">A point on the splitting line.</param>
-    /// <param name="direction">The direction of the splitting line.</param>
-    /// <returns>The resulting polygons after the split, or null if no split occurred.</returns>
-    public Polygons? Split(Vector2 point, Vector2 direction)
+    
+    #endregion
+    
+    #region Split
+    public bool Split(Vector2 point, Vector2 direction, Polygons result)
     {
         var line = new Line(point, direction);
-        return Split(line);
+        return Split(line, result);
     }
-
-    /// <summary>
-    /// Splits the polygon using a line.
-    /// </summary>
-    /// <param name="line">The line to split with.</param>
-    /// <returns>The resulting polygons after the split, or null if no split occurred.</returns>
-    public Polygons? Split(Line line)
+    
+    public bool Split(Line line, Polygons result)
     {
         var w = Center - line.Point;
         var l = w.Length();
@@ -252,75 +231,63 @@ public partial class Polygon
         else l *= 2f;
 
         var segment = line.ToSegment(l);
-        return Split(segment);
+        return Split(segment, result);
     }
-
-    /// <summary>
-    /// Splits the polygon using a segment.
-    /// </summary>
-    /// <param name="segment">The segment to split with.</param>
-    /// <returns>The resulting polygons after the split, or null if no split occurred.</returns>
-    public Polygons? Split(Segment segment)
+    
+    public bool Split(Segment segment, Polygons result)
     {
-        var result = this.Difference(segment);
-        if (result.Count <= 0) return null;
-        return result.ToPolygons();
+        clipPolygonBuffer.Clear();
+        clipPolygonBuffer.Add(segment.Start);
+        clipPolygonBuffer.Add(segment.End);
+        
+        ClipperImmediate2D.ClipEngine.Execute(this, clipPolygonBuffer, ShapeClipperClipType.Difference, clipResultBuffer);
+        if(clipResultBuffer.Count <= 0) return false;
+        
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
     }
-
-    /// <summary>
-    /// Splits the polygon using multiple segments.
-    /// </summary>
-    /// <param name="segments">The segments to split with.</param>
-    /// <returns>The resulting polygons after the split, or null if no split occurred.</returns>
-    public Polygons? Split(Segments segments)
+    
+    public bool Split(Segments segments, Polygons result)
     {
-        var result = this.DifferenceMany(segments);
-        if (result.Count <= 0) return null;
-        return result.ToPolygons();
+        if(segments.Count <= 0) return false;
+        clipPooledBuffer.PrepareBuffer(segments.Count);
+        for (int i = 0; i < segments.Count; i++)
+        {
+            var segment = segments[i];
+            var buffer = clipPooledBuffer.Buffer[i];
+            buffer.Clear();
+            buffer.Add(segment.Start.ToPoint64());
+            buffer.Add(segment.End.ToPoint64());
+        }
+        
+        ClipperImmediate2D.ClipEngine.ExecuteMany(this, clipPooledBuffer.Buffer, ShapeClipperClipType.Difference, clipResultBuffer);
+        if(clipResultBuffer.Count <= 0) return false;
+        
+        clipResultBuffer.ToPolygons(result, true);
+        return true;
     }
-
-    /// <summary>
-    /// Generates a fracture line in the specified direction and splits the polygon with it.
-    /// </summary>
-    /// <param name="dir">The direction for the fracture.</param>
-    /// <param name="maxOffsetPercentage">Maximum offset for each point along the fracture line,
-    /// as a percentage of the segment length. Value Range <c>0-1</c>.</param>
-    /// <param name="fractureLineComplexity">Number of points to generate for the fracture line.</param>
-    /// <returns>The resulting polygons after the split, or null if no split occurred.</returns>
-    /// <remarks>
-    /// The fracture line is generated with random offsets to simulate a jagged break.
-    /// </remarks>
-    public Polygons? FractureSplit(Vector2 dir, float maxOffsetPercentage, int fractureLineComplexity)
+    
+    public bool FractureSplit(Vector2 dir, float maxOffsetPercentage, int fractureLineComplexity, Polygons result)
     {
-        if (fractureLineComplexity < 1 || dir.LengthSquared() <= 0f) return null;
+        if (fractureLineComplexity < 1 || dir.LengthSquared() <= 0f) return false;
 
         var center = Center;
-        var result = IntersectShape(new Line(center, dir));
-        if (result == null || result.Count < 2) return null;
+        var intersectionPoints = IntersectShape(new Line(center, dir));
+        if (intersectionPoints == null || intersectionPoints.Count < 2) return false;
 
-        var start = result[0].Point;
-        var end = result[1].Point;
-        if (result.Count > 2)
+        var start = intersectionPoints[0].Point;
+        var end = intersectionPoints[1].Point;
+        if (intersectionPoints.Count > 2)
         {
-            end = result.GetFurthestCollisionPoint(start).Point;
+            end = intersectionPoints.GetFurthestCollisionPoint(start).Point;
         }
 
         var fractureLine = GenerateFractureLine(start, end, maxOffsetPercentage, fractureLineComplexity);
-        if (fractureLine == null) return null;
-        return Split(fractureLine);
+        if (fractureLine == null) return false;
+        Split(fractureLine, result);
+        return true;
     }
-
-    /// <summary>
-    /// Generates a fracture line from start to end with random offsets.
-    /// </summary>
-    /// <param name="start">Start of the fracture line.</param>
-    /// <param name="end">End of the fracture line.</param>
-    /// <param name="maxOffsetPercentage">Maximum offset for each point, as a percentage of the segment length. Value Range <c>0-1</c>.</param>
-    /// <param name="linePoints">Number of points to generate along the line.</param>
-    /// <returns>The generated fracture line as a set of segments, or null if invalid parameters.</returns>
-    /// <remarks>
-    /// The resulting fracture line can be used to split the polygon with a jagged effect.
-    /// </remarks>
+    
     public Segments? GenerateFractureLine(Vector2 start, Vector2 end, float maxOffsetPercentage, int linePoints)
     {
         if (linePoints < 1) return null;
@@ -362,5 +329,6 @@ public partial class Polygon
 
         return result;
     }
+    #endregion
 
 }

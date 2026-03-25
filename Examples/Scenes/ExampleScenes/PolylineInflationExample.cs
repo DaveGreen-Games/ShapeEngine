@@ -10,6 +10,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.ShapeClipper;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -229,11 +230,13 @@ namespace Examples.Scenes.ExampleScenes
                 circle.Draw(Colors.Warm);
             }
 
-            Polygons? inflatedPolygons = null;
+            Polygons? inflationResult = null;
             if (lerpOffsetDelta > 10f && polyline.Count > 1)
             {
-                inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
-                foreach (var polygon in inflatedPolygons)
+                inflationResult = new();
+                polyline.InflatePolyline(inflationResult, lerpOffsetDelta, 2f, false, ShapeClipperEndType.Round);
+                // inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
+                foreach (var polygon in inflationResult)
                 {
                     polygon.DrawLines(relativeSize, Colors.Special);
                 }
@@ -243,9 +246,9 @@ namespace Examples.Scenes.ExampleScenes
             if (collisionSegmentValid)
             {
                 var intersectionHappend = false;
-                if (inflatedPolygons != null)
+                if (inflationResult != null)
                 {
-                    foreach (var polygon in inflatedPolygons)
+                    foreach (var polygon in inflationResult)
                     {
                         var intersectionPoints = collisionSegment.IntersectShape(polygon);
                         if (intersectionPoints != null && intersectionPoints.Count > 0)

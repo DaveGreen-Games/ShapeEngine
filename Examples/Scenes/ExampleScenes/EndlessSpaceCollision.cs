@@ -380,13 +380,11 @@ public class EndlessSpaceCollision : ExampleScene
     private void AddAsteroid(bool big)
     {
         var pos = GetRandomUniversePosition(2500);
-
-        // var minSize = big ? AsteroidMinSize : AsteroidMinSize / 4f;
         var maxSize = big ? AsteroidMaxSize : AsteroidMaxSize / 4f;
         
-        // var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
-        var shape = Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f);
-        if (shape == null) return;
+        Polygon shape = new();
+        if (!Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f, shape) || shape.Count < 3) return;
+        
         var a = new AsteroidObstacle(shape, pos, maxSize, big);
         if (!big) a.target = ship;
         asteroids.Add(a);
@@ -394,12 +392,11 @@ public class EndlessSpaceCollision : ExampleScene
     }
     private void AddAsteroid(Vector2 pos, bool big)
     {
-        // var minSize = big ? AsteroidMinSize : AsteroidMinSize / 4f;
         var maxSize = big ? AsteroidMaxSize : AsteroidMaxSize / 4f;
         
-        // var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
-        var shape = Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f);
-        if (shape == null) return;
+        Polygon shape = new();
+        if (!Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f, shape) || shape.Count < 3) return;
+        
         var a = new AsteroidObstacle(shape, pos, maxSize, big);
         if (!big) a.target = ship;
         asteroids.Add(a);

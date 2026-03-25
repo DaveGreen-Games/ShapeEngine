@@ -329,8 +329,9 @@ namespace Examples.Scenes.ExampleScenes
         private Rect boundingBox;
         public Rock(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(Size, 0f), 1f))
         {
-            var shape = Polygon.GenerateRelative(6, 0.5f, 1f);
-            var col = new PolygonCollider(new(), shape ?? [])
+            Polygon shape = new();
+            Polygon.GenerateRelative(6, 0.5f, 1f, shape);
+            var col = new PolygonCollider(new(), shape)
             {
                 ComputeCollision = true,
                 ComputeIntersections = true,

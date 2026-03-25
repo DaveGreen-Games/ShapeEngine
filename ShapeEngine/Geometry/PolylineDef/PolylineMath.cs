@@ -2,6 +2,8 @@ using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.TriangulationDef;
+using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolylineDef;
@@ -578,5 +580,130 @@ public partial class Polyline
         return newPolyline;
     }
 
+    #endregion
+    
+    #region Outline Triangulation
+
+    public void TriangulateOutline(Triangulation result, float thickness, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        ClipperImmediate2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+    
+    public void TriangulateOutline(TriMesh result, float thickness, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        ClipperImmediate2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+    #endregion
+    
+    #region Outline Perimeter Triangulation
+
+    private static Polyline buffer = new();
+    public void ToPolylinePerimeter(float perimeterToDraw, Polyline result)
+    {
+        if (perimeterToDraw <= 0f) return;
+        
+        if (Count <= 1) return;
+        
+        result.Clear();
+        
+        bool ccw = perimeterToDraw > 0;
+        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
+        float accumulatedPerimeter = 0f;
+        int currentIndex = ccw ? 0 : Count - 1;
+        
+        
+        // Create polyline based on perimeter.
+        // // Positive walks forward from 0.
+        // // Negative walks backward from Count - 1.
+        // // No wrapping: polyline stays open.
+        while (absPerimeterToDraw > accumulatedPerimeter)
+        {
+            int nextIndex = currentIndex + (ccw ? 1 : -1);
+            if (nextIndex < 0 || nextIndex >= Count) break; //safety
+            
+            var cur = this[currentIndex];
+            var next = this[nextIndex];
+            result.Add(cur);
+            
+            float segmentLength = (next - cur).Length();
+
+            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
+            {
+                float remainingPerimeter = absPerimeterToDraw - accumulatedPerimeter;
+                float f = segmentLength <= 0f ? 0f : remainingPerimeter / segmentLength;
+                var end = cur.Lerp(next, f);
+                result.Add(end);
+                break;
+            }
+
+            accumulatedPerimeter += segmentLength;
+            currentIndex = nextIndex;
+
+            // Reached the open end of the polyline; add the endpoint and stop.
+            if ((ccw && currentIndex == Count - 1) || (!ccw && currentIndex == 0))
+            {
+                result.Add(this[currentIndex]);
+                break;
+            }
+        }
+    }
+    
+    public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        ToPolylinePerimeter(perimeterToDraw, buffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(buffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+    
+    public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        ToPolylinePerimeter(perimeterToDraw, buffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(buffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+    #endregion
+
+    #region Outline Percentage Triangulation
+    public void ToPolylinePercentage(float f, Polyline result)
+    {
+        if (f <= 0) return;
+        
+        if (Count <= 1) return;
+
+        if (f >= 1f)
+        {
+            result.Clear();
+            foreach (var p in this)
+            {
+                result.Add(p);
+            }
+            return;
+        }
+        
+        float totalPerimeter = 0f;
+        
+        for (var i = 0; i < Count - 1; i++)
+        {
+            var start = this[i];
+            var end = this[i + 1];
+            float l = (end - start).Length();
+            totalPerimeter += l;
+        }
+        ToPolylinePerimeter(totalPerimeter * f, result);
+    }
+   
+    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        ToPolylinePercentage(f, buffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(buffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
+   
+    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, float thickness, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        ToPolylinePercentage(f, buffer);
+        ClipperImmediate2D.CreatePolylineTriangulation(buffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+    }
     #endregion
 }

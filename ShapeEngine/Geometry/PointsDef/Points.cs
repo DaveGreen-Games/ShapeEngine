@@ -4,6 +4,11 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.SegmentsDef;
+using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 using Game = ShapeEngine.Core.GameDef.Game;
 
@@ -368,6 +373,138 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
                 return -1;
             }
         );
+        return true;
+    }
+    #endregion
+    
+    #region Triangulate Point Cloud
+
+    //TODO: Remove static functions (make them instance functions!)
+    public Rect GetPointCloudBoundingBox() => GetBoundingBox(this);
+    public Triangle GetPointCloudBoundingTriangle() => GetBoundingTriangle(this);
+    public void TriangulatePointCloud(Triangulation result)
+    {
+        TriangulatePointCloud(this, result);
+    }
+
+    /// <summary>
+    /// Gets a bounding rectangle that encapsulates all points.
+    /// </summary>
+    /// <param name="points">The points to encapsulate.</param>
+    /// <returns>A rectangle that contains all the points, or an empty rectangle if fewer than 2 points.</returns>
+    public static Rect GetBoundingBox(IReadOnlyList<Vector2> points)
+    {
+        var enumerable = points as Vector2[] ?? points.ToArray();
+        if (enumerable.Length < 2) return new();
+        var start = enumerable.First();
+        Rect r = new(start.X, start.Y, 0, 0);
+
+        foreach (var p in enumerable)
+        {
+            r = r.Enlarge(p);
+        }
+
+        return r;
+    }
+
+    /// <summary>
+    /// Gets a triangle that encapsulates all points, with an optional margin factor.
+    /// </summary>
+    /// <param name="points">The points to encapsulate.</param>
+    /// <param name="marginFactor">A factor for scaling the final triangle. Default is 1.</param>
+    /// <returns>A triangle that contains all the points.</returns>
+    public static Triangle GetBoundingTriangle(IReadOnlyList<Vector2> points, float marginFactor = 1f)
+    {
+        var bounds = GetBoundingBox(points);
+        float dMax = bounds.Size.Max() * marginFactor; 
+        var center = bounds.Center;
+        var a = new Vector2(center.X, bounds.BottomLeft.Y + dMax);
+        var b = new Vector2(center.X - dMax * 1.25f, bounds.TopLeft.Y - dMax / 4);
+        var c = new Vector2(center.X + dMax * 1.25f, bounds.TopLeft.Y - dMax / 4);
+        
+        return new Triangle(a, b, c);
+    }
+
+    public static void TriangulatePointCloud(IReadOnlyList<Vector2> points, Triangulation result)
+    {
+        var enumerable = points.ToList();
+        var supraTriangle = GetBoundingTriangle(enumerable, 2f);
+        TriangulatePointCloud(enumerable, supraTriangle, result);
+    }
+    
+    public static void TriangulatePointCloud(IReadOnlyList<Vector2> points, Triangle supraTriangle, Triangulation result)
+    {
+        // Triangulation triangles = new() { supraTriangle };
+        
+        result.Clear();
+        result.Add(supraTriangle);
+
+        foreach (var p in points)
+        {
+            Triangulation badTriangles = new();
+
+            //Identify 'bad triangles'
+            for (int triIndex = result.Count - 1; triIndex >= 0; triIndex--)
+            {
+                Triangle triangle = result[triIndex];
+
+                //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
+                var circumCircle = triangle.GetCircumCircle();
+                float distSq = Vector2.DistanceSquared(p, circumCircle.Center);
+                if (distSq < circumCircle.Radius * circumCircle.Radius)
+                {
+                    badTriangles.Add(triangle);
+                    result.RemoveAt(triIndex);
+                }
+            }
+
+            Segments allEdges = new();
+            foreach (var badTriangle in badTriangles)
+            {
+                allEdges.AddRange(badTriangle.GetEdges());
+            }
+
+            Segments uniqueEdges = GetUniqueSegmentsDelaunay(allEdges);
+            //Create new triangles
+            for (int i = 0; i < uniqueEdges.Count; i++)
+            {
+                var edge = uniqueEdges[i];
+                result.Add(new(p, edge));
+            }
+        }
+
+        //Remove all triangles that share a vertex with the supra triangle to recieve the final triangulation
+        for (int i = result.Count - 1; i >= 0; i--)
+        {
+            var t = result[i];
+            if (t.SharesVertex(supraTriangle)) result.RemoveAt(i);
+        }
+    }
+
+    private static Segments GetUniqueSegmentsDelaunay(Segments segments)
+    {
+        Segments uniqueEdges = new();
+        for (int i = segments.Count - 1; i >= 0; i--)
+        {
+            var edge = segments[i];
+            if (IsSimilar(segments, edge))
+            {
+                uniqueEdges.Add(edge);
+            }
+        }
+
+        return uniqueEdges;
+    }
+
+    private static bool IsSimilar(Segments segments, Segment seg)
+    {
+        var counter = 0;
+        foreach (var segment in segments)
+        {
+            if (segment.IsSimilar(seg)) counter++;
+            if (counter > 1) return false;
+        }
+
         return true;
     }
     #endregion

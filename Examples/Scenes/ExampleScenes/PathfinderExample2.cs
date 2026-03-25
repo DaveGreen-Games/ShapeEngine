@@ -17,6 +17,7 @@ using ShapeEngine.Input;
 using ShapeEngine.Pathfinding;
 using Path = ShapeEngine.Pathfinding.Path;
 using ShapeEngine.Random;
+using ShapeEngine.ShapeClipper;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
@@ -71,16 +72,16 @@ public class PathfinderExample2 : ExampleScene
             inputActionTree = [iaMoveHor, iaMoveVer];
         }
 
-        public Polygon? GetCutShape(float minSize)
-        {
-            var s = MathF.Max(minSize, shipSize);
-            return Polygon.Generate(pivot, 12, s, s * 2);
-        }
+        // public Polygon? GetCutShape(float minSize)
+        // {
+        //     var s = MathF.Max(minSize, shipSize);
+        //     return Polygon.Generate(pivot, 12, s, s * 2);
+        // }
 
-        public bool Overlaps(Polygon poly)
-        {
-            return hull.OverlapShape(poly);
-        }
+        // public bool Overlaps(Polygon poly)
+        // {
+        //     return hull.OverlapShape(poly);
+        // }
         private void CreateHull(Vector2 pos, float size)
         {
             var a = pos + new Vector2(size, 0);
@@ -524,9 +525,11 @@ public class PathfinderExample2 : ExampleScene
         public AsteroidObstacle(Vector2 center)
         {
             this.center = center;
-            this.shape = GenerateShape(center);
-            this.bb = this.shape.GetBoundingBox();
-            this.triangulation = shape.Triangulate();
+            shape = new();
+            GenerateShape(center, shape);
+            bb = this.shape.GetBoundingBox();
+            triangulation = new();
+            shape.Triangulate(triangulation);
 
         }
 
@@ -535,7 +538,8 @@ public class PathfinderExample2 : ExampleScene
             this.shape = shape;
             this.center = shape.GetCentroid();
             this.bb = this.shape.GetBoundingBox();
-            this.triangulation = shape.Triangulate();
+            this.triangulation = new();
+            this.shape.Triangulate(triangulation);
         }
 
         
@@ -543,18 +547,21 @@ public class PathfinderExample2 : ExampleScene
         {
             if (!bb.OverlapShape(cameraRect)) return;
 
-            if(drawFilled) triangulation.Draw(Colors.PcBackground.ColorRgba);
+            if (drawFilled) triangulation.Draw(Colors.PcBackground.ColorRgba);
             
             if (AsteroidLineThickness > 1)
             {
-                shape.DrawLines(AsteroidLineThickness, Colors.PcHighlight.ColorRgba);
+                TriMesh result = new();
+                shape.TriangulateOutline(result, AsteroidLineThickness, 4f, true, false);
+                result.Draw(Colors.PcHighlight.ColorRgba);
+                // shape.DrawLines(AsteroidLineThickness, Colors.PcHighlight.ColorRgba);
             }
         }
 
         
-        public static Polygon? GenerateShape(Vector2 position)
+        public static bool GenerateShape(Vector2 position, Polygon shape)
         {
-            return Polygon.Generate(position, AsteroidPointCount, AsteroidMinSize, AsteroidMaxSize);
+            return Polygon.Generate(position, AsteroidPointCount, AsteroidMinSize, AsteroidMaxSize, shape);
         }
         
         public ShapeType GetShapeType() => ShapeType.Poly;
@@ -592,7 +599,8 @@ public class PathfinderExample2 : ExampleScene
     private const float MinPathRequestDistance = CellSize * 2;
     private const float MinPathRequestDistanceSquared = MinPathRequestDistance * MinPathRequestDistance;
 
-    
+    Polygons cutOutsBuffer = new();
+    Polygons newShapesBuffer = new();
     
     
     public PathfinderExample2()
@@ -712,9 +720,11 @@ public class PathfinderExample2 : ExampleScene
         for (int i = 0; i < amount; i++)
         {
             var center = universe.GetRandomPointInside();
-            var newShape = AsteroidObstacle.GenerateShape(center);
+            Polygon newShape = new();
+            if(!AsteroidObstacle.GenerateShape(center, newShape) || newShape.Count < 3) continue;
 
-            var result = newShape.Intersect(universeShape);
+            Polygons result = new();
+            newShape.ClipIntersection(universeShape, result);
             if (result.Count > 0)
             {
                 newShape = result[0].ToPolygon();
@@ -724,11 +734,11 @@ public class PathfinderExample2 : ExampleScene
             {
                 var existingShape = shapes[j];
                 
-                if(newShape == existingShape) continue;
+                if(newShape.Equals(existingShape)) continue;
 
                 if (newShape.OverlapShape(existingShape))
                 {
-                    newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
+                    newShape.ClipUnion(existingShape, newShape);
                     shapes.RemoveAt(j);
                 }
                 else
@@ -736,11 +746,12 @@ public class PathfinderExample2 : ExampleScene
                     var cd = newShape.GetClosestPoint(existingShape);
                     if (cd.DistanceSquared <= cellDisSq)
                     {
-                        var fillShape = Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2);
-                        if (fillShape != null)
+                        Polygon fillShape = new();
+                        Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2, fillShape);
+                        if (fillShape.Count > 3)
                         {
-                            newShape.UnionShapeSelf(fillShape, FillRule.NonZero);
-                            newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
+                            newShape.ClipUnion(fillShape, newShape);
+                            newShape.ClipUnion(existingShape, newShape);
                             shapes.RemoveAt(j);  
                         }
                         
@@ -760,6 +771,7 @@ public class PathfinderExample2 : ExampleScene
         }
     }
 
+    /*
     private void AddAsteroid(Vector2 position)
     {
         var asteroidShape = AsteroidObstacle.GenerateShape(position);
@@ -867,8 +879,9 @@ public class PathfinderExample2 : ExampleScene
         var newAsteroid = new AsteroidObstacle(asteroidShape);
         asteroids.Add(newAsteroid);
     }
+    */
 
-    private void RemoveChasers(int amount)
+    /*private void RemoveChasers(int amount)
     {
         if (amount >= chasers.Count)
         {
@@ -883,7 +896,8 @@ public class PathfinderExample2 : ExampleScene
             chasers.RemoveAt(i);
             pathfinder.RemoveAgent(chaser);
         }
-    }
+    }*/
+    
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
         var gamepad = Input.GamepadManager.LastUsedGamepad;
@@ -944,16 +958,18 @@ public class PathfinderExample2 : ExampleScene
                 var asteroid = asteroids[i];
                
                 var asteroidShape = asteroid.GetShape();
-                var result = asteroidShape.CutShape(cutShape);
+                cutOutsBuffer.Clear();
+                newShapesBuffer.Clear();
+                asteroidShape.Cut(cutShape, cutOutsBuffer, newShapesBuffer);
                 
-                if (result.cutOuts.Count > 0 )
+                if (cutOutsBuffer.Count > 0)
                 {
                     lastCutShapes.Add(cutRect);
                     lastCutShapeTimers.Add(LastCutShapeDuration);
                     pathfinder.ApplyNodeValue(nodeValueRect, AsteroidObstacle.NodeCostReset);
                     asteroids.RemoveAt(i);
                 
-                    foreach (var shape in result.newShapes)
+                    foreach (var shape in newShapesBuffer)
                     {
                         if (shape.GetArea() <= CellSize * CellSize)
                         {
@@ -964,37 +980,7 @@ public class PathfinderExample2 : ExampleScene
                         asteroids.Add(newAsteroid);
                     }
                 }
-                
-                // if (ship.Overlaps(asteroid.GetShape()))
-                // {
-                //     var asteroidShape = asteroid.GetShape();
-                //     var result = asteroidShape.Cut(cutShape);
-                //
-                //     if (result.newShapes.Count > 0)
-                //     {
-                //         lastCutShapes.Add(cutRect);
-                //         lastCutShapeTimers.Add(LastCutShapeDuration);
-                //         pathfinder.ApplyNodeValue(nodeValueRect, AsteroidObstacle.NodeValueReset);
-                //         asteroids.RemoveAt(i);
-                //
-                //         foreach (var shape in result.newShapes)
-                //         {
-                //             if (shape.GetArea() <= CellSize * CellSize)
-                //             {
-                //                 pathfinder.ApplyNodeValue(shape, AsteroidObstacle.NodeValueReset);
-                //                 continue;
-                //             }
-                //             var newAsteroid = new AsteroidObstacle(shape);
-                //             asteroids.Add(newAsteroid);
-                //         }
-                //     }
-                //
-                // }
-                //
-                
-                // asteroid.Update(time.Delta);
             }
-
         }
         
         

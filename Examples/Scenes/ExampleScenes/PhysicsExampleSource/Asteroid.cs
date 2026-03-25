@@ -84,8 +84,9 @@ public class Asteroid : CollisionObject
         
         Transform = new Transform2D(position, 0f, new Size(randSize), 1f);
         paletteColor = color;
-        var relativePoints = Polygon.GenerateRelative(15, 0.4f, 1f);
-        collider = new PolygonCollider(new(),relativePoints ?? [])
+        Polygon relativePoints = new();
+        Polygon.GenerateRelative(15, 0.4f, 1f, relativePoints);
+        collider = new PolygonCollider(new(),relativePoints)
         {
             ComputeCollision = true,
             ComputeIntersections = true,

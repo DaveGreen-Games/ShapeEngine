@@ -263,8 +263,8 @@ public class ShapeDrawingTestExample : ExampleScene
         var center = Vector2.Zero;
 
         triangleTemplate = Triangle.Generate(center, size * 0.5f, size);
-        var generatedPolygon = Polygon.Generate(center, 10, radius * 0.5f, radius);
-        polygonTemplate = generatedPolygon ?? [];
+        polygonTemplate = new();
+        Polygon.Generate(center, 10, radius * 0.5f, radius, polygonTemplate);
     }
 
     private void BuildShapes()

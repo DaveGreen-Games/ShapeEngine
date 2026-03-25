@@ -38,4 +38,10 @@ public class FractureInfo
         this.Cutouts = cutouts;
         this.Pieces = pieces;
     }
+    public FractureInfo()
+    {
+        this.NewShapes = new();
+        this.Cutouts = new();
+        this.Pieces = new();
+    }
 }

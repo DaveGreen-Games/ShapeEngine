@@ -202,14 +202,12 @@ public static class PolygonDrawing
     /// </summary>
     /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored; triangles are drawn directly.</param>
     /// <param name="color">Fill color used when rendering the polygon.</param>
-    /// <param name="multiThreaded">If true, the method avoids shared helper collections and uses local allocations (calls that return new triangulations).
-    /// This makes the call safe for concurrent threads but increases temporary allocations and CPU work.</param>
     /// <remarks>
     /// Caution:This method will triangulate the polygon each call when the polygon contains more than 3 points,
     /// which can be performance-intensive for complex polygons.
     /// Precompute triangulation for best performance and then transform/draw the triangulation as needed.
     /// </remarks>
-    public static void Draw(this Polygon poly, ColorRgba color, bool multiThreaded = false)
+    public static void Draw(this Polygon poly, ColorRgba color)
     {
         if (poly.Count < 3) return;
         if (poly.Count == 3)
@@ -218,19 +216,14 @@ public static class PolygonDrawing
             return;
         }
 
-        if (multiThreaded)
-        {
-            poly.Triangulate().Draw(color);
-        }
-        else
-        {
-            drawHelperTriangulation.Clear();
-            poly.Triangulate(ref drawHelperTriangulation);
-            drawHelperTriangulation.Draw(color);
-        }
+        drawHelperTriangulation.Clear();
+        poly.Triangulate(drawHelperTriangulation);
+        drawHelperTriangulation.Draw(color);
     }
 
     #endregion
+    
+    //TODO: Rework all below with new ClipperImmediate2d system!
     
     #region Draw Lines Perimeter & Percentage
     

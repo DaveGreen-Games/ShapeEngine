@@ -179,5 +179,14 @@ public partial class Segments : ShapeList<Segment>
         foreach (var segment in this) { if (segment.IsSimilar(seg)) return true; }
         return false;
     }
+    
+    //TODO: Docs or remove function?
+    public void GetSegmentAxis(List<Vector2> result, bool normalized = false)
+    {
+        foreach (var seg in this)
+        {
+            result.Add(normalized ? seg.Dir : seg.Displacement);
+        }
+    }
     #endregion
 }
