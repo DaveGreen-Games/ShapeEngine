@@ -1,6 +1,5 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PointsDef;
@@ -189,15 +188,15 @@ public partial class Points
         }
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points translated so that the specified origin moves to a new position.
+    /// Copies all points into <paramref name="result"/>, translated so that the specified <paramref name="origin"/> moves to <paramref name="newPosition"/>.
     /// </summary>
     /// <param name="newPosition">The new position to which the origin point will be moved.</param>
     /// <param name="origin">The reference origin point in the current collection to be moved to <paramref name="newPosition"/>.</param>
-    /// <returns>A new <see cref="Points"/> instance with translated points, or <c>null</c> if the collection has fewer than 2 points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the translated points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points translated by the vector difference between <paramref name="newPosition"/> and <paramref name="origin"/>.
+    /// This method does not modify the current instance. It writes the translated points into <paramref name="result"/> by applying the vector difference between <paramref name="newPosition"/> and <paramref name="origin"/>.
     /// </remarks>
     public bool SetPositionCopy(Vector2 newPosition, Vector2 origin, Points result)
     {
@@ -206,14 +205,14 @@ public partial class Points
         return ChangePositionCopy(delta, result);
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points translated by the specified offset vector.
+    /// Copies all points into <paramref name="result"/>, translated by the specified offset vector.
     /// </summary>
     /// <param name="offset">The vector by which to move every point in the collection.</param>
-    /// <returns>A new <see cref="Points"/> instance with translated points, or <c>null</c> if the collection has fewer than 3 points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the translated points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points shifted by the given offset.
+    /// This method does not modify the current instance. It writes the shifted points into <paramref name="result"/>.
     /// </remarks>
     public bool ChangePositionCopy(Vector2 offset, Points result)
     {
@@ -228,15 +227,15 @@ public partial class Points
         return true;
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points rotated around a specified origin by a given angle in radians.
+    /// Copies all points into <paramref name="result"/>, rotated around the specified <paramref name="origin"/> by the given angle in radians.
     /// </summary>
     /// <param name="rotRad">The rotation angle in radians. Positive values rotate counterclockwise.</param>
     /// <param name="origin">The point around which all points will be rotated.</param>
-    /// <returns>A new <see cref="Points"/> instance with rotated points, or <c>null</c> if the collection has fewer than 3 points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points rotated by the specified angle around the given origin.
+    /// This method does not modify the current instance. It writes the rotated points into <paramref name="result"/>.
     /// </remarks>
     public bool ChangeRotationCopy(float rotRad, Vector2 origin, Points result)
     {
@@ -252,15 +251,15 @@ public partial class Points
         return true;
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points rotated around a specified origin to a given angle in radians.
+    /// Copies all points into <paramref name="result"/>, rotating them around the specified <paramref name="origin"/> so the first point aligns with the target angle.
     /// </summary>
     /// <param name="angleRad">The target rotation angle in radians. Positive values rotate counterclockwise.</param>
     /// <param name="origin">The point around which all points will be rotated.</param>
-    /// <returns>A new <see cref="Points"/> instance with rotated points, or <c>null</c> if the collection has fewer than 3 points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points rotated to the specified angle around the given origin.
+    /// This method does not modify the current instance. It computes the shortest rotation from the current angle of the first point relative to <paramref name="origin"/> to <paramref name="angleRad"/>, then writes the rotated points into <paramref name="result"/>.
     /// </remarks>
     public bool SetRotationCopy(float angleRad, Vector2 origin, Points result)
     {
@@ -270,15 +269,15 @@ public partial class Points
         return ChangeRotationCopy(rotRad, origin, result);
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points scaled uniformly from a specified origin.
+    /// Copies all points into <paramref name="result"/>, scaled uniformly relative to the specified <paramref name="origin"/>.
     /// </summary>
     /// <param name="scale">The uniform scale factor to apply to all points relative to the origin. Values greater than 1 enlarge, less than 1 shrink.</param>
     /// <param name="origin">The point from which scaling is performed.</param>
-    /// <returns>A new <see cref="Points"/> instance with scaled points, or <c>null</c> if the collection has fewer than 3 points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the scaled points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points scaled by the given factor from the specified origin.
+    /// This method does not modify the current instance. It writes the uniformly scaled points into <paramref name="result"/>.
     /// </remarks>
     public bool ScaleSizeCopy(float scale, Vector2 origin, Points result)
     {
@@ -296,15 +295,15 @@ public partial class Points
         return true;
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points scaled from the specified origin by a non-uniform (per-axis) scale factor.
+    /// Copies all points into <paramref name="result"/>, scaled relative to the specified <paramref name="origin"/> by a non-uniform per-axis factor.
     /// </summary>
     /// <param name="scale">The scale factor to apply to all points relative to the origin, per axis. For example, (2, 1) doubles the width but keeps the height unchanged.</param>
     /// <param name="origin">The point from which scaling is performed.</param>
-    /// <returns>A new <see cref="Points"/> instance with scaled points, or <c>null</c> if the collection has fewer than 3 points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the scaled points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points scaled by the given factor from the specified origin.
+    /// This method does not modify the current instance. It writes the per-axis scaled points into <paramref name="result"/>.
     /// </remarks>
     public bool ScaleSizeCopy(Vector2 scale, Vector2 origin, Points result)
     {
@@ -322,15 +321,15 @@ public partial class Points
         return true;
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points' distances from the specified origin changed by the given amount.
+    /// Copies all points into <paramref name="result"/>, changing each point's distance from <paramref name="origin"/> by the specified amount.
     /// </summary>
     /// <param name="amount">The amount by which to change the length of each point's distance from the origin. Positive values increase size, negative values decrease size.</param>
     /// <param name="origin">The point from which size is adjusted.</param>
-    /// <returns>A new <see cref="Points"/> instance with modified point distances, or <c>null</c> if the collection has fewer than 3 points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points' distances from the origin changed by the specified amount.
+    /// This method does not modify the current instance. It writes the adjusted points into <paramref name="result"/>.
     /// </remarks>
     public bool ChangeSizeCopy(float amount, Vector2 origin, Points result)
     {
@@ -347,18 +346,15 @@ public partial class Points
         return true;
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points set to a specified distance from the origin.
+    /// Copies all points into <paramref name="result"/>, setting each point to the specified distance from <paramref name="origin"/>.
     /// </summary>
     /// <param name="size">The target distance from the origin for each point.</param>
     /// <param name="origin">The reference point from which distances are measured and set.</param>
-    /// <returns>
-    /// A new <see cref="Points"/> instance with all points set to the specified distance from the origin,
-    /// or <c>null</c> if the collection has fewer than 3 points.
-    /// </returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It returns a new collection with all points equidistant from the origin.
+    /// This method does not modify the current instance. It writes the points with their distances set to <paramref name="size"/> into <paramref name="result"/>.
     /// </remarks>
     public bool SetSizeCopy(float size, Vector2 origin, Points result)
     {
@@ -375,19 +371,15 @@ public partial class Points
         return true;
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points transformed by the specified <see cref="Transform2D"/> and origin.
+    /// Copies all points into <paramref name="result"/>, transformed by the specified <see cref="Transform2D"/> relative to <paramref name="origin"/>.
     /// </summary>
     /// <param name="transform">The <see cref="Transform2D"/> containing the target position, rotation (in radians), and scaled size.</param>
     /// <param name="origin">The reference point from which transformations are applied.</param>
-    /// <returns>
-    /// A new <see cref="Points"/> instance with all points transformed by the given transform and origin,
-    /// or <c>null</c> if the collection has fewer than 3 points.
-    /// </returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance. It applies translation, rotation, and scaling in sequence to all points,
-    /// aligning the shape with the given transform relative to the specified origin.
+    /// This method does not modify the current instance. It applies translation, rotation, and size adjustment in sequence, then writes the transformed points into <paramref name="result"/>.
     /// </remarks>
     public bool SetTransformCopy(Transform2D transform, Vector2 origin, Points result)
     {
@@ -409,20 +401,15 @@ public partial class Points
         return true;
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> instance with all points transformed by the specified offset <see cref="Transform2D"/> and origin.
+    /// Copies all points into <paramref name="result"/>, applying the specified offset <see cref="Transform2D"/> relative to <paramref name="origin"/>.
     /// </summary>
     /// <param name="offset">The <see cref="Transform2D"/> containing the position, rotation (in radians), and scaled size offsets to apply.</param>
     /// <param name="origin">The reference point from which transformations are applied.</param>
-    /// <returns>
-    /// A new <see cref="Points"/> instance with all points transformed by the given offset and origin,
-    /// or <c>null</c> if the collection has fewer than 3 points.
-    /// </returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed points.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
-    /// This method does not modify the current instance.
-    /// It applies translation, rotation, and scaling offsets in sequence to all points,
-    /// modifying the shape relative to the given origin.
+    /// This method does not modify the current instance. It applies translation, rotation, and size offsets in sequence, then writes the transformed points into <paramref name="result"/>.
     /// </remarks>
     public bool ApplyOffsetCopy(Transform2D offset, Vector2 origin, Points result)
     {
@@ -456,6 +443,7 @@ public partial class Points
             points[i] = points[i].Floor();
         }
     }
+    
     /// <summary>
     /// Applies the ceiling operation to each <see cref="Vector2"/> in the provided list,
     /// modifying each coordinate to the smallest integer greater than or equal to it.
@@ -468,6 +456,7 @@ public partial class Points
             points[i] = points[i].Ceiling();
         }
     }
+    
     /// <summary>
     /// Rounds each <see cref="Vector2"/> in the provided list to the nearest integer values for both coordinates.
     /// </summary>
@@ -479,6 +468,7 @@ public partial class Points
             points[i] = points[i].Round();
         }
     }
+    
     /// <summary>
     /// Truncates each <see cref="Vector2"/> in the provided list, removing the fractional part of each coordinate.
     /// </summary>
@@ -490,6 +480,7 @@ public partial class Points
             points[i] = points[i].Truncate();
         }
     }
+   
     /// <summary>
     /// Applies the floor operation to all points in this collection, modifying each coordinate to the largest integer less than or equal to it.
     /// </summary>
@@ -538,11 +529,11 @@ public partial class Points
     
     #region Index Helpers
     /// <summary>
-    /// Returns the vertex immediately after the vertex at the specified index, wrapping around the polygon.
+    /// Returns the vertex immediately after the vertex at the specified index, wrapping around the points list.
     /// </summary>
     /// <param name="index">Zero-based vertex index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
     /// <returns>
-    /// The next vertex as a <see cref="Vector2"/>. If the polygon contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
+    /// The next vertex as a <see cref="Vector2"/>. If the points list contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
     /// </returns>
     public Vector2 GetNextVertex(int index)
     {
@@ -550,11 +541,11 @@ public partial class Points
     }
 
     /// <summary>
-    /// Returns the vertex immediately before the vertex at the specified index, wrapping around the polygon.
+    /// Returns the vertex immediately before the vertex at the specified index, wrapping around the points list.
     /// </summary>
     /// <param name="index">Zero-based vertex index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
     /// <returns>
-    /// The previous vertex as a <see cref="Vector2"/>. If the polygon contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
+    /// The previous vertex as a <see cref="Vector2"/>. If the points list contains no vertices, returns the default <see cref="Vector2"/> (zero vector).
     /// </returns>
     public Vector2 GetPreviousVertex(int index)
     {
@@ -566,7 +557,7 @@ public partial class Points
     /// </summary>
     /// <param name="index">Zero-based index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
     /// <returns>
-    /// The next index wrapped into the range [0, Count). If the polygon has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
+    /// The next index wrapped into the range [0, Count). If the points list has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
     /// </returns>
     public int GetNextIndex(int index)
     {
@@ -578,7 +569,7 @@ public partial class Points
     /// </summary>
     /// <param name="index">Zero-based index. Values outside the valid range are wrapped using <c>ShapeMath.WrapIndex</c>.</param>
     /// <returns>
-    /// The previous index wrapped into the range [0, Count). If the polygon has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
+    /// The previous index wrapped into the range [0, Count). If the points list has no vertices, the behavior is determined by <c>ShapeMath.WrapIndex</c>.
     /// </returns>
     public int GetPreviousIndex(int index)
     {

@@ -174,7 +174,14 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <returns>A new <see cref="Polygon"/> instance containing the same points.</returns>
     public Polygon ToPolygon() => new(this);
 
-    //TODO: Docs
+    /// <summary>
+    /// Copies this point collection into the specified <see cref="Polygon"/> instance.
+    /// </summary>
+    /// <param name="result">The destination polygon that will receive the points from this collection.</param>
+    /// <returns><c>true</c> if this collection contains at least three points and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current instance. If the conversion succeeds, any existing points in <paramref name="result"/> are cleared before the new points are added.
+    /// </remarks>
     public bool ToPolygon(Polygon result)
     {
         if (Count < 3) return false;
@@ -196,7 +203,14 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <returns>A new <see cref="Polyline"/> instance containing the same points.</returns>
     public Polyline ToPolyline() => new(this);
 
-    //TODO: Docs
+    /// <summary>
+    /// Copies this point collection into the specified <see cref="Polyline"/> instance.
+    /// </summary>
+    /// <param name="result">The destination polyline that will receive the points from this collection.</param>
+    /// <returns><c>true</c> if this collection contains at least three points and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current instance. If the conversion succeeds, any existing points in <paramref name="result"/> are cleared before the new points are added.
+    /// </remarks>
     public bool ToPolyline(Polyline result)
     {
         if (Count < 3) return false;
@@ -212,20 +226,14 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return true;
     }
     
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a tuple containing a relative transform and a normalized polygon shape based on the specified center.
+    /// Normalizes this point collection relative to the specified <paramref name="center"/> and writes the normalized points into <paramref name="result"/>.
     /// </summary>
-    /// <param name="center">The center point to use as the origin for normalization.</param>
-    /// <returns>
-    /// A tuple where:
-    /// <list type="bullet">
-    /// <item><description><see cref="Transform2D"/>: The transform representing the original center and scale.</description></item>
-    /// <item><description><see cref="Polygon"/>: The normalized polygon shape with points in the range 0-1 relative to the center.</description></item>
-    /// </list>
-    /// </returns>
+    /// <param name="center">The center point used as the origin for normalization.</param>
+    /// <param name="result">The destination polygon that will be cleared and populated with the normalized points.</param>
+    /// <returns>A <see cref="Transform2D"/> whose position is <paramref name="center"/> and whose size stores the maximum point distance from that center.</returns>
     /// <remarks>
-    /// Useful for storing shapes in a normalized form and reconstructing them with a transform.
+    /// This method does not modify the current instance. Each output point is computed by subtracting <paramref name="center"/> from the source point and dividing by the maximum distance from <paramref name="center"/> to any point in the collection.
     /// </remarks>
     public Transform2D ToRelative(Vector2 center, Polygon result)
     {
@@ -249,12 +257,11 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return (new Transform2D(center, 0f, new Size(size, 0f), 1f));
     }
 
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a list of points relative to the specified origin.
+    /// Writes all points offset relative to the specified <paramref name="origin"/> into <paramref name="result"/>.
     /// </summary>
     /// <param name="origin">The origin to subtract from each point.</param>
-    /// <returns>A list of <see cref="Vector2"/> points relative to the origin.</returns>
+    /// <param name="result">The destination list that will be cleared and populated with the relative points.</param>
     public void GetRelativeVector2List(Vector2 origin, List<Vector2> result)
     {
         result.Clear();
@@ -262,12 +269,11 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         foreach (var p in this)  result.Add(p - origin);
     }
     
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a list of points relative to the specified transform.
+    /// Writes all points transformed into the local space of the specified <paramref name="transform"/> into <paramref name="result"/>.
     /// </summary>
     /// <param name="transform">The transform to revert each point by.</param>
-    /// <returns>A list of <see cref="Vector2"/> points relative to the transform.</returns>
+    /// <param name="result">The destination list that will be cleared and populated with the transformed points.</param>
     public void GetRelativeVector2List(Transform2D transform, List<Vector2> result)
     {
         result.Clear();
@@ -275,12 +281,11 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         foreach (var p in this)  result.Add(transform.RevertPosition(p));
     }
     
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> collection with all points relative to the specified origin.
+    /// Writes all points offset relative to the specified <paramref name="origin"/> into <paramref name="result"/>.
     /// </summary>
     /// <param name="origin">The origin to subtract from each point.</param>
-    /// <returns>A new <see cref="Points"/> instance with points relative to the origin.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the relative points.</param>
     public void GetRelativePoints(Vector2 origin, Points result)
     {
         result.Clear();
@@ -288,12 +293,11 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         foreach (var p in this)  result.Add(p - origin);
     }
     
-    //TODO: Update Docs
     /// <summary>
-    /// Returns a new <see cref="Points"/> collection with all points relative to the specified transform.
+    /// Writes all points transformed into the local space of the specified <paramref name="transform"/> into <paramref name="result"/>.
     /// </summary>
     /// <param name="transform">The transform to revert each point by.</param>
-    /// <returns>A new <see cref="Points"/> instance with points relative to the transform.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed points.</param>
     public void GetRelativePoints(Transform2D transform, Points result)
     {
         result.Clear();
@@ -304,13 +308,14 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     #endregion
 
     #region Interpolated Edge Points
-    //TODO: Update Docs
     /// <summary>
-    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
-    /// Interplates between last and first point as well (closed shape)
+    /// Computes one interpolated point along each edge of the closed point loop and writes the results into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
-    /// <returns></returns>
+    /// <param name="t">The interpolation factor used for each edge. Values between 0 and 1 produce points between each vertex and the next vertex.</param>
+    /// <param name="result">The destination collection that will be cleared and populated with the interpolated points.</param>
+    /// <remarks>
+    /// The last point is interpolated toward the first point, so the input is treated as a closed shape. If the collection contains fewer than two points, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
     public void GetInterpolatedEdgePoints(float t, Points result)
     {
         if (Count < 2) return;
@@ -327,14 +332,15 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     }
 
     
-    //TODO: Update Docs
     /// <summary>
-    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
-    /// Interplates between last and first point as well (closed shape)
+    /// Repeatedly computes interpolated edge points for the closed point loop and writes the final result into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
-    /// <param name="steps">Recursive steps. The amount of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
-    /// <returns></returns>
+    /// <param name="t">The interpolation factor used for each edge on every pass. Values between 0 and 1 produce points between each vertex and the next vertex.</param>
+    /// <param name="steps">The number of interpolation passes to perform. Values less than or equal to 1 perform a single pass.</param>
+    /// <param name="result">The destination collection that will receive the interpolated points.</param>
+    /// <remarks>
+    /// The last point is interpolated toward the first point on each pass, so the input is treated as a closed shape. If the collection contains fewer than two points, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
     public void GetInterpolatedEdgePoints(float t, int steps, Points result)
     {
         if (Count < 2) return;
@@ -409,7 +415,10 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     
     #region Triangulate Point Cloud
 
-    //TODO: Docs
+    /// <summary>
+    /// Computes an axis-aligned bounding rectangle that encloses the points in this collection.
+    /// </summary>
+    /// <returns>The bounding <see cref="Rect"/> for the point cloud, or the default rectangle if the collection contains fewer than two points.</returns>
     public Rect GetPointCloudBoundingBox()
     {
         if (Count < 2) return new();
@@ -424,7 +433,14 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return r;
     }
 
-    //TODO: Docs
+    /// <summary>
+    /// Computes a triangle that encloses the current point cloud, optionally expanded by a margin factor.
+    /// </summary>
+    /// <param name="marginFactor">A multiplier applied to the bounding box extent when constructing the enclosing triangle.</param>
+    /// <returns>A <see cref="Triangle"/> that surrounds the current point cloud.</returns>
+    /// <remarks>
+    /// This is typically used as a supra-triangle when triangulating the point cloud.
+    /// </remarks>
     public Triangle GetPointCloudBoundingTriangle(float marginFactor = 1f)
     {
         var bounds = GetPointCloudBoundingBox();
@@ -437,14 +453,25 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return new Triangle(a, b, c);
     }
 
-    //TODO: Docs
+    /// <summary>
+    /// Triangulates this point cloud and writes the resulting triangles into <paramref name="result"/> using an automatically generated supra-triangle.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
+    /// <param name="marginFactor">A multiplier applied when generating the enclosing supra-triangle.</param>
     public void TriangulatePointCloud(Triangulation result, float marginFactor = 2f)
     {
         var supraTriangle = GetPointCloudBoundingTriangle(marginFactor);
         TriangulatePointCloud(supraTriangle, result);
     }
     
-    //TODO: Docs
+    /// <summary>
+    /// Triangulates this point cloud and writes the resulting triangles into <paramref name="result"/> using the specified supra-triangle.
+    /// </summary>
+    /// <param name="supraTriangle">An enclosing triangle large enough to contain all points in the cloud.</param>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
+    /// <remarks>
+    /// This method removes any triangles that still share a vertex with <paramref name="supraTriangle"/> before returning.
+    /// </remarks>
     public void TriangulatePointCloud(Triangle supraTriangle, Triangulation result)
     {
         result.Clear();
@@ -496,7 +523,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     #endregion
     
     /// <summary>
-    /// Draws a circle at each vertex in this collection using the provided radius, color and segment count.
+    /// Draws a circle at each vertex in this collection using the provided radius, color and smoothness.
     /// </summary>
     /// <param name="vertexRadius">Radius of the drawn circle for each vertex (in world units).</param>
     /// <param name="color">Color of the vertex circles.</param>
