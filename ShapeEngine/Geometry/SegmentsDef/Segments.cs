@@ -13,6 +13,15 @@ namespace ShapeEngine.Geometry.SegmentsDef;
 /// </summary>
 public partial class Segments : ShapeList<Segment>
 {
+    #region Helper
+    
+    private static HashSet<Vector2> hashSetVector2Buffer = new();
+    private static HashSet<Segment> hashSetSegmentBuffer = new();
+    private static List<Segment> segmentsBuffer = new();
+    private static List<WeightedItem<Segment>> weightedSegmentBuffer = new();
+    
+    #endregion
+    
     #region Constructors
     /// <summary>
     /// Creates an empty list of segments.
@@ -47,43 +56,16 @@ public partial class Segments : ShapeList<Segment>
         }
         return true;
     }
+    
     /// <summary>
     /// Gets the hash code for the list of segments.
     /// </summary>
     /// <returns>The hash code for the list of segments.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
     
-    //TODO: Docs
-    public bool IsSimilar(Segment seg)
-    {
-        var counter = 0;
-        foreach (var segment in this)
-        {
-            if (segment.IsSimilar(seg)) counter++;
-            if (counter > 1) return false;
-        }
-
-        return true;
-    }
     #endregion
 
     #region Public
-    
-    //TODO: Docs
-    public void GetUniqueSegments(Segments result)
-    {
-        result.Clear();
-        for (int i = Count - 1; i >= 0; i--)
-        {
-            var edge = this[i];
-            if (IsSimilar(edge))
-            {
-                result.Add(edge);
-            }
-        }
-    }
-    
-    
     /// <summary>
     /// Gets the segment at the specified index.
     /// </summary>
@@ -91,44 +73,48 @@ public partial class Segments : ShapeList<Segment>
     /// <returns>The segment at the specified index, with the index wrapped if out of bounds.</returns>
     public Segment GetSegment(int index)
     {
-        // if (index < 0) return new Segment();
         if (Count <= 0) return new Segment();
         var i =ShapeMath.WrapI(index, 0, Count - 1);
-        // var i = ((index % Count) + Count) % Count;
-        // var i = index % Count;
         return this[i];
     }
     
+    //TODO: Update docs
     /// <summary>
     /// Gets a list of unique points from all the segments in the list.
     /// </summary>
     /// <returns>A list of unique points.</returns>
-    public Points GetUniquePoints()
+    public void GetUniquePoints(Points result)
     {
-        var uniqueVertices = new HashSet<Vector2>();
+        hashSetVector2Buffer.Clear();
         for (int i = 0; i < Count; i++)
         {
             var seg = this[i];
-            uniqueVertices.Add(seg.Start);
-            uniqueVertices.Add(seg.End);
+            hashSetVector2Buffer.Add(seg.Start);
+            hashSetVector2Buffer.Add(seg.End);
         }
 
-        return new(uniqueVertices);
+        result.Clear();
+        result.EnsureCapacity(hashSetVector2Buffer.Count);
+        result.AddRange(hashSetVector2Buffer);
     }
+    
+    //TODO: Update docs
     /// <summary>
     /// Gets a list of unique segments from the list.
     /// </summary>
     /// <returns>A new list of segments containing only the unique segments from the original list.</returns>
-    public Segments GetUniqueSegments()
+    public void GetUniqueSegments(Segments result)
     {
-        var uniqueSegments = new HashSet<Segment>();
+        hashSetSegmentBuffer.Clear();
         for (int i = 0; i < Count; i++)
         {
             var seg = this[i];
-            uniqueSegments.Add(seg);
+            hashSetSegmentBuffer.Add(seg);
         }
 
-        return new(uniqueSegments);
+        result.Clear();
+        result.EnsureCapacity(hashSetSegmentBuffer.Count);
+        result.AddRange(hashSetSegmentBuffer);
     }
 
     /// <summary>
@@ -137,39 +123,62 @@ public partial class Segments : ShapeList<Segment>
     /// <returns>A random segment from the list. The longer the segment, the higher the chance of being picked.</returns>
     public Segment GetRandomSegment()
     {
-        var items = new WeightedItem<Segment>[Count];
+        weightedSegmentBuffer.Clear();
+        weightedSegmentBuffer.EnsureCapacity(Count);
         for (var i = 0; i < Count; i++)
         {
             var seg = this[i];
-            items[i] = new(seg, (int)seg.LengthSquared);
+            weightedSegmentBuffer.Add(new(seg, (int)seg.LengthSquared));
         }
-        return Rng.Instance.PickRandomItem(items);
+        return Rng.Instance.PickRandomItem(weightedSegmentBuffer);
     }
+    
     /// <summary>
     /// Gets a random point on a random segment from the list.
     /// </summary>
     /// <returns>A random point on a random segment.</returns>
     public Vector2 GetRandomPoint() => GetRandomSegment().GetRandomPoint();
+   
+    //TODO: Update docs
     /// <summary>
     /// Gets a list of random points on random segments from the list.
     /// </summary>
     /// <param name="amount">The amount of random points to generate.</param>
     /// <returns>A list of random points.</returns>
-    public Points GetRandomPoints(int amount)
+    public void GetRandomPoints(int amount, Points result)
     {
-        var items = new WeightedItem<Segment>[Count];
+        weightedSegmentBuffer.Clear();
+        weightedSegmentBuffer.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
             var seg = this[i];
-            items[i] = new(seg, (int)seg.LengthSquared);
+            weightedSegmentBuffer.Add(new(seg, (int)seg.LengthSquared));
         }
-        var pickedSegments = Rng.Instance.PickRandomItems(amount, items);
-        var randomPoints = new Points();
-        foreach (var seg in pickedSegments)
+        
+        Rng.Instance.PickRandomItems(segmentsBuffer, amount, weightedSegmentBuffer);
+        result.Clear();
+        result.EnsureCapacity(segmentsBuffer.Count);
+        
+        foreach (var seg in segmentsBuffer)
         {
-            randomPoints.Add(seg.GetRandomPoint());
+            result.Add(seg.GetRandomPoint());
         }
-        return randomPoints;
+    }
+    
+    //TODO: Add docs
+    public void GetRandomSegments(int amount, Segments result)
+    {
+        weightedSegmentBuffer.Clear();
+        weightedSegmentBuffer.EnsureCapacity(Count);
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var seg = this[i];
+            weightedSegmentBuffer.Add(new(seg, (int)seg.LengthSquared));
+        }
+        
+        Rng.Instance.PickRandomItems(result, amount, weightedSegmentBuffer);
     }
         
     /// <summary>
@@ -196,6 +205,7 @@ public partial class Segments : ShapeList<Segment>
         foreach (var segment in this) { if (segment.Equals(seg)) return true; }
         return false;
     }
+ 
     /// <summary>
     /// Checks if a similar segment is in the list.
     /// </summary>
@@ -207,8 +217,8 @@ public partial class Segments : ShapeList<Segment>
         return false;
     }
     
-    //TODO: Docs or remove function?
-    public void GetSegmentAxis(List<Vector2> result, bool normalized = false)
+    //TODO: add docs
+    public void GetSegmentDirections(List<Vector2> result, bool normalized = false)
     {
         foreach (var seg in this)
         {
@@ -217,3 +227,29 @@ public partial class Segments : ShapeList<Segment>
     }
     #endregion
 }
+
+//TODO: Remove
+    
+// public void GetUniqueSegments(Segments result)
+// {
+//     result.Clear();
+//     for (int i = Count - 1; i >= 0; i--)
+//     {
+//         var edge = this[i];
+//         if (IsSimilar(edge))
+//         {
+//             result.Add(edge);
+//         }
+//     }
+// }
+// public bool IsSimilar(Segment seg)
+// {
+//     var counter = 0;
+//     foreach (var segment in this)
+//     {
+//         if (segment.IsSimilar(seg)) counter++;
+//         if (counter > 1) return false;
+//     }
+//
+//     return true;
+// }

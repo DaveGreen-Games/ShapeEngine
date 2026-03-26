@@ -90,6 +90,7 @@ public class Rng
 
         return default(T);
     }
+    
     /// <summary>
     /// Picks a random item from the given items and weights.
     /// </summary>
@@ -115,6 +116,7 @@ public class Rng
 
         return default(T);
     }
+    
     /// <summary>
     /// Picks a random string from the given string-weight pairs.
     /// </summary>
@@ -139,6 +141,88 @@ public class Rng
 
         return "";
     }
+    
+    //TODO: Update docs
+    /// <summary>
+    /// Picks a random item from the given weighted items.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">An array of weighted items.</param>
+    /// <returns>A randomly selected item, or default if none.</returns>
+    public T? PickRandomItem<T>(IReadOnlyList<WeightedItem<T>> items)
+    {
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+
+        int ticket = RandI(0, totalWeight);
+
+        int curWeight = 0;
+        foreach (var item in items)
+        {
+            curWeight += item.weight;
+            if (ticket <= curWeight) return item.item;
+        }
+
+        return default(T);
+    }
+    
+    //TODO: Update docs
+    /// <summary>
+    /// Picks a random item from the given items and weights.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">An array of tuples containing items and their weights.</param>
+    /// <returns>A randomly selected item, or default if none.</returns>
+    public T? PickRandomItem<T>(IReadOnlyList<(T item, int weight)> items)
+    {
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+
+        int ticket = RandI(0, totalWeight);
+
+        int curWeight = 0;
+        foreach (var item in items)
+        {
+            curWeight += item.weight;
+            if (ticket <= curWeight) return item.item;
+        }
+
+        return default(T);
+    }
+    
+    //TODO: Update docs
+    /// <summary>
+    /// Picks a random string from the given string-weight pairs.
+    /// </summary>
+    /// <param name="items">An array of tuples containing string IDs and their weights.</param>
+    /// <returns>A randomly selected string, or empty string if none.</returns>
+    public string PickRandomItem(IReadOnlyList<(string id, int weight)> items)
+    {
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+
+        int ticket = RandI(0, totalWeight);
+
+        int curWeight = 0;
+        foreach (var item in items)
+        {
+            curWeight += item.weight;
+            if (ticket <= curWeight) return item.id;
+        }
+
+        return "";
+    }
+    
+    
     /// <summary>
     /// Picks multiple random items from the given weighted items.
     /// </summary>
@@ -149,6 +233,43 @@ public class Rng
     public List<T> PickRandomItems<T>(int amount, params WeightedItem<T>[] items)
     {
         List<T> chosen = new();
+        PickRandomItems<T>(chosen, amount, items);
+        return chosen;
+    }
+    
+    /// <summary>
+    /// Picks multiple random items from the given items and weights.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="amount">The number of items to pick.</param>
+    /// <param name="items">An array of tuples containing items and their weights.</param>
+    /// <returns>A list of randomly selected items.</returns>
+    public List<T> PickRandomItems<T>(int amount, params (T item, int weight)[] items)
+    {
+        List<T> chosen = new();
+        PickRandomItems(chosen, amount, items);
+        return chosen;
+    }
+   
+    /// <summary>
+    /// Picks multiple random strings from the given string-weight pairs.
+    /// </summary>
+    /// <param name="amount">The number of strings to pick.</param>
+    /// <param name="items">An array of tuples containing string IDs and their weights.</param>
+    /// <returns>A list of randomly selected strings.</returns>
+    public List<string> PickRandomItems(int amount, params (string id, int weight)[] items)
+    {
+        List<string> chosen = new();
+        PickRandomItems(chosen, amount, items);
+        return chosen;
+    }
+    
+    //TODO: Add docs
+    public void PickRandomItems<T>(List<T> result, int amount, params WeightedItem<T>[] items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
         int totalWeight = 0;
         foreach (var item in items)
         {
@@ -165,23 +286,48 @@ public class Rng
                 curWeight += item.weight;
                 if (ticket <= curWeight) 
                 { 
-                    chosen.Add(item.item);
+                    result.Add(item.item);
                     break;
                 }
             }
         }
-        return chosen;
     }
-    /// <summary>
-    /// Picks multiple random items from the given items and weights.
-    /// </summary>
-    /// <typeparam name="T">The type of the items.</typeparam>
-    /// <param name="amount">The number of items to pick.</param>
-    /// <param name="items">An array of tuples containing items and their weights.</param>
-    /// <returns>A list of randomly selected items.</returns>
-    public List<T> PickRandomItems<T>(int amount, params (T item, int weight)[] items)
+    
+    //TODO: Add docs
+    public void PickRandomItems<T>(List<T> result, int amount, params (T item, int weight)[] items)
     {
-        List<T> chosen = new();
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+        
+        for (int i = 0; i < amount; i++)
+        {
+            int ticket = RandI(0, totalWeight);
+
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight)
+                {
+                    result.Add(item.item);
+                    break;
+                }
+            }
+        }
+    }
+    
+    //TODO: Add docs
+    public void  PickRandomItems(List<string> result, int amount, params (string id, int weight)[] items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
         int totalWeight = 0;
         foreach (var item in items)
         {
@@ -199,30 +345,54 @@ public class Rng
                 curWeight += item.weight;
                 if (ticket <= curWeight)
                 {
-                    chosen.Add(item.item);
+                    result.Add(item.id);
                     break;
                 }
             }
         }
-
-        return chosen;
     }
-    /// <summary>
-    /// Picks multiple random strings from the given string-weight pairs.
-    /// </summary>
-    /// <param name="amount">The number of strings to pick.</param>
-    /// <param name="items">An array of tuples containing string IDs and their weights.</param>
-    /// <returns>A list of randomly selected strings.</returns>
-    public List<string> PickRandomItems(int amount, params (string id, int weight)[] items)
+    
+    //TODO: Add docs
+    public void PickRandomItems<T>(List<T> result, int amount, IReadOnlyList<WeightedItem<T>> items)
     {
-        List<string> chosen = new();
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
         int totalWeight = 0;
         foreach (var item in items)
         {
             totalWeight += item.weight;
         }
 
+        for (int i = 0; i < amount; i++)
+        {
+            int ticket = RandI(0, totalWeight);
 
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight) 
+                { 
+                    result.Add(item.item);
+                    break;
+                }
+            }
+        }
+    }
+    
+    //TODO: Add docs
+    public void PickRandomItems<T>(List<T> result, int amount, IReadOnlyList<(T item, int weight)> items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+        
         for (int i = 0; i < amount; i++)
         {
             int ticket = RandI(0, totalWeight);
@@ -233,13 +403,40 @@ public class Rng
                 curWeight += item.weight;
                 if (ticket <= curWeight)
                 {
-                    chosen.Add(item.id);
+                    result.Add(item.item);
                     break;
                 }
             }
         }
+    }
+    
+    //TODO: Add docs
+    public void  PickRandomItems(List<string> result, int amount, IReadOnlyList<(string id, int weight)> items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+        
+        for (int i = 0; i < amount; i++)
+        {
+            int ticket = RandI(0, totalWeight);
 
-        return chosen;
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight)
+                {
+                    result.Add(item.id);
+                    break;
+                }
+            }
+        }
     }
     #endregion
 
@@ -616,6 +813,7 @@ public class Rng
         if (pop) list.RemoveAt(index);
         return t;
     }
+    
     /// <summary>
     /// Returns a list of random elements from the source list, optionally removing them.
     /// </summary>
@@ -626,19 +824,11 @@ public class Rng
     /// <returns>A list of randomly selected elements.</returns>
     public List<T> RandCollection<T>(List<T> source, int amount, bool pop = false)
     {
-        if (source.Count <= 0 || amount <= 0) return [];
-        if (pop) amount = Math.Min(amount, source.Count);
         var list = new List<T>();
-        for (var i = 0; i < amount; i++)
-        {
-            int index = RandI(0, source.Count);
-            var element = source[index];
-            list.Add(element);
-            if (pop) source.RemoveAt(index);
-        }
+        RandCollection(source, list, amount, pop);
         return list;
-
     }
+    
     /// <summary>
     /// Returns a random element from the array.
     /// </summary>
@@ -650,5 +840,28 @@ public class Rng
         if (array.Length <= 0) return default;
         return array[RandI(0, array.Length)];
     }
+    
+    
+    //TODO: Add docs
+    public int RandCollection<T>(List<T> source, List<T> result, int amount, bool pop = false)
+    {
+        if (source.Count <= 0 || amount <= 0) return 0;
+        
+        if (pop) amount = Math.Min(amount, source.Count);
+        
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        for (var i = 0; i < amount; i++)
+        {
+            int index = RandI(0, source.Count);
+            var element = source[index];
+            result.Add(element);
+            if (pop) source.RemoveAt(index);
+        }
+        
+        return result.Count;
+    }
+    
     #endregion
 }

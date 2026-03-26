@@ -12,6 +12,7 @@ using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
+
 /// <summary>
 /// Represents a 2D circle defined by a center point and a radius.
 /// </summary>
@@ -26,7 +27,6 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     private static Segments segmentsBuffer = new();
 
     #endregion
-    
     
     #region Members
     /// <summary>
@@ -204,8 +204,10 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// <returns>A hash code for the current circle.</returns>
     public readonly override int GetHashCode() => HashCode.Combine(Center, Radius);
 
+    //TODO: Docs
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Circle;
 
+    //TODO: Docs
     public ShapeType GetShapeType() => ShapeType.Circle;
 
     /// <summary>
@@ -254,6 +256,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     {
         return Center + new Vector2(Radius, 0f).Rotate(angleRad + angleStepRad * index);
     }
+    
     /// <summary>
     /// Gets a point on the circle at a specified angle and scale factor.
     /// </summary>
@@ -261,6 +264,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// <param name="f">The scale factor for the radius.(<c>0</c> - <c>1</c>)</param>
     /// <returns>The point position as a <see cref="Vector2"/>.</returns>
     public Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
+    
     /// <summary>
     /// Gets a random point inside the circle.
     /// </summary>
@@ -318,6 +322,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// </summary>
     /// <returns>A random point on the edge as a <see cref="Vector2"/>.</returns>
     public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+    
     /// <summary>
     /// Gets a collection of random points on the circle's edge.
     /// </summary>
@@ -372,7 +377,6 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             result.Add(p);
         }
     }
-   
     
     /// <summary>
     /// Converts the circle into a polygon representation.
@@ -390,6 +394,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         }
         return poly;
     }
+    
     /// <summary>
     /// Converts the circle into a polygon representation and stores the result in the provided <see cref="Polygon"/>.
     /// </summary>
@@ -412,6 +417,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
 
         return true;
     }
+    
     /// <summary>
     /// Converts the circle into a polyline representation.
     /// </summary>
@@ -442,7 +448,6 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         }
         return true;
     }
-
     
     /// <summary>
     /// Triangulates the circle into a set of triangles.
@@ -463,11 +468,13 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             cur = next;
         }
     }
+    
     /// <summary>
     /// Gets the bounding box of the circle.
     /// </summary>
     /// <returns>A <see cref="Rect"/> representing the bounding box of the circle.</returns>
     public Rect GetBoundingBox() { return new Rect(Center, new Size(Radius, Radius) * 2f, new(0.5f)); }
+    
     /// <summary>
     /// Combines the current circle with another circle.
     /// </summary>
@@ -500,6 +507,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var left = Center + new Vector2(-Radius, 0);
         return (top, right, bottom, left);
     }
+    
     /// <summary>
     /// Gets the top, right, bottom, and left points of the circle as a list.
     /// </summary>
@@ -512,6 +520,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var left = Center + new Vector2(-Radius, 0);
         return new() { top, right, bottom, left };
     }
+    
     /// <summary>
     /// Gets the top-left, top-right, bottom-right,
     /// and bottom-left corners of the circle's bounding box.
@@ -526,6 +535,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var bl = Center + new Vector2(-Radius, Radius);
         return (tl, tr, br, bl);
     }
+    
     /// <summary>
     /// Gets the top-left, top-right, bottom-right,
     /// and bottom-left corners of the circle's bounding box as a list.
@@ -557,6 +567,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
                 left.Radius + right.Radius
             );
     }
+    
     /// <summary>
     /// Subtracts the center and radius of one circle from another.
     /// </summary>
@@ -571,6 +582,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius - right.Radius
         );
     }
+    
     /// <summary>
     /// Multiplies the center and radii of two circles.
     /// </summary>
@@ -585,6 +597,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius * right.Radius
         );
     }
+    
     /// <summary>
     /// Divides the center and  radius of one circle by another.
     /// </summary>
@@ -599,6 +612,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius / right.Radius
         );
     }
+    
     /// <summary>
     /// Adds a vector offset to the circle's center.
     /// </summary>
@@ -613,6 +627,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Subtracts a vector offset from the circle's center.
     /// </summary>
@@ -627,6 +642,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Multiplies the circle center by a vector.
     /// </summary>
@@ -641,6 +657,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Divides the circle center by a vector.
     /// </summary>
@@ -655,6 +672,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Adds a scalar value to the circle's radius.
     /// </summary>
@@ -669,6 +687,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius + right
         );
     }
+    
     /// <summary>
     /// Subtracts a scalar value from the circle's radius.
     /// </summary>
@@ -683,6 +702,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius - right
         );
     }
+    
     /// <summary>
     /// Multiplies the circle's radius by a scalar value.
     /// </summary>
@@ -697,6 +717,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius * right
         );
     }
+    
     /// <summary>
     /// Divides the circle's radius by a scalar value.
     /// </summary>
@@ -711,6 +732,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius / right
         );
     }
+    
     #endregion
 
     #region Static
@@ -762,6 +784,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         pointsBuffer.GetInterpolatedEdgePoints(t, result);
         return true;
     }
+    
     //TODO: Update docs
     /// <summary>
     /// Returns a set of interpolated edge points on the circle's circumference,
@@ -794,7 +817,52 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     
     #endregion
     
+    #region Arc Length
+   
+    //TODO: Update Docs
+    /// <summary>
+    /// Converts an angle in radians to the corresponding arc length on this circle using its <see cref="Radius"/>.
+    /// </summary>
+    /// <param name="angleRad">Angle in radians.</param>
+    /// <returns>The arc length along the circle corresponding to <paramref name="angleRad"/>.</returns>
+    public float GetArcLengthFromAngle(float angleRad, bool normalize = true)
+    {
+        if (Radius <= 0f) throw new ArgumentException("radius must be > 0", nameof(Radius));
+        float theta = angleRad;
+        if (normalize)
+        {
+            float twoPi = 2f * MathF.PI;
+            theta %= twoPi;
+            if (theta < 0f) theta += twoPi;
+        }
+        return Radius * theta;
+    }
     
+    //TODO: Update Docs
+    /// <summary>
+    /// Converts an arc length along this circle to the corresponding central angle in radians.
+    /// </summary>
+    /// <param name="arcLength">The length of the arc along the circle.</param>
+    /// <returns>The angle in radians corresponding to the provided arc length.</returns>
+    /// <exception cref="System.ArgumentException">Thrown when this circle's <see cref="Radius"/> is less than or equal to zero.</exception>
+    public float GetAngleFromArcLength(float arcLength, bool normalize = true)
+    {
+        if (Radius <= 0f) throw new ArgumentException("radius must be > 0", nameof(Radius));
+        float theta = arcLength / Radius;
+        if (normalize)
+        {
+            float twoPi = 2f * MathF.PI;
+            theta %= twoPi;
+            if (theta < 0f) theta += twoPi;
+        }
+        return theta;
+    }
+    
+    #endregion
+}
+
+    //TODO: Remove
+    /*
     /// <summary>
     /// Converts an arc length on a circle to the corresponding central angle in radians.
     /// </summary>
@@ -835,25 +903,4 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         }
         return radius * theta;
     }
-    /// <summary>
-    /// Converts an angle in radians to the corresponding arc length on this circle using its <see cref="Radius"/>.
-    /// </summary>
-    /// <param name="angleRad">Angle in radians.</param>
-    /// <returns>The arc length along the circle corresponding to <paramref name="angleRad"/>.</returns>
-    public float GetArcLengthFromAngle(float angleRad)
-    {
-        return ArcLengthFromAngle(angleRad, Radius);
-    }
-    /// <summary>
-    /// Converts an arc length along this circle to the corresponding central angle in radians.
-    /// </summary>
-    /// <param name="arcLength">The length of the arc along the circle.</param>
-    /// <returns>The angle in radians corresponding to the provided arc length.</returns>
-    /// <exception cref="System.ArgumentException">Thrown when this circle's <see cref="Radius"/> is less than or equal to zero.</exception>
-    public float GetAngleFromArcLength(float arcLength)
-    {
-        return ArcLengthToAngle(arcLength, Radius);
-    }
-    
-}
-
+    */

@@ -35,6 +35,7 @@ public partial class Segments
         }
         return intersections;
     }
+    
     /// <summary>
     /// Computes all intersection points between this segments and a collider shape.
     /// </summary>
@@ -487,6 +488,7 @@ public partial class Segments
 
         return count;
     }
+    
     /// <summary>
     /// Computes all intersection points between this segments and a triangle.
     /// </summary>
@@ -521,6 +523,7 @@ public partial class Segments
         }
         return count;
     }
+    
     /// <summary>
     /// Computes all intersection points between this segments and a rectangle.
     /// </summary>
@@ -555,6 +558,7 @@ public partial class Segments
         }
         return count;
     }
+    
     /// <summary>
     /// Computes all intersection points between this segments and a quadrilateral.
     /// </summary>
@@ -589,6 +593,7 @@ public partial class Segments
         }
         return count;
     }
+    
     /// <summary>
     /// Computes all intersection points between this segments and a polygon.
     /// </summary>
@@ -617,6 +622,7 @@ public partial class Segments
         }
         return count;
     }
+    
     /// <summary>
     /// Computes all intersection points between this segments and a polyline.
     /// </summary>

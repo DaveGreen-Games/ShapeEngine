@@ -20,17 +20,27 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 /// </summary>
 public partial class Triangulation : ShapeList<Triangle>
 {
+    #region Helper
+
+    private static Triangulation queueBuffer = new();
+    private static Triangulation subdivBuffer = new();
+    private static HashSet<Vector2> uniquePointsBuffer = new();
+    private static HashSet<Segment> uniqueSegmentsBuffer = new();
+    private static HashSet<Triangle> uniqueTrianglesBuffer = new();
+    #endregion
+    
     #region Constructors
     /// <summary>
     /// Initializes a new instance of the <see cref="Triangulation"/> class.
     /// </summary>
     public Triangulation() { }
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified capacity.
     /// </summary>
     /// <param name="capacity">The number of triangles the collection can initially store.</param>
     public Triangulation(int capacity) : base(capacity) { }
-    //public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified triangles.
     /// </summary>
@@ -64,70 +74,84 @@ public partial class Triangulation : ShapeList<Triangle>
     #endregion
 
     #region Public
-    
+    //TODO: Update docs
     /// <summary>
     /// Gets all unique points from all triangles in the triangulation.
     /// </summary>
     /// <returns>A <see cref="Points"/> collection containing all unique vertices.</returns>
-    public Points GetUniquePoints()
+    public void GetUniquePoints(Points result)
     {
-        var uniqueVertices = new HashSet<Vector2>();
+        uniquePointsBuffer.Clear();
+        uniquePointsBuffer.EnsureCapacity(Count * 3);
         for (var i = 0; i < Count; i++)
         {
             var tri = this[i];
-            uniqueVertices.Add(tri.A);
-            uniqueVertices.Add(tri.B);
-            uniqueVertices.Add(tri.C);
+            uniquePointsBuffer.Add(tri.A);
+            uniquePointsBuffer.Add(tri.B);
+            uniquePointsBuffer.Add(tri.C);
         }
-
-        return new(uniqueVertices);
+    
+        result.Clear();
+        result.EnsureCapacity(uniquePointsBuffer.Count);
+        result.AddRange(uniquePointsBuffer);
     }
+    
+    //TODO: Update docs
     /// <summary>
     /// Gets all unique segments from all triangles in the triangulation.
     /// </summary>
     /// <returns>A <see cref="Segments"/> collection containing all unique segments.</returns>
-    public Segments GetUniqueSegments()
+    public void GetUniqueSegments(Segments result)
     {
-        var unique = new HashSet<Segment>();
+        uniqueSegmentsBuffer.Clear();
+        uniqueSegmentsBuffer.EnsureCapacity(Count * 3);
         for (var i = 0; i < Count; i++)
         {
             var tri = this[i];
-            unique.Add(tri.SegmentAToB);
-            unique.Add(tri.SegmentBToC);
-            unique.Add(tri.SegmentCToA);
+            uniqueSegmentsBuffer.Add(tri.SegmentAToB);
+            uniqueSegmentsBuffer.Add(tri.SegmentBToC);
+            uniqueSegmentsBuffer.Add(tri.SegmentCToA);
         }
 
-        return new(unique);
+        result.Clear();
+        result.EnsureCapacity(uniqueSegmentsBuffer.Count);
+        result.AddRange(uniqueSegmentsBuffer);
     }
+    
+    //TODO: Update docs
     /// <summary>
     /// Gets all unique triangles in the triangulation.
     /// </summary>
     /// <returns>A <see cref="Triangulation"/> containing all unique triangles.</returns>
-    public Triangulation GetUniqueTriangles()
+    public void  GetUniqueTriangles(Triangulation result)
     {
-        var uniqueTriangles = new HashSet<Triangle>();
+        uniqueTrianglesBuffer.Clear();
+        uniqueTrianglesBuffer.EnsureCapacity(Count);
         for (var i = 0; i < Count; i++)
         {
-            var tri = this[i];
-            uniqueTriangles.Add(tri);
+            uniqueTrianglesBuffer.Add(this[i]);
         }
 
-        return new(uniqueTriangles);
+        result.Clear();
+        result.EnsureCapacity(uniqueTrianglesBuffer.Count);
+        result.AddRange(uniqueTrianglesBuffer);
     }
+    
+    //TODO: Update docs
     /// <summary>
     /// Gets all triangles that contain the specified point.
     /// </summary>
     /// <param name="p">The point to test for containment.</param>
     /// <returns>A <see cref="Triangulation"/> containing all triangles that contain the point.</returns>
-    public Triangulation GetContainingTriangles(Vector2 p)
+    public void GetContainingTriangles(Triangulation result, Vector2 p)
     {
-        Triangulation result = new();
+        result.Clear();
+        result.EnsureCapacity(Count);
         for (var i = 0; i < Count; i++)
         {
             var tri = this[i];
             if (tri.ContainsPoint(p)) result.Add(tri);
         }
-        return result;
     }
 
     /// <summary>
@@ -166,9 +190,6 @@ public partial class Triangulation : ShapeList<Triangle>
     #endregion
 
     #region Triangulation
-
-    private static Triangulation queueBuffer = new();
-    private static Triangulation subdivBuffer = new();
     
     //TODO: Docs
     public void Get(Triangulation result, float areaThreshold)
@@ -268,6 +289,7 @@ public partial class Triangulation : ShapeList<Triangle>
     }
     #endregion
 
+    //TODO: Docs
     public void ToTriMesh(TriMesh dst)
     {
         dst.Clear();

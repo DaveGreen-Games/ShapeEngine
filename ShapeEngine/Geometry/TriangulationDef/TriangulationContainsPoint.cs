@@ -74,6 +74,7 @@ public partial class Triangulation
         }
         return false;
     }
+    
     /// <summary>
     /// Checks if a collider is contained within any triangle of this triangulation.
     /// </summary>
@@ -98,6 +99,7 @@ public partial class Triangulation
         }
         return false;
     }
+    
     /// <summary>
     /// Checks if a segment is contained within any triangle of this triangulation.
     /// </summary>
@@ -169,6 +171,7 @@ public partial class Triangulation
 
         return false;
     }
+    
     /// <summary>
     /// Checks if a triangle is contained within any triangle of this triangulation.
     /// </summary>
@@ -192,6 +195,7 @@ public partial class Triangulation
 
         return false;
     }
+    
     /// <summary>
     /// Checks if a quad is contained within any triangle of this triangulation.
     /// </summary>
@@ -239,6 +243,7 @@ public partial class Triangulation
 
         return false;
     }
+    
     /// <summary>
     /// Checks if a polygon is contained within any triangle of this triangulation.
     /// </summary>
