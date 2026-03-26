@@ -159,6 +159,26 @@ public readonly partial struct Rect
         };
         return points;
     }
+    
+    //TODO: Add docs
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(8);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(D);
+        result.Add(A + v);
+        result.Add(B + v);
+        result.Add(C + v);
+        result.Add(D + v);
+        
+        return true;
+    }
 
     /// <summary>
     /// Projects the shape of the rectangle in the direction of the given vector, returning a convex hull.
@@ -177,7 +197,29 @@ public readonly partial struct Rect
             C + v,
             D + v
         };
-        return Polygon.FindConvexHull(points);
+        
+        var result = new Polygon(8);
+        points.FindConvexHull(result);
+        return result;
+    }
+    
+    //TODO: Add docs
+    public bool ProjectShape(Polygon result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+
+        var points = new Points
+        {
+            A, B, C, D,
+            A + v,
+            B + v,
+            C + v,
+            D + v
+        };
+
+        points.FindConvexHull(result);
+        
+        return true;
     }
 
     /// <summary>

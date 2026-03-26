@@ -784,9 +784,19 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// Returns the convex hull of the polygon as a new polygon.
     /// </summary>
     /// <returns>A convex polygon containing all the original points.</returns>
-    public Polygon? ToConvex() => Polygon.FindConvexHull(this);
+    public Polygon? ToConvex()
+    {
+        var result = new Polygon();
+        FindConvexHull(result);
+        return result.Count >= 3 ? result : null;
+    }
     
-    
+    //TODO: Add docs
+    public void ToConvex(Polygon result)
+    {
+        FindConvexHull(result);
+    }
+
     public bool GetEdgeDirections(List<Vector2> result, bool normalized = false)
     {
         if (Count <= 1) return false;

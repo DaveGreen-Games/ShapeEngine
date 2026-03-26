@@ -25,6 +25,7 @@ namespace ShapeEngine.Geometry.TriangleDef;
 /// </remarks>
 public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    
     #region Members
     /// <summary>
     /// The first vertex of the triangle (point A).

@@ -459,7 +459,26 @@ public readonly partial struct Triangle
         };
         return points;
     }
+    
+    //TODO: Add docs
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(6);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(A + v);
+        result.Add(B + v);
+        result.Add(C + v);
+        
+        return true;
+    }
 
+    
     /// <summary>
     /// Projects the triangle along a vector to create a convex hull polygon.
     /// </summary>
@@ -481,7 +500,26 @@ public readonly partial struct Triangle
             B + v,
             C + v
         };
-        return Polygon.FindConvexHull(points);
+        var result = new Polygon(6);
+        points.FindConvexHull(result);
+        return result;
+    }
+    
+    //TODO: Add docs
+    public bool ProjectShape(Polygon result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        var points = new Points
+        {
+            A,
+            B,
+            C,
+            A + v,
+            B + v,
+            C + v
+        };
+        points.FindConvexHull(result);
+        return true;
     }
 
     /// <summary>
@@ -530,11 +568,13 @@ public readonly partial struct Triangle
     /// <returns>The sum of the lengths of all three sides of the triangle.</returns>
     /// <remarks>The perimeter is useful for calculations involving the triangle's boundary length.</remarks>
     public float GetPerimeter() => SideA.Length() + SideB.Length() + SideC.Length();
+    
     /// <summary>
     /// Calculates the semi-perimeter (half of the triangle's perimeter).
     /// </summary>
     /// <returns>The semi-perimeter as a float: (sideA + sideB + sideC) / 2.</returns>
     public float GetSemiPerimeter() => GetPerimeter() * 0.5f;
+    
     /// <summary>
     /// Calculates the squared perimeter of the triangle.
     /// </summary>
@@ -748,62 +788,3 @@ public readonly partial struct Triangle
 
     #endregion
 }
-
-// /// <summary>
-    // /// Calculates the maximum line thickness that can be drawn inside the triangle without exceeding its boundaries.
-    // /// </summary>
-    // /// <param name="margin">
-    // /// Optional margin factor to reduce the maximum thickness for safety (default is 0.95).
-    // /// </param>
-    // /// <returns>
-    // /// The maximum allowable line thickness as a float, based on the triangle's inradius and margin.
-    // /// </returns>
-    // public float CalculateMaxLineThickness(float margin = 0.95f)
-    // {
-    //     var edgeAB = B - A;
-    //     var edgeBC = C - B;
-    //     var edgeCA = A - C;
-    //     
-    //     var lengthAB = edgeAB.Length();
-    //     if (lengthAB <= 0f) return -1f;
-    //     
-    //     var lengthBC = edgeBC.Length();
-    //     if (lengthBC <= 0f) return -1f;
-    //     
-    //     var lengthCA = edgeCA.Length();
-    //     if (lengthCA <= 0f) return -1f;
-    //
-    //     float perimeter = lengthAB + lengthBC + lengthCA;
-    //     Vector2 incenter = (A * lengthBC + B * lengthCA + C * lengthAB) / perimeter;
-    //     
-    //     var minLengthSquared = (incenter - A).LengthSquared();
-    //     var lengthSquared = (incenter - B).LengthSquared();
-    //     if (lengthSquared < minLengthSquared)
-    //     {
-    //         minLengthSquared = lengthSquared;
-    //     }
-    //     lengthSquared = (incenter - C).LengthSquared();
-    //     if (lengthSquared < minLengthSquared)
-    //     {
-    //         minLengthSquared = lengthSquared;
-    //     }
-    //     if(minLengthSquared <= 0f) return -1f;
-    //     return MathF.Sqrt(minLengthSquared) * margin;
-    //     
-    //     // Calculate side lengths
-    //     // float a = (B - C).Length();
-    //     // float b = (C - A).Length();
-    //     // float c = (A - B).Length();
-    //     //
-    //     // // Calculate semi-perimeter
-    //     // float s = (a + b + c) * 0.5f;
-    //     //
-    //     // // Calculate area using Heron's formula
-    //     // float area = MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
-    //     //
-    //     // // Inradius formula: r = area / s
-    //     // float inradius = area / s;
-    //     //
-    //     // // Return inradius as max thickness (or slightly less to be safe)
-    //     // return inradius * margin; // 0.95 leaves a small margin
-    // }

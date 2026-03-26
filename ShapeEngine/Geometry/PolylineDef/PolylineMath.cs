@@ -35,6 +35,22 @@ public partial class Polyline
         return points;
     }
 
+    //TODO: Add docs
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        result.Clear();
+        result.EnsureCapacity(Count * 2);
+        for (var i = 0; i < Count; i++)
+        {
+            result.Add(this[i]);
+            result.Add(this[i] + v);
+        }
+
+        return true;
+    }
+
+    
     /// <summary>
     /// Projects the polyline along a given vector and returns the convex hull of the resulting points as a polygon.
     /// </summary>
@@ -54,7 +70,25 @@ public partial class Polyline
             points.Add(this[i] + v);
         }
 
-        return Polygon.FindConvexHull(points);
+        Polygon result = new(points.Count);
+        points.FindConvexHull(result);
+        return result;
+    }
+    
+    //TODO: Add docs
+    public bool ProjectShape(Polygon result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f || Count < 2) return false;
+        
+        var points = new Points(Count * 2);
+        for (var i = 0; i < Count; i++)
+        {
+            points.Add(this[i]);
+            points.Add(this[i] + v);
+        }
+        
+        points.FindConvexHull(result);
+        return true;
     }
 
     /// <summary>

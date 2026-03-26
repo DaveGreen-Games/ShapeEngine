@@ -113,6 +113,22 @@ public partial class Polygon
 
         return points;
     }
+    
+    //TODO: Add docs
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+
+        result.Clear();
+        result.EnsureCapacity(Count * 2);
+        for (var i = 0; i < Count; i++)
+        {
+            result.Add(this[i]);
+            result.Add(this[i] + v);
+        }
+
+        return true;
+    }
 
     /// <summary>
     /// Projects the polygon along a vector and returns the convex hull of the result.
@@ -131,7 +147,25 @@ public partial class Polygon
             points.Add(this[i] + v);
         }
 
-        return FindConvexHull(points);
+        var result = new Polygon(Count * 2);
+        points.FindConvexHull(result);
+        return result;
+    }
+    
+    //TODO: Add docs
+    public bool ProjectShape(Polygon result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f || Count < 3) return false;
+
+        var points = new Points(Count * 2);
+        for (var i = 0; i < Count; i++)
+        {
+            points.Add(this[i]);
+            points.Add(this[i] + v);
+        }
+
+        points.FindConvexHull(result);
+        return true;
     }
 
     /// <summary>

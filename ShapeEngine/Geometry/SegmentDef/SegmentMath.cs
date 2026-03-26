@@ -66,6 +66,22 @@ public readonly partial struct Segment
         };
         return points;
     }
+    
+    //TODO: Add docs
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(4);
+        
+        result.Add(Start);
+        result.Add(End);
+        result.Add(Start + v);
+        result.Add(End + v);
+        
+        return true;
+    }
 
     /// <summary>
     /// Returns the convex hull polygon formed by projecting the segment along a given vector.
@@ -85,7 +101,25 @@ public readonly partial struct Segment
             Start + v,
             End + v,
         };
-        return Polygon.FindConvexHull(points);
+        var result = new Polygon(4);
+        points.FindConvexHull(result);
+        return result;
+    }
+    
+    //TODO: Add docs
+    public bool ProjectShape(Polygon result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        var points = new Points
+        {
+            Start,
+            End,
+            Start + v,
+            End + v,
+        };
+        
+        points.FindConvexHull(result);
+        return true;
     }
 
     /// <summary>
