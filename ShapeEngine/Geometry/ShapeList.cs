@@ -7,9 +7,6 @@ namespace ShapeEngine.Geometry;
 /// A strongly-typed list for shapes, providing utility methods for copying, random access, and index validation.
 /// </summary>
 /// <typeparam name="T">The type of elements in the list.</typeparam>
-/// <remarks>
-/// ShapeList does not perform deep copies in its <see cref="Copy"/> method.
-/// </remarks>
 public class ShapeList<T> : List<T>
 {
     /// <summary>
@@ -25,6 +22,7 @@ public class ShapeList<T> : List<T>
     {
         
     }
+    
     /// <summary>
     /// Adds a range of items to the list.
     /// </summary>
@@ -44,6 +42,21 @@ public class ShapeList<T> : List<T>
         newList.AddRange(this);
         return newList;
     }
+    
+    /// <summary>
+    /// Copies the contents of this list into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the current elements.</param>
+    /// <remarks>
+    /// This method performs a shallow copy of the elements and does not modify the current list.
+    /// </remarks>
+    public virtual void  Copy(ShapeList<T> result)
+    {
+        result.Clear();
+        result.EnsureCapacity(Count);
+        result.AddRange(this);
+    }
+    
     /// <summary>
     /// Determines whether the specified index is valid for this list.
     /// </summary>
@@ -53,6 +66,7 @@ public class ShapeList<T> : List<T>
     {
         return index >= 0 && index < Count;
     }
+    
     /// <summary>
     /// Returns a hash code for the list based on its elements.
     /// </summary>
@@ -71,21 +85,42 @@ public class ShapeList<T> : List<T>
     /// Gets a random item from the list, or null if the list is empty.
     /// </summary>
     /// <returns>A random item, or null if the list is empty.</returns>
-    public T? GetRandomItem() => Rng.Instance.RandCollection(this);
+    public T? GetRandomItem()
+    {
+        return Rng.Instance.RandCollection(this);
+    }
 
     /// <summary>
     /// Gets a list of random items from the list.
     /// </summary>
     /// <param name="amount">The number of random items to retrieve.</param>
     /// <returns>A list of random items.</returns>
-    public List<T> GetRandomItems(int amount) => Rng.Instance.RandCollection(this, amount);
+    public List<T> GetRandomItems(int amount)
+    {
+        return Rng.Instance.RandCollection(this, amount);
+    }
+    
+    /// <summary>
+    /// Selects random items from the list and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that will receive the selected items.</param>
+    /// <param name="amount">The number of random items to retrieve.</param>
+    /// <returns>The number of items written to <paramref name="result"/>.</returns>
+    public int GetRandomItems(List<T> result, int amount)
+    {
+        return Rng.Instance.RandCollection(this, result, amount);
+    }
+
     /// <summary>
     /// Gets the item at the specified index, wrapping the index if necessary.
     /// </summary>
     /// <param name="index">The index of the item to retrieve.</param>
     /// <returns>The item at the wrapped index, or the default value if the list is empty.</returns>
-    public T? GetItem(int index) => Count <= 0 ? default(T) : this[ShapeMath.WrapIndex(Count, index)];
-    
+    public T? GetItem(int index)
+    {
+        return Count <= 0 ? default(T) : this[ShapeMath.WrapIndex(Count, index)];
+    }
+
     /// <summary>
     /// Retrieves and removes a random item from the list.
     /// </summary>

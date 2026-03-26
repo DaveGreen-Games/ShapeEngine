@@ -25,7 +25,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
 
     private static Points pointsBuffer = new();
     private static Segments segmentsBuffer = new();
-
+    private static Polygon? circleSectorOutlineTriangulationPolyCache = null;
     #endregion
     
     #region Members
@@ -329,7 +329,10 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// Gets a random point on the circle's edge.
     /// </summary>
     /// <returns>A random point on the edge as a <see cref="Vector2"/>.</returns>
-    public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+    public Vector2 GetRandomPointOnEdge()
+    {
+        return GetRandomEdge().GetRandomPoint();
+    }
     
     /// <summary>
     /// Gets a collection of random points on the circle's edge.
@@ -344,6 +347,21 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             points.Add(GetRandomPointOnEdge());
         }
         return points;
+    }
+    
+    /// <summary>
+    /// Writes randomly generated points on the circle's polygonal edge approximation into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated edge points.</param>
+    /// <param name="amount">The number of random edge points to generate.</param>
+    public void GetRandomPointsOnEdge(Points result, int amount)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        for (int i = 0; i < amount; i++)
+        {
+            result.Add(GetRandomPointOnEdge());
+        }
     }
     #endregion
 
@@ -537,6 +555,24 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     }
     
     /// <summary>
+    /// Gets the top, right, bottom, and left points of the circle and stores them in the provided list.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the top, right, bottom, and left points.</param>
+    public void GetCornersList(List<Vector2> result)
+    {
+        var top = Center + new Vector2(0, -Radius);
+        var right = Center + new Vector2(Radius, 0);
+        var bottom = Center + new Vector2(0, Radius);
+        var left = Center + new Vector2(-Radius, 0);
+        result.Clear();
+        result.EnsureCapacity(4);
+        result.Add(top);
+        result.Add(right);
+        result.Add(bottom);
+        result.Add(left);
+    }
+    
+    /// <summary>
     /// Gets the top-left, top-right, bottom-right,
     /// and bottom-left corners of the circle's bounding box.
     /// </summary>
@@ -564,6 +600,26 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var br = Center + new Vector2(Radius, Radius);
         var bl = Center + new Vector2(-Radius, Radius);
         return new() {tl, tr, br, bl};
+    }
+    
+    /// <summary>
+    /// Gets the top-left, top-right, bottom-right, and bottom-left corners of the circle's bounding box
+    /// and stores them in the provided list.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the bounding box corners.</param>
+    public void GetRectCornersList(List<Vector2> result)
+    {
+        var tl = Center + new Vector2(-Radius, -Radius);
+        var tr = Center + new Vector2(Radius, -Radius);
+        var br = Center + new Vector2(Radius, Radius);
+        var bl = Center + new Vector2(-Radius, Radius);
+        
+        result.Clear();
+        result.EnsureCapacity(4);  
+        result.Add(tl);
+        result.Add(tr);
+        result.Add(br);
+        result.Add(bl);
     }
     #endregion
 

@@ -23,11 +23,12 @@ namespace ShapeEngine.Geometry.PointsDef;
 public partial class Points : ShapeList<Vector2>, IEquatable<Points>
 {
     #region Helper
+    
     private static Points pointsBuffer = new();
     private static Segments segmentsBuffer1 = new();
     private static Segments segmentsBuffer2 = new();
+    private static HashSet<Vector2> uniquePointsBuffer = new();
     
-
     #endregion
     
     #region Constructors
@@ -85,6 +86,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return GetItem(index);
         //return Count <= 0 ? new() : this[index % Count];
     }
+    
     /// <summary>
     /// Finds the index of the point in the collection that is closest to the specified position.
     /// </summary>
@@ -109,6 +111,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         }
         return closestIndex;
     }
+    
     /// <summary>
     /// Finds the point in the collection that is closest to the specified position.
     /// </summary>
@@ -133,6 +136,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         }
         return closestPoint;
     }
+    
     /// <summary>
     /// Returns a new <see cref="Points"/> instance containing only unique points from the collection.
     /// </summary>
@@ -142,25 +146,65 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// </remarks>
     public Points GetUniquePoints()
     {
-        var uniqueVertices = new HashSet<Vector2>();
+        uniquePointsBuffer.Clear();
+        uniquePointsBuffer.EnsureCapacity(Count);
         for (var i = 0; i < Count; i++)
         {
-            uniqueVertices.Add(this[i]);
+            uniquePointsBuffer.Add(this[i]);
         }
-        return new(uniqueVertices);
+        
+        var result = new Points(uniquePointsBuffer.Count);
+        result.AddRange(uniquePointsBuffer);
+        return result;
     }
+    
+    /// <summary>
+    /// Collects all unique points from this collection and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the unique points.</param>
+    /// <remarks>
+    /// This method does not modify the current collection. Point uniqueness is determined by the equality comparer used by the internal <see cref="HashSet{T}"/>.
+    /// </remarks>
+    public void GetUniquePoints(Points result)
+    {
+        uniquePointsBuffer.Clear();
+        uniquePointsBuffer.EnsureCapacity(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            uniquePointsBuffer.Add(this[i]);
+        }
+        
+        result.Clear();
+        result.EnsureCapacity(uniquePointsBuffer.Count);
+        result.AddRange(uniquePointsBuffer);
+    }
+    
     /// <summary>
     /// Returns a random point from the collection.
     /// </summary>
     /// <returns>A randomly selected <see cref="Vector2"/> from the collection.</returns>
     public Vector2 GetRandomPoint() => GetRandomItem();
+   
     /// <summary>
     /// Returns a list of random points from the collection.
     /// </summary>
     /// <param name="amount">The number of random points to retrieve.</param>
     /// <returns>A list of randomly selected <see cref="Vector2"/> points.</returns>
-    public List<Vector2> GetRandomPoints(int amount) => GetRandomItems(amount);
+    public List<Vector2> GetRandomPoints(int amount)
+    {
+        return GetRandomItems(amount);
+    }
 
+    /// <summary>
+    /// Selects random points from this collection and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that will receive the selected points.</param>
+    /// <param name="amount">The number of random points to select.</param>
+    /// <returns>The number of points written to <paramref name="result"/>.</returns>
+    public int GetRandomPoints(List<Vector2> result, int amount)
+    {
+        return GetRandomItems(result, amount);
+    }
     #endregion
     
     #region Shapes
@@ -330,7 +374,6 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
             result.Add(interpolated);
         }
     }
-
     
     /// <summary>
     /// Repeatedly computes interpolated edge points for the closed point loop and writes the final result into <paramref name="result"/>.
@@ -388,6 +431,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         );
         return true;
     }
+  
     /// <summary>
     /// Sorts the points in the collection so that the furthest points from the specified <paramref name="referencePoint"/> come first.
     /// </summary>
@@ -520,6 +564,164 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         }
     }
     
+    #endregion
+
+    #region Convex Hull
+
+    // Convex Hull Algorithms
+    // This class implements the Jarvis March (Gift Wrapping) algorithm to find the convex hull of a set of points.
+    // Reference: https://github.com/allfii/ConvexHull/tree/master
+    
+    // Alternative algorithms for convex hull computation:
+    // - Graham scan: https://en.wikipedia.org/wiki/Graham_scan
+    // - Chan's algorithm: https://en.wikipedia.org/wiki/Chan%27s_algorithm
+    
+    // Gift Wrapping algorithm resources:
+    // - Coding Train video: https://www.youtube.com/watch?v=YNyULRrydVI
+    // - Wikipedia: https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+    
+    private static int Turn_JarvisMarch(Vector2 p, Vector2 q, Vector2 r)
+    {
+        return ((q.X - p.X) * (r.Y - p.Y) - (r.X - p.X) * (q.Y - p.Y)).CompareTo(0);
+        // return ((q.getX() - p.getX()) * (r.getY() - p.getY()) - (r.getX() - p.getX()) * (q.getY() - p.getY())).CompareTo(0);
+    }
+    private static Vector2 NextHullPoint_JarvisMarch(IReadOnlyList<Vector2> points, Vector2 p)
+    {
+        // const int TurnLeft = 1;
+        const int turnRight = -1;
+        const int turnNone = 0;
+        var q = p;
+        int t;
+        foreach (var r in points)
+        {
+            t = Turn_JarvisMarch(p, q, r);
+            if (t == turnRight || t == turnNone && p.DistanceSquared(r) > p.DistanceSquared(q)) // dist(p, r) > dist(p, q))
+                q = r;
+        }
+
+        return q;
+    }
+
+    /// <summary>
+    /// Finds the convex hull of a set of points using the Jarvis March algorithm.
+    /// </summary>
+    /// <param name="points">The list of points to compute the convex hull for.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
+    public static Points ConvexHull_JarvisMarch(IReadOnlyList<Vector2> points)
+    {
+        var hull = new Points();
+        if (points.Count <= 3)
+        {
+            foreach (var p in points)
+            {
+                hull.Add(p);
+            }
+            return hull;
+        }
+        
+        foreach (var p in points)
+        {
+            if (hull.Count == 0)
+                hull.Add(p);
+            else
+            {
+                if (hull[0].X > p.X)
+                    hull[0] = p;
+                else if (ShapeMath.EqualsF(hull[0].X, p.X))
+                    if (hull[0].Y > p.Y)
+                        hull[0] = p;
+            }
+        }
+
+        var counter = 0;
+        while (counter < hull.Count)
+        {
+            var q = NextHullPoint_JarvisMarch(points, hull[counter]);
+            if (q != hull[0])
+            {
+                hull.Add(q);
+            }
+
+            counter++;
+        }
+
+        return hull;
+    }
+    
+    /// <summary>
+    /// Computes the convex hull of the specified points using the Jarvis March algorithm and writes the hull vertices into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="points">The points for which to compute the convex hull.</param>
+    /// <param name="result">The destination list that will be cleared and populated with the hull vertices in traversal order.</param>
+    /// <remarks>
+    /// If <paramref name="points"/> contains three or fewer points, they are copied directly into <paramref name="result"/>.
+    /// </remarks>
+    public static void ConvexHull_JarvisMarch(IReadOnlyList<Vector2> points, List<Vector2> result)
+    {
+        result.Clear();
+        result.EnsureCapacity(points.Count);
+        if (points.Count <= 3)
+        {
+            foreach (var p in points)
+            {
+                result.Add(p);
+            }
+            return;
+        }
+        
+        foreach (var p in points)
+        {
+            if (result.Count == 0)
+                result.Add(p);
+            else
+            {
+                if (result[0].X > p.X)
+                    result[0] = p;
+                else if (ShapeMath.EqualsF(result[0].X, p.X))
+                    if (result[0].Y > p.Y)
+                        result[0] = p;
+            }
+        }
+
+        var counter = 0;
+        while (counter < result.Count)
+        {
+            var q = NextHullPoint_JarvisMarch(points, result[counter]);
+            if (q != result[0])
+            {
+                result.Add(q);
+            }
+
+            counter++;
+        }
+    }
+
+    /// <summary>
+    /// Computes the convex hull of this point collection.
+    /// </summary>
+    /// <returns>A new <see cref="Points"/> instance containing the convex hull vertices in traversal order.</returns>
+    /// <remarks>
+    /// This method uses the Jarvis March algorithm and does not modify the current collection.
+    /// </remarks>
+    public Points FindConvexHull()
+    {
+        var poly = new Polyline();
+        poly.FindConvexHull(poly);
+        
+        return ConvexHull_JarvisMarch(this);
+    }
+    
+    /// <summary>
+    /// Computes the convex hull of this point collection and writes the hull vertices into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the convex hull vertices in traversal order.</param>
+    /// <remarks>
+    /// This method uses the Jarvis March algorithm and does not modify the current collection.
+    /// </remarks>
+    public void FindConvexHull(List<Vector2> result)
+    {
+        ConvexHull_JarvisMarch(this, result);
+    }
     #endregion
     
     /// <summary>

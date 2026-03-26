@@ -96,7 +96,7 @@ public readonly partial struct Circle
     #endregion
 
     #region Math
-
+    
     /// <summary>
     /// Projects the circle's shape points along a given vector.
     /// </summary>
@@ -107,18 +107,39 @@ public readonly partial struct Circle
     public Points? GetProjectedShapePoints(Vector2 v, int pointCount = 8)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
-        float angleStep = (MathF.PI * 2f) / pointCount;
+        
         Points points = new(pointCount * 2);
+        
+        GetProjectedShapePoints(points, v, pointCount);
+        
+        return points;
+    }
+    
+    /// <summary>
+    /// Writes the circle's projected shape points into <paramref name="result"/> by sampling the circle and duplicating each sample offset by <paramref name="v"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the projected shape points.</param>
+    /// <param name="v">The vector along which the sampled circle points are projected.</param>
+    /// <param name="pointCount">The number of circle sample points to generate before projection. Must be at least 4.</param>
+    /// <returns><c>true</c> if valid parameters were provided and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool GetProjectedShapePoints(Points result, Vector2 v, int pointCount = 8)
+    {
+        if (pointCount < 4 || v.LengthSquared() <= 0f) return false;
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        
+        result.Clear();
+        result.EnsureCapacity(pointCount * 2);
+        
         for (var i = 0; i < pointCount; i++)
         {
             var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            points.Add(p);
-            points.Add(p + v);
+            result.Add(p);
+            result.Add(p + v);
         }
 
-        return points;
+        return true;
     }
-
+    
     /// <summary>
     /// Projects the circle's shape into a polygon along a given vector.
     /// </summary>
@@ -130,17 +151,47 @@ public readonly partial struct Circle
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
         float angleStep = (MathF.PI * 2f) / pointCount;
-        Points points = new(pointCount * 2);
+        pointsBuffer.Clear();
+        pointsBuffer.EnsureCapacity(pointCount * 2);
         for (var i = 0; i < pointCount; i++)
         {
             var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            points.Add(p);
-            points.Add(p + v);
+            pointsBuffer.Add(p);
+            pointsBuffer.Add(p + v);
         }
 
-        return Polygon.FindConvexHull(points);
+        Polygon result = new Polygon();
+        pointsBuffer.FindConvexHull(result);
+        return result;
     }
 
+    /// <summary>
+    /// Projects the circle's shape into a polygon along the specified vector and writes the convex hull into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that will receive the projected shape.</param>
+    /// <param name="v">The vector along which the circle shape is projected.</param>
+    /// <param name="pointCount">The number of circle sample points to generate before projection. Must be at least 4.</param>
+    /// <returns><c>true</c> if valid parameters were provided and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method samples the circle, adds a projected copy of each sample offset by <paramref name="v"/>, and computes the convex hull of those points.
+    /// </remarks>
+    public bool ProjectShape(Polygon result, Vector2 v, int pointCount = 8)
+    {
+        if (pointCount < 4 || v.LengthSquared() <= 0f) return false;
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        pointsBuffer.Clear();
+        pointsBuffer.EnsureCapacity(pointCount * 2);
+        for (var i = 0; i < pointCount; i++)
+        {
+            var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+            pointsBuffer.Add(p);
+            pointsBuffer.Add(p + v);
+        }
+
+        pointsBuffer.FindConvexHull(result);
+        return true;
+    }
+    
     /// <summary>
     /// Floors the circle's center and radius values to the nearest lower integer.
     /// </summary>
@@ -217,9 +268,21 @@ public readonly partial struct Circle
     #endregion
     
     #region Generate Circle Sector Outline Triangulation
-    private static Polygon? circleSectorOutlineTriangulationPolyCache = null;
     
-    //TODO: Docs
+    /// <summary>
+    /// Generates a triangulated outline for a circle sector and writes it into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will receive the generated outline triangles.</param>
+    /// <param name="startAngleDeg">The starting sector angle in degrees.</param>
+    /// <param name="endAngleDeg">The ending sector angle in degrees.</param>
+    /// <param name="sides">The number of sides used to approximate the curved arc of the sector.</param>
+    /// <param name="lineThickness">The thickness of the generated outline.</param>
+    /// <param name="miterLimit">The maximum miter length used when generating the outline joins.</param>
+    /// <param name="beveled"><c>true</c> to use beveled joins; otherwise, mitered joins are used.</param>
+    /// <param name="useDelaunay"><c>true</c> to use Delaunay triangulation when generating the outline; otherwise, the default triangulation is used.</param>
+    /// <remarks>
+    /// The method returns immediately without modifying <paramref name="result"/> if the circle radius is not positive, <paramref name="sides"/> is less than 3, the sector angle span is effectively zero, or the absolute angle span is 360 degrees or greater.
+    /// </remarks>
     public void GenerateCircleSectorOutlineTriangulation(Triangulation result, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, 
         float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {

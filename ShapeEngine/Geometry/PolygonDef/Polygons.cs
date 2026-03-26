@@ -1,3 +1,6 @@
+using System.Numerics;
+using ShapeEngine.Geometry.PointsDef;
+
 namespace ShapeEngine.Geometry.PolygonDef;
 
 /// <summary>
@@ -24,4 +27,40 @@ public class Polygons : List<Polygon>
     /// </summary>
     /// <param name="polygons">An enumerable collection of polygons to add.</param>
     public Polygons(IEnumerable<Polygon> polygons) { AddRange(polygons); }
+
+    #region Convex Hull
+    
+    private static Points pointsBuffer = new();
+    
+    /// <summary>
+    /// Computes the convex hull from all points contained in the polygons in this collection.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="Points"/> instance containing the convex hull points.
+    /// </returns>
+    public Points FindConvexHull()
+    {
+        pointsBuffer.Clear();
+        foreach(var poly in this)
+        {
+            pointsBuffer.AddRange(poly);
+        }
+        return pointsBuffer.FindConvexHull();
+    }
+    
+    /// <summary>
+    /// Computes the convex hull from all points contained in the polygons in this collection
+    /// and stores the resulting hull points in the provided list.
+    /// </summary>
+    /// <param name="result">The list to populate with the convex hull points.</param>
+    public void FindConvexHull(List<Vector2> result)
+    {
+        pointsBuffer.Clear();
+        foreach(var poly in this)
+        {
+            pointsBuffer.AddRange(poly);
+        }
+        pointsBuffer.FindConvexHull(result);
+    }
+    #endregion
 }
