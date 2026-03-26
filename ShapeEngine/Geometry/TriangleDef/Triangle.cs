@@ -12,6 +12,9 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.TriangleDef;
 
+//TODO: Use result parameters
+
+
 /// <summary>
 /// Represents a triangle defined by three vertices in 2D space. The vertices should be arranged in counter-clockwise order for proper geometric calculations.
 /// </summary>
@@ -434,7 +437,13 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// </summary>
     /// <param name="amount">The number of random points to generate on the edges.</param>
     /// <returns>A collection of points positioned randomly along the triangle's perimeter.</returns>
-    public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+    public Points GetRandomPointsOnEdge(int amount)
+    {
+        var edges = GetEdges();
+        var points = new Points();
+        edges.GetRandomPoints(amount, points);
+        return points;
+    }
 
     /// <summary>
     /// Gets a specific edge of the triangle by index.

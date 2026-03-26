@@ -18,6 +18,8 @@ using Size = ShapeEngine.Core.Structs.Size;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
+//TODO: Use result parameters
+
 /// <summary>
 /// Represents a 2D polygon defined by a sequence of points in counter-clockwise order,
 /// providing geometric operations, containment and intersection tests,
@@ -865,7 +867,14 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// </summary>
     /// <param name="amount">The number of random points to generate.</param>
     /// <returns>A set of random points on the edges.</returns>
-    public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+    public Points GetRandomPointsOnEdge(int amount)
+    {
+        var edges = GetEdges();
+        var points = new Points();
+        edges.GetRandomPoints(amount, points);
+        return points;
+    }
+
     /// <summary>
     /// Gets a random point inside the convex hull of the polygon by interpolating between random edges.
     /// </summary>

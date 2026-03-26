@@ -15,6 +15,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RectDef;
 
+//TODO: Use result parameters
+
 /// <summary>
 /// Represents a rectangle defined by its top-left corner, width, and height, with various geometric and utility operations.
 /// </summary>
@@ -580,12 +582,20 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </summary>
     /// <returns>A <see cref="Vector2"/> representing a random point on the rectangle's edge.</returns>
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
+  
+    
     /// <summary>
     /// Gets a specified number of random points on the perimeter of the rectangle.
     /// </summary>
     /// <param name="amount">The number of random points to generate on the edge.</param>
     /// <returns>A <see cref="Points"/> object containing the random points on the rectangle's edge.</returns>
-    public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+    public Points GetRandomPointsOnEdge(int amount)
+    {
+        var edges = GetEdges();
+        var points = new Points();
+        edges.GetRandomPoints(amount, points);
+        return points;
+    }
 
     /// <summary>
     /// Gets a random triangle contained inside this rectangle.
