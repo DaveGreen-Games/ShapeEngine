@@ -20,6 +20,14 @@ namespace ShapeEngine.Geometry.CircleDef;
 /// </remarks>
 public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+    private static Segments segmentsBuffer = new();
+
+    #endregion
+    
+    
     #region Members
     /// <summary>
     /// The center position of the circle in 2D space.
@@ -263,31 +271,47 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var randDir = ShapeVec.VecFromAngleRad(randAngle);
         return Center + randDir * Rng.Instance.RandF(0, Radius);
     }
+  
+    //TODO: Update Docs
     /// <summary>
     /// Gets a collection of random points inside the circle.
     /// </summary>
     /// <param name="amount">The number of random points to generate.</param>
     /// <returns>A <see cref="Points"/> collection containing the random points.</returns>
-    public Points GetRandomPoints(int amount)
+    public void GetRandomPoints(int amount, Points result)
     {
-        var points = new Points();
+        if(amount <= 0) return;
+        result.Clear();
+        result.EnsureCapacity(amount);
         for (int i = 0; i < amount; i++)
         {
-            points.Add(GetRandomPoint());
+            result.Add(GetRandomPoint());
         }
-        return points;
     }
+
+    //TODO: Update docs
     /// <summary>
     /// Gets a random vertex on the circle's edge.
     /// </summary>
     /// <returns>A random vertex as a <see cref="Vector2"/>.</returns>
-    public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(GetVertices()); }
+    public Vector2 GetRandomVertex(int count = 16)
+    {
+        GetVertices(pointsBuffer, count);
+        if(pointsBuffer.Count <= 0) return Vector2.Zero;
+        return Rng.Instance.RandCollection(pointsBuffer);
+    }
 
+    //TODO: Update docs
     /// <summary>
     /// Gets a random edge segment of the circle.
     /// </summary>
     /// <returns>A random edge as a <see cref="Segment"/>.</returns>
-    public Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges()); }
+    public Segment GetRandomEdge(int count = 16)
+    {
+        GetEdges(segmentsBuffer, count);
+        if(segmentsBuffer.Count <= 0) return new Segment();
+        return Rng.Instance.RandCollection(segmentsBuffer);
+    }
 
     /// <summary>
     /// Gets a random point on the circle's edge.
@@ -311,40 +335,45 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     #endregion
 
     #region Shapes
+    //TODO: Update docs
     /// <summary>
     /// Gets the edges of the circle as a collection of segments.
     /// </summary>
     /// <param name="pointCount">The number of points to use for generating the edges. Default is 16.</param>
     /// <returns>A <see cref="Segments"/> collection representing the edges of the circle.</returns>
-    public Segments GetEdges(int pointCount = 16)
+    public void GetEdges(Segments result, int pointCount = 16)
     {
         float angleStep = (MathF.PI * 2f) / pointCount;
-        Segments segments = new();
+        result.Clear();
+        result.EnsureCapacity(pointCount);
         for (int i = 0; i < pointCount; i++)
         {
             var start = Center + new Vector2(Radius, 0f).Rotate(-angleStep * i);
             var end = Center + new Vector2(Radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
 
-            segments.Add(new Segment(start, end));
+            result.Add(new Segment(start, end));
         }
-        return segments;
     }
+    
+    //TODO: Update docs
     /// <summary>
     /// Gets the vertices of the circle as a collection of points.
     /// </summary>
     /// <param name="count">The number of vertices to generate. Default is 16.</param>
     /// <returns>A <see cref="Points"/> collection containing the vertices of the circle.</returns>
-    public Points GetVertices(int count = 16)
+    public void GetVertices(Points result, int count = 16)
     {
         float angleStep = (MathF.PI * 2f) / count;
-        Points points = new();
+        result.Clear();
+        result.EnsureCapacity(count);
         for (int i = 0; i < count; i++)
         {
             Vector2 p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            points.Add(p);
+            result.Add(p);
         }
-        return points;
     }
+   
+    
     /// <summary>
     /// Converts the circle into a polygon representation.
     /// </summary>
@@ -367,11 +396,12 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// <param name="result">A reference to the <see cref="Polygon"/> to store the result.</param>
     /// <param name="pointCount">The number of points to use for the polygon. Default is 16.</param>
     /// <returns><c>true</c> if the conversion was successful; otherwise, <c>false</c>.</returns>
-    public bool ToPolygon(ref Polygon result, int pointCount = 16)
+    public bool ToPolygon(Polygon result, int pointCount = 16)
     {
         if (Radius <= 0f) return false;
         
-        if (result.Count > 0) result.Clear();
+        result.Clear();
+        result.EnsureCapacity(pointCount);
         float angleStep = (MathF.PI * 2f) / pointCount;
         
         for (var i = 0; i < pointCount; i++)
@@ -398,6 +428,22 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         }
         return polyLine;
     }
+  
+    //TODO: Docs
+    public bool ToPolyline(Polyline result, int pointCount = 16)
+    {
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        result.Clear();
+        result.EnsureCapacity(pointCount);
+        for (int i = 0; i < pointCount; i++)
+        {
+            Vector2 p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+            result.Add(p);
+        }
+        return true;
+    }
+
+    
     /// <summary>
     /// Triangulates the circle into a set of triangles.
     /// </summary>
@@ -693,6 +739,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     #endregion
 
     #region Interpolated Edge Points
+    //TODO: Update docs
     /// <summary>
     /// Returns a set of interpolated edge points on the circle's circumference.
     /// </summary>
@@ -705,15 +752,17 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// <returns>
     /// A <see cref="Points"/> collection containing the interpolated edge points, or <c>null</c> if the input is invalid.
     /// </returns>
-    public Points? GetInterpolatedEdgePoints(float t, int vertexCount)
+    public bool GetInterpolatedEdgePoints(float t, int vertexCount, Points result)
     {
-        if(vertexCount < 3) return null;
+        if(vertexCount < 3) return false;
         
-        var points = GetVertices(vertexCount);
-        if (points.Count <= 3) return null;
+        GetVertices(pointsBuffer, vertexCount);
+        if (pointsBuffer.Count <= 3) return false;
         
-        return points.GetInterpolatedEdgePoints(t);
+        pointsBuffer.GetInterpolatedEdgePoints(t, result);
+        return true;
     }
+    //TODO: Update docs
     /// <summary>
     /// Returns a set of interpolated edge points on the circle's circumference,
     /// using a specified number of interpolation steps and vertices.
@@ -732,14 +781,15 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// A <see cref="Points"/> collection containing the interpolated edge points,
     /// or <c>null</c> if the input is invalid.
     /// </returns>
-    public Points? GetInterpolatedEdgePoints(float t, int steps, int vertexCount)
+    public bool GetInterpolatedEdgePoints(float t, int steps, int vertexCount, Points result)
     {
-        if(vertexCount < 3) return null;
+        if(vertexCount < 3) return false;
         
-        var points = GetVertices(vertexCount);
-        if (points.Count <= 3) return null;
+        GetVertices(pointsBuffer, vertexCount);
+        if (pointsBuffer.Count <= 3) return false;
         
-        return points.GetInterpolatedEdgePoints(t, steps);
+        pointsBuffer.GetInterpolatedEdgePoints(t, steps, result);
+        return true;
     }
     
     #endregion

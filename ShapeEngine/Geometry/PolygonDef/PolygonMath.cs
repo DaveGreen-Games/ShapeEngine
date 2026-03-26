@@ -575,6 +575,7 @@ public partial class Polygon
         }
     }
 
+    //TODO: Change to result parameter
     /// <summary>
     /// Returns a copy of the polygon with its centroid set to a new position.
     /// </summary>
@@ -814,6 +815,7 @@ public partial class Polygon
 
     #region Generate Rounded Corners
 
+    //TODO: Change to result parameter
     /// <summary>
     /// Creates a copy of this polygon with rounded corners.
     /// </summary>

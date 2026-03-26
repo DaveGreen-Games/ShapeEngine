@@ -527,7 +527,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// </summary>
     /// <param name="margin">Optional margin to expand the bounding triangle. Default is 3.</param>
     /// <returns>The bounding triangle.</returns>
-    public Triangle GetBoundingTriangle(float margin = 3f) => Polygon.GetBoundingTriangle(this, margin);
+    public Triangle GetBoundingTriangle(float margin = 3f) => GetPointCloudBoundingTriangle(margin);
     
     /// <summary>
     /// Returns the edges (segments) of the polygon.

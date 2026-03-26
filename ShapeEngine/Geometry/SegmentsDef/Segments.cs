@@ -52,10 +52,37 @@ public partial class Segments : ShapeList<Segment>
     /// </summary>
     /// <returns>The hash code for the list of segments.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
+    
+    //TODO: Docs
+    public bool IsSimilar(Segment seg)
+    {
+        var counter = 0;
+        foreach (var segment in this)
+        {
+            if (segment.IsSimilar(seg)) counter++;
+            if (counter > 1) return false;
+        }
 
+        return true;
+    }
     #endregion
 
     #region Public
+    
+    //TODO: Docs
+    public void GetUniqueSegments(Segments result)
+    {
+        result.Clear();
+        for (int i = Count - 1; i >= 0; i--)
+        {
+            var edge = this[i];
+            if (IsSimilar(edge))
+            {
+                result.Add(edge);
+            }
+        }
+    }
+    
     
     /// <summary>
     /// Gets the segment at the specified index.

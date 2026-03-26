@@ -20,6 +20,7 @@ public partial class Points
     /// </remarks>
     public void SetPosition(Vector2 newPosition, Vector2 origin)
     {
+        if (Count <= 0) return;
         var delta = newPosition - origin;
         ChangePosition(delta);
     }
@@ -33,6 +34,7 @@ public partial class Points
     /// </remarks>
     public void ChangePosition(Vector2 offset)
     {
+        if (Count <= 0) return;
         for (int i = 0; i < Count; i++)
         {
             this[i] += offset;
@@ -49,7 +51,7 @@ public partial class Points
     /// </remarks>
     public void ChangeRotation(float rotRad, Vector2 origin)
     {
-        if (Count < 2) return;
+        if (Count <= 0) return;
         for (int i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
@@ -67,7 +69,7 @@ public partial class Points
     /// </remarks>
     public void SetRotation(float angleRad, Vector2 origin)
     {
-        if (Count < 2) return;
+        if (Count <= 0) return;
 
         var curAngle = (this[0] - origin).AngleRad();
         var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
@@ -84,7 +86,7 @@ public partial class Points
     /// </remarks>
     public void ScaleSize(float scale, Vector2 origin)
     {
-        if (Count < 2) return;
+        if (Count <= 0) return;
         for (int i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
@@ -102,13 +104,12 @@ public partial class Points
     /// </remarks>
     public void ScaleSize(Vector2 scale, Vector2 origin)
     {
-        if (Count < 3) return; // new();
+        if (Count <= 0) return;
         for (int i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
             this[i] = origin + w * scale;
         }
-        //return path;
     }
 
     /// <summary>
@@ -121,7 +122,7 @@ public partial class Points
     /// </remarks>
     public void ChangeSize(float amount, Vector2 origin)
     {
-        if (Count < 2) return;
+        if (Count <= 0) return;
         for (var i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
@@ -139,7 +140,7 @@ public partial class Points
     /// </remarks>
     public void SetSize(float size, Vector2 origin)
     {
-        if (Count < 2) return;
+        if (Count <= 0) return;
         for (var i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
@@ -157,9 +158,16 @@ public partial class Points
     /// </remarks>
     public void SetTransform(Transform2D transform, Vector2 origin)
     {
-        SetPosition(transform.Position, origin);
-        SetRotation(transform.RotationRad, origin);
-        SetSize(transform.ScaledSize.Length, origin);
+        if (Count <= 0) return;
+        
+        var offset = transform.Position - origin;
+        var curAngle = (this[0] - origin).AngleRad();
+        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, transform.RotationRad);
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            this[i] = (origin + w.SetLength(transform.ScaledSize.Length).Rotate(rotRad)) + offset;
+        }
     }
 
     /// <summary>
@@ -172,11 +180,16 @@ public partial class Points
     /// </remarks>
     public void ApplyOffset(Transform2D offset, Vector2 origin)
     {
-        ChangePosition(offset.Position);
-        ChangeRotation(offset.RotationRad, origin);
-        ChangeSize(offset.ScaledSize.Length, origin);
+        if (Count <= 0) return;
+
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            this[i] = (origin + w.ChangeLength(offset.ScaledSize.Length).Rotate(offset.RotationRad)) + offset.Position;
+        }
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points translated so that the specified origin moves to a new position.
     /// </summary>
@@ -186,13 +199,14 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points translated by the vector difference between <paramref name="newPosition"/> and <paramref name="origin"/>.
     /// </remarks>
-    public Points? SetPositionCopy(Vector2 newPosition, Vector2 origin)
+    public bool SetPositionCopy(Vector2 newPosition, Vector2 origin, Points result)
     {
-        if (Count < 2) return null;
+        if (Count <= 0) return false;
         var delta = newPosition - origin;
-        return ChangePositionCopy(delta);
+        return ChangePositionCopy(delta, result);
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points translated by the specified offset vector.
     /// </summary>
@@ -201,18 +215,20 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points shifted by the given offset.
     /// </remarks>
-    public Points? ChangePositionCopy(Vector2 offset)
+    public bool ChangePositionCopy(Vector2 offset, Points result)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
+        if (Count <= 0) return false;
+        result.Clear();
+        result.EnsureCapacity(Count);
         for (int i = 0; i < Count; i++)
         {
-            newPolygon.Add(this[i] + offset);
+            result.Add(this[i] + offset);
         }
 
-        return newPolygon;
+        return true;
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points rotated around a specified origin by a given angle in radians.
     /// </summary>
@@ -222,19 +238,21 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points rotated by the specified angle around the given origin.
     /// </remarks>
-    public Points? ChangeRotationCopy(float rotRad, Vector2 origin)
+    public bool ChangeRotationCopy(float rotRad, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
+        if (Count <= 0) return false;
+        result.Clear();
+        result.EnsureCapacity(Count);
         for (var i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
-            newPolygon.Add(origin + w.Rotate(rotRad));
+            result.Add(origin + w.Rotate(rotRad));
         }
 
-        return newPolygon;
+        return true;
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points rotated around a specified origin to a given angle in radians.
     /// </summary>
@@ -244,14 +262,15 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points rotated to the specified angle around the given origin.
     /// </remarks>
-    public Points? SetRotationCopy(float angleRad, Vector2 origin)
+    public bool SetRotationCopy(float angleRad, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
+        if (Count <= 0) return false;
         var curAngle = (this[0] - origin).AngleRad();
         var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-        return ChangeRotationCopy(rotRad, origin);
+        return ChangeRotationCopy(rotRad, origin, result);
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points scaled uniformly from a specified origin.
     /// </summary>
@@ -261,20 +280,23 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points scaled by the given factor from the specified origin.
     /// </remarks>
-    public Points? ScaleSizeCopy(float scale, Vector2 origin)
+    public bool ScaleSizeCopy(float scale, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
+        if (Count <= 0) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(Count);
 
         for (var i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
-            newPolygon.Add(origin + w * scale);
+            result.Add(origin + w * scale);
         }
 
-        return newPolygon;
+        return true;
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points scaled from the specified origin by a non-uniform (per-axis) scale factor.
     /// </summary>
@@ -284,20 +306,23 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points scaled by the given factor from the specified origin.
     /// </remarks>
-    public Points? ScaleSizeCopy(Vector2 scale, Vector2 origin)
+    public bool ScaleSizeCopy(Vector2 scale, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
+        if (Count <= 0) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(Count);
 
         for (var i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
-            newPolygon.Add(origin + w * scale);
+            result.Add(origin + w * scale);
         }
 
-        return newPolygon;
+        return true;
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points' distances from the specified origin changed by the given amount.
     /// </summary>
@@ -307,20 +332,22 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points' distances from the origin changed by the specified amount.
     /// </remarks>
-    public Points? ChangeSizeCopy(float amount, Vector2 origin)
+    public bool ChangeSizeCopy(float amount, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
+        if (Count <= 0) return false;
+        result.Clear();
+        result.EnsureCapacity(Count);
 
         for (var i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
-            newPolygon.Add(origin + w.ChangeLength(amount));
+            result.Add(origin + w.ChangeLength(amount));
         }
 
-        return newPolygon;
+        return true;
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points set to a specified distance from the origin.
     /// </summary>
@@ -333,20 +360,22 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It returns a new collection with all points equidistant from the origin.
     /// </remarks>
-    public Points? SetSizeCopy(float size, Vector2 origin)
+    public bool SetSizeCopy(float size, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
+        if (Count <= 0) return false;
+        result.Clear();
+        result.EnsureCapacity(Count);
 
         for (var i = 0; i < Count; i++)
         {
             var w = this[i] - origin;
-            newPolygon.Add(origin + w.SetLength(size));
+            result.Add(origin + w.SetLength(size));
         }
 
-        return newPolygon;
+        return true;
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points transformed by the specified <see cref="Transform2D"/> and origin.
     /// </summary>
@@ -360,16 +389,27 @@ public partial class Points
     /// This method does not modify the current instance. It applies translation, rotation, and scaling in sequence to all points,
     /// aligning the shape with the given transform relative to the specified origin.
     /// </remarks>
-    public Points? SetTransformCopy(Transform2D transform, Vector2 origin)
+    public bool SetTransformCopy(Transform2D transform, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
-        var newPoints = SetPositionCopy(transform.Position, origin);
-        if (newPoints == null) return null;
-        newPoints.SetRotation(transform.RotationRad, origin);
-        newPoints.SetSize(transform.ScaledSize.Length, origin);
-        return newPoints;
+        if (Count <= 0) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(Count);
+
+        var offset = transform.Position - origin;
+        var curAngle = (this[0] - origin).AngleRad();
+        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, transform.RotationRad);
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            var p = (origin + w.SetLength(transform.ScaledSize.Length).Rotate(rotRad)) + offset;
+            result.Add(p);
+        }
+
+        return true;
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> instance with all points transformed by the specified offset <see cref="Transform2D"/> and origin.
     /// </summary>
@@ -384,15 +424,21 @@ public partial class Points
     /// It applies translation, rotation, and scaling offsets in sequence to all points,
     /// modifying the shape relative to the given origin.
     /// </remarks>
-    public Points? ApplyOffsetCopy(Transform2D offset, Vector2 origin)
+    public bool ApplyOffsetCopy(Transform2D offset, Vector2 origin, Points result)
     {
-        if (Count < 3) return null;
+        if (Count <= 0) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(Count);
 
-        var newPoints = ChangePositionCopy(offset.Position);
-        if (newPoints == null) return null;
-        newPoints.ChangeRotation(offset.RotationRad, origin);
-        newPoints.ChangeSize(offset.ScaledSize.Length, origin);
-        return newPoints;
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            var p = (origin + w.ChangeLength(offset.ScaledSize.Length).Rotate(offset.RotationRad)) + offset.Position;
+            result.Add(p);
+        }
+
+        return true;
     }
 
     #endregion

@@ -297,6 +297,7 @@ public partial class Polyline
         }
     }
 
+    //TODO: Change to result parameter
     /// <summary>
     /// Returns a new polyline translated so its centroid is at the specified position.
     /// </summary>

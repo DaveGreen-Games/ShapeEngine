@@ -22,6 +22,14 @@ namespace ShapeEngine.Geometry.PointsDef;
 /// </remarks>
 public partial class Points : ShapeList<Vector2>, IEquatable<Points>
 {
+    #region Helper
+    private static Points pointsBuffer = new();
+    private static Segments segmentsBuffer1 = new();
+    private static Segments segmentsBuffer2 = new();
+    
+
+    #endregion
+    
     #region Constructors
     /// <summary>
     /// Initializes a new instance of the <see cref="Points"/> class.
@@ -166,7 +174,8 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <returns>A new <see cref="Polygon"/> instance containing the same points.</returns>
     public Polygon ToPolygon() => new(this);
 
-    public bool ToPolygon(ref Polygon result)
+    //TODO: Docs
+    public bool ToPolygon(Polygon result)
     {
         if (Count < 3) return false;
         
@@ -187,6 +196,23 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <returns>A new <see cref="Polyline"/> instance containing the same points.</returns>
     public Polyline ToPolyline() => new(this);
 
+    //TODO: Docs
+    public bool ToPolyline(Polyline result)
+    {
+        if (Count < 3) return false;
+        
+        if(result.Count > 0) result.Clear();
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var point = this[i];
+            result.Add(point);
+        }
+
+        return true;
+    }
+    
+    //TODO: Update Docs
     /// <summary>
     /// Returns a tuple containing a relative transform and a normalized polygon shape based on the specified center.
     /// </summary>
@@ -201,7 +227,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <remarks>
     /// Useful for storing shapes in a normalized form and reconstructing them with a transform.
     /// </remarks>
-    public (Transform2D transform, Polygon shape) ToRelative(Vector2 center)
+    public Transform2D ToRelative(Vector2 center, Polygon result)
     {
         var maxLengthSq = 0f;
         for (int i = 0; i < this.Count; i++)
@@ -211,87 +237,97 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         }
 
         var size = MathF.Sqrt(maxLengthSq);
-
-        var relativeShape = new Polygon();
+        
+        result.Clear();
+        result.EnsureCapacity(this.Count);
         for (int i = 0; i < this.Count; i++)
         {
             var w = this[i] - center;
-            relativeShape.Add(w / size); //transforms it to range 0 - 1
+            result.Add(w / size); //transforms it to range 0 - 1
         }
 
-        return (new Transform2D(center, 0f, new Size(size, 0f), 1f), relativeShape);
+        return (new Transform2D(center, 0f, new Size(size, 0f), 1f));
     }
 
+    //TODO: Update Docs
     /// <summary>
     /// Returns a list of points relative to the specified origin.
     /// </summary>
     /// <param name="origin">The origin to subtract from each point.</param>
     /// <returns>A list of <see cref="Vector2"/> points relative to the origin.</returns>
-    public List<Vector2> GetRelativeVector2List(Vector2 origin)
+    public void GetRelativeVector2List(Vector2 origin, List<Vector2> result)
     {
-        var relative = new List<Vector2>(Count);
-        foreach (var p in this)  relative.Add(p - origin);
-        return relative;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        foreach (var p in this)  result.Add(p - origin);
     }
+    
+    //TODO: Update Docs
     /// <summary>
     /// Returns a list of points relative to the specified transform.
     /// </summary>
     /// <param name="transform">The transform to revert each point by.</param>
     /// <returns>A list of <see cref="Vector2"/> points relative to the transform.</returns>
-    public List<Vector2> GetRelativeVector2List(Transform2D transform)
+    public void GetRelativeVector2List(Transform2D transform, List<Vector2> result)
     {
-        var relative = new List<Vector2>(Count);
-        foreach (var p in this)  relative.Add(transform.RevertPosition(p));
-        return relative;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        foreach (var p in this)  result.Add(transform.RevertPosition(p));
     }
+    
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> collection with all points relative to the specified origin.
     /// </summary>
     /// <param name="origin">The origin to subtract from each point.</param>
     /// <returns>A new <see cref="Points"/> instance with points relative to the origin.</returns>
-    public Points GetRelativePoints(Vector2 origin)
+    public void GetRelativePoints(Vector2 origin, Points result)
     {
-        var relative = new Points(Count);
-        foreach (var p in this)  relative.Add(p - origin);
-        return relative;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        foreach (var p in this)  result.Add(p - origin);
     }
+    
+    //TODO: Update Docs
     /// <summary>
     /// Returns a new <see cref="Points"/> collection with all points relative to the specified transform.
     /// </summary>
     /// <param name="transform">The transform to revert each point by.</param>
     /// <returns>A new <see cref="Points"/> instance with points relative to the transform.</returns>
-    public Points GetRelativePoints(Transform2D transform)
+    public void GetRelativePoints(Transform2D transform, Points result)
     {
-        var relative = new Points(Count);
-        foreach (var p in this)  relative.Add(transform.RevertPosition(p));
-        return relative;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        foreach (var p in this)  result.Add(transform.RevertPosition(p));
     }
 
     #endregion
 
     #region Interpolated Edge Points
-
+    //TODO: Update Docs
     /// <summary>
     /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
     /// Interplates between last and first point as well (closed shape)
     /// </summary>
     /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
     /// <returns></returns>
-    public Points? GetInterpolatedEdgePoints(float t)
+    public void GetInterpolatedEdgePoints(float t, Points result)
     {
-        if (Count < 2) return null;
+        if (Count < 2) return;
 
-        var result = new Points();
+        result.Clear();
+        result.EnsureCapacity(Count);
         for (int i = 0; i < Count; i++)
         {
             var cur = this[i];
             var next = this[(i + 1) % Count];
-            var interpolated = cur.Lerp(next, t);// Vector2.Lerp(cur, next, t);
+            var interpolated = cur.Lerp(next, t);
             result.Add(interpolated);
         }
-        
-        return result;
     }
+
+    
+    //TODO: Update Docs
     /// <summary>
     /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
     /// Interplates between last and first point as well (closed shape)
@@ -299,32 +335,26 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
     /// <param name="steps">Recursive steps. The amount of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
     /// <returns></returns>
-    public Points? GetInterpolatedEdgePoints(float t, int steps)
+    public void GetInterpolatedEdgePoints(float t, int steps, Points result)
     {
-        if (Count < 2) return null;
-        if (steps <= 1) return GetInterpolatedEdgePoints(t);
+        if (Count < 2) return;
+        if (steps <= 1)
+        {
+            GetInterpolatedEdgePoints(t, result);
+            return;
+        }
 
         int remainingSteps = steps;
-        var result = new Points();
-        var buffer = new Points();
+        result.Clear();
         while (remainingSteps > 0)
         {
             var target = result.Count <= 0 ? this : result;
-            for (int i = 0; i < target.Count; i++)
-            {
-                var cur = target[i];
-                var next = target[(i + 1) % target.Count];
-                var interpolated = cur.Lerp(next, t);
-                buffer.Add(interpolated);
-            }
-
-            (result, buffer) = (buffer, result);//switch buffer and result
-            buffer.Clear();
+            target.GetInterpolatedEdgePoints(t, pointsBuffer);
+            result.Clear();
+            result.AddRange(pointsBuffer);
+            pointsBuffer.Clear();
             remainingSteps--;
         }
-
-        
-        return result;
     }
     #endregion
     
@@ -379,27 +409,14 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     
     #region Triangulate Point Cloud
 
-    //TODO: Remove static functions (make them instance functions!)
-    public Rect GetPointCloudBoundingBox() => GetBoundingBox(this);
-    public Triangle GetPointCloudBoundingTriangle() => GetBoundingTriangle(this);
-    public void TriangulatePointCloud(Triangulation result)
+    //TODO: Docs
+    public Rect GetPointCloudBoundingBox()
     {
-        TriangulatePointCloud(this, result);
-    }
-
-    /// <summary>
-    /// Gets a bounding rectangle that encapsulates all points.
-    /// </summary>
-    /// <param name="points">The points to encapsulate.</param>
-    /// <returns>A rectangle that contains all the points, or an empty rectangle if fewer than 2 points.</returns>
-    public static Rect GetBoundingBox(IReadOnlyList<Vector2> points)
-    {
-        var enumerable = points as Vector2[] ?? points.ToArray();
-        if (enumerable.Length < 2) return new();
-        var start = enumerable.First();
+        if (Count < 2) return new();
+        var start = this[0];
         Rect r = new(start.X, start.Y, 0, 0);
 
-        foreach (var p in enumerable)
+        foreach (var p in this)
         {
             r = r.Enlarge(p);
         }
@@ -407,15 +424,10 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return r;
     }
 
-    /// <summary>
-    /// Gets a triangle that encapsulates all points, with an optional margin factor.
-    /// </summary>
-    /// <param name="points">The points to encapsulate.</param>
-    /// <param name="marginFactor">A factor for scaling the final triangle. Default is 1.</param>
-    /// <returns>A triangle that contains all the points.</returns>
-    public static Triangle GetBoundingTriangle(IReadOnlyList<Vector2> points, float marginFactor = 1f)
+    //TODO: Docs
+    public Triangle GetPointCloudBoundingTriangle(float marginFactor = 1f)
     {
-        var bounds = GetBoundingBox(points);
+        var bounds = GetPointCloudBoundingBox();
         float dMax = bounds.Size.Max() * marginFactor; 
         var center = bounds.Center;
         var a = new Vector2(center.X, bounds.BottomLeft.Y + dMax);
@@ -425,21 +437,20 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         return new Triangle(a, b, c);
     }
 
-    public static void TriangulatePointCloud(IReadOnlyList<Vector2> points, Triangulation result)
+    //TODO: Docs
+    public void TriangulatePointCloud(Triangulation result, float marginFactor = 2f)
     {
-        var enumerable = points.ToList();
-        var supraTriangle = GetBoundingTriangle(enumerable, 2f);
-        TriangulatePointCloud(enumerable, supraTriangle, result);
+        var supraTriangle = GetPointCloudBoundingTriangle(marginFactor);
+        TriangulatePointCloud(supraTriangle, result);
     }
     
-    public static void TriangulatePointCloud(IReadOnlyList<Vector2> points, Triangle supraTriangle, Triangulation result)
+    //TODO: Docs
+    public void TriangulatePointCloud(Triangle supraTriangle, Triangulation result)
     {
-        // Triangulation triangles = new() { supraTriangle };
-        
         result.Clear();
         result.Add(supraTriangle);
 
-        foreach (var p in points)
+        foreach (var p in this)
         {
             Triangulation badTriangles = new();
 
@@ -458,17 +469,18 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
                 }
             }
 
-            Segments allEdges = new();
+            segmentsBuffer1.Clear();
+            segmentsBuffer1.EnsureCapacity(badTriangles.Count * 3);
             foreach (var badTriangle in badTriangles)
             {
-                allEdges.AddRange(badTriangle.GetEdges());
+                segmentsBuffer1.AddRange(badTriangle.GetEdges());
             }
 
-            Segments uniqueEdges = GetUniqueSegmentsDelaunay(allEdges);
+            segmentsBuffer1.GetUniqueSegments(segmentsBuffer2);
             //Create new triangles
-            for (int i = 0; i < uniqueEdges.Count; i++)
+            for (int i = 0; i < segmentsBuffer2.Count; i++)
             {
-                var edge = uniqueEdges[i];
+                var edge = segmentsBuffer2[i];
                 result.Add(new(p, edge));
             }
         }
@@ -480,33 +492,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
             if (t.SharesVertex(supraTriangle)) result.RemoveAt(i);
         }
     }
-
-    private static Segments GetUniqueSegmentsDelaunay(Segments segments)
-    {
-        Segments uniqueEdges = new();
-        for (int i = segments.Count - 1; i >= 0; i--)
-        {
-            var edge = segments[i];
-            if (IsSimilar(segments, edge))
-            {
-                uniqueEdges.Add(edge);
-            }
-        }
-
-        return uniqueEdges;
-    }
-
-    private static bool IsSimilar(Segments segments, Segment seg)
-    {
-        var counter = 0;
-        foreach (var segment in segments)
-        {
-            if (segment.IsSimilar(seg)) counter++;
-            if (counter > 1) return false;
-        }
-
-        return true;
-    }
+    
     #endregion
     
     /// <summary>
