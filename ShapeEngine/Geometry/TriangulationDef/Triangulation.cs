@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Random;
 using ShapeEngine.ShapeClipper;
+using ShapeEngine.StaticLib;
 using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.TriangulationDef;
@@ -74,11 +75,13 @@ public partial class Triangulation : ShapeList<Triangle>
     #endregion
 
     #region Public
-    //TODO: Update docs
     /// <summary>
-    /// Gets all unique points from all triangles in the triangulation.
+    /// Collects all unique triangle vertices in this triangulation and writes them into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A <see cref="Points"/> collection containing all unique vertices.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the unique vertices.</param>
+    /// <remarks>
+    /// This method does not modify the current triangulation. Vertex uniqueness is determined by the equality comparer used by the internal <see cref="HashSet{T}"/>.
+    /// </remarks>
     public void GetUniquePoints(Points result)
     {
         uniquePointsBuffer.Clear();
@@ -96,11 +99,13 @@ public partial class Triangulation : ShapeList<Triangle>
         result.AddRange(uniquePointsBuffer);
     }
     
-    //TODO: Update docs
     /// <summary>
-    /// Gets all unique segments from all triangles in the triangulation.
+    /// Collects all unique triangle edges in this triangulation and writes them into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A <see cref="Segments"/> collection containing all unique segments.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the unique segments.</param>
+    /// <remarks>
+    /// This method does not modify the current triangulation. Segment uniqueness is determined by the equality comparer used by the internal <see cref="HashSet{T}"/>.
+    /// </remarks>
     public void GetUniqueSegments(Segments result)
     {
         uniqueSegmentsBuffer.Clear();
@@ -118,11 +123,13 @@ public partial class Triangulation : ShapeList<Triangle>
         result.AddRange(uniqueSegmentsBuffer);
     }
     
-    //TODO: Update docs
     /// <summary>
-    /// Gets all unique triangles in the triangulation.
+    /// Collects all unique triangles in this triangulation and writes them into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A <see cref="Triangulation"/> containing all unique triangles.</returns>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the unique triangles.</param>
+    /// <remarks>
+    /// This method does not modify the current triangulation. Triangle uniqueness is determined by the equality comparer used by the internal <see cref="HashSet{T}"/>.
+    /// </remarks>
     public void  GetUniqueTriangles(Triangulation result)
     {
         uniqueTrianglesBuffer.Clear();
@@ -137,12 +144,11 @@ public partial class Triangulation : ShapeList<Triangle>
         result.AddRange(uniqueTrianglesBuffer);
     }
     
-    //TODO: Update docs
     /// <summary>
-    /// Gets all triangles that contain the specified point.
+    /// Finds all triangles in this triangulation that contain the specified point and writes them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the containing triangles.</param>
     /// <param name="p">The point to test for containment.</param>
-    /// <returns>A <see cref="Triangulation"/> containing all triangles that contain the point.</returns>
     public void GetContainingTriangles(Triangulation result, Vector2 p)
     {
         result.Clear();
@@ -163,7 +169,8 @@ public partial class Triangulation : ShapeList<Triangle>
     /// <remarks>Indices are wrapped using modulo operation.</remarks>
     public Segment GetSegment(int triangleIndex, int segmentIndex)
     {
-        var i = triangleIndex % Count;
+        var i = ShapeMath.WrapIndex(Count, triangleIndex);
+        // var i = triangleIndex % Count;
         return this[i].GetSegment(segmentIndex);
     }
     
@@ -191,7 +198,14 @@ public partial class Triangulation : ShapeList<Triangle>
 
     #region Triangulation
     
-    //TODO: Docs
+    /// <summary>
+    /// Filters this triangulation by triangle area and writes triangles whose area is greater than or equal to <paramref name="areaThreshold"/> into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the filtered triangles.</param>
+    /// <param name="areaThreshold">The minimum area a triangle must have to be copied into <paramref name="result"/>.</param>
+    /// <remarks>
+    /// If <paramref name="areaThreshold"/> is less than or equal to 0, the method returns immediately without modifying <paramref name="result"/>.
+    /// </remarks>
     public void Get(Triangulation result, float areaThreshold)
     {
         if (areaThreshold <= 0f) return;
@@ -207,7 +221,14 @@ public partial class Triangulation : ShapeList<Triangle>
         }
     }
     
-    //TODO: Docs
+    /// <summary>
+    /// Recursively subdivides triangles in this triangulation until each resulting triangle has an area smaller than <paramref name="minArea"/>, then writes the final triangles into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the subdivided triangles.</param>
+    /// <param name="minArea">The area threshold below which a triangle is kept instead of subdivided further.</param>
+    /// <remarks>
+    /// This method clears <paramref name="result"/> before processing. Triangles with area greater than or equal to <paramref name="minArea"/> are subdivided by calling <c>Triangle.Triangulate</c>.
+    /// </remarks>
     public void Subdivide(Triangulation result, float minArea)
     {
         result.Clear();
@@ -233,7 +254,17 @@ public partial class Triangulation : ShapeList<Triangle>
         }
     }
     
-    //TODO: Docs
+    /// <summary>
+    /// Recursively subdivides triangles in this triangulation using area limits, optional random retention, and narrow-triangle rejection, writing accepted triangles into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that receives the accepted triangles.</param>
+    /// <param name="minArea">Triangles with area smaller than this value are kept without further subdivision.</param>
+    /// <param name="maxArea">Triangles with area greater than this value are always subdivided.</param>
+    /// <param name="keepChance">The probability of keeping a triangle whose area lies between <paramref name="minArea"/> and <paramref name="maxArea"/>. Values outside the range [0, 1] cause a probability to be derived from the triangle area.</param>
+    /// <param name="narrowValue">Triangles considered narrow by this threshold are kept without further subdivision.</param>
+    /// <remarks>
+    /// If the triangulation is empty, the method returns immediately without modifying <paramref name="result"/>. Unlike the other <c>Subdivide</c> overload, this method does not clear <paramref name="result"/> before appending accepted triangles.
+    /// </remarks>
     public void Subdivide(Triangulation result, float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
     {
         if (this.Count <= 0) return;
@@ -289,7 +320,13 @@ public partial class Triangulation : ShapeList<Triangle>
     }
     #endregion
 
-    //TODO: Docs
+    /// <summary>
+    /// Converts this triangulation into a <see cref="TriMesh"/> by writing each triangle's vertices into <paramref name="dst"/>.
+    /// </summary>
+    /// <param name="dst">The destination mesh that will be cleared and populated with triangle vertex data.</param>
+    /// <remarks>
+    /// Each triangle contributes its vertices in A-B-C order to <c>dst.Triangles</c>.
+    /// </remarks>
     public void ToTriMesh(TriMesh dst)
     {
         dst.Clear();

@@ -1,5 +1,4 @@
 using System.Numerics;
-using ShapeEngine.Core;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Random;
@@ -78,11 +77,13 @@ public partial class Segments : ShapeList<Segment>
         return this[i];
     }
     
-    //TODO: Update docs
     /// <summary>
-    /// Gets a list of unique points from all the segments in the list.
+    /// Collects all unique segment endpoints in this collection and writes them into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A list of unique points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the unique points.</param>
+    /// <remarks>
+    /// This method does not modify the current collection. Point uniqueness is determined by the equality comparer used by the internal <see cref="HashSet{T}"/>.
+    /// </remarks>
     public void GetUniquePoints(Points result)
     {
         hashSetVector2Buffer.Clear();
@@ -98,11 +99,13 @@ public partial class Segments : ShapeList<Segment>
         result.AddRange(hashSetVector2Buffer);
     }
     
-    //TODO: Update docs
     /// <summary>
-    /// Gets a list of unique segments from the list.
+    /// Collects all unique segments in this collection and writes them into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A new list of segments containing only the unique segments from the original list.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the unique segments.</param>
+    /// <remarks>
+    /// This method does not modify the current collection. Segment uniqueness is determined by the equality comparer used by the internal <see cref="HashSet{T}"/>.
+    /// </remarks>
     public void GetUniqueSegments(Segments result)
     {
         hashSetSegmentBuffer.Clear();
@@ -139,12 +142,14 @@ public partial class Segments : ShapeList<Segment>
     /// <returns>A random point on a random segment.</returns>
     public Vector2 GetRandomPoint() => GetRandomSegment().GetRandomPoint();
    
-    //TODO: Update docs
     /// <summary>
-    /// Gets a list of random points on random segments from the list.
+    /// Writes random points sampled from randomly selected segments into <paramref name="result"/>.
     /// </summary>
     /// <param name="amount">The amount of random points to generate.</param>
-    /// <returns>A list of random points.</returns>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated points.</param>
+    /// <remarks>
+    /// Segment selection is weighted by each segment's squared length, so longer segments are more likely to be chosen.
+    /// </remarks>
     public void GetRandomPoints(int amount, Points result)
     {
         weightedSegmentBuffer.Clear();
@@ -166,7 +171,14 @@ public partial class Segments : ShapeList<Segment>
         }
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Writes randomly selected segments from this collection into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="amount">The number of segments to select.</param>
+    /// <param name="result">The destination collection that will receive the selected segments.</param>
+    /// <remarks>
+    /// Segment selection is weighted by each segment's squared length, so longer segments are more likely to be chosen.
+    /// </remarks>
     public void GetRandomSegments(int amount, Segments result)
     {
         weightedSegmentBuffer.Clear();
@@ -217,9 +229,15 @@ public partial class Segments : ShapeList<Segment>
         return false;
     }
     
-    //TODO: add docs
+    /// <summary>
+    /// Writes the direction vector of each segment into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that receives one direction vector per segment.</param>
+    /// <param name="normalized"><c>true</c> to write normalized direction vectors; <c>false</c> to write each segment's full displacement vector.</param>
     public void GetSegmentDirections(List<Vector2> result, bool normalized = false)
     {
+        result.Clear();
+        result.EnsureCapacity(Count);
         foreach (var seg in this)
         {
             result.Add(normalized ? seg.Dir : seg.Displacement);
@@ -227,29 +245,3 @@ public partial class Segments : ShapeList<Segment>
     }
     #endregion
 }
-
-//TODO: Remove
-    
-// public void GetUniqueSegments(Segments result)
-// {
-//     result.Clear();
-//     for (int i = Count - 1; i >= 0; i--)
-//     {
-//         var edge = this[i];
-//         if (IsSimilar(edge))
-//         {
-//             result.Add(edge);
-//         }
-//     }
-// }
-// public bool IsSimilar(Segment seg)
-// {
-//     var counter = 0;
-//     foreach (var segment in this)
-//     {
-//         if (segment.IsSimilar(seg)) counter++;
-//         if (counter > 1) return false;
-//     }
-//
-//     return true;
-// }

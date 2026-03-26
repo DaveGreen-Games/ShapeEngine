@@ -457,7 +457,8 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     public Segment GetSegment(int index)
     {
         if (index < 0) return new Segment();
-        var i = index % 3;
+        // var i = index % 3;
+        var i = ShapeMath.WrapIndex(3, index);
         if(i == 0) return SegmentAToB;
         if(i == 1) return SegmentBToC;
         return SegmentCToA;
