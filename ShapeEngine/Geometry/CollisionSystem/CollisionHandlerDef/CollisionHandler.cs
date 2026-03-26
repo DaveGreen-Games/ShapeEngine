@@ -5,6 +5,9 @@ using ShapeEngine.Geometry.PolygonDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 
+//TODO: Go through all outside functions that are use in collision handler parallel mode and add overloads for reusable buffer parameters (makes them thread safe and memory efficient)
+
+
 
 /// <summary>
 /// Handles collision detection, resolution, and spatial queries for registered <see cref="CollisionObject"/> instances.
