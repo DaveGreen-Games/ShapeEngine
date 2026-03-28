@@ -1,12 +1,13 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PointsDef;
 
 public partial class Points
 {
-    #region Transform
+    #region Transform Self
 
     /// <summary>
     /// Sets the position of all points in the collection by translating them so that the specified <paramref name="origin"/> moves to <paramref name="newPosition"/>.
@@ -188,6 +189,10 @@ public partial class Points
         }
     }
 
+    #endregion
+
+    #region Transform Copy
+    
     /// <summary>
     /// Copies all points into <paramref name="result"/>, translated so that the specified <paramref name="origin"/> moves to <paramref name="newPosition"/>.
     /// </summary>
@@ -198,11 +203,11 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It writes the translated points into <paramref name="result"/> by applying the vector difference between <paramref name="newPosition"/> and <paramref name="origin"/>.
     /// </remarks>
-    public bool SetPositionCopy(Vector2 newPosition, Vector2 origin, Points result)
+    public bool SetPositionCopy(Points result, Vector2 newPosition, Vector2 origin)
     {
         if (Count <= 0) return false;
         var delta = newPosition - origin;
-        return ChangePositionCopy(delta, result);
+        return ChangePositionCopy(result, delta);
     }
 
     /// <summary>
@@ -214,7 +219,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It writes the shifted points into <paramref name="result"/>.
     /// </remarks>
-    public bool ChangePositionCopy(Vector2 offset, Points result)
+    public bool ChangePositionCopy(Points result, Vector2 offset)
     {
         if (Count <= 0) return false;
         result.Clear();
@@ -237,7 +242,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It writes the rotated points into <paramref name="result"/>.
     /// </remarks>
-    public bool ChangeRotationCopy(float rotRad, Vector2 origin, Points result)
+    public bool ChangeRotationCopy(Points result, float rotRad, Vector2 origin)
     {
         if (Count <= 0) return false;
         result.Clear();
@@ -261,12 +266,12 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It computes the shortest rotation from the current angle of the first point relative to <paramref name="origin"/> to <paramref name="angleRad"/>, then writes the rotated points into <paramref name="result"/>.
     /// </remarks>
-    public bool SetRotationCopy(float angleRad, Vector2 origin, Points result)
+    public bool SetRotationCopy(Points result, float angleRad, Vector2 origin)
     {
         if (Count <= 0) return false;
         var curAngle = (this[0] - origin).AngleRad();
         var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-        return ChangeRotationCopy(rotRad, origin, result);
+        return ChangeRotationCopy(result, rotRad, origin);
     }
 
     /// <summary>
@@ -279,7 +284,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It writes the uniformly scaled points into <paramref name="result"/>.
     /// </remarks>
-    public bool ScaleSizeCopy(float scale, Vector2 origin, Points result)
+    public bool ScaleSizeCopy(Points result, float scale, Vector2 origin)
     {
         if (Count <= 0) return false;
         
@@ -305,7 +310,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It writes the per-axis scaled points into <paramref name="result"/>.
     /// </remarks>
-    public bool ScaleSizeCopy(Vector2 scale, Vector2 origin, Points result)
+    public bool ScaleSizeCopy(Points result, Vector2 scale, Vector2 origin)
     {
         if (Count <= 0) return false;
         
@@ -331,7 +336,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It writes the adjusted points into <paramref name="result"/>.
     /// </remarks>
-    public bool ChangeSizeCopy(float amount, Vector2 origin, Points result)
+    public bool ChangeSizeCopy(Points result, float amount, Vector2 origin)
     {
         if (Count <= 0) return false;
         result.Clear();
@@ -356,7 +361,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It writes the points with their distances set to <paramref name="size"/> into <paramref name="result"/>.
     /// </remarks>
-    public bool SetSizeCopy(float size, Vector2 origin, Points result)
+    public bool SetSizeCopy(Points result, float size, Vector2 origin)
     {
         if (Count <= 0) return false;
         result.Clear();
@@ -381,7 +386,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It applies translation, rotation, and size adjustment in sequence, then writes the transformed points into <paramref name="result"/>.
     /// </remarks>
-    public bool SetTransformCopy(Transform2D transform, Vector2 origin, Points result)
+    public bool SetTransformCopy(Points result, Transform2D transform, Vector2 origin)
     {
         if (Count <= 0) return false;
         
@@ -411,7 +416,7 @@ public partial class Points
     /// <remarks>
     /// This method does not modify the current instance. It applies translation, rotation, and size offsets in sequence, then writes the transformed points into <paramref name="result"/>.
     /// </remarks>
-    public bool ApplyOffsetCopy(Transform2D offset, Vector2 origin, Points result)
+    public bool ApplyOffsetCopy(Points result, Transform2D offset, Vector2 origin)
     {
         if (Count <= 0) return false;
         
@@ -428,9 +433,236 @@ public partial class Points
         return true;
     }
 
+    
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, translated so the mean centroid moves to <paramref name="newPosition"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the translated points.</param>
+    /// <param name="newPosition">The new position to which the mean centroid will be moved.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the translation origin.
+    /// </remarks>
+    public bool SetPositionCopy(Points result, Vector2 newPosition)
+    {
+        return SetPositionCopy(result, newPosition, GetCentroidMean());
+    }
+
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, rotated around the mean centroid by the given angle in radians.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated points.</param>
+    /// <param name="rotRad">The rotation angle in radians. Positive values rotate counterclockwise.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the rotation origin.
+    /// </remarks>
+    public bool ChangeRotationCopy(Points result, float rotRad)
+    {
+        return ChangeRotationCopy(result, rotRad, GetCentroidMean());
+    }
+
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, rotating them around the mean centroid so the first point aligns with the target angle.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated points.</param>
+    /// <param name="angleRad">The target rotation angle in radians. Positive values rotate counterclockwise.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the rotation origin.
+    /// </remarks>
+    public bool SetRotationCopy(Points result, float angleRad)
+    {
+        return SetRotationCopy(result, angleRad, GetCentroidMean());
+    }
+    
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, scaled uniformly relative to the mean centroid.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the scaled points.</param>
+    /// <param name="scale">The uniform scale factor to apply relative to the mean centroid.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the scaling origin.
+    /// </remarks>
+    public bool ScaleSizeCopy(Points result, float scale)
+    {
+        return ScaleSizeCopy(result, scale, GetCentroidMean());
+    }
+    
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, changing each point's distance from the mean centroid by the specified amount.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized points.</param>
+    /// <param name="amount">The amount by which to change the length of each point's distance from the mean centroid.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the size-adjustment origin.
+    /// </remarks>
+    public bool ChangeSizeCopy(Points result, float amount)
+    {
+        return ChangeSizeCopy(result, amount, GetCentroidMean());
+    }
+    
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, setting each point to the specified distance from the mean centroid.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized points.</param>
+    /// <param name="size">The target distance from the mean centroid for each point.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the reference origin.
+    /// </remarks>
+    public bool SetSizeCopy(Points result, float size)
+    {
+        return SetSizeCopy(result, size, GetCentroidMean());
+    }
+    
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, transformed by the specified <see cref="Transform2D"/> relative to the mean centroid.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed points.</param>
+    /// <param name="transform">The transform containing the target position, rotation, and scaled size.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the transformation origin.
+    /// </remarks>
+    public bool SetTransformCopy(Points result, Transform2D transform)
+    {
+        return SetTransformCopy(result, transform, GetCentroidMean());
+    }
+    
+    /// <summary>
+    /// Copies all points into <paramref name="result"/>, applying the specified offset transform relative to the mean centroid.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed points.</param>
+    /// <param name="offset">The offset transform containing the position, rotation, and scaled size offsets to apply.</param>
+    /// <returns><c>true</c> if the current collection contains at least one point and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This convenience overload uses <see cref="GetCentroidMean()"/> as the transformation origin.
+    /// </remarks>
+    public bool ApplyOffsetCopy(Points result, Transform2D offset)
+    {
+        return ApplyOffsetCopy(result, offset, GetCentroidMean());
+    }
     #endregion
 
     #region Math
+    /// <summary>
+    /// Calculates the mean centroid (arithmetic average) of all points in the polyline.
+    /// </summary>
+    /// <returns>
+    /// The mean centroid as a <see cref="Vector2"/>. Returns (0,0) if the polyline is empty, or the single point if only one exists.
+    /// </returns>
+    public Vector2 GetCentroidMean()
+    {
+        if (Count <= 0) return new(0f);
+        else if (Count == 1) return this[0];
+        Vector2 total = new(0f);
+        foreach (Vector2 p in this)
+        {
+            total += p;
+        }
+
+        return total / Count;
+    }
+    
+    /// <summary>
+    /// Returns a set of points representing the projection of the polyline along a given vector.
+    /// </summary>
+    /// <param name="v">The vector along which to project each point of the polyline.</param>
+    /// <returns>
+    /// A <see cref="Points"/> collection containing the original and projected points, or <c>null</c> if the vector is zero.
+    /// </returns>
+    /// <remarks>
+    /// Each point in the polyline is duplicated and offset by the vector <paramref name="v"/>.
+    /// </remarks>
+    public Points? GetProjectedShapePoints(Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return null;
+        var points = new Points(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            points.Add(this[i]);
+            points.Add(this[i] + v);
+        }
+
+        return points;
+    }
+
+    /// <summary>
+    /// Writes the original points and their projected counterparts into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the original and projected points.</param>
+    /// <param name="v">The vector used to offset each projected point.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// For each point in the current collection, this method appends the original point followed by that point translated by <paramref name="v"/>.
+    /// </remarks>
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        result.Clear();
+        result.EnsureCapacity(Count * 2);
+        for (var i = 0; i < Count; i++)
+        {
+            result.Add(this[i]);
+            result.Add(this[i] + v);
+        }
+
+        return true;
+    }
+
+    
+    /// <summary>
+    /// Projects the polyline along a given vector and returns the convex hull of the resulting points as a polygon.
+    /// </summary>
+    /// <param name="v">The vector along which to project each point of the polyline.</param>
+    /// <returns>
+    /// A <see cref="Polygon"/> representing the convex hull of the projected points,
+    /// or <c>null</c> if the vector is zero.
+    /// </returns>
+    public Polygon? ProjectShape(Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f || Count < 2) return null;
+        
+        var points = new Points(Count * 2);
+        for (var i = 0; i < Count; i++)
+        {
+            points.Add(this[i]);
+            points.Add(this[i] + v);
+        }
+
+        Polygon result = new(points.Count);
+        points.FindConvexHull(result);
+        return result;
+    }
+    
+    /// <summary>
+    /// Projects the points along the given vector and writes the convex hull of the combined point set into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that receives the convex hull of the original and projected points.</param>
+    /// <param name="v">The vector used to offset each projected point.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero, the collection contains at least two points, and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method creates a temporary doubled point set containing each original point and its translated counterpart, then computes the convex hull into <paramref name="result"/>.
+    /// </remarks>
+    public bool ProjectShape(Polygon result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f || Count < 2) return false;
+        
+        var points = new Points(Count * 2);
+        for (var i = 0; i < Count; i++)
+        {
+            points.Add(this[i]);
+            points.Add(this[i] + v);
+        }
+        
+        points.FindConvexHull(result);
+        return true;
+    }
+    
+    
     /// <summary>
     /// Applies the floor operation to each <see cref="Vector2"/> in the provided list,
     /// modifying each coordinate to the largest integer less than or equal to it.

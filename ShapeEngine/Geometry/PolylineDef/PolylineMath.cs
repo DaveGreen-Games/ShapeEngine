@@ -13,85 +13,6 @@ public partial class Polyline
     #region Math
 
     /// <summary>
-    /// Returns a set of points representing the projection of the polyline along a given vector.
-    /// </summary>
-    /// <param name="v">The vector along which to project each point of the polyline.</param>
-    /// <returns>
-    /// A <see cref="Points"/> collection containing the original and projected points, or <c>null</c> if the vector is zero.
-    /// </returns>
-    /// <remarks>
-    /// Each point in the polyline is duplicated and offset by the vector <paramref name="v"/>.
-    /// </remarks>
-    public Points? GetProjectedShapePoints(Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f) return null;
-        var points = new Points(Count);
-        for (var i = 0; i < Count; i++)
-        {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
-        }
-
-        return points;
-    }
-
-    //TODO: Add docs
-    public bool GetProjectedShapePoints(Points result, Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f) return false;
-        result.Clear();
-        result.EnsureCapacity(Count * 2);
-        for (var i = 0; i < Count; i++)
-        {
-            result.Add(this[i]);
-            result.Add(this[i] + v);
-        }
-
-        return true;
-    }
-
-    
-    /// <summary>
-    /// Projects the polyline along a given vector and returns the convex hull of the resulting points as a polygon.
-    /// </summary>
-    /// <param name="v">The vector along which to project each point of the polyline.</param>
-    /// <returns>
-    /// A <see cref="Polygon"/> representing the convex hull of the projected points,
-    /// or <c>null</c> if the vector is zero.
-    /// </returns>
-    public Polygon? ProjectShape(Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f || Count < 2) return null;
-        
-        var points = new Points(Count * 2);
-        for (var i = 0; i < Count; i++)
-        {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
-        }
-
-        Polygon result = new(points.Count);
-        points.FindConvexHull(result);
-        return result;
-    }
-    
-    //TODO: Add docs
-    public bool ProjectShape(Polygon result, Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f || Count < 2) return false;
-        
-        var points = new Points(Count * 2);
-        for (var i = 0; i < Count; i++)
-        {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
-        }
-        
-        points.FindConvexHull(result);
-        return true;
-    }
-
-    /// <summary>
     /// Gets the centroid point along the polyline, based on its length.
     /// </summary>
     /// <returns>The centroid point located at the halfway mark along the polyline's length.</returns>
@@ -117,28 +38,6 @@ public partial class Polyline
         //     }
         // }
         // return new Vector2();
-    }
-
-    /// <summary>
-    /// Calculates the mean centroid (arithmetic average) of all points in the polyline.
-    /// </summary>
-    /// <returns>
-    /// The mean centroid as a <see cref="Vector2"/>. Returns (0,0) if the polyline is empty, or the single point if only one exists.
-    /// </returns>
-    /// <remarks>
-    /// This method averages all point positions. For a geometric centroid along the line, use <see cref="GetCentroidOnLine"/>.
-    /// </remarks>
-    public Vector2 GetCentroidMean()
-    {
-        if (Count <= 0) return new(0f);
-        else if (Count == 1) return this[0];
-        Vector2 total = new(0f);
-        foreach (Vector2 p in this)
-        {
-            total += p;
-        }
-
-        return total / Count;
     }
 
     /// <summary>
@@ -331,299 +230,38 @@ public partial class Polyline
         }
     }
 
-    //TODO: Change to result parameter
-    /// <summary>
-    /// Returns a new polyline translated so its centroid is at the specified position.
-    /// </summary>
-    /// <param name="newPosition">The new centroid position for the copy.</param>
-    /// <returns>A new <see cref="Polyline"/> with the centroid at <paramref name="newPosition"/>,
-    /// or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public Polyline? SetPositionCopy(Vector2 newPosition)
-    {
-        if (Count < 2) return null;
-        var centroid = GetCentroidMean();
-        var delta = newPosition - centroid;
-        return ChangePositionCopy(delta);
-    }
-
-    /// <summary>
-    /// Returns a new polyline translated by the specified offset.
-    /// </summary>
-    /// <param name="offset">The vector by which to offset all points.</param>
-    /// <returns>A new <see cref="Polyline"/> translated by <paramref name="offset"/>,
-    /// or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? ChangePositionCopy(Vector2 offset)
-    {
-        if (Count < 2) return null;
-        var newPolygon = new Polyline(this.Count);
-        for (int i = 0; i < Count; i++)
-        {
-            newPolygon.Add(this[i] + offset);
-        }
-
-        return newPolygon;
-    }
-
-    /// <summary>
-    /// Returns a new polyline rotated by the specified angle around the given origin.
-    /// </summary>
-    /// <param name="rotRad">The rotation angle in radians.</param>
-    /// <param name="origin">The origin point to rotate around.</param>
-    /// <returns>A new <see cref="Polyline"/> rotated by <paramref name="rotRad"/> around <paramref name="origin"/>, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? ChangeRotationCopy(float rotRad, Vector2 origin)
-    {
-        if (Count < 2) return null;
-        var newPolygon = new Polyline(this.Count);
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolygon.Add(origin + w.Rotate(rotRad));
-        }
-
-        return newPolygon;
-    }
-
-    /// <summary>
-    /// Returns a new polyline rotated by the specified angle around its centroid.
-    /// </summary>
-    /// <param name="rotRad">The rotation angle in radians.</param>
-    /// <returns>A new <see cref="Polyline"/> rotated by <paramref name="rotRad"/> around the centroid, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public Polyline? ChangeRotationCopy(float rotRad)
-    {
-        if (Count < 2) return null;
-        return ChangeRotationCopy(rotRad, GetCentroidMean());
-    }
-
-    /// <summary>
-    /// Returns a new polyline rotated so that the vector from the origin to the first point matches the specified angle.
-    /// </summary>
-    /// <param name="angleRad">The target angle in radians.</param>
-    /// <param name="origin">The origin point for the rotation.</param>
-    /// <returns>A new <see cref="Polyline"/> with the specified absolute rotation, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? SetRotationCopy(float angleRad, Vector2 origin)
-    {
-        if (Count < 2) return null;
-
-        var curAngle = (this[0] - origin).AngleRad();
-        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-        return ChangeRotationCopy(rotRad, origin);
-    }
-
-    /// <summary>
-    /// Returns a new polyline rotated so that the vector from the centroid to the first point matches the specified angle.
-    /// </summary>
-    /// <param name="angleRad">The target angle in radians.</param>
-    /// <returns>A new <see cref="Polyline"/> with the specified absolute rotation, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public Polyline? SetRotationCopy(float angleRad)
-    {
-        if (Count < 2) return null;
-
-        var origin = GetCentroidMean();
-        var curAngle = (this[0] - origin).AngleRad();
-        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-        return ChangeRotationCopy(rotRad, origin);
-    }
-
-    /// <summary>
-    /// Returns a new polyline scaled uniformly about its centroid.
-    /// </summary>
-    /// <param name="scale">The scale factor to apply.</param>
-    /// <returns>A new <see cref="Polyline"/> scaled by <paramref name="scale"/>, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public Polyline? ScaleSizeCopy(float scale)
-    {
-        if (Count < 2) return null;
-        return ScaleSizeCopy(scale, GetCentroidMean());
-    }
-
-    /// <summary>
-    /// Returns a new polyline scaled uniformly about the given origin.
-    /// </summary>
-    /// <param name="scale">The scale factor to apply.</param>
-    /// <param name="origin">The origin point for scaling.</param>
-    /// <returns>A new <see cref="Polyline"/> scaled by <paramref name="scale"/> about <paramref name="origin"/>, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? ScaleSizeCopy(float scale, Vector2 origin)
-    {
-        if (Count < 2) return null;
-        var newPolyline = new Polyline(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolyline.Add(origin + w * scale);
-        }
-
-        return newPolyline;
-    }
-
-    /// <summary>
-    /// Returns a new polyline scaled non-uniformly about the given origin.
-    /// </summary>
-    /// <param name="scale">The scale vector to apply to each axis.</param>
-    /// <param name="origin">The origin point for scaling.</param>
-    /// <returns>A new <see cref="Polyline"/> scaled by <paramref name="scale"/> about <paramref name="origin"/>, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? ScaleSizeCopy(Vector2 scale, Vector2 origin)
-    {
-        if (Count < 2) return null;
-        var newPolyline = new Polyline(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolyline.Add(origin + w * scale);
-        }
-
-        return newPolyline;
-    }
-
-    /// <summary>
-    /// Returns a new polyline with each vector from the origin to each point changed in length by the specified amount.
-    /// </summary>
-    /// <param name="amount">The amount to change the length of each vector from the origin.</param>
-    /// <param name="origin">The origin point for the size change.</param>
-    /// <returns>A new <see cref="Polyline"/> with changed size, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? ChangeSizeCopy(float amount, Vector2 origin)
-    {
-        if (Count < 2) return null;
-        var newPolyline = new Polyline(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolyline.Add(origin + w.ChangeLength(amount));
-        }
-
-        return newPolyline;
-    }
-
-    /// <summary>
-    /// Returns a new polyline with each vector from the centroid to each point changed in length by the specified amount.
-    /// </summary>
-    /// <param name="amount">The amount to change the length of each vector from the centroid.</param>
-    /// <returns>A new <see cref="Polyline"/> with changed size, or null if fewer than 3 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public Polyline? ChangeSizeCopy(float amount)
-    {
-        if (Count < 3) return null;
-        return ChangeSizeCopy(amount, GetCentroidMean());
-    }
-
-    /// <summary>
-    /// Returns a new polyline with each vector from the origin to each point set to the specified length.
-    /// </summary>
-    /// <param name="size">The new length for each vector from the origin.</param>
-    /// <param name="origin">The origin point for the size set.</param>
-    /// <returns>A new <see cref="Polyline"/> with set size, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? SetSizeCopy(float size, Vector2 origin)
-    {
-        if (Count < 2) return null;
-        var newPolyline = new Polyline(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolyline.Add(origin + w.SetLength(size));
-        }
-
-        return newPolyline;
-    }
-
-    /// <summary>
-    /// Returns a new polyline with each vector from the centroid to each point set to the specified length.
-    /// </summary>
-    /// <param name="size">The new length for each vector from the centroid.</param>
-    /// <returns>A new <see cref="Polyline"/> with set size, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public Polyline? SetSizeCopy(float size)
-    {
-        if (Count < 2) return null;
-        return SetSizeCopy(size, GetCentroidMean());
-    }
-
-    /// <summary>
-    /// Returns a new polyline with the specified transform applied, using the given origin.
-    /// </summary>
-    /// <param name="transform">The transform to apply.</param>
-    /// <param name="origin">The origin point for the transform.</param>
-    /// <returns>A new <see cref="Polyline"/> with the transform applied, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? SetTransformCopy(Transform2D transform, Vector2 origin)
-    {
-        if (Count < 2) return null;
-        var newPolyline = SetPositionCopy(transform.Position);
-        if (newPolyline == null) return null;
-        newPolyline.SetRotation(transform.RotationRad, origin);
-        newPolyline.SetSize(transform.ScaledSize.Length, origin);
-        return newPolyline;
-    }
-
-    /// <summary>
-    /// Returns a new polyline with the specified offset applied, using the given origin.
-    /// </summary>
-    /// <param name="offset">The offset to apply.</param>
-    /// <param name="origin">The origin point for the offset.</param>
-    /// <returns>A new <see cref="Polyline"/> with the offset applied, or null if fewer than 2 points.</returns>
-    /// <remarks>
-    /// The original polyline is not modified.
-    /// </remarks>
-    public new Polyline? ApplyOffsetCopy(Transform2D offset, Vector2 origin)
-    {
-        if (Count < 2) return null;
-
-        var newPolyline = ChangePositionCopy(offset.Position);
-        if (newPolyline == null) return null;
-        newPolyline.ChangeRotation(offset.RotationRad, origin);
-        newPolyline.ChangeSize(offset.ScaledSize.Length, origin);
-        return newPolyline;
-    }
-
     #endregion
     
     #region Outline Triangulation
-
+    /// <summary>
+    /// Triangulates this polyline's stroked outline and writes the generated triangles into the provided <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    /// <param name="thickness">The stroke thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the open polyline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method triangulates only the stroked outline of the polyline. It does not modify the polyline itself.
+    /// </remarks>
     public void TriangulateOutline(Triangulation result, float thickness, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     
+    /// <summary>
+    /// Triangulates this polyline's stroked outline and writes the generated triangles into the provided <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
+    /// <param name="thickness">The stroke thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the open polyline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method triangulates only the stroked outline of the polyline. It does not modify the polyline itself.
+    /// </remarks>
     public void TriangulateOutline(TriMesh result, float thickness, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
@@ -631,8 +269,16 @@ public partial class Polyline
     #endregion
     
     #region Outline Perimeter Triangulation
-
-    private static Polyline buffer = new();
+    
+    /// <summary>
+    /// Builds a new open <see cref="Polyline"/> representing the first portion of this polyline up to the specified traveled distance.
+    /// </summary>
+    /// <param name="perimeterToDraw">The distance to trace along the polyline. Values less than or equal to zero are ignored.</param>
+    /// <param name="result">The destination polyline that will be cleared and populated with the traced points.</param>
+    /// <remarks>
+    /// The resulting polyline follows the original vertex order from the first point toward the last point and does not wrap.
+    /// If the requested distance ends in the middle of a segment, an interpolated endpoint is added.
+    /// </remarks>
     public void ToPolylinePerimeter(float perimeterToDraw, Polyline result)
     {
         if (perimeterToDraw <= 0f) return;
@@ -683,6 +329,19 @@ public partial class Polyline
         }
     }
     
+    /// <summary>
+    /// Triangulates the stroked outline of the initial portion of this polyline up to the specified traveled distance and writes the result into the provided <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    /// <param name="perimeterToDraw">The distance to trace along the polyline before triangulating the stroke.</param>
+    /// <param name="thickness">The stroke thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePerimeter(float, Polyline)"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
@@ -690,6 +349,19 @@ public partial class Polyline
         ClipperImmediate2D.CreatePolylineTriangulation(buffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     
+    /// <summary>
+    /// Triangulates the stroked outline of the initial portion of this polyline up to the specified traveled distance and writes the result into the provided <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
+    /// <param name="perimeterToDraw">The distance to trace along the polyline before triangulating the stroke.</param>
+    /// <param name="thickness">The stroke thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePerimeter(float, Polyline)"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
@@ -699,6 +371,14 @@ public partial class Polyline
     #endregion
 
     #region Outline Percentage Triangulation
+    /// <summary>
+    /// Builds a new open <see cref="Polyline"/> representing the first portion of this polyline up to the specified fraction of its total length.
+    /// </summary>
+    /// <param name="f">The fraction of the total polyline length to include. Values less than or equal to zero are ignored, and values greater than or equal to one copy the full polyline.</param>
+    /// <param name="result">The destination polyline that receives the traced points.</param>
+    /// <remarks>
+    /// This method converts the requested fraction into an absolute length along the polyline, then delegates to <see cref="ToPolylinePerimeter(float, Polyline)"/>.
+    /// </remarks>
     public void ToPolylinePercentage(float f, Polyline result)
     {
         if (f <= 0) return;
@@ -727,6 +407,20 @@ public partial class Polyline
         ToPolylinePerimeter(totalPerimeter * f, result);
     }
    
+    /// <summary>
+    /// Triangulates the stroked outline of the initial portion of this polyline defined by a fraction of its total length and writes the result into the provided <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="polygon">Unused parameter retained for API compatibility.</param>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    /// <param name="f">The fraction of the total polyline length to include before triangulating the stroke.</param>
+    /// <param name="thickness">The stroke thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePercentage(float, Polyline)"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
@@ -734,6 +428,20 @@ public partial class Polyline
         ClipperImmediate2D.CreatePolylineTriangulation(buffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
    
+    /// <summary>
+    /// Triangulates the stroked outline of the initial portion of this polyline defined by a fraction of its total length and writes the result into the provided <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygon">Unused parameter retained for API compatibility.</param>
+    /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
+    /// <param name="f">The fraction of the total polyline length to include before triangulating the stroke.</param>
+    /// <param name="thickness">The stroke thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePercentage(float, Polyline)"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {

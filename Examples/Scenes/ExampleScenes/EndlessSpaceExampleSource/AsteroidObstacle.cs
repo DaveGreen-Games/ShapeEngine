@@ -87,16 +87,17 @@ internal class AsteroidObstacle : CollisionObject
         shape.Triangulate(Triangulation);
         shape.TriangulateOutline(OutlineTriangulation, EndlessSpaceCollision.AsteroidLineThickness, 2f, false, false);
         
+        outsideShape = new Polygon();
         if (big)
         {
-            outsideShape = shape.ScaleSizeCopy(1.5f);
+            shape.ScaleSizeCopy(outsideShape, 1.5f);
             Health = ShapeMath.LerpFloat(300, 650, EndlessSpaceCollision.DifficultyFactor) * Rng.Instance.RandF(0.9f, 1.1f);
             gappedOutlineInfo = BigAsteroidGappedOutlineInfo.ChangeStartOffset(Rng.Instance.RandF());
             
         }
         else
         {
-            outsideShape = shape.ScaleSizeCopy(1.25f);
+            shape.ScaleSizeCopy(outsideShape, 1.25f);
             Health = ShapeMath.LerpFloat(25, 100, EndlessSpaceCollision.DifficultyFactor) * Rng.Instance.RandF(0.9f, 1.1f);
             gappedOutlineInfo = SmallAsteroidGappedOutlineInfo.ChangeStartOffset(Rng.Instance.RandF());
         }

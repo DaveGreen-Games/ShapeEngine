@@ -96,79 +96,6 @@ public partial class Polygon
     }
 
     /// <summary>
-    /// Gets the projected shape points by translating each vertex by a vector.
-    /// </summary>
-    /// <param name="v">The vector to project along.</param>
-    /// <returns>A <see cref="Points"/> collection of projected points, or null if the vector is zero.</returns>
-    public Points? GetProjectedShapePoints(Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f) return null;
-
-        var points = new Points(Count);
-        for (var i = 0; i < Count; i++)
-        {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
-        }
-
-        return points;
-    }
-    
-    //TODO: Add docs
-    public bool GetProjectedShapePoints(Points result, Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f) return false;
-
-        result.Clear();
-        result.EnsureCapacity(Count * 2);
-        for (var i = 0; i < Count; i++)
-        {
-            result.Add(this[i]);
-            result.Add(this[i] + v);
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Projects the polygon along a vector and returns the convex hull of the result.
-    /// </summary>
-    /// <param name="v">The vector to project along.</param>
-    /// <returns>A new <see cref="Polygon"/> representing the projected convex hull,
-    /// or null if the vector is zero.</returns>
-    public Polygon? ProjectShape(Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f || Count < 3) return null;
-
-        var points = new Points(Count * 2);
-        for (var i = 0; i < Count; i++)
-        {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
-        }
-
-        var result = new Polygon(Count * 2);
-        points.FindConvexHull(result);
-        return result;
-    }
-    
-    //TODO: Add docs
-    public bool ProjectShape(Polygon result, Vector2 v)
-    {
-        if (v.LengthSquared() <= 0f || Count < 3) return false;
-
-        var points = new Points(Count * 2);
-        for (var i = 0; i < Count; i++)
-        {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
-        }
-
-        points.FindConvexHull(result);
-        return true;
-    }
-
-    /// <summary>
     /// Calculates the centroid (center of mass) of the polygon.
     /// </summary>
     /// <returns>The centroid as a <see cref="Vector2"/>.</returns>
@@ -193,21 +120,6 @@ public partial class Polygon
 
         area *= 0.5f;
         return centroid / (area * 6);
-
-        //return GetCentroidMean();
-        // Vector2 result = new();
-
-        // for (int i = 0; i < Count; i++)
-        // {
-        // var a = this[i];
-        // var b = this[(i + 1) % Count];
-        //// float factor = a.X * b.Y - b.X * a.Y; //clockwise 
-        // float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
-        // result.X += (a.X + b.X) * factor;
-        // result.Y += (a.Y + b.Y) * factor;
-        // }
-
-        // return result * (1f / (GetArea() * 6f));
     }
 
     /// <summary>
@@ -296,7 +208,13 @@ public partial class Polygon
         return area / 2f;
     }
     
-    //TODO: Docs
+    /// <summary>
+    /// Calculates the absolute area of the polygon, independent of winding order.
+    /// </summary>
+    /// <returns>The non-negative area of the polygon.</returns>
+    /// <remarks>
+    /// This is equivalent to <c>MathF.Abs(GetArea())</c> and is useful when only the area magnitude matters.
+    /// </remarks>
     public float GetAreaAbs()
     {
         return MathF.Abs(GetArea());
@@ -369,7 +287,7 @@ public partial class Polygon
     /// This means none of its vertices "point inward," and the polygon does not have any indentations. </item>
     /// <item><c>Concave</c>:
     /// A concave polygon has at least one interior angle greater than 180°
-    /// and at least one vertex that points inward (self-intersecting).</item>
+    /// and at least one inward-pointing indentation. A concave polygon is not necessarily self-intersecting.</item>
     /// </list>
     /// </remarks>
     public static bool IsConvex(List<Vector2> vertices)
@@ -412,22 +330,17 @@ public partial class Polygon
     }
 
     /// <summary>
-    /// Calculates the mean centroid (average of all vertices).
+    /// Copies this polygon's vertices into the provided <see cref="Points"/> collection.
     /// </summary>
-    /// <returns>The mean centroid as a <see cref="Vector2"/>.</returns>
-    public Vector2 GetCentroidMean()
+    /// <param name="result">The destination collection that will be cleared and populated with the polygon's vertices.</param>
+    /// <remarks>
+    /// This method does not modify the polygon itself. It reuses <paramref name="result"/> by clearing it before adding all vertices.
+    /// </remarks>
+    public void ToPoints(Points result)
     {
-        if (Count <= 0) return new(0f);
-        if (Count == 1) return this[0];
-        if (Count == 2) return (this[0] + this[1]) / 2;
-        if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
-        var total = new Vector2(0f);
-        foreach (var p in this)
-        {
-            total += p;
-        }
-
-        return total / Count;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        result.AddRange(this);
     }
 
     /// <summary>
@@ -522,7 +435,26 @@ public partial class Polygon
 
         return newPolygon;
     }
-
+    
+    /// <summary>
+    /// Transforms this polygon's vertices into absolute coordinates and writes them into the provided list.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with transformed vertices.</param>
+    /// <param name="transform">The transform containing the position, rotation, and scaled size to apply.</param>
+    /// <remarks>
+    /// This method does not modify the polygon itself. If the polygon contains no vertices, the method returns without changing <paramref name="result"/>.
+    /// </remarks>
+    public void ToAbsolute(List<Vector2> result, Transform2D transform)
+    {
+        if(Count <= 0) return;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            var p = transform.Position + (this[i] * transform.ScaledSize.Radius).Rotate(transform.RotationRad);
+            result.Add(p);
+        }
+    }
 
     /// <summary>
     /// Sets the position of the polygon's centroid.
@@ -609,247 +541,123 @@ public partial class Polygon
         }
     }
 
-    //TODO: Change to result parameter
+    
     /// <summary>
-    /// Returns a copy of the polygon with its centroid set to a new position.
+    /// Copies this polygon's vertices into <paramref name="result"/>, translated so the polygon centroid moves to <paramref name="newPosition"/>.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the translated vertices.</param>
     /// <param name="newPosition">The new centroid position.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated position, or null if invalid.</returns>
-    public Polygon? SetPositionCopy(Vector2 newPosition)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the origin for the translation.
+    /// </remarks>
+    public new bool SetPositionCopy(Points result, Vector2 newPosition)
     {
-        if (Count < 3) return null;
-        var centroid = GetCentroid();
-        var delta = newPosition - centroid;
-        return ChangePositionCopy(delta);
+        return SetPositionCopy(result, newPosition, GetCentroid());
     }
-
+    
     /// <summary>
-    /// Returns a copy of the polygon translated by an offset.
+    /// Copies this polygon's vertices into <paramref name="result"/>, rotated around the polygon centroid by the specified angle.
     /// </summary>
-    /// <param name="offset">The translation offset.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated position, or null if invalid.</returns>
-    public new Polygon? ChangePositionCopy(Vector2 offset)
-    {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
-        for (int i = 0; i < Count; i++)
-        {
-            newPolygon.Add(this[i] + offset);
-        }
-
-        return newPolygon;
-    }
-
-    /// <summary>
-    /// Returns a copy of the polygon rotated by a given angle around an origin.
-    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated vertices.</param>
     /// <param name="rotRad">The rotation angle in radians.</param>
-    /// <param name="origin">The origin to rotate around.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated rotation, or null if invalid.</returns>
-    public new Polygon? ChangeRotationCopy(float rotRad, Vector2 origin)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the rotation origin.
+    /// </remarks>
+    public new bool ChangeRotationCopy(Points result, float rotRad)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolygon.Add(origin + w.Rotate(rotRad));
-        }
-
-        return newPolygon;
+        return ChangeRotationCopy(result, rotRad, GetCentroid());
     }
 
     /// <summary>
-    /// Returns a copy of the polygon rotated by a given angle around its centroid.
+    /// Copies this polygon's vertices into <paramref name="result"/>, rotating them around the polygon centroid so the first vertex aligns with the target angle.
     /// </summary>
-    /// <param name="rotRad">The rotation angle in radians.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated rotation, or null if invalid.</returns>
-    public Polygon? ChangeRotationCopy(float rotRad)
-    {
-        if (Count < 3) return null;
-        return ChangeRotationCopy(rotRad, GetCentroid());
-    }
-
-    /// <summary>
-    /// Returns a copy of the polygon with its absolute rotation set around an origin.
-    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated vertices.</param>
     /// <param name="angleRad">The target rotation angle in radians.</param>
-    /// <param name="origin">The origin to rotate around.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated rotation, or null if invalid.</returns>
-    public new Polygon? SetRotationCopy(float angleRad, Vector2 origin)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the rotation origin.
+    /// </remarks>
+    public new bool SetRotationCopy(Points result, float angleRad)
     {
-        if (Count < 3) return null;
-        var curAngle = (this[0] - origin).AngleRad();
-        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-        return ChangeRotationCopy(rotRad, origin);
+        return SetRotationCopy(result, angleRad, GetCentroid());
     }
 
     /// <summary>
-    /// Returns a copy of the polygon with its absolute rotation set around its centroid.
+    /// Copies this polygon's vertices into <paramref name="result"/>, scaled uniformly relative to the polygon centroid.
     /// </summary>
-    /// <param name="angleRad">The target rotation angle in radians.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated rotation, or null if invalid.</returns>
-    public Polygon? SetRotationCopy(float angleRad)
-    {
-        if (Count < 3) return null;
-
-        var origin = GetCentroid();
-        var curAngle = (this[0] - origin).AngleRad();
-        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-        return ChangeRotationCopy(rotRad, origin);
-    }
-
-    /// <summary>
-    /// Returns a copy of the polygon scaled uniformly about its centroid.
-    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the scaled vertices.</param>
     /// <param name="scale">The scale factor.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated scale, or null if invalid.</returns>
-    public Polygon? ScaleSizeCopy(float scale)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the scaling origin.
+    /// </remarks>
+    public new bool ScaleSizeCopy(Points result, float scale)
     {
-        if (Count < 3) return null;
-        return ScaleSizeCopy(scale, GetCentroid());
+        return ScaleSizeCopy(result, scale, GetCentroid());
     }
 
     /// <summary>
-    /// Returns a copy of the polygon scaled uniformly about a given origin.
+    /// Copies this polygon's vertices into <paramref name="result"/>, changing each vertex distance from the polygon centroid by the specified amount.
     /// </summary>
-    /// <param name="scale">The scale factor.</param>
-    /// <param name="origin">The origin to scale about.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated scale, or null if invalid.</returns>
-    public new Polygon? ScaleSizeCopy(float scale, Vector2 origin)
-    {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolygon.Add(origin + w * scale);
-        }
-
-        return newPolygon;
-    }
-
-    /// <summary>
-    /// Returns a copy of the polygon scaled non-uniformly about a given origin.
-    /// </summary>
-    /// <param name="scale">The scale vector.</param>
-    /// <param name="origin">The origin to scale about.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated scale, or null if invalid.</returns>
-    public new Polygon? ScaleSizeCopy(Vector2 scale, Vector2 origin)
-    {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolygon.Add(origin + w * scale);
-        }
-
-        return newPolygon;
-    }
-
-    /// <summary>
-    /// Returns a copy of the polygon with its size changed by a given amount about a given origin.
-    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized vertices.</param>
     /// <param name="amount">The amount to change the size.</param>
-    /// <param name="origin">The origin to scale about.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated size, or null if invalid.</returns>
-    public new Polygon? ChangeSizeCopy(float amount, Vector2 origin)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the size-adjustment origin.
+    /// </remarks>
+    public new bool ChangeSizeCopy(Points result,float amount)
     {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolygon.Add(origin + w.ChangeLength(amount));
-        }
-
-        return newPolygon;
+        return ChangeSizeCopy(result, amount, GetCentroid());
     }
 
     /// <summary>
-    /// Returns a copy of the polygon with its size changed by a given amount about its centroid.
+    /// Copies this polygon's vertices into <paramref name="result"/>, setting each vertex to the specified distance from the polygon centroid.
     /// </summary>
-    /// <param name="amount">The amount to change the size.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated size, or null if invalid.</returns>
-    public Polygon? ChangeSizeCopy(float amount)
-    {
-        if (Count < 3) return null;
-        return ChangeSizeCopy(amount, GetCentroid());
-    }
-
-    /// <summary>
-    /// Returns a copy of the polygon with its size set to a given value about a given origin.
-    /// </summary>
-    /// <param name="size">The new size (distance from origin to each vertex).</param>
-    /// <param name="origin">The origin to scale about.</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated size, or null if invalid.</returns>
-    public new Polygon? SetSizeCopy(float size, Vector2 origin)
-    {
-        if (Count < 3) return null;
-        var newPolygon = new Polygon(this.Count);
-
-        for (var i = 0; i < Count; i++)
-        {
-            var w = this[i] - origin;
-            newPolygon.Add(origin + w.SetLength(size));
-        }
-
-        return newPolygon;
-    }
-
-    /// <summary>
-    /// Returns a copy of the polygon with its size set to a given value about its centroid.
-    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized vertices.</param>
     /// <param name="size">The new size (distance from centroid to each vertex).</param>
-    /// <returns>A new <see cref="Polygon"/> with the updated size, or null if invalid.</returns>
-    public Polygon? SetSizeCopy(float size)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the reference origin.
+    /// </remarks>
+    public new bool SetSizeCopy(Points result, float size)
     {
-        if (Count < 3) return null;
-        return SetSizeCopy(size, GetCentroid());
+        return SetSizeCopy(result, size, GetCentroid());
     }
 
     /// <summary>
-    /// Returns a copy of the polygon with a transform applied, using a given origin.
+    /// Copies this polygon's vertices into <paramref name="result"/>, applying the specified transform relative to the polygon centroid.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed vertices.</param>
     /// <param name="transform">The transform to apply.</param>
-    /// <param name="origin">The origin for rotation and scaling.</param>
-    /// <returns>A new <see cref="Polygon"/> with the transform applied, or null if invalid.</returns>
-    public new Polygon? SetTransformCopy(Transform2D transform, Vector2 origin)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the transformation origin.
+    /// </remarks>
+    public new bool SetTransformCopy(Points result, Transform2D transform)
     {
-        if (Count < 3) return null;
-        var newPolygon = SetPositionCopy(transform.Position);
-        if (newPolygon == null) return null;
-        newPolygon.SetRotation(transform.RotationRad, origin);
-        newPolygon.SetSize(transform.ScaledSize.Length, origin);
-        return newPolygon;
+        return SetTransformCopy(result, transform, GetCentroid());
     }
 
     /// <summary>
-    /// Returns a copy of the polygon with an offset transform applied, using a given origin.
+    /// Copies this polygon's vertices into <paramref name="result"/>, applying the specified offset transform relative to the polygon centroid.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed vertices.</param>
     /// <param name="offset">The offset transform to apply.</param>
-    /// <param name="origin">The origin for rotation and scaling.</param>
-    /// <returns>A new <see cref="Polygon"/> with the offset applied, or null if invalid.</returns>
-    public new Polygon? ApplyOffsetCopy(Transform2D offset, Vector2 origin)
+    /// <returns><c>true</c> if the polygon contains at least one vertex and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not modify the current polygon. It uses <see cref="GetCentroid()"/> as the transformation origin.
+    /// </remarks>
+    public new bool ApplyOffsetCopy(Points result, Transform2D offset)
     {
-        if (Count < 3) return null;
-
-        var newPolygon = ChangePositionCopy(offset.Position);
-        if (newPolygon == null) return null;
-        newPolygon.ChangeRotation(offset.RotationRad, origin);
-        newPolygon.ChangeSize(offset.ScaledSize.Length, origin);
-        return newPolygon;
+        return ApplyOffsetCopy(result, offset, GetCentroid());
     }
 
     #endregion
 
     #region Generate Rounded Corners
-
-    //TODO: Change to result parameter
+    
     /// <summary>
     /// Creates a copy of this polygon with rounded corners.
     /// </summary>
@@ -1096,16 +904,33 @@ public partial class Polygon
             AddRange(vertices);
         }
 
-        return false;
+        return true;
     }
 
     #endregion
     
     #region Triangulation
+    /// <summary>
+    /// Triangulates the filled polygon and writes the generated triangles into the provided <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method delegates to the clipping/triangulation backend and does not modify the polygon itself.
+    /// </remarks>
     public void Triangulate(Triangulation result, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolygonTriangulation(this, useDelaunay, result);
     }
+    
+    /// <summary>
+    /// Triangulates the filled polygon and writes the generated triangles into the provided <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method delegates to the clipping/triangulation backend and does not modify the polygon itself.
+    /// </remarks>
     public void Triangulate(TriMesh result, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolygonTriangulation(this, useDelaunay, result);
@@ -1114,12 +939,33 @@ public partial class Polygon
     #endregion
     
     #region Outline Triangulation
-
+    /// <summary>
+    /// Triangulates the polygon's outline as a stroked path and writes the generated triangles into the provided <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    /// <param name="thickness">The outline thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
+    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method triangulates only the polygon outline, not the filled interior.
+    /// </remarks>
     public void TriangulateOutline(Triangulation result, float thickness, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolygonOutlineTriangulation(this, thickness, miterLimit, beveled, useDelaunay, result);
     }
     
+    /// <summary>
+    /// Triangulates the polygon's outline as a stroked path and writes the generated triangles into the provided <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
+    /// <param name="thickness">The outline thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
+    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method triangulates only the polygon outline, not the filled interior.
+    /// </remarks>
     public void TriangulateOutline(TriMesh result, float thickness, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolygonOutlineTriangulation(this, thickness, miterLimit, beveled, useDelaunay, result);
@@ -1127,6 +973,15 @@ public partial class Polygon
     #endregion
     
     #region Outline Perimeter Triangulation
+    /// <summary>
+    /// Builds an open <see cref="Polyline"/> that follows a portion of this polygon's perimeter starting at the specified vertex index.
+    /// </summary>
+    /// <param name="perimeterToDraw">The positive perimeter length to trace along the polygon.</param>
+    /// <param name="startIndex">The starting vertex index. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="result">The destination polyline that will be cleared and populated with the traced perimeter points.</param>
+    /// <remarks>
+    /// If <paramref name="perimeterToDraw"/> is less than or equal to zero, or the polygon contains fewer than two vertices, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
     public void PolygonToPolylinePerimeter(float perimeterToDraw, int startIndex, Polyline result)
     {
         if (perimeterToDraw <= 0f) return;
@@ -1162,6 +1017,20 @@ public partial class Polygon
         }
     }
     
+    /// <summary>
+    /// Triangulates a stroked portion of the polygon perimeter and writes the generated triangles into the provided <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    /// <param name="perimeterToDraw">The positive perimeter length to trace before triangulating the outline.</param>
+    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The outline thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
+    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first converts the requested perimeter segment into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
@@ -1169,6 +1038,20 @@ public partial class Polygon
         ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     
+    /// <summary>
+    /// Triangulates a stroked portion of the polygon perimeter and writes the generated triangles into the provided <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
+    /// <param name="perimeterToDraw">The positive perimeter length to trace before triangulating the outline.</param>
+    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The outline thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
+    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first converts the requested perimeter segment into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
@@ -1178,6 +1061,15 @@ public partial class Polygon
     #endregion
 
     #region Outline Percentage Triangulation
+    /// <summary>
+    /// Builds an open <see cref="Polyline"/> that follows a percentage of this polygon's perimeter starting at the specified vertex index.
+    /// </summary>
+    /// <param name="f">The fraction of the total perimeter to trace. Values greater than or equal to 1 copy the full polygon perimeter.</param>
+    /// <param name="startIndex">The starting vertex index. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="result">The destination polyline that receives the traced perimeter points.</param>
+    /// <remarks>
+    /// If <paramref name="f"/> is less than or equal to zero, or the polygon contains fewer than two vertices, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
     public void PolygonToPolylinePercentage(float f, int startIndex, Polyline result)
     {
         if (f <= 0) return;
@@ -1206,6 +1098,21 @@ public partial class Polygon
         PolygonToPolylinePerimeter(totalPerimeter * f, startIndex, result);
     }
    
+    /// <summary>
+    /// Triangulates a stroked portion of the polygon perimeter defined by a percentage of its total length and writes the generated triangles into the provided <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="polygon">Unused polygon parameter retained for API compatibility; the current polygon instance is used to generate the perimeter segment.</param>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    /// <param name="f">The fraction of the total perimeter to trace before triangulating the outline.</param>
+    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The outline thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
+    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first converts the requested perimeter fraction into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
@@ -1213,6 +1120,21 @@ public partial class Polygon
         ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
    
+    /// <summary>
+    /// Triangulates a stroked portion of the polygon perimeter defined by a percentage of its total length and writes the generated triangles into the provided <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygon">Unused polygon parameter retained for API compatibility; the current polygon instance is used to generate the perimeter segment.</param>
+    /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
+    /// <param name="f">The fraction of the total perimeter to trace before triangulating the outline.</param>
+    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The outline thickness to triangulate.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
+    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
+    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
+    /// <remarks>
+    /// This method first converts the requested perimeter fraction into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// </remarks>
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
@@ -1222,637 +1144,3 @@ public partial class Polygon
     #endregion
     
 }
-
-
-//TODO: Remove
-
-    //TODO: REMOVE
-/*
-    /// <summary>
-    /// Triangulates a set of points using Delaunay triangulation. Only works with non-self-intersecting shapes.
-    /// </summary>
-    /// <param name="points">The points to triangulate. Can be any set of points, including polygons.</param>
-    /// <returns>A triangulation of the input points.</returns>
-    public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
-    {
-        var enumerable = points.ToList();
-        var supraTriangle = GetBoundingTriangle(enumerable, 2f);
-        return TriangulateDelaunay(enumerable, supraTriangle);
-    }
-
-    /// <summary>
-    /// Triangulates a set of points using Delaunay triangulation, with a custom bounding triangle. Only works with non-self-intersecting shapes.
-    /// </summary>
-    /// <param name="points">The points to triangulate. Can be any set of points, including polygons.</param>
-    /// <param name="supraTriangle">A triangle that encapsulates all the points.</param>
-    /// <returns>A triangulation of the input points.</returns>
-    public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points, Triangle supraTriangle)
-    {
-        Triangulation triangles = new() { supraTriangle };
-
-        foreach (var p in points)
-        {
-            Triangulation badTriangles = new();
-
-            //Identify 'bad triangles'
-            for (int triIndex = triangles.Count - 1; triIndex >= 0; triIndex--)
-            {
-                Triangle triangle = triangles[triIndex];
-
-                //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
-                var circumCircle = triangle.GetCircumCircle();
-                float distSq = Vector2.DistanceSquared(p, circumCircle.Center);
-                if (distSq < circumCircle.Radius * circumCircle.Radius)
-                {
-                    badTriangles.Add(triangle);
-                    triangles.RemoveAt(triIndex);
-                }
-            }
-
-            Segments allEdges = new();
-            foreach (var badTriangle in badTriangles)
-            {
-                allEdges.AddRange(badTriangle.GetEdges());
-            }
-
-            Segments uniqueEdges = GetUniqueSegmentsDelaunay(allEdges);
-            //Create new triangles
-            for (int i = 0; i < uniqueEdges.Count; i++)
-            {
-                var edge = uniqueEdges[i];
-                triangles.Add(new(p, edge));
-            }
-        }
-
-        //Remove all triangles that share a vertex with the supra triangle to recieve the final triangulation
-        for (int i = triangles.Count - 1; i >= 0; i--)
-        {
-            var t = triangles[i];
-            if (t.SharesVertex(supraTriangle)) triangles.RemoveAt(i);
-        }
-
-
-        return triangles;
-    }
-    */
-
-/*
-    /// <summary>
-    /// Triangulates the polygon using an ear-clipping approach with randomized ear selection.
-    /// Produces a set of non-overlapping triangles that cover the polygon interior.
-    /// </summary>
-    /// <remarks>
-    /// <list type="bullet">
-    /// <item><description>Returns an empty triangulation when the polygon has fewer than 3 vertices.</description></item>
-    /// <item><description>Returns a single triangle when the polygon has exactly 3 vertices.</description></item>
-    /// <item><description>The implementation selects candidate ears at random; repeated calls may yield different valid triangulations.</description></item>
-    /// <item><description>Typical runtime is O\(n^2\) in practice due to repeated ear validity checks.</description></item>
-    /// </list>
-    /// </remarks>
-    /// <returns>A <see cref="Triangulation"/> containing the resulting triangles.</returns>
-    public Triangulation Triangulate()
-    {
-        if (Count < 3) return [];
-        if (Count == 3) return [new(this[0], this[1], this[2])];
-
-        Triangulation triangles = [];
-        List<Vector2> vertices = [];
-        vertices.AddRange(this);
-        List<int> validIndices = [];
-        for (var i = 0; i < vertices.Count; i++)
-        {
-            validIndices.Add(i);
-        }
-
-        while (vertices.Count > 3)
-        {
-            if (validIndices.Count <= 0)
-                break;
-
-            int i = validIndices[Rng.Instance.RandI(0, validIndices.Count)];
-            var a = vertices[i];
-            var b = Game.GetItem(vertices, i + 1);
-            var c = Game.GetItem(vertices, i - 1);
-
-            var ba = b - a;
-            var ca = c - a;
-            float cross = ba.Cross(ca);
-            if (cross >= 0f) //makes sure that ear is not self intersecting
-            {
-                validIndices.Remove(i);
-                continue;
-            }
-
-            Triangle t = new(a, b, c);
-
-            var isValid = true;
-            foreach (var p in this)
-            {
-                if (p == a || p == b || p == c) continue;
-                if (t.ContainsPoint(p))
-                {
-                    isValid = false;
-                    break;
-                }
-            }
-
-            if (isValid)
-            {
-                triangles.Add(t);
-                vertices.RemoveAt(i);
-
-                validIndices.Clear();
-                for (int j = 0; j < vertices.Count; j++)
-                {
-                    validIndices.Add(j);
-                }
-                //break;
-            }
-        }
-
-        triangles.Add(new(vertices[0], vertices[1], vertices[2]));
-
-        return triangles;
-    }
-    */
-
-/*/// <summary>
-    /// Triangulates this polygon and appends the resulting triangles into the provided <see cref="Triangulation"/>.
-    /// This function aims to minimize memory allocations by reusing internal buffers and filling the provided collection instead of creating a new one.
-    /// </summary>
-    /// <param name="result">
-    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles.
-    /// The method appends triangles to this collection; it does not clear it.
-    /// </param>
-    /// <returns>
-    /// The number of triangles added to <paramref name="result"/>.
-    /// Returns 0 if the polygon has fewer than 3 vertices.
-    /// </returns>
-    /// <remarks>
-    /// This method implements an ear-clipping style triangulation optimized for minimal allocations
-    /// by reusing internal temporary buffers. When the polygon has exactly 3 vertices a single
-    /// triangle is added and 1 is returned. The algorithm uses randomized ear selection so
-    /// repeated calls may produce different valid triangulations.
-    /// </remarks>
-    public int TriangulatePointCloud(ref Triangulation result)
-    {
-        if (Count < 3) return 0;
-        if (Count == 3)
-        {
-            result.Add(new Triangle(this[0], this[1], this[2]));
-            return 1;
-        }
-    
-        triangulateTempVertices.Clear();
-        triangulateTempValidIndices.Clear();
-    
-        triangulateTempVertices.AddRange(this);
-        int count = 0;
-        for (var i = 0; i < triangulateTempVertices.Count; i++)
-        {
-            triangulateTempValidIndices.Add(i);
-        }
-    
-        while (triangulateTempVertices.Count > 3)
-        {
-            if (triangulateTempValidIndices.Count <= 0)
-                break;
-    
-            int i = triangulateTempValidIndices[Rng.Instance.RandI(0, triangulateTempValidIndices.Count)];
-            var a = triangulateTempVertices[i];
-            var b = Game.GetItem(triangulateTempVertices, i + 1);
-            var c = Game.GetItem(triangulateTempVertices, i - 1);
-    
-            var ba = b - a;
-            var ca = c - a;
-            float cross = ba.Cross(ca);
-            if (cross >= 0f) //makes sure that ear is not self intersecting
-            {
-                triangulateTempValidIndices.Remove(i);
-                continue;
-            }
-    
-            Triangle t = new(a, b, c);
-    
-            var isValid = true;
-            foreach (var p in this)
-            {
-                if (p == a || p == b || p == c) continue;
-                if (t.ContainsPoint(p))
-                {
-                    isValid = false;
-                    break;
-                }
-            }
-    
-            if (isValid)
-            {
-                result.Add(t);
-                count++;
-    
-                triangulateTempVertices.RemoveAt(i);
-    
-                triangulateTempValidIndices.Clear();
-                for (int j = 0; j < triangulateTempVertices.Count; j++)
-                {
-                    triangulateTempValidIndices.Add(j);
-                }
-            }
-        }
-    
-    
-        result.Add(new(triangulateTempVertices[0], triangulateTempVertices[1], triangulateTempVertices[2]));
-        count++;
-    
-        return count;
-    }*/
-
-/*
-    #region Outline Perimeter Triangulation
-
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's outline measured by a perimeter length.
-    /// The method inflates the polygon by <paramref name="thickness"/> (using the specified join type and miter limit)
-    /// and then produces triangles that cover the requested outline segment starting at <paramref name="startIndex"/>.
-    /// </summary>
-    /// <param name="perimeterToDraw">The length of the polygon perimeter to draw/triangulate. Must be greater than 0.</param>
-    /// <param name="startIndex">Index of the vertex at which to start drawing the outline segment.</param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges when creating the outline for triangulation.</param>
-    /// <param name="cornerPoints">Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.</param>
-    /// <param name="miterLimit">Miter limit used when applying miter joins. Values &gt;= 2 prefer miter joins.</param>
-    /// <param name="beveled">When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.</param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// A <see cref="Triangulation"/> containing triangles for the generated outline segment, or <c>null</c> if the operation fails
-    /// (for example when the polygon has insufficient vertices or the inflation/triangulation cannot produce a valid result).
-    /// </returns>
-    public Triangulation? GenerateOutlinePerimeterTriangulation(float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
-    {
-        if (perimeterToDraw <= 0f) return null;
-
-        Polygon polygon = new(Count);
-
-        bool ccw = perimeterToDraw > 0;
-        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
-        float accumulatedPerimeter = 0f;
-        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
-
-        //create polyline based on perimeter & start index
-        while (absPerimeterToDraw > accumulatedPerimeter)
-        {
-            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
-            var cur = this[currentIndex];
-            var next = this[nextIndex];
-            currentIndex = nextIndex;
-            polygon.Add(cur);
-            float segmentLength = (next - cur).Length();
-
-            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
-            {
-                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
-                var end = cur.Lerp(next, f);
-                polygon.Add(end);
-                break;
-            }
-
-            accumulatedPerimeter += segmentLength;
-        }
-
-        return polygon.GenerateOutlineTriangulation(thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's inflated outline and appends the resulting triangles
-    /// into the provided <see cref="Triangulation"/> instance.
-    /// </summary>
-    /// <param name="result">
-    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles. The method appends triangles
-    /// to this collection; it does not clear it.
-    /// </param>
-    /// <param name="perimeterToDraw">
-    /// The length of the polygon perimeter to draw/triangulate. Must be greater than 0.
-    /// </param>
-    /// <param name="startIndex">Index of the vertex at which to start drawing the outline segment.</param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges when creating the outline for triangulation.</param>
-    /// <param name="cornerPoints">
-    /// Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.
-    /// </param>
-    /// <param name="miterLimit">Miter limit used when applying miter joins. Values &gt;= 2 prefer miter joins.</param>
-    /// <param name="beveled">
-    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// The number of triangles appended to <paramref name="result"/>. Returns 0 if the polygon has insufficient vertices
-    /// or if triangulation/inflation fails.
-    /// </returns>
-    public int GenerateOutlinePerimeterTriangulation(ref Triangulation result, float perimeterToDraw, int startIndex, float thickness, int cornerPoints = 0,
-        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
-    {
-        if (perimeterToDraw <= 0f) return 0;
-
-        Polygon polygon = new(Count);
-
-        bool ccw = perimeterToDraw > 0;
-        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
-        float accumulatedPerimeter = 0f;
-        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
-
-        //create polyline based on perimeter & start index
-        while (absPerimeterToDraw > accumulatedPerimeter)
-        {
-            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
-            var cur = this[currentIndex];
-            var next = this[nextIndex];
-            currentIndex = nextIndex;
-            polygon.Add(cur);
-            float segmentLength = (next - cur).Length();
-
-            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
-            {
-                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
-                var end = cur.Lerp(next, f);
-                polygon.Add(end);
-                break;
-            }
-
-            accumulatedPerimeter += segmentLength;
-        }
-
-        if (polygon.Count < 3) return 0;
-
-        return polygon.GenerateOutlineTriangulation(ref result, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    #endregion
-
-    #region Outline Percentage Triangulation
-
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter.
-    /// The method inflates the polygon by <paramref name="thickness"/> and produces triangles that cover the outline segment
-    /// corresponding to <paramref name="f"/> of the total perimeter length.
-    /// </summary>
-    /// <param name="f">
-    /// Fraction of the total perimeter to draw. Expected magnitude in the range [0 - 1] (e.g. 0.25 = 25% of the perimeter).
-    /// A negative value indicates drawing in the opposite winding direction.
-    /// </param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges for the outline triangulation.</param>
-    /// <param name="perimeter">
-    /// Optional total perimeter length to use as the basis for <paramref name="f"/>.
-    /// If smaller or equal to 0 the polygon's computed perimeter is used.
-    /// </param>
-    /// <param name="cornerPoints">
-    /// Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.
-    /// </param>
-    /// <param name="miterLimit">Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins.</param>
-    /// <param name="beveled">
-    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// A <see cref="Triangulation"/> containing triangles for the generated outline percentage, or <c>null</c>
-    /// if the operation fails (for example when the polygon has insufficient vertices or triangulation cannot produce a valid result).
-    /// </returns>
-    public Triangulation? GenerateOutlinePercentageTriangulation(float f, float thickness, float perimeter = 0f, int cornerPoints = 0, float miterLimit = 2f,
-        bool beveled = false, bool useDelaunay = false)
-    {
-        if (f == 0f) return null;
-
-        float absF = MathF.Abs(f);
-        var startIndex = (int)absF;
-        float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
-
-        if (f < 0f) percentage *= -1f;
-
-        if (perimeter <= 0)
-        {
-            perimeter = 0f;
-            for (var i = 0; i < Count; i++)
-            {
-                var start = this[i];
-                var end = this[(i + 1) % Count];
-                float l = (end - start).Length();
-                perimeter += l;
-            }
-        }
-
-        return GenerateOutlinePerimeterTriangulation(perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    /// <summary>
-    /// Generates a triangulation covering a portion of the polygon's inflated outline determined by a fraction of the perimeter,
-    /// appending the resulting triangles into <paramref name="result"/>.
-    /// </summary>
-    /// <param name="result">
-    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles. The method appends triangles
-    /// to this collection; it does not clear it.
-    /// </param>
-    /// <param name="f">
-    /// Fraction of the total perimeter to draw. The integer part selects the start vertex index and the fractional part
-    /// selects the percentage of the perimeter to draw from that start. A negative value draws in the opposite winding direction.
-    /// A value of 0 results in no operation.
-    /// </param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges for the outline triangulation.</param>
-    /// <param name="perimeter">
-    /// Optional total perimeter length to use as the basis for <paramref name="f"/>. If smaller or equal to 0 the polygon's computed perimeter is used.
-    /// </param>
-    /// <param name="cornerPoints">Number of points to approximate rounded corners. If &lt;= 0 rounded joins are not used.</param>
-    /// <param name="miterLimit">Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins.</param>
-    /// <param name="beveled">
-    /// When true and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">If true, request Delaunay post-processing from the Clipper triangulation step when supported.</param>
-    /// <returns>
-    /// The number of triangles appended to <paramref name="result"/>. Returns 0 if <paramref name="f"/> is 0,
-    /// the polygon has insufficient vertices, or triangulation/inflation fails.
-    /// </returns>
-    public int GenerateOutlinePercentageTriangulation(ref Triangulation result, float f, float thickness, float perimeter = 0f, int cornerPoints = 0,
-        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
-    {
-        if (f == 0f) return 0;
-
-        float absF = MathF.Abs(f);
-        var startIndex = (int)absF;
-        float percentage = ShapeMath.Clamp(absF - startIndex, 0f, 1f);
-
-        if (f < 0f) percentage *= -1f;
-
-        if (perimeter <= 0)
-        {
-            perimeter = 0f;
-            for (var i = 0; i < Count; i++)
-            {
-                var start = this[i];
-                var end = this[(i + 1) % Count];
-                float l = (end - start).Length();
-                perimeter += l;
-            }
-        }
-
-        return GenerateOutlinePerimeterTriangulation(ref result, perimeter * percentage, startIndex, thickness, cornerPoints, miterLimit, beveled, useDelaunay);
-    }
-
-    #endregion*/
-
-/*
-    /// <summary>
-    /// Generates a triangulation for the polygon's outline when the polygon is inflated by a given <paramref name="thickness"/>.
-    /// The outline is produced by inflating the polygon (using round, miter, bevel or square joins depending on parameters)
-    /// and then triangulating the resulting shape(s).
-    /// </summary>
-    /// <param name="thickness">The amount to inflate the polygon edges by (outline half-width).</param>
-    /// <param name="cornerPoints">
-    /// Number of points to approximate rounded corners. If &lt;= 0 rounded corners are not used.
-    /// </param>
-    /// <param name="miterLimit">
-    /// The miter limit applied when using miter joins. Values &gt;= 2 favour miter joins; smaller values may produce bevel/square joins.
-    /// </param>
-    /// <param name="beveled">
-    /// When <c>true</c> and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">
-    /// If <c>true</c> request Delaunay post-processing from the Clipper triangulation step (when supported).
-    /// </param>
-    /// <returns>
-    /// A <see cref="Triangulation"/> containing triangles that cover the inflated outline, or <c>null</c> if a valid triangulation
-    /// could not be produced (for example when the polygon has insufficient vertices or inflation fails).
-    /// </returns>
-    /// <remarks>
-    /// This method will return <c>null</c> for polygons with fewer than 3 vertices. When the inflation produces multiple disjoint
-    /// paths the function attempts to triangulate each resulting region. Uses the polygon's Inflate helper and the Clipper library
-    /// for triangulation when applicable.
-    /// </remarks>
-    public Triangulation? GenerateOutlineTriangulation(float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false,
-        bool useDelaunay = false)
-    {
-        if (Count <= 2) return null;
-
-        ShapeClipperJoinType joinType;
-        if (cornerPoints > 0)
-        {
-            joinType = ShapeClipperJoinType.Round;
-        }
-        else
-        {
-            if (miterLimit >= 2f)
-            {
-                joinType = ShapeClipperJoinType.Miter;
-            }
-            else
-            {
-                joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
-            }
-        }
-
-        double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
-        var result = this.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
-        if (result.Count <= 0) return null;
-
-        if (result.Count == 1)
-        {
-            if (result[0].Count < 3) return null;
-            var polygon = result[0].ToPolygon();
-            return polygon.Triangulate();
-        }
-
-        var triangulationResult = Clipper.Triangulate(result, 4, out var solution, useDelaunay);
-        if (triangulationResult == TriangulateResult.success)
-        {
-            var triangulation = new Triangulation();
-            foreach (var path in solution)
-            {
-                if (path.Count < 3) continue;
-                triangulation.Add(new Triangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2()));
-            }
-
-            return triangulation;
-        }
-
-        return null;
-    }
-    
-    /// <summary>
-    /// Generates a triangulation for the polygon's inflated outline and appends the resulting triangles
-    /// into the provided <see cref="Triangulation"/> instance.
-    /// This function aims to minimize memory allocations by reusing internal buffers and filling the provided collection instead of creating a new one.
-    /// </summary>
-    /// <param name="result">
-    /// A reference to a <see cref="Triangulation"/> that will receive the produced triangles.
-    /// The method appends triangles to this collection; it does not clear it.
-    /// </param>
-    /// <param name="thickness">Inflation half-width applied to polygon edges.</param>
-    /// <param name="cornerPoints">
-    /// Number of points to approximate rounded corners. If &lt;= 0 rounded corners are not used.
-    /// </param>
-    /// <param name="miterLimit">
-    /// Miter limit applied when using miter joins. Values &gt;= 2 favour miter joins; smaller values may produce bevel/square joins.
-    /// </param>
-    /// <param name="beveled">
-    /// When <c>true</c> and <paramref name="cornerPoints"/> is 0, prefer bevel joins instead of square joins for sharp corners.
-    /// </param>
-    /// <param name="useDelaunay">
-    /// If <c>true</c> request Delaunay post-processing from the Clipper triangulation step (when supported).
-    /// </param>
-    /// <returns>
-    /// The number of triangles added to <paramref name="result"/>. Returns 0 if the polygon has insufficient vertices
-    /// or if triangulation/inflation fails.
-    /// </returns>
-    /// <remarks>
-    /// This overload minimizes allocations by filling the provided collection. For a standalone triangulation use
-    /// the overload that returns a new <see cref="Triangulation"/> instance.
-    /// </remarks>
-    public int GenerateOutlineTriangulation(ref Triangulation result, float thickness, int cornerPoints = 0, float miterLimit = 2f, bool beveled = false,
-        bool useDelaunay = false)
-    {
-        if (Count <= 2) return 0;
-
-        ShapeClipperJoinType joinType;
-        if (cornerPoints > 0)
-        {
-            joinType = ShapeClipperJoinType.Round;
-        }
-        else
-        {
-            if (miterLimit >= 2f)
-            {
-                joinType = ShapeClipperJoinType.Miter;
-            }
-            else
-            {
-                joinType = beveled ? ShapeClipperJoinType.Bevel : ShapeClipperJoinType.Square;
-            }
-        }
-
-        double arcTolerance = cornerPoints <= 0 ? 0.0 : thickness / (cornerPoints * 2);
-        var inflation = this.Inflate(thickness, joinType, ShapeClipperEndType.Joined, miterLimit, 2, arcTolerance);
-        if (inflation.Count <= 0) return 0;
-
-        if (inflation.Count == 1)
-        {
-            if (inflation[0].Count < 3) return 0;
-            triangulateTempPolygon.Clear();
-            foreach (var vertex in inflation[0])
-            {
-                triangulateTempPolygon.Add(vertex.ToVec2());
-            }
-
-            return triangulateTempPolygon.Triangulate(ref result);
-        }
-
-        var triangulationResult = Clipper.Triangulate(inflation, 4, out var solution, useDelaunay);
-        if (triangulationResult == TriangulateResult.success)
-        {
-            int count = 0;
-            foreach (var path in solution)
-            {
-                if (path.Count < 3) continue;
-                result.Add(new Triangle(path[0].ToVec2(), path[1].ToVec2(), path[2].ToVec2()));
-                count++;
-            }
-
-            return count;
-        }
-
-        return 0;
-    }*/

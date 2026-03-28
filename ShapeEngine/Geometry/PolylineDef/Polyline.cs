@@ -23,6 +23,12 @@ namespace ShapeEngine.Geometry.PolylineDef;
 /// </remarks>
 public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
 {
+    #region Helper
+
+    private static Polyline buffer = new();
+
+    #endregion
+    
     #region Constructors
     /// <summary>
     /// Initializes a new instance of the <see cref="Polyline"/> class with no points.
@@ -221,7 +227,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     #endregion
     
     #region Interpolated Edge Points
-
+    //TODO: Result parameter
     /// <summary>
     /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
     /// </summary>
@@ -279,6 +285,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     #endregion
     
     #region Static
+    
     /// <summary>
     /// Creates a polyline shape from a set of relative points and a transformation.
     /// </summary>
@@ -296,7 +303,6 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         }
         return shape;
     }
-
     
     #endregion
 }
