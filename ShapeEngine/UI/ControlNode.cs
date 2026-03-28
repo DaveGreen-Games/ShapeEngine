@@ -4,8 +4,6 @@ using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.UI;
 
-//TODO: Add missing docs.
-
 /// <summary>
 /// Represents an abstract base class for UI control nodes, providing core functionality for hierarchy, state, events, and input handling.
 /// </summary>
@@ -102,7 +100,13 @@ public abstract class ControlNode
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode, bool>? OnPressedChanged;
+    
+    /// <summary>
+    /// Occurs when the down state changes.
+    /// Parameters: Invoker, Value
+    /// </summary>
     public event Action<ControlNode, bool>? OnIsDownChanged;
+    
     /// <summary>
     /// Occurs when the navigable state changes.
     /// Parameters: Invoker, Value
@@ -140,32 +144,7 @@ public abstract class ControlNode
     private bool parentActive = true;
     private bool parentVisible = true;
     private bool selected;
-    
     private bool displayed = true;
-
-    /// <summary>
-    /// Gets or sets whether this node and its children are displayed.
-    /// Changing this value will recursively update all children.
-    /// Triggers <see cref="OnDisplayedChanged"/> and updates navigable and visible-in-hierarchy states.
-    /// </summary>
-    public bool Displayed
-    {
-        get => displayed;
-        set
-        {
-            if (value == displayed) return;
-            prevNavigable = Navigable;
-            prevIsVisibleInHierarchy = IsVisibleInHierarchy;
-            displayed = value;
-            ResolveOnDisplayedChanged();
-            foreach (var child in children)
-            {
-                child.Displayed = value;
-            }
-        }
-    }
-    
-    
     private bool navigationSelected;
     private bool prevNavigable;
     private bool prevIsVisibleInHierarchy;
@@ -173,7 +152,7 @@ public abstract class ControlNode
     #endregion
 
     #region Public Members
-
+    
     /// <summary>
     /// The anchor point used to position this node within its parent.
     /// </summary>
@@ -260,6 +239,27 @@ public abstract class ControlNode
     #endregion
 
     #region Getters & Setters
+    /// <summary>
+    /// Gets or sets whether this node and its children are displayed.
+    /// Changing this value will recursively update all children.
+    /// Triggers <see cref="OnDisplayedChanged"/> and updates navigable and visible-in-hierarchy states.
+    /// </summary>
+    public bool Displayed
+    {
+        get => displayed;
+        set
+        {
+            if (value == displayed) return;
+            prevNavigable = Navigable;
+            prevIsVisibleInHierarchy = IsVisibleInHierarchy;
+            displayed = value;
+            ResolveOnDisplayedChanged();
+            foreach (var child in children)
+            {
+                child.Displayed = value;
+            }
+        }
+    }
     
     /// <summary>
     /// Gets or sets whether this node is active.
@@ -374,6 +374,9 @@ public abstract class ControlNode
     /// </summary>
     public bool Pressed { get; private set; }
     
+    /// <summary>
+    /// Gets whether this node is currently down.
+    /// </summary>
     public bool IsDown { get; private set; }
     
     /// <summary>
@@ -422,8 +425,6 @@ public abstract class ControlNode
     /// Gets an enumerable of all child nodes.
     /// </summary>
     public IEnumerable<ControlNode> GetChildrenEnumerable => children;
-    
-    // public List<ControlNode> GetChildren(Predicate<ControlNode> match) => children.FindAll(match);
     
     /// <summary>
     /// Gets whether this node is navigable (active, visible, and has appropriate filters).
@@ -1022,31 +1023,34 @@ public abstract class ControlNode
     /// </summary>
     /// <returns>Returns false per default.</returns>   
     protected virtual bool GetMouseButtonPressedState() => false;
+    
     /// <summary>
     /// Returns whether the key for the released state is down.
     /// Override this method to handle custom input logic for button release.
     /// </summary>
     /// <returns>Returns false by default.</returns>
     protected virtual bool GetButtonReleasedState() => false;
+    
     /// <summary>
     /// Returns whether the mouse button for the released state is down (only called when mouse is inside).
     /// Override this method to handle custom input logic for mouse button release.
     /// </summary>
     /// <returns>Returns false by default.</returns>
     protected virtual bool GetMouseButtonReleasedState() => false;
+    
     /// <summary>
     /// Returns whether the key for the down state is currently held down.
     /// Override this method to handle custom input logic for button down.
     /// </summary>
     /// <returns>Returns false by default.</returns>
     protected virtual bool GetButtonDownState() => false;
+    
     /// <summary>
     /// Returns whether the mouse button for the down state is currently held down (only called when mouse is inside).
     /// Override this method to handle custom input logic for mouse button down.
     /// </summary>
     /// <returns>Returns false by default.</returns>
     protected virtual bool GetMouseButtonDownState() => false;
-    
     
     /// <summary>
     /// Return the direction to move to another element.
@@ -1211,6 +1215,7 @@ public abstract class ControlNode
     /// </summary>
     /// <param name="value">The new pressed state.</param>
     protected virtual void PressedWasChanged(bool value) { }
+ 
     /// <summary>
     /// Called when the IsDown state changes.
     /// </summary>
@@ -1274,6 +1279,7 @@ public abstract class ControlNode
         ActiveInHierarchyChanged(IsActiveInHierarchy);
         OnActiveInHierarchyChanged?.Invoke(this, IsActiveInHierarchy);
     }
+  
     /// <summary>
     /// Resolves changes to the visible-in-hierarchy state and triggers related events.
     /// </summary>
@@ -1283,6 +1289,7 @@ public abstract class ControlNode
         VisibleInHierarchyChanged(IsVisibleInHierarchy);
         OnVisibleInHierarchyChanged?.Invoke(this, IsVisibleInHierarchy);
     }
+    
     /// <summary>
     /// Resolves changes to the displayed state and triggers related events.
     /// </summary>
@@ -1293,6 +1300,7 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnVisibleInHierarchyChanged();
     }
+    
     /// <summary>
     /// Resolves changes to the active state and triggers related events.
     /// </summary>
@@ -1303,6 +1311,7 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnActiveInHierarchyChanged();
     }
+    
     /// <summary>
     /// Resolves changes to the visible state and triggers related events.
     /// </summary>
@@ -1313,6 +1322,7 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnVisibleInHierarchyChanged();
     }
+    
     /// <summary>
     /// Resolves changes to the parent visible state and triggers related events.
     /// </summary>
@@ -1323,6 +1333,7 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnVisibleInHierarchyChanged();
     }
+    
     /// <summary>
     /// Resolves changes to the parent active state and triggers related events.
     /// </summary>
@@ -1333,6 +1344,7 @@ public abstract class ControlNode
         ResolveOnNavigableChanged();
         ResolveOnActiveInHierarchyChanged();
     }
+    
     /// <summary>
     /// Resolves changes to the parent node and triggers related events.
     /// </summary>
@@ -1344,6 +1356,7 @@ public abstract class ControlNode
         OnParentChanged?.Invoke(this, oldParent, newParent);
         // ResolveOnNavigableChanged(Navigable);
     }
+    
     /// <summary>
     /// Resolves the addition of a child node and triggers related events.
     /// </summary>
@@ -1353,6 +1366,7 @@ public abstract class ControlNode
         ChildWasAdded(newChild);
         OnChildAdded?.Invoke(this, newChild);
     }
+    
     /// <summary>
     /// Resolves the removal of a child node and triggers related events.
     /// </summary>
@@ -1362,6 +1376,7 @@ public abstract class ControlNode
         ChildWasRemoved(oldChild);
         OnChildRemoved?.Invoke(this, oldChild);
     }
+    
     /// <summary>
     /// Resolves the mouse entering this node and triggers related events.
     /// </summary>
@@ -1371,6 +1386,7 @@ public abstract class ControlNode
         MouseHasEntered(mousePos);
         OnMouseEntered?.Invoke(this, mousePos);
     }
+    
     /// <summary>
     /// Resolves the mouse exiting this node and triggers related events.
     /// </summary>
@@ -1380,6 +1396,7 @@ public abstract class ControlNode
         MouseHasExited(mousePos);
         OnMouseExited?.Invoke(this, mousePos);
     }
+    
     /// <summary>
     /// Resolves changes to the selected state and triggers related events.
     /// </summary>
@@ -1389,6 +1406,7 @@ public abstract class ControlNode
         SelectedWasChanged(selected);
         OnSelectedChanged?.Invoke(this, selected);
     }
+    
     /// <summary>
     /// Resolves changes to the pressed state and triggers related events.
     /// </summary>
@@ -1397,6 +1415,7 @@ public abstract class ControlNode
         PressedWasChanged(Pressed);
         OnPressedChanged?.Invoke(this, Pressed);
     }
+    
     /// <summary>
     /// Resolves changes to the IsDown state and triggers related events.
     /// </summary>
@@ -1405,6 +1424,7 @@ public abstract class ControlNode
         IsDownWasChanged(Pressed);
         OnIsDownChanged?.Invoke(this, Pressed);
     }
+    
     /// <summary>
     /// Resolves changes to the mouse filter and triggers related events.
     /// </summary>
@@ -1415,6 +1435,7 @@ public abstract class ControlNode
         MouseFilterWasChanged(old, cur);
         OnMouseFilterChanged?.Invoke(this, old, cur);
     }
+    
     /// <summary>
     /// Resolves changes to the selection filter and triggers related events.
     /// </summary>
@@ -1426,6 +1447,7 @@ public abstract class ControlNode
         OnSelectionFilterChanged?.Invoke(this, old, cur);
         ResolveOnNavigableChanged();
     }
+    
     /// <summary>
     /// Resolves changes to the input filter and triggers related events.
     /// </summary>
@@ -1437,6 +1459,7 @@ public abstract class ControlNode
         OnInputFilterChanged?.Invoke(this, old, cur);
         ResolveOnNavigableChanged();
     }
+    
     /// <summary>
     /// Resolves changes to the navigable state and triggers related events.
     /// </summary>
