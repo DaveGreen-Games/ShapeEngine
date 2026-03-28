@@ -18,8 +18,6 @@ using Size = ShapeEngine.Core.Structs.Size;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
-//TODO: Use result parameters
-
 /// <summary>
 /// Represents a 2D polygon defined by a sequence of points in counter-clockwise order,
 /// providing geometric operations, containment and intersection tests,
@@ -30,7 +28,7 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// Use <see cref="FixWindingOrder"/> or <see cref="MakeCounterClockwise"/> if your points are in clockwise (CW) order.
 /// <list type="bullet">
 /// <item>
-///A convex polygon is a polygon where all interior angles are less than 180°,
+/// A convex polygon is a polygon where all interior angles are less than 180°,
 /// and every line segment between any two points inside the polygon lies entirely within the polygon.
 /// In other words, no vertices "point inward."
 /// </item>
@@ -44,14 +42,16 @@ namespace ShapeEngine.Geometry.PolygonDef;
 public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
     #region Helper Members
+    
     private static IntersectionPoints intersectionPointsReference = new(4);
-
     private static Triangulation triangulationBuffer = new();
     private static Polyline polylinePerimeterBuffer = new();
     private static Paths64 clipResultBuffer = new();
     private static Polygon clipPolygonBuffer = new();
     private static Paths64PooledBuffer clipPooledBuffer = new();
-    
+    private static List<WeightedItem<Triangle>> weightedTrianglesBuffer = new();
+    private static List<Triangle> pickedTrianglesBuffer = new();
+    private static Segments segmentsBuffer = new();
     
     #endregion
     
@@ -97,6 +97,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// Initializes an empty polygon.
     /// </summary>
     public Polygon() { }
+    
     /// <summary>
     /// Initializes a polygon with a specified capacity.
     /// </summary>
@@ -105,22 +106,26 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     {
         
     }
+    
     /// <summary>
     /// Initializes a polygon from a collection of points.
     /// </summary>
     /// <param name="points">The points that define the polygon. Should be in CCW order.
     /// Use <see cref="FixWindingOrder"/> or <see cref="MakeCounterClockwise"/> if in CW order.</param>
     public Polygon(IEnumerable<Vector2> points) { AddRange(points); }
+    
     /// <summary>
     /// Initializes a polygon from another <see cref="Points"/> instance.
     /// </summary>
     /// <param name="points">The points to copy. Should be in CCW order.</param>
     public Polygon(Points points) : base(points.Count) { AddRange(points); }
+    
     /// <summary>
     /// Initializes a polygon by copying another polygon.
     /// </summary>
     /// <param name="poly">The polygon to copy.</param>
     public Polygon(Polygon poly) : base(poly.Count) { AddRange(poly); }
+    
     /// <summary>
     /// Initializes a polygon from a polyline.
     /// </summary>
@@ -149,14 +154,23 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         }
         return true;
     }
+    
     /// <summary>
     /// Returns a hash code for the polygon.
     /// </summary>
     /// <returns>A hash code for the current polygon.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
 
+    /// <summary>
+    /// Gets the closed shape type represented by this polygon.
+    /// </summary>
+    /// <returns><see cref="ClosedShapeType.Poly"/>.</returns>
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Poly;
 
+    /// <summary>
+    /// Gets the general shape type represented by this polygon.
+    /// </summary>
+    /// <returns><see cref="ShapeType.Poly"/>.</returns>
     public ShapeType GetShapeType() => ShapeType.Poly;
 
     /// <summary>
@@ -201,6 +215,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
             Reverse();
         }
     }
+    
     /// <summary>
     /// Converts the polygon's winding order to clockwise (CW).
     /// </summary>
@@ -212,6 +227,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         if (IsClockwise()) return;
         Reverse();
     }
+    
     /// <summary>
     /// Converts the polygon's winding order to counter-clockwise (CCW).
     /// </summary>
@@ -223,6 +239,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         if (!IsClockwise()) return;
         Reverse();
     }
+    
     /// <summary>
     /// Reduces the number of vertices in the polygon to the specified count.
     /// </summary>
@@ -248,6 +265,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         }
 
     }
+    
     /// <summary>
     /// Reduces the number of vertices by a factor.
     /// </summary>
@@ -256,6 +274,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     {
         ReduceVertexCount(Count - (int)(Count * factor));
     }
+    
     /// <summary>
     /// Increases the number of vertices in the polygon to the specified count by subdividing the longest edges.
     /// </summary>
@@ -281,6 +300,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
             this.Insert(longestID + 1, m);
         }
     }
+    
     /// <summary>
     /// Gets the vertex at the specified index, wrapping around if necessary.
     /// </summary>
@@ -320,6 +340,51 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     }
     
     /// <summary>
+    /// Removes vertices that are effectively duplicates by comparing each vertex to its next neighbor.
+    /// If the squared distance between two consecutive vertices is less than or equal to
+    /// <paramref name="toleranceSquared"/>, the current vertex is omitted.
+    /// No action is performed when the polygon has fewer than three vertices.
+    /// </summary>
+    /// <param name="toleranceSquared">Squared distance threshold used to detect duplicate vertices (default: 0.001f).</param>
+    public void RemoveDuplicates(float toleranceSquared = 0.001f)
+    {
+        if (Count < 3) return;
+        Points result = [];
+
+        for (var i = 0; i < Count; i++)
+        {
+            var cur = this[i];
+            var next = Game.GetItem(this, i + 1);
+            if ((cur - next).LengthSquared() > toleranceSquared) result.Add(cur);
+        }
+        Clear();
+        AddRange(result);
+    }
+
+    /// <summary>
+    /// Smooths the polygon by moving each vertex towards the average of its neighbors and the centroid.
+    /// </summary>
+    /// <param name="amount">The smoothing factor (0-1).</param>
+    /// <param name="baseWeight">The weight applied to the centroid direction.</param>
+    public void Smooth(float amount, float baseWeight)
+    {
+        if (Count < 3) return;
+        Points result = [];
+        var centroid = GetCentroid();
+        for (var i = 0; i < Count; i++)
+        {
+            var cur = this[i];
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+            var dir = (prev - cur) + (next - cur) + ((cur - centroid) * baseWeight);
+            result.Add(cur + dir * amount);
+        }
+
+        Clear();
+        AddRange(result);
+    }
+    
+    /// <summary>
     /// Creates and returns a new polygon that is a copy of this polygon with vertices
     /// that are approximately collinear removed.
     /// </summary>
@@ -347,28 +412,6 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         }
 
         return result;
-    }
-    
-    /// <summary>
-    /// Removes vertices that are effectively duplicates by comparing each vertex to its next neighbor.
-    /// If the squared distance between two consecutive vertices is less than or equal to
-    /// <paramref name="toleranceSquared"/>, the current vertex is omitted.
-    /// No action is performed when the polygon has fewer than three vertices.
-    /// </summary>
-    /// <param name="toleranceSquared">Squared distance threshold used to detect duplicate vertices (default: 0.001f).</param>
-    public void RemoveDuplicates(float toleranceSquared = 0.001f)
-    {
-        if (Count < 3) return;
-        Points result = [];
-
-        for (var i = 0; i < Count; i++)
-        {
-            var cur = this[i];
-            var next = Game.GetItem(this, i + 1);
-            if ((cur - next).LengthSquared() > toleranceSquared) result.Add(cur);
-        }
-        Clear();
-        AddRange(result);
     }
     
     /// <summary>
@@ -400,29 +443,6 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     }
     
     /// <summary>
-    /// Smooths the polygon by moving each vertex towards the average of its neighbors and the centroid.
-    /// </summary>
-    /// <param name="amount">The smoothing factor (0-1).</param>
-    /// <param name="baseWeight">The weight applied to the centroid direction.</param>
-    public void Smooth(float amount, float baseWeight)
-    {
-        if (Count < 3) return;
-        Points result = [];
-        var centroid = GetCentroid();
-        for (var i = 0; i < Count; i++)
-        {
-            var cur = this[i];
-            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
-            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
-            var dir = (prev - cur) + (next - cur) + ((cur - centroid) * baseWeight);
-            result.Add(cur + dir * amount);
-        }
-
-        Clear();
-        AddRange(result);
-    }
-    
-    /// <summary>
     /// Creates and returns a smoothed copy of this polygon.
     /// Each vertex is moved towards the average of its neighboring vertices and towards the polygon centroid
     /// according to the provided smoothing parameters.
@@ -447,6 +467,89 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         }
 
         return result;
+    }
+    
+    /// <summary>
+    /// Writes a copy of this polygon into <paramref name="result"/> with approximately collinear vertices removed.
+    /// </summary>
+    /// <param name="result">The destination polygon that will be cleared and populated with the filtered vertices.</param>
+    /// <param name="angleThresholdDegrees">
+    /// The threshold angle in degrees used to determine collinearity. If the angle between
+    /// the vectors (prev -> cur) and (cur -> next) is smaller than this threshold the current
+    /// vertex is considered collinear and omitted from the copied polygon. Default is 5 degrees.
+    /// </param>
+    /// <returns><c>true</c> if this polygon has at least three vertices and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool RemoveCollinearVerticesCopy(Polygon result, float angleThresholdDegrees = 5f)
+    {
+        if (Count < 3) return false;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        for (var i = 0; i < Count; i++)
+        {
+            var prev = Game.GetItem(this, i - 1);
+            var cur = this[i];
+            var next = Game.GetItem(this, i + 1);
+
+            if(ShapeVec.IsColinearAngle(prev, cur, next, angleThresholdDegrees)) continue;
+            result.Add(cur);
+        }
+
+        return true;
+    }
+    
+    /// <summary>
+    /// Writes a copy of this polygon into <paramref name="result"/> with consecutive duplicate vertices removed.
+    /// Each vertex is compared to its next neighbor; if the squared distance between them is less than
+    /// or equal to <paramref name="toleranceSquared"/>, the current vertex is omitted from the result.
+    /// </summary>
+    /// <param name="result">The destination polygon that will be cleared and populated with the filtered vertices.</param>
+    /// <param name="toleranceSquared">
+    /// Squared distance threshold used to detect duplicate vertices. Vertices closer than or equal to
+    /// this threshold are treated as duplicates. Default is <c>0.001f</c>.
+    /// </param>
+    /// <returns><c>true</c> if this polygon has at least three vertices and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool RemoveDuplicatesCopy(Polygon result, float toleranceSquared = 0.001f)
+    {
+        if (Count < 3) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(Count);
+
+        for (var i = 0; i < Count; i++)
+        {
+            var cur = this[i];
+            var next = Game.GetItem(this, i + 1);
+            if ((cur - next).LengthSquared() > toleranceSquared) result.Add(cur);
+        }
+
+        return true;
+    }
+    
+    /// <summary>
+    /// Writes a smoothed copy of this polygon into <paramref name="result"/>.
+    /// Each vertex is moved towards the average of its neighboring vertices and towards the polygon centroid
+    /// according to the provided smoothing parameters.
+    /// </summary>
+    /// <param name="result">The destination polygon that will be cleared and populated with the smoothed vertices.</param>
+    /// <param name="amount">Smoothing factor in the range [0,1]. 0 means no change, 1 applies the full computed displacement.</param>
+    /// <param name="baseWeight">Weight applied to the centroid contribution when computing the smoothing direction.</param>
+    /// <returns><c>true</c> if this polygon has at least three vertices and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool SmoothCopy(Polygon result, float amount, float baseWeight)
+    {
+        if (Count < 3) return false;
+        result.Clear();
+        result.EnsureCapacity(Count);
+        var centroid = GetCentroid();
+        for (var i = 0; i < Count; i++)
+        {
+            var cur = this[i];
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+            var dir = (prev - cur) + (next - cur) + ((cur - centroid) * baseWeight);
+            result.Add(cur + dir * amount);
+        }
+
+        return true;
     }
     #endregion
 
@@ -476,6 +579,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
         return (new Transform2D(pos, 0f, new Size(size, 0f), 1f), relativeShape);
     }
+   
     /// <summary>
     /// Converts the polygon's points to relative coordinates using a given transform.
     /// </summary>
@@ -492,6 +596,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
         return points;
     }
+
     /// <summary>
     /// Converts the polygon to a new polygon in relative coordinates using a given transform.
     /// </summary>
@@ -508,6 +613,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
         return points;
     }
+    
     /// <summary>
     /// Converts the polygon's points to a list of relative coordinates using a given transform.
     /// </summary>
@@ -524,6 +630,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
         return points;
     }
+    
     /// <summary>
     /// Gets the minimal bounding triangle of the polygon.
     /// </summary>
@@ -582,38 +689,6 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     }
     
     /// <summary>
-    /// Appends the edge normal vectors of this polygon to the provided list.
-    /// </summary>
-    /// <param name="normalsRef">A <see cref="List{Vector2}"/> that will receive the computed normals (normals are appended).</param>
-    /// <returns>
-    /// The number of normals added:
-    /// - 0 when the polygon has 0 or 1 vertex (nothing is added).
-    /// - 1 when the polygon has exactly 2 vertices (a single segment normal is added).
-    /// - <c>Count</c> when the polygon has 3 or more vertices (one normal per edge).
-    /// </returns>
-    /// <remarks>
-    /// Normals are computed using <see cref="Segment.GetNormal(Vector2, Vector2, bool)"/> with the third parameter set to <c>false</c>.
-    /// When the polygon vertices are in counter-clockwise (CCW) order the normals will face outward.
-    /// </remarks>
-    public int GetEdgeNormals(ref List<Vector2> normalsRef)
-    {
-        switch (Count)
-        {
-            case <= 1:
-                return 0;
-            case 2:
-                normalsRef.Add(Segment.GetNormal(this[0], this[1], false));
-                return 1;
-        }
-        
-        for (var i = 0; i < Count; i++)
-        {
-            normalsRef.Add(Segment.GetNormal(this[i], this[(i + 1) % Count], false));
-        }
-        return Count;
-    }
-    
-    /// <summary>
     /// Returns a simple (non-minimal) enclosing circle for the polygon.
     /// You should always use <see cref="GetBoundingCircle"/> unless performance is critical.
     /// </summary>
@@ -645,6 +720,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 
         return new Circle(origin, MathF.Sqrt(maxD));
     }
+   
     /// <summary>
     /// Gets the minimal bounding circle of the polygon using Welzl's algorithm.
     /// </summary>
@@ -664,6 +740,311 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         var boundary = new List<Vector2>();
         return WelzlHelper(points, boundary, points.Count);
     }
+    
+    /// <summary>
+    /// Gets the axis-aligned bounding box of the polygon.
+    /// </summary>
+    /// <returns>The bounding <see cref="Rect"/>.</returns>
+    public Rect GetBoundingBox()
+    {
+        if (Count == 0) return new Rect();
+        if (Count == 1) return new Rect(this[0].X, this[0].Y, 0, 0);
+    
+        float minX = this[0].X;
+        float maxX = this[0].X;
+        float minY = this[0].Y;
+        float maxY = this[0].Y;
+    
+        for (int i = 1; i < Count; i++)
+        {
+            var p = this[i];
+            if (p.X < minX) minX = p.X;
+            else if (p.X > maxX) maxX = p.X;
+            
+            if (p.Y < minY) minY = p.Y;
+            else if (p.Y > maxY) maxY = p.Y;
+        }
+    
+        return new Rect(minX, minY, maxX - minX, maxY - minY);
+    }
+    
+    /// <summary>
+    /// Returns the convex hull of the polygon as a new polygon.
+    /// </summary>
+    /// <returns>A convex polygon containing all the original points.</returns>
+    public Polygon? ToConvex()
+    {
+        var result = new Polygon();
+        FindConvexHull(result);
+        return result.Count >= 3 ? result : null;
+    }
+    
+    /// <summary>
+    /// Converts this polygon's vertices into relative coordinates using the supplied transform and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the relative coordinates.</param>
+    /// <param name="transform">The transform whose inverse position mapping is applied to each polygon vertex.</param>
+    public void ToRelative(List<Vector2> result, Transform2D transform)
+    {
+        result.Clear();
+        result.EnsureCapacity(Count);
+        for (int i = 0; i < Count; i++)
+        {
+            var p = transform.RevertPosition(this[i]);
+            result.Add(p);
+        }
+    }
+    
+    /// <summary>
+    /// Appends the edge normal vectors of this polygon to the provided list.
+    /// </summary>
+    /// <param name="result">A <see cref="List{Vector2}"/> that will receive the computed normals. Existing contents are preserved and the normals are appended.</param>
+    /// <returns>
+    /// The number of normals added:
+    /// - 0 when the polygon has 0 or 1 vertex (nothing is added).
+    /// - 1 when the polygon has exactly 2 vertices (a single segment normal is added).
+    /// - <c>Count</c> when the polygon has 3 or more vertices (one normal per edge).
+    /// </returns>
+    /// <remarks>
+    /// Normals are computed using <see cref="Segment.GetNormal(Vector2, Vector2, bool)"/> with the third parameter set to <c>false</c>.
+    /// When the polygon vertices are in counter-clockwise (CCW) order the normals will face outward.
+    /// </remarks>
+    public int GetEdgeNormals(ref List<Vector2> result)
+    {
+        switch (Count)
+        {
+            case <= 1:
+                return 0;
+            case 2:
+                result.Add(Segment.GetNormal(this[0], this[1], false));
+                return 1;
+        }
+        
+        for (var i = 0; i < Count; i++)
+        {
+            result.Add(Segment.GetNormal(this[i], this[(i + 1) % Count], false));
+        }
+        return Count;
+    }
+    
+    /// <summary>
+    /// Computes the convex hull of this polygon and writes it into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that will receive the convex hull vertices.</param>
+    /// <remarks>
+    /// This method delegates to <see cref="Points.FindConvexHull(List{Vector2})"/> using the polygon instance as the destination collection.
+    /// </remarks>
+    public void ToConvex(Polygon result)
+    {
+        FindConvexHull(result);
+    }
+
+    /// <summary>
+    /// Computes the direction vector of each polygon edge and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with one direction vector per edge.</param>
+    /// <param name="normalized"><c>true</c> to normalize each direction vector; otherwise, full edge displacement vectors are written.</param>
+    /// <returns><c>true</c> if the polygon has at least two vertices and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool GetEdgeDirections(List<Vector2> result, bool normalized = false)
+    {
+        if (Count <= 1) return false;
+        result.Clear();
+        if (Count == 2)
+        {
+            result.Add(this[1] - this[0]);
+            return true;
+        }
+        for (var i = 0; i < Count; i++)
+        {
+            var start = this[i];
+            var end = this[(i + 1) % Count];
+            var a = end - start;
+            result.Add(normalized ? a.Normalize() : a);
+        }
+
+        return true;
+    }
+    
+    /// <summary>
+    /// Writes the polygon edges into <paramref name="result"/> as segments.
+    /// </summary>
+    /// <param name="result">The destination segment collection that will be cleared and populated with the polygon edges.</param>
+    /// <returns><c>true</c> if the polygon has at least two vertices and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// When the polygon has exactly two vertices, a single segment is produced. For three or more vertices, the closing segment from the last vertex back to the first is included.
+    /// </remarks>
+    public bool GetEdges(Segments result)
+    {
+        if (Count <= 1) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
+        if (Count == 2)
+        {
+            var segment = new Segment(this[0], this[1]);
+            result.Add(segment);
+            return true;
+        }
+        
+        for (int i = 0; i < Count; i++)
+        {
+            result.Add(new(this[i], this[(i + 1) % Count]));
+        }
+        
+        return true;
+    }
+    
+    #endregion
+
+    #region Random
+    /// <summary>
+    /// Gets a random point inside the polygon using triangulation.
+    /// </summary>
+    /// <returns>A random point inside the polygon.</returns>
+    public Vector2 GetRandomPointInside()
+    {
+        Triangulate(triangulationBuffer);
+        
+        weightedTrianglesBuffer.Clear();
+        weightedTrianglesBuffer.EnsureCapacity(triangulationBuffer.Count);
+        
+        foreach (var t in triangulationBuffer)
+        {
+            weightedTrianglesBuffer.Add(new(t, (int)t.GetArea()));
+        }
+        
+        var item = Rng.Instance.PickRandomItem(weightedTrianglesBuffer);
+        return item.GetRandomPointInside();
+    }
+    
+    /// <summary>
+    /// Gets a set of random points inside the polygon.
+    /// </summary>
+    /// <param name="amount">The number of random points to generate.</param>
+    /// <returns>A set of random points inside the polygon.</returns>
+    public Points GetRandomPointsInside(int amount)
+    {
+        Triangulate(triangulationBuffer);
+        
+        weightedTrianglesBuffer.Clear();
+        weightedTrianglesBuffer.EnsureCapacity(triangulationBuffer.Count);
+        
+        foreach (var t in triangulationBuffer)
+        {
+            weightedTrianglesBuffer.Add(new(t, (int)t.GetArea()));
+        }
+        
+        Rng.Instance.PickRandomItems(pickedTrianglesBuffer, amount, weightedTrianglesBuffer);
+        Points randomPoints = new(amount);
+        foreach (var tri in pickedTrianglesBuffer)
+        {
+            randomPoints.Add(tri.GetRandomPointInside());
+        }
+
+        return randomPoints;
+    }
+    
+    /// <summary>
+    /// Gets a random vertex from the polygon.
+    /// </summary>
+    /// <returns>A random vertex.</returns>
+    public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
+    
+    /// <summary>
+    /// Gets a random edge (segment) from the polygon.
+    /// </summary>
+    /// <returns>A random edge.</returns>
+    public Segment GetRandomEdge()
+    {
+        GetEdges(segmentsBuffer);
+        return segmentsBuffer.GetRandomSegment();
+    }
+
+    /// <summary>
+    /// Gets a random point on the polygon's edge.
+    /// </summary>
+    /// <returns>A random point on an edge.</returns>
+    public Vector2 GetRandomPointOnEdge()
+    {
+        return GetRandomEdge().GetRandomPoint();
+    }
+
+    /// <summary>
+    /// Gets a set of random points on the polygon's edges.
+    /// </summary>
+    /// <param name="amount">The number of random points to generate.</param>
+    /// <returns>A set of random points on the edges.</returns>
+    public Points GetRandomPointsOnEdge(int amount)
+    {
+        GetEdges(segmentsBuffer);
+        var points = new Points();
+        segmentsBuffer.GetRandomPoints(amount, points);
+        return points;
+    }
+
+    /// <summary>
+    /// Gets a random point inside the convex hull of the polygon by interpolating between random edges.
+    /// </summary>
+    /// <returns>A random point inside the convex hull.</returns>
+    public Vector2 GetRandomPointConvex()
+    {
+        var edges = GetEdges();
+        var ea = Rng.Instance.RandCollection(edges, true);
+        var eb = Rng.Instance.RandCollection(edges);
+
+        var pa = ea.Start.Lerp(ea.End, Rng.Instance.RandF());
+        var pb = eb.Start.Lerp(eb.End, Rng.Instance.RandF());
+        return pa.Lerp(pb, Rng.Instance.RandF());
+    }
+    
+    /// <summary>
+    /// Generates random points inside the polygon and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated points.</param>
+    /// <param name="amount">The number of random points to generate.</param>
+    /// <remarks>
+    /// This method triangulates the polygon, randomly selects triangles weighted by their area, and samples one random interior point from each selected triangle.
+    /// </remarks>
+    public void GetRandomPointsInside(Points result, int amount)
+    {
+        Triangulate(triangulationBuffer);
+        
+        weightedTrianglesBuffer.Clear();
+        weightedTrianglesBuffer.EnsureCapacity(triangulationBuffer.Count);
+        
+        foreach (var t in triangulationBuffer)
+        {
+            weightedTrianglesBuffer.Add(new(t, (int)t.GetArea()));
+        }
+        
+        Rng.Instance.PickRandomItems(pickedTrianglesBuffer, amount, weightedTrianglesBuffer);
+        
+        result.Clear();
+        result.EnsureCapacity(pickedTrianglesBuffer.Count);
+        
+        foreach (var tri in pickedTrianglesBuffer)
+        {
+            result.Add(tri.GetRandomPointInside());
+        }
+    }
+    
+    /// <summary>
+    /// Generates random points on the polygon's edges and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated edge points.</param>
+    /// <param name="amount">The number of random points to generate.</param>
+    /// <remarks>
+    /// Edge selection is delegated to <see cref="Segments.GetRandomPoints(int, Points)"/> after building the polygon edge list.
+    /// </remarks>
+    public void GetRandomPointsOnEdge(Points result, int amount)
+    {
+        GetEdges(segmentsBuffer);
+        segmentsBuffer.GetRandomPoints(amount, result);
+    }
+    #endregion
+    
+    #region Private
     /// <summary>
     /// Recursively computes the minimal enclosing circle for a set of points using Welzl's algorithm.
     /// </summary>
@@ -701,6 +1082,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         
         return circle;
     }
+    
     /// <summary>
     /// Constructs the minimal circle determined by the given boundary (support) points.
     /// </summary>
@@ -753,415 +1135,5 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
         
         return new Circle(center3, radius3);
     }
-    /// <summary>
-    /// Gets the axis-aligned bounding box of the polygon.
-    /// </summary>
-    /// <returns>The bounding <see cref="Rect"/>.</returns>
-    public Rect GetBoundingBox()
-    {
-        if (Count == 0) return new Rect();
-        if (Count == 1) return new Rect(this[0].X, this[0].Y, 0, 0);
-    
-        float minX = this[0].X;
-        float maxX = this[0].X;
-        float minY = this[0].Y;
-        float maxY = this[0].Y;
-    
-        for (int i = 1; i < Count; i++)
-        {
-            var p = this[i];
-            if (p.X < minX) minX = p.X;
-            else if (p.X > maxX) maxX = p.X;
-            
-            if (p.Y < minY) minY = p.Y;
-            else if (p.Y > maxY) maxY = p.Y;
-        }
-    
-        return new Rect(minX, minY, maxX - minX, maxY - minY);
-    }
-    
-    /// <summary>
-    /// Returns the convex hull of the polygon as a new polygon.
-    /// </summary>
-    /// <returns>A convex polygon containing all the original points.</returns>
-    public Polygon? ToConvex()
-    {
-        var result = new Polygon();
-        FindConvexHull(result);
-        return result.Count >= 3 ? result : null;
-    }
-    
-    //TODO: Add docs
-    public void ToConvex(Polygon result)
-    {
-        FindConvexHull(result);
-    }
-
-    public bool GetEdgeDirections(List<Vector2> result, bool normalized = false)
-    {
-        if (Count <= 1) return false;
-        result.Clear();
-        if (Count == 2)
-        {
-            result.Add(this[1] - this[0]);
-            return true;
-        }
-        for (var i = 0; i < Count; i++)
-        {
-            var start = this[i];
-            var end = this[(i + 1) % Count];
-            var a = end - start;
-            result.Add(normalized ? a.Normalize() : a);
-        }
-
-        return true;
-    }
-
-
     #endregion
-
-    #region Random
-    /// <summary>
-    /// Gets a random point inside the polygon using triangulation.
-    /// </summary>
-    /// <returns>A random point inside the polygon.</returns>
-    public Vector2 GetRandomPointInside()
-    {
-        Triangulate(triangulationBuffer);
-        List<WeightedItem<Triangle>> items = new();
-        foreach (var t in triangulationBuffer)
-        {
-            items.Add(new(t, (int)t.GetArea()));
-        }
-        var item = Rng.Instance.PickRandomItem(items.ToArray());
-        return item.GetRandomPointInside();
-    }
-    /// <summary>
-    /// Gets a set of random points inside the polygon.
-    /// </summary>
-    /// <param name="amount">The number of random points to generate.</param>
-    /// <returns>A set of random points inside the polygon.</returns>
-    public Points GetRandomPointsInside(int amount)
-    {
-        Triangulate(triangulationBuffer);
-        var items = new WeightedItem<Triangle>[triangulationBuffer.Count];
-        for (var i = 0; i < items.Length; i++)
-        {
-            var t = triangulationBuffer[i];
-            items[i] = new(t, (int)t.GetArea());
-        }
-        
-        var pickedTriangles = Rng.Instance.PickRandomItems(amount, items);
-        Points randomPoints = [];
-        foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPointInside());
-
-        return randomPoints;
-    }
-    /// <summary>
-    /// Gets a random vertex from the polygon.
-    /// </summary>
-    /// <returns>A random vertex.</returns>
-    public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
-    /// <summary>
-    /// Gets a random edge (segment) from the polygon.
-    /// </summary>
-    /// <returns>A random edge.</returns>
-    public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
-    /// <summary>
-    /// Gets a random point on the polygon's edge.
-    /// </summary>
-    /// <returns>A random point on an edge.</returns>
-    public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    /// <summary>
-    /// Gets a set of random points on the polygon's edges.
-    /// </summary>
-    /// <param name="amount">The number of random points to generate.</param>
-    /// <returns>A set of random points on the edges.</returns>
-    public Points GetRandomPointsOnEdge(int amount)
-    {
-        var edges = GetEdges();
-        var points = new Points();
-        edges.GetRandomPoints(amount, points);
-        return points;
-    }
-
-    /// <summary>
-    /// Gets a random point inside the convex hull of the polygon by interpolating between random edges.
-    /// </summary>
-    /// <returns>A random point inside the convex hull.</returns>
-    public Vector2 GetRandomPointConvex()
-    {
-        var edges = GetEdges();
-        var ea = Rng.Instance.RandCollection(edges, true);
-        var eb = Rng.Instance.RandCollection(edges);
-
-        var pa = ea.Start.Lerp(ea.End, Rng.Instance.RandF());
-        var pb = eb.Start.Lerp(eb.End, Rng.Instance.RandF());
-        return pa.Lerp(pb, Rng.Instance.RandF());
-    }
-
-    
-    #endregion
-    
-    
-    
 }
-
-//TODO: Remove
-/*
-    private Polygon? compoundHelperPolygon = null;
-    #region Cutout & Compound
-    private bool GetPolygonShape(IShape shape, ref Polygon result)
-    {
-        switch (shape.GetShapeType())
-        {
-            default:
-            case ShapeType.None: 
-            case ShapeType.Ray:
-            case ShapeType.Line:
-            case ShapeType.Segment:
-            case ShapeType.PolyLine:
-                return false;
-            case ShapeType.Circle:
-                return shape.GetCircleShape().ToPolygon(ref result);
-            case ShapeType.Triangle:
-                shape.GetTriangleShape().ToPolygon(ref result);
-                return true;
-            case ShapeType.Quad:
-                shape.GetQuadShape().ToPolygon(ref result);
-                return true;
-            case ShapeType.Rect:
-                shape.GetRectShape().ToPolygon(ref result);
-                return true;
-            case ShapeType.Poly:
-                return shape.GetPolygonShape().ToPolygon(ref result);
-        }
-    }
-    
-    /// <summary>
-    /// Adds a compound shape to the polygon by converting the given <see cref="IShape"/> to a polygon and merging it.
-    /// </summary>
-    /// <param name="shape">The shape to add.</param>
-    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
-    public bool AddCompoundShape(IShape shape)
-    {
-        compoundHelperPolygon ??= [];
-        var valid = GetPolygonShape(shape, ref compoundHelperPolygon);
-        if (!valid || compoundHelperPolygon.Count <= 2) return false;
-        return Union(compoundHelperPolygon, this);
-    }
-    
-    /// <summary>
-    /// Adds a compound shape and its children from a <see cref="ShapeContainer"/> to the polygon.
-    /// </summary>
-    /// <param name="shape">The shape container to add.</param>
-    /// <returns>The number of shapes successfully merged. (Parent Shape + Children Shapes) </returns>
-    public int AddCompoundShape(ShapeContainer shape)
-    {
-        int count = 0;
-        if (AddCompoundShape((IShape)shape)) count++;
-        
-        foreach (var child in shape.GetChildrenCopy())
-        {
-            if(AddCompoundShape((IShape)child))
-            {
-                count++;
-            }
-        }
-    
-        return count;
-    }
-    
-    /// <summary>
-    /// Adds a <see cref="Circle"/> shape to the polygon by converting it to a polygon with the specified number of points.
-    /// </summary>
-    /// <param name="shape">The circle to add.</param>
-    /// <param name="pointCount">The number of points to use for the polygon approximation. Default is 16.</param>
-    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
-    public bool AddCompoundShape(Circle shape, int pointCount = 16)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon, pointCount);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return Union(compoundHelperPolygon, this);
-    }
-    
-    /// <summary>
-    /// Adds a <see cref="Triangle"/> shape to the polygon by converting it to a polygon.
-    /// </summary>
-    /// <param name="shape">The triangle to add.</param>
-    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
-    public bool AddCompoundShape(Triangle shape)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return Union(compoundHelperPolygon, this);
-    }
-    
-    /// <summary>
-    /// Adds a <see cref="Quad"/> shape to the polygon by converting it to a polygon.
-    /// </summary>
-    /// <param name="shape">The quad to add.</param>
-    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
-    public bool AddCompoundShape(Quad shape)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return Union(compoundHelperPolygon, this);
-    }
-    
-    /// <summary>
-    /// Adds a <see cref="Rect"/> shape to the polygon by converting it to a polygon.
-    /// </summary>
-    /// <param name="shape">The rectangle to add.</param>
-    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
-    public bool AddCompoundShape(Rect shape)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return Union(compoundHelperPolygon, this);
-    }
-    
-    /// <summary>
-    /// Adds another <see cref="Polygon"/> shape to the polygon by merging it.
-    /// </summary>
-    /// <param name="shape">The polygon to add.</param>
-    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
-    public bool AddCompoundShape(Polygon shape)
-    {
-        if (shape.Count <= 2) return false;
-        return Union(shape, this);
-    }
-   
-    
-    /// <summary>
-    /// Cuts out the given <see cref="IShape"/> from the polygon by converting it to a polygon and performing a cut operation.
-    /// </summary>
-    /// <param name="shape">The shape to cut out.</param>
-    /// <returns>True if the cutout was successful; otherwise, false.</returns>
-    /// <remarks>
-    /// Does not support cutting out holes.
-    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
-    /// </remarks>
-    public bool AddCutoutShape(IShape shape)
-    {
-        compoundHelperPolygon ??= [];
-        bool valid = GetPolygonShape(shape, ref compoundHelperPolygon);
-        if (!valid || compoundHelperPolygon.Count <= 2) return false;
-        return CutShapeSelf(compoundHelperPolygon);
-    }
-    
-    /// <summary>
-    /// Cuts out the parent and child shapes from a <see cref="ShapeContainer"/> from the polygon.
-    /// </summary>
-    /// <param name="shape">The shape container whose shapes will be cut out.</param>
-    /// <returns>The number of shapes successfully cut out.</returns>
-    /// <remarks>
-    /// Does not support cutting out holes.
-    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
-    /// </remarks>
-    public int AddCutoutShape(ShapeContainer shape)
-    {
-        var count = 0;
-        if (AddCutoutShape((IShape)shape)) count++;
-        
-        foreach (var child in shape.GetChildrenCopy())
-        {
-            if(AddCutoutShape((IShape)child))
-            {
-                count++;
-            }
-        }
-    
-        return count;
-    }
-    
-    /// <summary>
-    /// Cuts out a <see cref="Circle"/> shape from the polygon by converting it to a polygon with the specified number of points.
-    /// </summary>
-    /// <param name="shape">The circle to cut out.</param>
-    /// <param name="pointCount">The number of points to use for the polygon approximation. Default is 16.</param>
-    /// <returns>True if the cutout was successful; otherwise, false.</returns>
-    /// <remarks>
-    /// Does not support cutting out holes.
-    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
-    /// </remarks>
-    public bool AddCutoutShape(Circle shape, int pointCount = 16)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon, pointCount);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return CutShapeSelf(compoundHelperPolygon);
-    }
-    
-    /// <summary>
-    /// Cuts out a <see cref="Triangle"/> shape from the polygon by converting it to a polygon.
-    /// </summary>
-    /// <param name="shape">The triangle to cut out.</param>
-    /// <returns>True if the cutout was successful; otherwise, false.</returns>
-    /// <remarks>
-    /// Does not support cutting out holes.
-    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
-    /// </remarks>
-    public bool AddCutoutShape(Triangle shape)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return CutShapeSelf(compoundHelperPolygon);
-    }
-    
-    /// <summary>
-    /// Cuts out a <see cref="Quad"/> shape from the polygon by converting it to a polygon.
-    /// </summary>
-    /// <param name="shape">The quad to cut out.</param>
-    /// <returns>True if the cutout was successful; otherwise, false.</returns>
-    /// <remarks>
-    /// Does not support cutting out holes.
-    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
-    /// </remarks>
-    public bool AddCutoutShape(Quad shape)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return CutShapeSelf(compoundHelperPolygon);
-    }
-    
-    /// <summary>
-    /// Cuts out a <see cref="Rect"/> shape from the polygon by converting it to a polygon.
-    /// </summary>
-    /// <param name="shape">The rectangle to cut out.</param>
-    /// <returns>True if the cutout was successful; otherwise, false.</returns>
-    /// <remarks>
-    /// Does not support cutting out holes.
-    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
-    /// </remarks>
-    public bool AddCutoutShape(Rect shape)
-    {
-        compoundHelperPolygon ??= [];
-        shape.ToPolygon(ref compoundHelperPolygon);
-        if(compoundHelperPolygon.Count <= 2) return false;
-        return CutShapeSelf(compoundHelperPolygon);
-    }
-    
-    /// <summary>
-    /// Cuts out another <see cref="Polygon"/> shape from the polygon.
-    /// </summary>
-    /// <param name="shape">The polygon to cut out.</param>
-    /// <returns>True if the cutout was successful; otherwise, false.</returns>
-    /// <remarks>
-    /// Does not support cutting out holes.
-    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
-    /// </remarks>
-    public bool AddCutoutShape(Polygon shape)
-    {
-        if (shape.Count <= 2) return false;
-        return CutShapeSelf(shape);
-    }
-    
-    #endregion
-*/
