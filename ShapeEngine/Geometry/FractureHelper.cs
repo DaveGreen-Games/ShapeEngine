@@ -15,7 +15,6 @@ public class FractureHelper
     private static Triangulation buffer = new();
     private static Triangulation buffer2 = new();
     
-    
     /// <summary>
     /// The minimum area for a fracture piece to be kept.
     /// </summary>
@@ -56,14 +55,13 @@ public class FractureHelper
         this.KeepChance = keepChance;
         this.NarrowValue = narrowValue;
     }
-
-    //TODO: Fix docs
+    
     /// <summary>
     /// Fractures a polygon by cutting it with another polygon and subdividing the resulting pieces.
     /// </summary>
     /// <param name="shape">The original polygon to be fractured.</param>
     /// <param name="cutShape">The polygon used to cut the original shape.</param>
-    /// <returns>A <see cref="FractureInfo"/> object containing the new shapes, cutouts, and fracture pieces.</returns>
+    /// <param name="result">A <see cref="FractureInfo"/> object containing the new shapes, cutouts, and fracture pieces.</param>
      /// <remarks>
      /// <list type="bullet">
      ///   <item>
@@ -78,11 +76,9 @@ public class FractureHelper
     {
         ClipperImmediate2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Intersection, result.Cutouts);
         ClipperImmediate2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Difference, result.NewShapes);
+        
         result.Cutouts.RemoveAllHoles();
         result.NewShapes.RemoveAllHoles();
-        // var cutOuts = ShapeClipper.Intersect(shape, cutShape).ToPolygons(true);
-        // var newShapes = ShapeClipper.Difference(shape, cutShape).ToPolygons(true);
-        // Triangulation pieces = new();
         
         result.Pieces.Clear();
         foreach (var cutOut in result.Cutouts)
@@ -93,7 +89,5 @@ public class FractureHelper
             buffer.Subdivide(buffer2, MinArea, MaxArea, KeepChance, NarrowValue);
             result.Pieces.AddRange(buffer2);
         }
-
-        // return new(newShapes, cutOuts, pieces);
     }
 }
