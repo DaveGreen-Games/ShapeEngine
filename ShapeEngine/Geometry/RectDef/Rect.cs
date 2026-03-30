@@ -15,8 +15,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RectDef;
 
-//TODO: Use result parameters
-
 /// <summary>
 /// Represents a rectangle defined by its top-left corner, width, and height, with various geometric and utility operations.
 /// </summary>
@@ -28,26 +26,41 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// Gets the X-coordinate of the top-left corner of the rectangle.
     /// </summary>
     public readonly float X;
+    
     /// <summary>
     /// Gets the Y-coordinate of the top-left corner of the rectangle.
     /// </summary>
     public readonly float Y;
+    
     /// <summary>
     /// Gets the width of the rectangle.
     /// </summary>
     public readonly float Width;
+  
     /// <summary>
     /// Gets the height of the rectangle.
     /// </summary>
     public readonly float Height;
 
+    /// <summary>
+    /// Returns a string that describes this rectangle's position and size.
+    /// </summary>
+    /// <returns>A string in the form <c>Rect[X: ..., Y: ..., Width: ..., Height: ...]</c>.</returns>
     public override string ToString()
     {
         return $"Rect[X: {X}, Y: {Y}, Width: {Width}, Height: {Height}]";
     }
 
+    /// <summary>
+    /// Gets the closed-shape type represented by this instance.
+    /// </summary>
+    /// <returns><see cref="ClosedShapeType.Rect"/>.</returns>
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Rect;
 
+    /// <summary>
+    /// Gets the general shape type represented by this instance.
+    /// </summary>
+    /// <returns><see cref="ShapeType.Rect"/>.</returns>
     public ShapeType GetShapeType() => ShapeType.Rect;
 
     #endregion
@@ -57,18 +70,22 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// Gets the top-left corner of the rectangle as a <see cref="Vector2"/>.
     /// </summary>
     public Vector2 TopLeft => new(X, Y);
+   
     /// <summary>
     /// Gets the top-right corner of the rectangle as a <see cref="Vector2"/>.
     /// </summary>
     public Vector2 TopRight => new(X + Width, Y);
+    
     /// <summary>
     /// Gets the bottom-right corner of the rectangle as a <see cref="Vector2"/>.
     /// </summary>
     public Vector2 BottomRight => new(X + Width, Y + Height);
+    
     /// <summary>
     /// Gets the bottom-left corner of the rectangle as a <see cref="Vector2"/>.
     /// </summary>
     public Vector2 BottomLeft => new(X, Y + Height);
+    
     /// <summary>
     /// Gets the center point of the rectangle as a <see cref="Vector2"/>.
     /// </summary>
@@ -78,14 +95,17 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// Gets the top-left corner of the rectangle (alias for <see cref="TopLeft"/>).
     /// </summary>
     public Vector2 A => TopLeft;
+   
     /// <summary>
     /// Gets the bottom-left corner of the rectangle (alias for <see cref="BottomLeft"/>).
     /// </summary>
     public Vector2 B => BottomLeft;
+    
     /// <summary>
     /// Gets the bottom-right corner of the rectangle (alias for <see cref="BottomRight"/>).
     /// </summary>
     public Vector2 C => BottomRight;
+    
     /// <summary>
     /// Gets the top-right corner of the rectangle (alias for <see cref="TopRight"/>).
     /// </summary>
@@ -101,14 +121,17 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// Gets the Y-coordinate of the top edge of the rectangle.
     /// </summary>
     public float Top => Y;
+    
     /// <summary>
     /// Gets the Y-coordinate of the bottom edge of the rectangle.
     /// </summary>
     public float Bottom => Y + Height;
+    
     /// <summary>
     /// Gets the X-coordinate of the left edge of the rectangle.
     /// </summary>
     public float Left => X;
+    
     /// <summary>
     /// Gets the X-coordinate of the right edge of the rectangle.
     /// </summary>
@@ -118,22 +141,27 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// Gets the left edge of the rectangle as a <see cref="Segment"/>.
     /// </summary>
     public Segment LeftSegment => new(TopLeft, BottomLeft);
+    
     /// <summary>
     /// Gets the bottom edge of the rectangle as a <see cref="Segment"/>.
     /// </summary>
     public Segment BottomSegment => new(BottomLeft, BottomRight);
+    
     /// <summary>
     /// Gets the right edge of the rectangle as a <see cref="Segment"/>.
     /// </summary>
     public Segment RightSegment => new(BottomRight, TopRight);
+    
     /// <summary>
     /// Gets the top edge of the rectangle as a <see cref="Segment"/>.
     /// </summary>
     public Segment TopSegment => new(TopRight, TopLeft);
+    
     /// <summary>
     /// Gets the size of the rectangle as a <see cref="Size"/>.
     /// </summary>
     public Size Size => new(Width, Height);
+    
     /// <summary>
     /// Gets the rectangle as a <see cref="Rectangle"/> structure.
     /// </summary>
@@ -202,6 +230,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         Width = MathF.Abs(size.Width);
         Height = MathF.Abs(size.Height);
     }
+  
     /// <summary>
     /// Initializes a new instance of the <see cref="Rect"/> struct from a position, size, and alignment anchor.
     /// </summary>
@@ -316,8 +345,6 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </returns>
     public Quad RotateToQuad(float angleDeg, AnchorPoint pivot)
     {
-        // var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
-        // return RotateToQuad(angleDeg, pivot);
         return new Quad(this, angleDeg, pivot);
     }
     
@@ -331,25 +358,15 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <returns>A <see cref="Quad"/> representing the rotated rectangle.</returns>
     public Quad RotateToQuad(float angleDeg, Vector2 pivot)
     {
-        // var rotRad = angleDeg * ShapeMath.DEGTORAD;
-        // var w = TopLeft - pivot;
-        // var p1 = pivot + w.Rotate(rotRad);
-        // w = BottomLeft - pivot;
-        // var p2 = pivot + w.Rotate(rotRad);
-        // w = BottomRight - pivot;
-        // var p3 = pivot + w.Rotate(rotRad);
-        // w = TopRight - pivot;
-        // var p4 = pivot + w.Rotate(rotRad);
-        // return new Quad(p1, p2, p3, p4);
         return new Quad(this, angleDeg, pivot);
     }
     
     /// <summary>
-    /// Points are ordered in ccw order starting with top left (tl, bl, br, tr).
+    /// Rotates this rectangle around the pivot defined by <paramref name="alignment"/> and returns the resulting corners as a <see cref="Polygon"/>.
     /// </summary>
     /// <param name="angleDeg">The angle in degrees to rotate.</param>
     /// <param name="alignment">The anchor point for rotation.</param>
-    /// <returns></returns>
+    /// <returns>A <see cref="Polygon"/> containing the rotated rectangle corners in counter-clockwise order starting at the top-left corner before rotation.</returns>
     public Polygon Rotate(float angleDeg, AnchorPoint alignment)
     {
         var poly = ToPolygon();
@@ -358,6 +375,22 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         return poly;
     }
 
+    /// <summary>
+    /// Rotates this rectangle around the pivot defined by <paramref name="alignment"/> and writes the resulting vertices into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that will be cleared and populated with the rotated rectangle corners.</param>
+    /// <param name="angleDeg">The rotation angle in degrees.</param>
+    /// <param name="alignment">The anchor point used to derive the rotation pivot relative to the rectangle.</param>
+    /// <remarks>
+    /// The resulting polygon stores the rectangle corners in counter-clockwise order starting at the top-left corner before rotation.
+    /// </remarks>
+    public void Rotate(Polygon result, float angleDeg, AnchorPoint alignment)
+    {
+        ToPolygon(result);
+        var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
+        result.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
+    }
+    
     /// <summary>
     /// Rotates the corners of the rectangle and returns the resulting points as a <see cref="Points"/> list.
     /// </summary>
@@ -373,10 +406,45 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     }
 
     /// <summary>
+    /// Rotates this rectangle around the pivot defined by <paramref name="alignment"/> and writes the resulting corner points into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated rectangle corners.</param>
+    /// <param name="angleDeg">The rotation angle in degrees.</param>
+    /// <param name="alignment">The anchor point used to derive the rotation pivot relative to the rectangle.</param>
+    /// <remarks>
+    /// The resulting points are written in counter-clockwise order starting at the top-left corner before rotation.
+    /// </remarks>
+    public void RotateList(Points result, float angleDeg, AnchorPoint alignment)
+    {
+        ToPoints(result);
+        var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
+        result.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
+    }
+    
+    /// <summary>
     /// Converts the rectangle to a list of points representing its corners.
     /// </summary>
     /// <returns>A <see cref="Points"/> object containing the corners of the rectangle.</returns>
     public Points ToPoints() { return [TopLeft, BottomLeft, BottomRight, TopRight]; }
+    
+    /// <summary>
+    /// Writes this rectangle's four corners into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rectangle corners.</param>
+    /// <remarks>
+    /// Points are written in counter-clockwise order starting at the top-left corner: top-left, bottom-left, bottom-right, top-right.
+    /// </remarks>
+    public void ToPoints(Points result)
+    {
+        result.Clear();
+        result.EnsureCapacity(4);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(D);
+    }
+    
     /// <summary>
     /// Converts the rectangle to a polygon representing its shape.
     /// </summary>
@@ -388,9 +456,11 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// The corners are added in counter-clockwise order: top-left, bottom-left, bottom-right, top-right.
     /// </summary>
     /// <param name="result">A reference to a <see cref="Polygon"/> that will be populated with the rectangle's corners.</param>
-    public void ToPolygon(ref Polygon result)
+    public void ToPolygon(Polygon result)
     {
-        if(result.Count > 0) result.Clear();
+        result.Clear();
+        result.EnsureCapacity(4);
+        
         result.Add(A);
         result.Add(B);
         result.Add(C);
@@ -411,6 +481,26 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </summary>
     /// <returns>A <see cref="Polyline"/> object representing the rectangle's outline.</returns>
     public Polyline ToPolyline() { return [TopLeft, BottomLeft, BottomRight, TopRight]; }
+
+    /// <summary>
+    /// Writes this rectangle's outline vertices into <paramref name="result"/> as an open <see cref="Polyline"/>.
+    /// </summary>
+    /// <param name="result">The destination polyline that will be cleared and populated with the rectangle corners.</param>
+    /// <remarks>
+    /// Points are written in counter-clockwise order starting at the top-left corner: top-left, bottom-left, bottom-right, top-right.
+    /// The first point is not repeated at the end.
+    /// </remarks>
+    public void ToPolyline(Polyline result)
+    {
+        result.Clear();
+        result.EnsureCapacity(4);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(D);
+    }
+   
     /// <summary>
     /// Gets the edges of the rectangle as segments.
     /// </summary>
@@ -430,6 +520,34 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     }
 
     /// <summary>
+    /// Writes this rectangle's four edges into <paramref name="segments"/>.
+    /// </summary>
+    /// <param name="segments">The destination collection that will be cleared and populated with the rectangle edges.</param>
+    /// <remarks>
+    /// Segments are written in counter-clockwise order: left, bottom, right, top.
+    /// </remarks>
+    public void GetEdges(Segments segments) 
+    {
+        var a = TopLeft;
+        var b = BottomLeft;
+        var c = BottomRight;
+        var d = TopRight;
+
+        Segment left = new(a, b);
+        Segment bottom = new(b, c);
+        Segment right = new(c, d);
+        Segment top = new(d, a);
+        
+        segments.Clear();
+        segments.EnsureCapacity(4);
+        
+        segments.Add(left);
+        segments.Add(bottom);
+        segments.Add(right);
+        segments.Add(top);
+    }
+    
+    /// <summary>
     /// Triangulates the rectangle into two triangles.
     /// </summary>
     /// <returns>A <see cref="Triangulation"/> object containing the two triangles that make up the rectangle.
@@ -440,13 +558,34 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         Triangle b = new(TopLeft, BottomRight, TopRight);
         return new Triangulation() { a, b };
     }
+    
+    /// <summary>
+    /// Triangulates this rectangle into two triangles and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
+    /// <remarks>
+    /// The triangles are written in this order: (TopLeft, BottomLeft, BottomRight) and (TopLeft, BottomRight, TopRight).
+    /// </remarks>
+    public void Triangulate(Triangulation result)
+    {
+        Triangle a = new(TopLeft, BottomLeft, BottomRight);
+        Triangle b = new(TopLeft, BottomRight, TopRight);
+        
+        result.Clear();
+        result.Add(a);
+        result.Add(b);
+    }
     #endregion
 
     #region Union & Difference
     /// <summary>
-    /// Creates a rect that represents the intersection between a and b. If there is no intersection, an
-    /// empty rect is returned.
+    /// Computes the overlap rectangle between this rectangle and <paramref name="rect"/>.
     /// </summary>
+    /// <param name="rect">The rectangle to test against this rectangle.</param>
+    /// <returns>The intersecting region as a <see cref="Rect"/>, or an empty rectangle if the two rectangles do not overlap.</returns>
+    /// <remarks>
+    /// Despite the method name, this operation returns the geometric intersection of the two rectangles.
+    /// </remarks>
     public Rect Difference(Rect rect)
     {
 
@@ -462,10 +601,15 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
 
         return new();
     }
+
     /// <summary>
-    /// Creates a rect that represents the intersection between a and b. If there is no intersection, an
-    /// empty rect is returned.
+    /// Computes the overlap rectangle between this rectangle and <paramref name="other"/>.
     /// </summary>
+    /// <param name="other">The rectangle to test against this rectangle.</param>
+    /// <returns>The intersecting region as a <see cref="Rect"/>, or an empty rectangle if the two rectangles do not overlap.</returns>
+    /// <remarks>
+    /// Despite the method name, this operation returns the geometric intersection of the two rectangles.
+    /// </remarks>
     public Rect Difference2(Rect other)
     {
         if (OverlapShape(other))
@@ -491,6 +635,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
 
         return new Rect(x1, y1, x2 - x1, y2 - y1);
     }
+    
     /// <summary>
     /// Creates a rectangle that represents the union between a and b.
     /// </summary>
@@ -517,6 +662,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         if(i == 2) return new Segment(C, D);
         return new Segment(D, A);
     }
+ 
     /// <summary>
     /// Gets a point on the rectangle based on the specified alignment anchor.
     /// </summary>
@@ -527,6 +673,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         var offset = Size * alignment.ToVector2();
         return TopLeft + offset;
     }
+    
     /// <summary>
     /// Rotates the corners of the rectangle around a pivot point by the specified angle.
     /// </summary>
@@ -535,10 +682,28 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <returns>A tuple containing the rotated corners of the rectangle.</returns>
     public (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateCorners(Vector2 pivot, float angleDeg)
     {
-        var poly = ToPolygon();
-        poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
-        return new(poly[0], poly[1], poly[2], poly[3]);
+        var a = TopLeft;
+        var b = BottomLeft;
+        var c = BottomRight;
+        var d = TopRight;
+        
+        var rotRad = angleDeg * ShapeMath.DEGTORAD;
+        
+        var w = a - pivot;
+        a = pivot + w.Rotate(rotRad);
+
+        w = b - pivot;
+        b = pivot + w.Rotate(rotRad);
+        
+        w = c - pivot;
+        c = pivot + w.Rotate(rotRad);
+        
+        w  = d - pivot;
+        d = pivot + w.Rotate(rotRad);
+        
+        return (a, b, c, d);
     }
+    
     /// <summary>
     /// Gets a random point inside the rectangle.
     /// </summary>
@@ -559,6 +724,27 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         }
         return points;
     }
+    
+    /// <summary>
+    /// Writes a specified number of random points sampled from inside this rectangle into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated points.</param>
+    /// <param name="amount">The number of random interior points to generate.</param>
+    /// <remarks>
+    /// If <paramref name="amount"/> is less than or equal to zero, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
+    public void GetRandomPointsInside(Points result, int amount)
+    {
+        if (amount <= 0) return;
+        
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        for (int i = 0; i < amount; i++)
+        {
+            result.Add(GetRandomPointInside());
+        }
+    }
 
     /// <summary>
     /// Gets a random vertex (corner) of the rectangle.
@@ -572,17 +758,18 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         else if (randIndex == 2) return BottomRight;
         else return TopRight;
     }
+  
     /// <summary>
     /// Gets a random edge of the rectangle as a <see cref="Segment"/>.
     /// </summary>
     /// <returns>A <see cref="Segment"/> representing a random edge of the rectangle.</returns>
     public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
+    
     /// <summary>
     /// Gets a random point on the perimeter of the rectangle.
     /// </summary>
     /// <returns>A <see cref="Vector2"/> representing a random point on the rectangle's edge.</returns>
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-  
     
     /// <summary>
     /// Gets a specified number of random points on the perimeter of the rectangle.
@@ -595,6 +782,20 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         var points = new Points();
         edges.GetRandomPoints(amount, points);
         return points;
+    }
+    
+    /// <summary>
+    /// Writes a specified number of random points sampled from this rectangle's perimeter into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated edge points.</param>
+    /// <param name="amount">The number of random perimeter points to generate.</param>
+    /// <remarks>
+    /// Edge selection is delegated to <see cref="Segments.GetRandomPoints(int, Points)"/> using the rectangle's four edges.
+    /// </remarks>
+    public void GetRandomPointsOnEdge(Points result, int amount)
+    {
+        var edges = GetEdges();
+        edges.GetRandomPoints(amount, result);
     }
 
     /// <summary>
@@ -627,11 +828,18 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     #region Corners
 
     /// <summary>
-    /// Corners a numbered in ccw order starting from the top left. (tl, bl, br, tr)
+    /// Gets one of the rectangle's corners by index.
     /// </summary>
-    /// <param name="corner">Corner Index from 0 to 3</param>
-    /// <returns></returns>
-    public Vector2 GetCorner(int corner) => ToPolygon()[corner % 4];
+    /// <param name="corner">The corner index. Values are wrapped modulo 4 in counter-clockwise order starting at the top-left corner: 0 = top-left, 1 = bottom-left, 2 = bottom-right, 3 = top-right.</param>
+    /// <returns>The corner position corresponding to the wrapped index.</returns>
+    public Vector2 GetCorner(int corner)
+    {
+        var index = corner % 4;
+        if(index == 0) return TopLeft;
+        else if(index == 1) return BottomLeft;
+        else if(index == 2) return BottomRight;
+        else return TopRight;
+    }
 
     /// <summary>
     /// Gets the corners of the rectangle relative to a given position. Points are ordered in counter-clockwise order starting from the top left.
@@ -640,12 +848,33 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <returns>A <see cref="Polygon"/> containing the relative corner points.</returns>
     public Polygon GetPointsRelative(Vector2 pos)
     {
-        var points = ToPolygon(); //GetPoints(rect);
-        for (int i = 0; i < points.Count; i++)
-        {
-            points[i] -= pos;
-        }
-        return points;
+        var result = new Polygon(4);
+        
+        result.Add(TopLeft - pos);
+        result.Add(BottomLeft - pos);
+        result.Add(BottomRight - pos);
+        result.Add(TopRight - pos);
+
+        return result;
+    }
+    
+    /// <summary>
+    /// Writes this rectangle's corners relative to <paramref name="pos"/> into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that will be cleared and populated with the relative corner points.</param>
+    /// <param name="pos">The position to subtract from each corner.</param>
+    /// <remarks>
+    /// Points are written in counter-clockwise order starting at the top-left corner.
+    /// </remarks>
+    public void GetPointsRelative(Polygon result, Vector2 pos)
+    {
+        result.Clear();
+        result.EnsureCapacity(4);
+        
+        result.Add(TopLeft - pos);
+        result.Add(BottomLeft - pos);
+        result.Add(BottomRight - pos);
+        result.Add(TopRight - pos);
     }
     #endregion
 
@@ -672,6 +901,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
 
         return (newTopLeft, newBottomRight);
     }
+  
     /// <summary>
     /// Constructs 9 rectangles out of an outer and inner rectangle.
     /// </summary>
@@ -744,17 +974,19 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
 
         return segments;
     }
+    
     /// <summary>
     /// Creates a rectangle from a circle by using the circle's center and radius.
     /// </summary>
     /// <param name="c">The circle to create the rectangle from.</param>
     /// <returns>A <see cref="Rect"/> representing the bounding rectangle of the circle.</returns>
-    public static Rect FromCircle(Circle c) => new(c.Center, new Size(c.Radius, c.Radius), new (0.5f, 0.5f));
+    public static Rect FromCircle(Circle c) => new(c.Center, new Size(c.Diameter), new (0.5f, 0.5f));
 
     /// <summary>
     /// Gets an empty rectangle with zero size.
     /// </summary>
     public static Rect Empty => new();
+    
     private static ValueRange RangeHull(ValueRange a, ValueRange b)
     {
         return new
@@ -783,6 +1015,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
                 left.Height + right.Height
             );
     }
+  
     /// <summary>
     /// Subtracts one rectangle from another component-wise.
     /// </summary>
@@ -799,6 +1032,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height - right.Height
         );
     }
+    
     /// <summary>
     /// Multiplies two rectangles component-wise.
     /// </summary>
@@ -815,6 +1049,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height * right.Height
         );
     }
+    
     /// <summary>
     /// Divides one rectangle by another component-wise.
     /// </summary>
@@ -831,6 +1066,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height / right.Height
         );
     }
+    
     /// <summary>
     /// Adds a vector to a rectangle's position.
     /// </summary>
@@ -847,6 +1083,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height
         );
     }
+    
     /// <summary>
     /// Subtracts a vector from a rectangle's position.
     /// </summary>
@@ -863,6 +1100,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height
         );
     }
+    
     /// <summary>
     /// Multiplies a rectangle's position and size by a vector component-wise.
     /// </summary>
@@ -879,6 +1117,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height * right.Y
         );
     }
+    
     /// <summary>
     /// Divides a rectangle's position and size by a vector component-wise.
     /// </summary>
@@ -895,6 +1134,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height / right.Y
         );
     }
+    
     /// <summary>
     /// Adds a scalar to a rectangle's position and size.
     /// </summary>
@@ -911,6 +1151,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height + right
         );
     }
+    
     /// <summary>
     /// Subtracts a scalar from a rectangle's position and size.
     /// </summary>
@@ -927,6 +1168,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height - right
         );
     }
+    
     /// <summary>
     /// Multiplies a rectangle's position and size by a scalar.
     /// </summary>
@@ -943,6 +1185,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             left.Height * right
         );
     }
+    
     /// <summary>
     /// Divides a rectangle's position and size by a scalar.
     /// </summary>
@@ -976,6 +1219,26 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         
         return new Points(4){a1, b1, c1, d1};
     }
+    
+    /// <summary>
+    /// Writes one interpolated point per rectangle edge into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the interpolated edge points.</param>
+    /// <param name="t">The interpolation factor used on each edge.</param>
+    /// <remarks>
+    /// The returned points correspond to interpolation on edges A→B, B→C, C→D, and D→A in that order.
+    /// </remarks>
+    public void GetInterpolatedEdgePoints(Points result, float t)
+    {
+        result.Clear();
+        result.EnsureCapacity(4);
+        
+        result.Add(A.Lerp(B, t));
+        result.Add(B.Lerp(C, t));
+        result.Add(C.Lerp(D, t));
+        result.Add(D.Lerp(A, t));
+    }
+  
     /// <summary>
     /// Gets interpolated points along the edges of the rectangle with specified steps.
     /// </summary>
@@ -985,6 +1248,28 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     public Points GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
+
+        var result = new Points(4);
+        GetInterpolatedEdgePoints(result, t, steps);
+        return result;
+    }
+    
+    /// <summary>
+    /// Repeatedly interpolates the rectangle edges and writes the final four points into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that receives the final interpolated points.</param>
+    /// <param name="t">The interpolation factor used at each step.</param>
+    /// <param name="steps">The number of interpolation iterations to perform. Values less than or equal to one fall back to a single interpolation pass.</param>
+    /// <remarks>
+    /// Each iteration interpolates between the points produced by the previous iteration, always preserving four output points in edge order.
+    /// </remarks>
+    public void GetInterpolatedEdgePoints(Points result, float t, int steps)
+    {
+        if (steps <= 1)
+        {
+            GetInterpolatedEdgePoints(result, t);
+            return;
+        }
         
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
@@ -1006,7 +1291,13 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
             remainingSteps--;
         }
         
-        return new Points(4){a1, b1, c1, d1};
+        result.Clear();
+        result.EnsureCapacity(4);
+        
+        result.Add(a1);
+        result.Add(b1);
+        result.Add(c1);
+        result.Add(d1);
     }
     #endregion
 }
