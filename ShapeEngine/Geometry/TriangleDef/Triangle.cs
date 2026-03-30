@@ -12,9 +12,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.TriangleDef;
 
-//TODO: Use result parameters
-
-
 /// <summary>
 /// Represents a triangle defined by three vertices in 2D space. The vertices should be arranged in counter-clockwise order for proper geometric calculations.
 /// </summary>
@@ -195,6 +192,13 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     public Points ToPoints() => new() {A, B, C};
     
     /// <summary>
+    /// Converts the triangle to a polyline representation.
+    /// </summary>
+    /// <returns>A polyline containing the three vertices of the triangle.</returns>
+    /// <remarks>The resulting polyline represents the triangle's perimeter as a series of connected line segments.</remarks>
+    public Polyline ToPolyline() => new() { A, B, C };
+    
+    /// <summary>
     /// Converts the triangle to a polygon representation.
     /// </summary>
     /// <returns>A polygon containing the three vertices of the triangle.</returns>
@@ -205,20 +209,49 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// Converts this triangle to a polygon by adding its vertices to the provided <paramref name="result"/> polygon.
     /// </summary>
     /// <param name="result">A reference to a <see cref="Polygon"/> that will be cleared and filled with the triangle's vertices.</param>
-    public void ToPolygon(ref Polygon result)
+    public void ToPolygon(Polygon result)
     {
-        if(result.Count > 0) result.Clear();
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+    }
+
+    /// <summary>
+    /// Converts this triangle to a <see cref="Points"/> collection by writing its three vertices into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the triangle vertices.</param>
+    /// <remarks>
+    /// Points are written in vertex order: <see cref="A"/>, <see cref="B"/>, <see cref="C"/>.
+    /// </remarks>
+    public void ToPoints(Points result)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        
         result.Add(A);
         result.Add(B);
         result.Add(C);
     }
     
     /// <summary>
-    /// Converts the triangle to a polyline representation.
+    /// Converts this triangle to a <see cref="Polyline"/> by writing its three vertices into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A polyline containing the three vertices of the triangle.</returns>
-    /// <remarks>The resulting polyline represents the triangle's perimeter as a series of connected line segments.</remarks>
-    public Polyline ToPolyline() => new() { A, B, C };
+    /// <param name="result">The destination polyline that will be cleared and populated with the triangle vertices.</param>
+    /// <remarks>
+    /// Points are written in vertex order: <see cref="A"/>, <see cref="B"/>, <see cref="C"/>. The first point is not repeated at the end.
+    /// </remarks>
+    public void ToPolyline(Polyline result)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+    }
     
     /// <summary>
     /// Gets all three edges of the triangle as a collection of line segments.
@@ -227,6 +260,22 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// <remarks>The segments are ordered as: A-B, B-C, C-A, maintaining the counter-clockwise orientation.</remarks>
     public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
     
+    /// <summary>
+    /// Gets all three edges of the triangle and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the triangle edges.</param>
+    /// <remarks>
+    /// Segments are written in this order: A-B, B-C, C-A.
+    /// </remarks>
+    public void GetEdges(Segments result)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        result.Add(SegmentAToB);
+        result.Add(SegmentBToC);
+        result.Add(SegmentCToA);
+    }
+
     /// <summary>
     /// Constructs an adjacent triangle sharing an edge with this triangle, using the specified point as the third vertex.
     /// </summary>
@@ -246,29 +295,27 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         var closest = GetClosestSegment(p, out float _);
         return new Triangle(p, closest.segment);
     }
-
     
-    //TODO: Fix Docs
     /// <summary>
-    /// Triangulates this triangle using its centroid as an interior point.
+    /// Triangulates this triangle using its centroid as the interior vertex and writes the result into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A triangulation containing three sub-triangles formed by connecting the centroid to each vertex.</returns>
-    /// <remarks>This creates a simple triangulation by connecting the triangle's centroid to each of its vertices.</remarks>
-    public void Triangulate(Triangulation result) => this.Triangulate(GetCentroid(), result);
-
-    
-    
-    //TODO: Fix Docs
-    /// <summary>
-    /// Triangulates this triangle by adding random interior points and performing Delaunay triangulation.
-    /// </summary>
-    /// <param name="pointCount">The number of random interior points to add before triangulation.</param>
-    /// <returns>A Delaunay triangulation of the triangle with the specified number of interior points.</returns>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated sub-triangles.</param>
     /// <remarks>
-    /// If pointCount is negative, returns a triangulation containing only this triangle.
-    /// Random points are generated using barycentric coordinates to ensure they lie within the triangle.
+    /// This creates three triangles by connecting the centroid to each edge of the triangle.
     /// </remarks>
-    public void Triangulate(int pointCount, Triangulation result)
+    public void Triangulate(Triangulation result) => this.Triangulate(result, GetCentroid());
+    
+    /// <summary>
+    /// Triangulates this triangle by adding random interior points and performing point-cloud triangulation into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
+    /// <param name="pointCount">The number of random interior points to add before triangulation.</param>
+    /// <remarks>
+    /// If <paramref name="pointCount"/> is negative, <paramref name="result"/> receives only this triangle.
+    /// Otherwise, the triangle vertices and the generated interior points are passed to <c>TriangulatePointCloud</c>.
+    /// Random points are generated using barycentric coordinates so they lie inside the triangle.
+    /// </remarks>
+    public void Triangulate(Triangulation result, int pointCount)
     {
         result.Clear();
         if (pointCount < 0)
@@ -292,17 +339,16 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         triangulationPointList.TriangulatePointCloud(result);
     }
     
-    //TODO: Fix Docs
     /// <summary>
-    /// Triangulates this triangle to achieve a target minimum area per sub-triangle.
+    /// Triangulates this triangle based on a target minimum area and writes the result into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
     /// <param name="minArea">The minimum area that each resulting triangle should have.</param>
-    /// <returns>A triangulation where each sub-triangle has approximately the specified minimum area.</returns>
     /// <remarks>
-    /// If minArea is less than or equal to zero, returns a triangulation containing only this triangle.
-    /// The method calculates the number of points needed based on the ratio of triangle area to minimum area.
+    /// If <paramref name="minArea"/> is less than or equal to zero, <paramref name="result"/> receives only this triangle.
+    /// Otherwise, the method estimates how many interior random points to generate from the ratio of triangle area to <paramref name="minArea"/>, then delegates to <see cref="Triangulate(Triangulation, int)"/>.
     /// </remarks>
-    public void Triangulate(float minArea, Triangulation result)
+    public void Triangulate(Triangulation result, float minArea)
     {
         result.Clear();
         if (minArea <= 0)
@@ -314,20 +360,19 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         float triArea = GetArea();
         float pieceCount = triArea / minArea;
         int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
-        Triangulate(points, result);
+        Triangulate(result, points);
     }
     
-    //TODO: Fix Docs
     /// <summary>
-    /// Triangulates this triangle using the specified point as an interior vertex.
+    /// Triangulates this triangle using the specified point as an interior vertex and writes the result into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated sub-triangles.</param>
     /// <param name="p">The interior point to use for triangulation.</param>
-    /// <returns>A triangulation containing three sub-triangles formed by connecting the point to each edge.</returns>
     /// <remarks>
     /// The resulting triangulation contains three triangles: A-B-P, B-C-P, and C-A-P.
     /// This method does not verify that the point is actually inside the triangle.
     /// </remarks>
-    public void Triangulate(Vector2 p, Triangulation result)
+    public void Triangulate(Triangulation result, Vector2 p)
     {
         result.Clear();
         result.Add(new(A, B, p));
@@ -409,6 +454,24 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     }
     
     /// <summary>
+    /// Writes a specified number of random points inside this triangle into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated points.</param>
+    /// <param name="amount">The number of random interior points to generate.</param>
+    /// <remarks>
+    /// Each point is generated independently using <see cref="GetRandomPointInside()"/>.
+    /// </remarks>
+    public void GetRandomPointsInside(Points result, int amount)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        for (int i = 0; i < amount; i++)
+        {
+            result.Add(GetRandomPointInside());
+        }
+    }
+    
+    /// <summary>
     /// Selects one of the triangle's vertices at random.
     /// </summary>
     /// <returns>One of the three vertices (A, B, or C) selected randomly with equal probability.</returns>
@@ -424,20 +487,26 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// Selects one of the triangle's edges at random.
     /// </summary>
     /// <returns>One of the three edges selected randomly with equal probability.</returns>
-    public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
-    
+    public Segment GetRandomEdge()
+    {
+        return GetEdges().GetRandomSegment();
+    }
+
     /// <summary>
     /// Generates a random point on the triangle's perimeter.
     /// </summary>
     /// <returns>A point positioned randomly on one of the triangle's edges.</returns>
     /// <remarks>The point can be anywhere along any of the three edges with uniform probability distribution.</remarks>
-    public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    
+    public Vector2 GetRandomPointOnEdge()
+    {
+        return GetRandomEdge().GetRandomPoint();
+    }
+
     /// <summary>
     /// Generates multiple random points on the triangle's perimeter.
     /// </summary>
     /// <param name="amount">The number of random points to generate on the edges.</param>
-    /// <returns>A collection of points positioned randomly along the triangle's perimeter.</returns>
+    /// <returns>A collection of points positioned randomly along the triangle's perimeter with uniform probability distribution.</returns>
     public Points GetRandomPointsOnEdge(int amount)
     {
         var edges = GetEdges();
@@ -446,6 +515,20 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         return points;
     }
 
+    /// <summary>
+    /// Writes a specified number of random points on the triangle perimeter into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that receives the generated edge points.</param>
+    /// <param name="amount">The number of random perimeter points to generate.</param>
+    /// <remarks>
+    /// Edge selection and sampling are delegated to <see cref="Segments.GetRandomPoints(int, Points)"/> using the triangle's three edges.
+    /// </remarks>
+    public void GetRandomPointsOnEdge(Points result, int amount)
+    {
+        var edges = GetEdges();
+        edges.GetRandomPoints(amount, result);
+    }
+    
     /// <summary>
     /// Gets a specific edge of the triangle by index.
     /// </summary>
@@ -543,8 +626,16 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         return HashCode.Combine(A, B, C);
     }
 
+    /// <summary>
+    /// Gets the closed-shape type represented by this instance.
+    /// </summary>
+    /// <returns><see cref="ClosedShapeType.Triangle"/>.</returns>
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Triangle;
 
+    /// <summary>
+    /// Gets the general shape type represented by this instance.
+    /// </summary>
+    /// <returns><see cref="ShapeType.Triangle"/>.</returns>
     public ShapeType GetShapeType() => ShapeType.Triangle;
 
     /// <summary>
@@ -872,6 +963,24 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     }
     
     /// <summary>
+    /// Writes one interpolated point per triangle edge into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the interpolated edge points.</param>
+    /// <param name="t">The interpolation factor applied along each edge.</param>
+    /// <remarks>
+    /// Points are written for edges A-B, B-C, and C-A in that order.
+    /// </remarks>
+    public void GetInterpolatedEdgePoints(Points result, float t)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(A.Lerp(B, t));
+        result.Add(B.Lerp(C, t));
+        result.Add(C.Lerp(A, t));
+    }
+    
+    /// <summary>
     /// Gets interpolated points by performing multiple steps of edge interpolation, creating a fractal-like effect.
     /// </summary>
     /// <param name="t">The interpolation factor (0.0 to 1.0) to apply at each step.</param>
@@ -885,6 +994,28 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     public Points GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
+
+        var result = new Points(3);
+        GetInterpolatedEdgePoints(result, t, steps);
+        return result;
+    }
+    
+    /// <summary>
+    /// Performs repeated edge interpolation and writes the final three points into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that receives the final interpolated points.</param>
+    /// <param name="t">The interpolation factor applied at each step.</param>
+    /// <param name="steps">The number of interpolation iterations to perform. Values less than or equal to one fall back to a single interpolation pass.</param>
+    /// <remarks>
+    /// Each iteration interpolates between the points produced by the previous iteration while preserving the triangle edge order.
+    /// </remarks>
+    public void GetInterpolatedEdgePoints(Points result, float t, int steps)
+    {
+        if (steps <= 1)
+        {
+            GetInterpolatedEdgePoints(result, t);
+            return;
+        }
         
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
@@ -904,8 +1035,12 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
             remainingSteps--;
         }
         
-        return new Points(3){a1, b1, c1};
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(a1);
+        result.Add(b1);
+        result.Add(c1);
     }
-    
     #endregion
 }
