@@ -460,7 +460,15 @@ public readonly partial struct Triangle
         return points;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Writes this triangle's vertices and their projected counterparts into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the original and projected triangle points.</param>
+    /// <param name="v">The vector along which to project the triangle.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Points are written in this order: <see cref="A"/>, <see cref="B"/>, <see cref="C"/>, <c>A + v</c>, <c>B + v</c>, <c>C + v</c>.
+    /// </remarks>
     public bool GetProjectedShapePoints(Points result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
@@ -505,7 +513,15 @@ public readonly partial struct Triangle
         return result;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Projects this triangle along the given vector and writes the convex hull of the combined point set into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that receives the convex hull of the original and projected triangle vertices.</param>
+    /// <param name="v">The vector along which to project the triangle.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method constructs a temporary six-point set containing the triangle vertices and those same vertices translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
+    /// </remarks>
     public bool ProjectShape(Polygon result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
@@ -684,9 +700,6 @@ public readonly partial struct Triangle
     }
     #endregion
     
-    //TODO: Add more functions here as needed, such as:
-    // - Functions to calculate angles at each vertex
-    // - Functions to calculate side lengths
     #region Isoscele Triangle Math (Static)
     public static float GetIsoscelesSideLength(float baseLength, Vector2 dir1, Vector2 dir2)
     {
