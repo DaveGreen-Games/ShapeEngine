@@ -160,7 +160,15 @@ public readonly partial struct Rect
         return points;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Writes this rectangle's original corners and their projected counterparts into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the original and projected corner points.</param>
+    /// <param name="v">The vector used to offset the projected corner points.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Points are written in this order: A, B, C, D, A + <paramref name="v"/>, B + <paramref name="v"/>, C + <paramref name="v"/>, D + <paramref name="v"/>.
+    /// </remarks>
     public bool GetProjectedShapePoints(Points result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
@@ -203,11 +211,20 @@ public readonly partial struct Rect
         return result;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Projects this rectangle along the given vector and writes the convex hull of the combined corner set into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that receives the convex hull of the original and projected rectangle corners.</param>
+    /// <param name="v">The vector used to offset the projected corner points.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method constructs a temporary set containing the four rectangle corners and those same corners translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
+    /// </remarks>
     public bool ProjectShape(Polygon result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
 
+        //TODO: Keep or add thread-safe buffer here?
         var points = new Points
         {
             A, B, C, D,
