@@ -75,7 +75,6 @@ public class ShapeClipper64
         foreach (var c in clips)
         {
             clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
             clipEngine.AddSubject(started ? solutionClosed : subject);
             clipEngine.AddClip(c);
             clipEngine.Execute(clipperClipType, clipperFillRule, solutionClosed);
@@ -92,7 +91,6 @@ public class ShapeClipper64
         foreach (var c in clips)
         {
             clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
             if(started)clipEngine.AddSubject(solutionClosed);
             else clipEngine.AddSubject(subject);
             clipEngine.AddClip(c);
@@ -113,7 +111,6 @@ public class ShapeClipper64
         foreach (var c in clips)
         {
             clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
             if(started)clipEngine.AddSubject(solutionClosed);
             else clipEngine.AddSubject(path64ClipBuffer);
             clipEngine.AddClip(c);
@@ -185,7 +182,6 @@ public class ShapeClipper64
         foreach (var c in paths64ClipBuffer.Buffer)
         {
             clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
             clipEngine.AddSubject(started ? solutionClosed : paths64SubjectBuffer.Buffer);
             clipEngine.AddClip(c);
             clipEngine.Execute(clipperClipType, clipperFillRule, solutionClosed);
@@ -208,7 +204,6 @@ public class ShapeClipper64
         foreach (var c in paths64ClipBuffer.Buffer)
         {
             clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
             if(started)clipEngine.AddSubject(solutionClosed);
             else clipEngine.AddSubject(path64ClipBuffer);
             clipEngine.AddClip(c);
@@ -307,7 +302,6 @@ public class ShapeClipper64
         foreach (var c in paths64ClipBuffer.Buffer)
         {
             clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
             clipEngine.AddSubject(started ? paths64SolutionBuffer : paths64SubjectBuffer.Buffer);
             clipEngine.AddClip(c);
             clipEngine.Execute(clipperClipType, clipperFillRule, paths64SolutionBuffer);
@@ -333,7 +327,6 @@ public class ShapeClipper64
         foreach (var c in paths64ClipBuffer.Buffer)
         {
             clipEngine.Clear();
-            //CHECK: Does this work! -> using solution here and in execute
             if(started)clipEngine.AddSubject(paths64SolutionBuffer);
             else clipEngine.AddSubject(path64ClipBuffer);
             clipEngine.AddClip(c);

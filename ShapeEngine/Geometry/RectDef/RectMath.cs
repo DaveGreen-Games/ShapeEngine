@@ -224,7 +224,6 @@ public readonly partial struct Rect
     {
         if (v.LengthSquared() <= 0f) return false;
 
-        //TODO: Keep or add thread-safe buffer here?
         var points = new Points
         {
             A, B, C, D,
