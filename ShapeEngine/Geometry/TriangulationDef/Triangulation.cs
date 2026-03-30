@@ -247,7 +247,7 @@ public partial class Triangulation : ShapeList<Triangle>
             else
             {
                 subdivBuffer.Clear();
-                tri.Triangulate(minArea, subdivBuffer);
+                tri.Triangulate(subdivBuffer, minArea);
                 queueBuffer.AddRange(subdivBuffer);
             }
             queueBuffer.RemoveAt(endIndex);
@@ -272,7 +272,7 @@ public partial class Triangulation : ShapeList<Triangle>
         if (Count == 1)
         {
             subdivBuffer.Clear();
-            this[0].Triangulate(minArea, subdivBuffer);
+            this[0].Triangulate(subdivBuffer, minArea);
             queueBuffer.AddRange(subdivBuffer);
         }
         else
@@ -293,7 +293,7 @@ public partial class Triangulation : ShapeList<Triangle>
             else if (triArea > maxArea) //always subdivide because too big
             {
                 subdivBuffer.Clear();
-                tri.Triangulate(minArea, subdivBuffer);
+                tri.Triangulate(subdivBuffer, minArea);
                 queueBuffer.AddRange(subdivBuffer);
             }
             else //subdivde or keep
@@ -311,7 +311,7 @@ public partial class Triangulation : ShapeList<Triangle>
                 else
                 {
                     subdivBuffer.Clear();
-                    tri.Triangulate(minArea, subdivBuffer);
+                    tri.Triangulate(subdivBuffer, minArea);
                     queueBuffer.AddRange(subdivBuffer);
                 }
             }
