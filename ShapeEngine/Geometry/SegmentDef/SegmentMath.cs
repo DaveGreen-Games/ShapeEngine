@@ -67,7 +67,15 @@ public readonly partial struct Segment
         return points;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Writes the segment endpoints and their projected counterparts into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the original and projected points.</param>
+    /// <param name="v">The vector along which to project the segment.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Points are written in this order: <see cref="Start"/>, <see cref="End"/>, <c>Start + v</c>, <c>End + v</c>.
+    /// </remarks>
     public bool GetProjectedShapePoints(Points result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
@@ -106,7 +114,15 @@ public readonly partial struct Segment
         return result;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Projects the segment along the given vector and writes the convex hull of the combined point set into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that receives the convex hull of the original and projected segment endpoints.</param>
+    /// <param name="v">The vector along which to project the segment.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method forms a temporary four-point set consisting of the segment endpoints and those same endpoints translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
+    /// </remarks>
     public bool ProjectShape(Polygon result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
