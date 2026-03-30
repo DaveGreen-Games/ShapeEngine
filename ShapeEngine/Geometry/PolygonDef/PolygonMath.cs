@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 
@@ -1142,5 +1143,40 @@ public partial class Polygon
         ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     #endregion
-    
+
+    #region Cut Ray
+
+    /// <summary>
+    /// Intersects a ray with this polygon and stores all segments of the ray that lie inside the polygon in the provided result list.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray. Must not be zero.</param>
+    /// <param name="result">A list to store the resulting segments inside the polygon.</param>
+    /// <returns>The number of segments added to the result list.</returns>
+    /// <remarks>Segments are sorted by distance from the ray origin.</remarks>
+    public int CutWithRay(Vector2 rayPoint, Vector2 rayDirection, ref List<Segment> result)
+    {
+        if (Count < 3) return 0;
+        if (rayDirection.X == 0 && rayDirection.Y == 0) return 0;
+
+        rayDirection = rayDirection.Normalize();
+        var intersectionPoints = IntersectPolygonRay(this, rayPoint, rayDirection, ref intersectionPointsReference);
+        if (intersectionPoints < 2) return 0;
+
+        int count = result.Count;
+        intersectionPointsReference.SortClosestFirst(rayPoint);
+
+        for (int i = 0; i < intersectionPointsReference.Count - 1; i += 2)
+        {
+            var segmentStart = intersectionPointsReference[i].Point;
+            var segmentEnd = intersectionPointsReference[i + 1].Point;
+            var segment = new Segment(segmentStart, segmentEnd);
+            result.Add(segment);
+        }
+
+        intersectionPointsReference.Clear();
+        return result.Count - count;
+    }
+
+    #endregion
 }

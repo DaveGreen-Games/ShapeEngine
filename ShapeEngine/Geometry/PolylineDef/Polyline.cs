@@ -131,6 +131,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
 
         return new Circle(origin, MathF.Sqrt(maxD));
     }
+    
     /// <summary>
     /// Calculates the axis-aligned bounding box that contains all points of the polyline.
     /// </summary>
@@ -166,6 +167,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         }
         return segments;
     }
+    
     /// <summary>
     /// Converts this <see cref="Polyline"/> to a <see cref="Points"/> collection containing the same points.
     /// </summary>
@@ -200,6 +202,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     /// the polyline will be in clockwise (CW) order if it was counter-clockwise (CCW) before and vice versa.
     /// </summary>
     public void ReverseOrder() => Reverse();
+    
     /// <summary>
     /// Gets the segment (edge) between the two points at the specified index.
     /// </summary>
@@ -219,6 +222,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     /// </summary>
     /// <returns>A random <see cref="Vector2"/> vertex from the polyline.</returns>
     public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
+    
     /// <summary>
     /// Gets a random edge (segment) from the polyline.
     /// </summary>
@@ -227,60 +231,62 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     #endregion
     
     #region Interpolated Edge Points
-    //TODO: Result parameter
     /// <summary>
-    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// Computes one interpolated point along each edge of the polyline and writes the results into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between <c>0 - 1</c>.</param>
-    /// <returns></returns>
-    public Points? InterpolatedEdgePoints(float t)
+    /// <param name="t">The interpolation factor used for each edge. Values between 0 and 1 produce points between each vertex and the next vertex.</param>
+    /// <param name="result">The destination collection that will be cleared and populated with the interpolated points.</param>
+    /// <remarks>
+    /// If the collection contains fewer than two points, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
+    public new void GetInterpolatedEdgePoints(float t, Points result)
     {
-        if (Count < 2) return null;
+        if (Count < 2) return;
 
-        var result = new Points();
+        result.Clear();
+        result.EnsureCapacity(Count);
         for (int i = 0; i < Count - 1; i++)
         {
             var cur = this[i];
             var next = this[i + 1];
-            var interpolated = cur.Lerp(next, t);// Vector2.Lerp(cur, next, t);
+            var interpolated = cur.Lerp(next, t);
             result.Add(interpolated);
         }
-        
-        return result;
     }
     
-    //TODO: Make buffers static in polyline main file?
     /// <summary>
-    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// Repeatedly computes interpolated edge points for the polyline and writes the final result into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between <c>0 - 1</c>.</param>
-    /// <param name="steps">Recursive steps. The number of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
-    /// <returns></returns>
-    public Points? InterpolatedEdgePoints(float t, int steps)
+    /// <param name="t">The interpolation factor used for each edge on every pass. Values between 0 and 1 produce points between each vertex and the next vertex.</param>
+    /// <param name="steps">The number of interpolation passes to perform. Values less than or equal to 1 perform a single pass.</param>
+    /// <param name="result">The destination collection that will receive the interpolated points.</param>
+    /// <remarks>
+    /// If the collection contains fewer than two points, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
+    public new void GetInterpolatedEdgePoints(float t, int steps, Points result)
     {
-        if (Count < 2) return null;
-        if (steps <= 1) return InterpolatedEdgePoints(t);
+        if (Count < 2 || steps <= 0) return;
+        
+        if (steps == 1)
+        {
+            GetInterpolatedEdgePoints(t, result);
+            return;
+        }
 
+        steps = ShapeMath.MinInt(steps, Count - 1);
+        
         int remainingSteps = steps;
-        var pointsResult = new Points();
-        var pointsBuffer = new Points();
+        result.Clear();
         
         while (remainingSteps > 0)
         {
-            var target = pointsResult.Count <= 0 ? this : pointsResult;
-            for (int i = 0; i < target.Count; i++)
-            {
-                var cur = target[i];
-                var next = target[i + 1];
-                var interpolated = cur.Lerp(next, t);
-                pointsBuffer.Add(interpolated);
-            }
-
-            (pointsResult, pointsBuffer) = (pointsBuffer, pointsResult);//switch buffer and result
+            var target = result.Count <= 0 ? this : result;
+            target.GetInterpolatedEdgePoints(t, pointsBuffer);
+            result.Clear();
+            result.AddRange(pointsBuffer);
             pointsBuffer.Clear();
             remainingSteps--;
         }
-        return pointsResult;
     }
     #endregion
     

@@ -296,6 +296,7 @@ public abstract class Collider : Shape
     /// <returns>The bounding <see cref="Rect"/>.</returns>
     public abstract Rect GetBoundingBox();
 
+    //TODO: All ProjectShape functions below need to thread safe (no points buffer)!
     /// <summary>
     /// Projects this collider's shape along a given vector.
     /// </summary>

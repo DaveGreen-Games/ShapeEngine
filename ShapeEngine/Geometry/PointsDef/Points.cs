@@ -24,7 +24,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
 {
     #region Helper
     
-    private static Points pointsBuffer = new();
+    protected static Points pointsBuffer = new();
     private static Segments segmentsBuffer1 = new();
     private static Segments segmentsBuffer2 = new();
     private static HashSet<Vector2> uniquePointsBuffer = new();

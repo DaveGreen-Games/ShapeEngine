@@ -1044,7 +1044,166 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     }
     #endregion
     
+    #region Static Methods
+    
+    /// <summary>
+    /// Transforms the supplied relative points and appends them to <paramref name="result"/> as polygon vertices.
+    /// </summary>
+    /// <param name="relative">The relative points defining the shape.</param>
+    /// <param name="transform">The transform applied to each point before it is added to <paramref name="result"/>.</param>
+    /// <param name="result">The destination polygon that receives the transformed vertices.</param>
+    /// <returns><c>true</c> if <paramref name="relative"/> contains at least three points and the transformed vertices were added; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method does not clear <paramref name="result"/> before adding vertices.
+    /// </remarks>
+    public static bool GetShape(Points relative, Transform2D transform, Polygon result)
+    {
+        if (relative.Count < 3) return false;
+        for (var i = 0; i < relative.Count; i++)
+        {
+            result.Add(transform.ApplyTransformTo(relative[i]));
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Generates vertices for a random polygon around the origin and appends them to <paramref name="result"/>.
+    /// </summary>
+    /// <param name="pointCount">Number of points (vertices) in the polygon. Must be at least 3.</param>
+    /// <param name="minLength">Minimum distance from the origin for each point.</param>
+    /// <param name="maxLength">Maximum distance from the origin for each point.</param>
+    /// <param name="result">The destination polygon that receives the generated vertices.</param>
+    /// <returns><c>true</c> if the polygon parameters are valid and vertices were generated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// The generated points are evenly distributed by angle and randomized by radial distance. If <paramref name="minLength"/> is greater than <paramref name="maxLength"/>, the values are swapped. This method does not clear <paramref name="result"/> before adding vertices.
+    /// </remarks>
+    public static bool GenerateRelative(int pointCount, float minLength, float maxLength, Polygon result)
+    {
+        if (pointCount < 3) return false;
+        if (Math.Abs(minLength - maxLength) < ShapeMath.Epsilon) return false;
+        if (minLength > maxLength)
+        {
+            //swap
+            (minLength, maxLength) = (maxLength, minLength);
+        }
+        
+        float angleStep = ShapeMath.PI * 2.0f / pointCount;
+
+        for (var i = 0; i < pointCount; i++)
+        {
+            float randLength = Rng.Instance.RandF(minLength, maxLength);
+            var p = ShapeVec.Right().Rotate(-angleStep * i) * randLength;
+            result.Add(p);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Generates vertices for a random polygon centered at <paramref name="center"/> and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="center">The center position of the polygon.</param>
+    /// <param name="pointCount">Number of points (vertices) in the polygon. Must be at least 3.</param>
+    /// <param name="minLength">Minimum distance from the center for each point.</param>
+    /// <param name="maxLength">Maximum distance from the center for each point.</param>
+    /// <param name="result">The destination polygon that will be cleared and populated with the generated vertices.</param>
+    /// <returns><c>true</c> if the polygon parameters are valid and vertices were generated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// The generated points are evenly distributed by angle and randomized by radial distance. If <paramref name="minLength"/> is greater than <paramref name="maxLength"/>, the values are swapped.
+    /// </remarks>
+    public static bool Generate(Vector2 center, int pointCount, float minLength, float maxLength, Polygon result)
+    {
+        if (pointCount < 3) return false;
+        if (Math.Abs(minLength - maxLength) < ShapeMath.Epsilon) return false;
+        if (minLength > maxLength)
+        {
+            //swap
+            (minLength, maxLength) = (maxLength, minLength);
+        }
+        float angleStep = ShapeMath.PI * 2.0f / pointCount;
+        result.Clear();
+        for (int i = 0; i < pointCount; i++)
+        {
+            float randLength = Rng.Instance.RandF(minLength, maxLength);
+            var p = ShapeVec.Right().Rotate(-angleStep * i) * randLength;
+            p += center;
+            result.Add(p);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Generates a polygonal shape around the specified <paramref name="segment"/> and appends its vertices to <paramref name="result"/>.
+    /// </summary>
+    /// <param name="segment">The segment to build a polygon around.</param>
+    /// <param name="result">The destination polygon that receives the generated vertices.</param>
+    /// <param name="magMin">The minimum perpendicular offset magnitude used for intermediate points on either side of the segment.</param>
+    /// <param name="magMax">The maximum perpendicular offset magnitude used for intermediate points on either side of the segment.</param>
+    /// <param name="minSectionLength">The minimum step size along the segment, expressed as a fraction of the segment length.</param>
+    /// <param name="maxSectionLength">The maximum step size along the segment, expressed as a fraction of the segment length.</param>
+    /// <returns><c>true</c> if the segment and generation parameters are valid and vertices were added; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// The generated vertex order starts at <see cref="Segment.Start"/>, progresses toward <see cref="Segment.End"/> along one side of the segment, then returns along the opposite side. If the minimum values are greater than the corresponding maximum values, the pairs are swapped. This method does not clear <paramref name="result"/> before adding vertices.
+    /// </remarks>
+    public static bool Generate(Segment segment, Polygon result, float magMin = 0.1f, float magMax = 0.25f, float minSectionLength = 0.025f, float maxSectionLength = 0.1f)
+    {
+        if (segment.LengthSquared <= 0) return false;
+        if (magMin <= 0 || magMax <= 0) return false;
+        if (minSectionLength <= 0 || maxSectionLength <= 0) return false;
+        if (magMin > magMax)
+        {
+            (magMin, magMax) = (magMax, magMin);
+        }
+
+        if (minSectionLength > maxSectionLength)
+        {
+            (minSectionLength, maxSectionLength) = (maxSectionLength, minSectionLength);       
+        }
+        result.Add(segment.Start);
+        var dir = segment.Dir;
+        var dirRight = dir.GetPerpendicularRight();
+        var dirLeft = dir.GetPerpendicularLeft();
+        float len = segment.Length;
+        float minSectionLengthSq = (minSectionLength * len) * (minSectionLength * len);
+        var cur = segment.Start;
+        while (true)
+        {
+            cur += dir * Rng.Instance.RandF(minSectionLength, maxSectionLength) * len;
+            if ((cur - segment.End).LengthSquared() < minSectionLengthSq) break;
+            result.Add(cur + dirRight * Rng.Instance.RandF(magMin, magMax));
+        }
+
+        cur = segment.End;
+        result.Add(cur);
+        while (true)
+        {
+            cur -= dir * Rng.Instance.RandF(minSectionLength, maxSectionLength) * len;
+            if ((cur - segment.Start).LengthSquared() < minSectionLengthSq) break;
+            result.Add(cur + dirLeft * Rng.Instance.RandF(magMin, magMax));
+        }
+
+        return true;
+    }
+    
+    
+    #endregion
+    
     #region Private
+    internal static bool ContainsPointCheck(Vector2 a, Vector2 b, Vector2 pointToCheck)
+    {
+        if (a.Y < pointToCheck.Y && b.Y >= pointToCheck.Y || b.Y < pointToCheck.Y && a.Y >= pointToCheck.Y)
+        {
+            if (a.X + (pointToCheck.Y - a.Y) / (b.Y - a.Y) * (b.X - a.X) < pointToCheck.X)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
     /// <summary>
     /// Recursively computes the minimal enclosing circle for a set of points using Welzl's algorithm.
     /// </summary>
