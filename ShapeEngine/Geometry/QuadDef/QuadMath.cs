@@ -56,7 +56,16 @@ public readonly partial struct Quad
         return points;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Populates the provided <see cref="Points"/> collection with the quad's vertices and their projected positions along a given vector.
+    /// </summary>
+    /// <param name="result">
+    /// The <see cref="Points"/> collection to clear and fill with the original and projected vertices.
+    /// </param>
+    /// <param name="v">The vector along which to project the quad's vertices.</param>
+    /// <returns>
+    /// <see langword="true"/> if the projection vector is non-zero and the points were added; otherwise, <see langword="false"/>.
+    /// </returns>
     public bool GetProjectedShapePoints(Points result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
@@ -100,7 +109,16 @@ public readonly partial struct Quad
         return result;
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Projects the quad along a given vector and stores the convex hull in the provided <see cref="Polygon"/>.
+    /// </summary>
+    /// <param name="result">
+    /// The <see cref="Polygon"/> instance to populate with the convex hull of the projected shape.
+    /// </param>
+    /// <param name="v">The vector along which to project the quad's vertices.</param>
+    /// <returns>
+    /// <see langword="true"/> if the projection vector is non\-zero and the polygon was populated; otherwise, <see langword="false"/>.
+    /// </returns>
     public bool ProjectShape(Polygon result, Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return false;
