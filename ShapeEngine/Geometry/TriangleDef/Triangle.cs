@@ -22,6 +22,11 @@ namespace ShapeEngine.Geometry.TriangleDef;
 /// </remarks>
 public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+
+    #endregion
     
     #region Members
     /// <summary>

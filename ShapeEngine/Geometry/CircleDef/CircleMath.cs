@@ -145,23 +145,18 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="v">The vector to project the shape along.</param>
     /// <param name="pointCount">The number of points to generate for the polygon. Default is 8.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>A <see cref="Polygon"/> representing the projected shape,
     /// or null if invalid parameters are provided.</returns>
-    public Polygon? ProjectShape(Vector2 v, int pointCount = 8)
+    public Polygon? ProjectShape(Vector2 v, int pointCount = 8, bool useBuffer = false)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
-        float angleStep = (MathF.PI * 2f) / pointCount;
-        pointsBuffer.Clear();
-        pointsBuffer.EnsureCapacity(pointCount * 2);
-        for (var i = 0; i < pointCount; i++)
-        {
-            var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            pointsBuffer.Add(p);
-            pointsBuffer.Add(p + v);
-        }
-
+        
         Polygon result = new Polygon();
-        pointsBuffer.FindConvexHull(result);
+
+        ProjectShape(result, v, pointCount, useBuffer);
+        
         return result;
     }
 
@@ -171,24 +166,38 @@ public readonly partial struct Circle
     /// <param name="result">The destination polygon that will receive the projected shape.</param>
     /// <param name="v">The vector along which the circle shape is projected.</param>
     /// <param name="pointCount">The number of circle sample points to generate before projection. Must be at least 4.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns><c>true</c> if valid parameters were provided and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
     /// This method samples the circle, adds a projected copy of each sample offset by <paramref name="v"/>, and computes the convex hull of those points.
     /// </remarks>
-    public bool ProjectShape(Polygon result, Vector2 v, int pointCount = 8)
+    public bool ProjectShape(Polygon result, Vector2 v, int pointCount = 8, bool useBuffer = false)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return false;
         float angleStep = (MathF.PI * 2f) / pointCount;
-        pointsBuffer.Clear();
-        pointsBuffer.EnsureCapacity(pointCount * 2);
+        
+        Points buffer;
+
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(pointCount * 2);
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points(pointCount * 2);
+        }
+        
         for (var i = 0; i < pointCount; i++)
         {
             var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            pointsBuffer.Add(p);
-            pointsBuffer.Add(p + v);
+            buffer.Add(p);
+            buffer.Add(p + v);
         }
 
-        pointsBuffer.FindConvexHull(result);
+        buffer.FindConvexHull(result);
         return true;
     }
     

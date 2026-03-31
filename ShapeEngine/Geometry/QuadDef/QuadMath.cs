@@ -85,27 +85,55 @@ public readonly partial struct Quad
         return true;
     }
 
+    
     /// <summary>
     /// Projects the quad along a given vector and returns the convex hull as a polygon.
     /// </summary>
     /// <param name="v">The vector along which to project the quad's vertices.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull of the projected shape,
     /// or null if the vector is zero.</returns>
     /// <remarks>Useful for shadow or extrusion effects.</remarks>
-    public Polygon? ProjectShape(Vector2 v)
+    public Polygon? ProjectShape(Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        
+        Points buffer;
+
+        if (useBuffer)
         {
-            A, B, C, D,
-            A + v,
-            B + v,
-            C + v,
-            D + v
-        };
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(D);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            pointsBuffer.Add(D + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                D,
+                A + v,
+                B + v,
+                C + v,
+                D + v
+            };
+        }
 
         Polygon result = new Polygon(8);
-        points.FindConvexHull(result);
+        buffer.FindConvexHull(result);
         return result;
     }
     
@@ -116,22 +144,49 @@ public readonly partial struct Quad
     /// The <see cref="Polygon"/> instance to populate with the convex hull of the projected shape.
     /// </param>
     /// <param name="v">The vector along which to project the quad's vertices.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>
     /// <see langword="true"/> if the projection vector is non\-zero and the polygon was populated; otherwise, <see langword="false"/>.
     /// </returns>
-    public bool ProjectShape(Polygon result, Vector2 v)
+    public bool ProjectShape(Polygon result, Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return false;
-        var points = new Points
-        {
-            A, B, C, D,
-            A + v,
-            B + v,
-            C + v,
-            D + v
-        };
         
-        points.FindConvexHull(result);
+        Points buffer;
+
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(D);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            pointsBuffer.Add(D + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                D,
+                A + v,
+                B + v,
+                C + v,
+                D + v
+            };
+        }
+        
+        buffer.FindConvexHull(result);
         return true;
     }
 

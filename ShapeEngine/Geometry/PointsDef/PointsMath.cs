@@ -613,28 +613,40 @@ public partial class Points
         return true;
     }
 
-    
     /// <summary>
     /// Projects the polyline along a given vector and returns the convex hull of the resulting points as a polygon.
     /// </summary>
     /// <param name="v">The vector along which to project each point of the polyline.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>
     /// A <see cref="Polygon"/> representing the convex hull of the projected points,
     /// or <c>null</c> if the vector is zero.
     /// </returns>
-    public Polygon? ProjectShape(Vector2 v)
+    public Polygon? ProjectShape(Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f || Count < 2) return null;
+
+        Points buffer;
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(Count * 2);
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points(Count * 2);
+        }
         
-        var points = new Points(Count * 2);
         for (var i = 0; i < Count; i++)
         {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
+            buffer.Add(this[i]);
+            buffer.Add(this[i] + v);
         }
 
-        Polygon result = new(points.Count);
-        points.FindConvexHull(result);
+        Polygon result = new(buffer.Count);
+        buffer.FindConvexHull(result);
         return result;
     }
     
@@ -643,22 +655,35 @@ public partial class Points
     /// </summary>
     /// <param name="result">The destination polygon that receives the convex hull of the original and projected points.</param>
     /// <param name="v">The vector used to offset each projected point.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns><c>true</c> if <paramref name="v"/> is non-zero, the collection contains at least two points, and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
     /// This method creates a temporary doubled point set containing each original point and its translated counterpart, then computes the convex hull into <paramref name="result"/>.
     /// </remarks>
-    public bool ProjectShape(Polygon result, Vector2 v)
+    public bool ProjectShape(Polygon result, Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f || Count < 2) return false;
         
-        var points = new Points(Count * 2);
-        for (var i = 0; i < Count; i++)
+        Points buffer;
+        if (useBuffer)
         {
-            points.Add(this[i]);
-            points.Add(this[i] + v);
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(Count * 2);
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points(Count * 2);
         }
         
-        points.FindConvexHull(result);
+        for (var i = 0; i < Count; i++)
+        {
+            buffer.Add(this[i]);
+            buffer.Add(this[i] + v);
+        }
+        
+        buffer.FindConvexHull(result);
         return true;
     }
     

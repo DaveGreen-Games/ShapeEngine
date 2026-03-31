@@ -95,22 +95,44 @@ public readonly partial struct Segment
     /// Returns the convex hull polygon formed by projecting the segment along a given vector.
     /// </summary>
     /// <param name="v">The vector along which to project the segment.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull, or null if the vector is zero.</returns>
     /// <remarks>
     /// The result is typically a quadrilateral, unless the vector is degenerate.
     /// </remarks>
-    public Polygon? ProjectShape(Vector2 v)
+    public Polygon? ProjectShape(Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+
+        Points buffer;
+
+        if (useBuffer)
         {
-            Start,
-            End,
-            Start + v,
-            End + v,
-        };
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(Start);
+            pointsBuffer.Add(End);
+            pointsBuffer.Add(Start + v);
+            pointsBuffer.Add(End + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                Start,
+                End,
+                Start + v,
+                End + v,
+            };
+        }
+        
+        
         var result = new Polygon(4);
-        points.FindConvexHull(result);
+        buffer.FindConvexHull(result);
         return result;
     }
     
@@ -119,22 +141,42 @@ public readonly partial struct Segment
     /// </summary>
     /// <param name="result">The destination polygon that receives the convex hull of the original and projected segment endpoints.</param>
     /// <param name="v">The vector along which to project the segment.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
     /// This method forms a temporary four-point set consisting of the segment endpoints and those same endpoints translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
     /// </remarks>
-    public bool ProjectShape(Polygon result, Vector2 v)
+    public bool ProjectShape(Polygon result, Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return false;
-        var points = new Points
-        {
-            Start,
-            End,
-            Start + v,
-            End + v,
-        };
         
-        points.FindConvexHull(result);
+        Points buffer;
+
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(Start);
+            pointsBuffer.Add(End);
+            pointsBuffer.Add(Start + v);
+            pointsBuffer.Add(End + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                Start,
+                End,
+                Start + v,
+                End + v,
+            };
+        }
+        
+        buffer.FindConvexHull(result);
         return true;
     }
 

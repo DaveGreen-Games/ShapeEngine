@@ -18,6 +18,12 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// </summary>
 public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+
+    #endregion
+    
     #region Members
     /// <summary>
     /// Gets the first vertex of the quad <c>(A)</c>. Should be in counter-clockwise order.

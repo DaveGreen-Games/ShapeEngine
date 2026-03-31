@@ -15,6 +15,12 @@ namespace ShapeEngine.Geometry.SegmentDef;
 /// </summary>
 public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+
+    #endregion
+    
     #region Members
     /// <summary>
     /// The start point of the segment.

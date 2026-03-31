@@ -296,7 +296,6 @@ public abstract class Collider : Shape
     /// <returns>The bounding <see cref="Rect"/>.</returns>
     public abstract Rect GetBoundingBox();
 
-    //TODO: All ProjectShape functions below need to thread safe (no points buffer)!
     /// <summary>
     /// Projects this collider's shape along a given vector.
     /// </summary>
@@ -308,25 +307,25 @@ public abstract class Collider : Shape
         {
             case ShapeType.Circle:
                 var c = GetCircleShape();
-                return c.ProjectShape(v);
+                return c.ProjectShape(v, 8, false);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
-                return s.ProjectShape(v);
+                return s.ProjectShape(v, false);
             case ShapeType.Triangle:
                 var t = GetTriangleShape();
-                return t.ProjectShape(v);
+                return t.ProjectShape(v, false);
             case ShapeType.Rect:
                 var r = GetRectShape();
-                return r.ProjectShape(v);
+                return r.ProjectShape(v, false);
             case ShapeType.Quad:
                 var q = GetQuadShape();
-                return q.ProjectShape(v);
+                return q.ProjectShape(v, false);
             case ShapeType.Poly:
                 var p = GetPolygonShape();
-                return p.ProjectShape(v);
+                return p.ProjectShape(v, false);
             case ShapeType.PolyLine:
                 var pl = GetPolylineShape();
-                return pl.ProjectShape(v);
+                return pl.ProjectShape(v, false);
         }
 
         return null;

@@ -486,30 +486,52 @@ public readonly partial struct Triangle
         return true;
     }
 
-    
     /// <summary>
     /// Projects the triangle along a vector to create a convex hull polygon.
     /// </summary>
     /// <param name="v">The vector along which to project the triangle.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>A convex polygon representing the projected shape, or null if the vector has zero length.</returns>
     /// <remarks>
     /// This method creates a shadow-like projection by extruding the triangle along the vector
     /// and computing the convex hull of all resulting points.
     /// </remarks>
-    public Polygon? ProjectShape(Vector2 v)
+    public Polygon? ProjectShape(Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        
+        Points buffer;
+
+        if (useBuffer)
         {
-            A,
-            B,
-            C,
-            A + v,
-            B + v,
-            C + v
-        };
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                A + v,
+                B + v,
+                C + v
+            };
+        }
+        
         var result = new Polygon(6);
-        points.FindConvexHull(result);
+        buffer.FindConvexHull(result);
         return result;
     }
     
@@ -518,23 +540,46 @@ public readonly partial struct Triangle
     /// </summary>
     /// <param name="result">The destination polygon that receives the convex hull of the original and projected triangle vertices.</param>
     /// <param name="v">The vector along which to project the triangle.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
     /// <remarks>
     /// This method constructs a temporary six-point set containing the triangle vertices and those same vertices translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
     /// </remarks>
-    public bool ProjectShape(Polygon result, Vector2 v)
+    public bool ProjectShape(Polygon result, Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return false;
-        var points = new Points
+        
+        Points buffer;
+
+        if (useBuffer)
         {
-            A,
-            B,
-            C,
-            A + v,
-            B + v,
-            C + v
-        };
-        points.FindConvexHull(result);
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                A + v,
+                B + v,
+                C + v
+            };
+        }
+        
+        buffer.FindConvexHull(result);
         return true;
     }
 

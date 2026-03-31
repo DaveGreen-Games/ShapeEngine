@@ -20,6 +20,12 @@ namespace ShapeEngine.Geometry.RectDef;
 /// </summary>
 public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+
+    #endregion
+    
     #region Members
 
     /// <summary>
