@@ -983,7 +983,7 @@ public partial class Polygon
     /// <remarks>
     /// If <paramref name="perimeterToDraw"/> is less than or equal to zero, or the polygon contains fewer than two vertices, the method returns without modifying <paramref name="result"/>.
     /// </remarks>
-    public void PolygonToPolylinePerimeter(float perimeterToDraw, int startIndex, Polyline result)
+    public void ToPolylinePerimeter(float perimeterToDraw, int startIndex, Polyline result)
     {
         if (perimeterToDraw <= 0f) return;
         
@@ -1035,7 +1035,7 @@ public partial class Polygon
     public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
-        PolygonToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
+        ToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
         ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     
@@ -1056,7 +1056,7 @@ public partial class Polygon
     public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
-        PolygonToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
+        ToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
         ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     #endregion
@@ -1071,7 +1071,7 @@ public partial class Polygon
     /// <remarks>
     /// If <paramref name="f"/> is less than or equal to zero, or the polygon contains fewer than two vertices, the method returns without modifying <paramref name="result"/>.
     /// </remarks>
-    public void PolygonToPolylinePercentage(float f, int startIndex, Polyline result)
+    public void ToPolylinePercentage(float f, int startIndex, Polyline result)
     {
         if (f <= 0) return;
         
@@ -1096,7 +1096,7 @@ public partial class Polygon
             float l = (end - start).Length();
             totalPerimeter += l;
         }
-        PolygonToPolylinePerimeter(totalPerimeter * f, startIndex, result);
+        ToPolylinePerimeter(totalPerimeter * f, startIndex, result);
     }
    
     /// <summary>
@@ -1117,7 +1117,7 @@ public partial class Polygon
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
-        PolygonToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
+        ToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
         ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
    
@@ -1139,7 +1139,7 @@ public partial class Polygon
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
-        PolygonToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
+        ToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
         ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     #endregion
