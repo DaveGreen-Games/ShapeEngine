@@ -13,6 +13,10 @@ namespace ShapeEngine.Geometry.LineDef;
 /// </summary>
 public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
 {
+    private const int DefaultDecimalPlaces = 3;
+    private const ulong FnvOffset = 14695981039346656037UL;
+    private const ulong FnvPrime = 1099511628211UL;
+
     /// <summary>
     /// The maximum length used for line calculations, primarily as a safeguard for infinite lines in geometric operations.
     /// </summary>
@@ -326,10 +330,119 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     /// Determines whether this instance is equal to another <see cref="Line"/>.
     /// </summary>
     /// <param name="other">The other <see cref="Line"/> to compare against.</param>
-    /// <returns><c>true</c> if both the <see cref="Point"/> and <see cref="Direction"/> are equal; otherwise <c>false</c>.</returns>
+    /// <returns><c>true</c> if both lines represent the same geometric line; otherwise <c>false</c>.</returns>
+    /// <remarks>
+    /// Direction is compared up to sign, so <c>dir</c> and <c>-dir</c> are treated as the same line direction.
+    /// Invalid lines are equal only when both lines are invalid and their points are equal.
+    /// </remarks>
     public bool Equals(Line other)
     {
-        return Point.Equals(other.Point) && Direction.Equals(other.Direction);
+        return Equals(other, DefaultDecimalPlaces);
+    }
+
+    /// <summary>
+    /// Determines whether this instance is equal to another <see cref="Line"/> using quantized comparison.
+    /// </summary>
+    /// <param name="other">The other <see cref="Line"/> to compare against.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before comparison.</param>
+    /// <returns><c>true</c> if both lines represent the same geometric line after quantization; otherwise <c>false</c>.</returns>
+    /// <remarks>
+    /// For valid lines, equality depends on a canonicalized direction and the line's perpendicular offset from the origin.
+    /// The stored point itself does not need to match as long as both points lie on the same line.
+    /// Invalid lines are equal only when both are invalid and their points are equal after quantization.
+    /// </remarks>
+    public bool Equals(Line other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+
+        double scale = ToScale(decimalPlaces);
+        bool invalidA = IsInvalidDirection(Direction, scale);
+        bool invalidB = IsInvalidDirection(other.Direction, scale);
+        if (invalidA || invalidB)
+        {
+            return invalidA && invalidB && QuantizedEquals(Point, other.Point, scale);
+        }
+
+        Vector2 direction = CanonicalizeDirection(Direction);
+        Vector2 otherDirection = CanonicalizeDirection(other.Direction);
+        if (!QuantizedEquals(direction, otherDirection, scale)) return false;
+
+        Vector2 normal = GetCanonicalNormal(direction);
+        float offset = Vector2.Dot(normal, Point);
+        float otherOffset = Vector2.Dot(normal, other.Point);
+        return Quantize(offset, scale) == Quantize(otherOffset, scale);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for the current line.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+
+        double scale = ToScale(decimalPlaces);
+        ulong hash = FnvOffset;
+        unchecked
+        {
+            if (IsInvalidDirection(Direction, scale))
+            {
+                hash ^= 1UL;
+                hash *= FnvPrime;
+                hash = HashQuantized(hash, Point.X, scale);
+                hash = HashQuantized(hash, Point.Y, scale);
+                return hash;
+            }
+
+            Vector2 direction = CanonicalizeDirection(Direction);
+            Vector2 normal = GetCanonicalNormal(direction);
+            float offset = Vector2.Dot(normal, Point);
+
+            hash ^= 3UL;
+            hash *= FnvPrime;
+            hash = HashQuantized(hash, direction.X, scale);
+            hash = HashQuantized(hash, direction.Y, scale);
+            hash = HashQuantized(hash, offset, scale);
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of this line hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of this line hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+
+    /// <summary>
+    /// Determines whether two lines are equal.
+    /// </summary>
+    /// <param name="left">The first line to compare.</param>
+    /// <param name="right">The second line to compare.</param>
+    /// <returns><c>true</c> if the lines are equal; otherwise, <c>false</c>.</returns>
+    public static bool operator ==(Line left, Line right)
+    {
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two lines are not equal.
+    /// </summary>
+    /// <param name="left">The first line to compare.</param>
+    /// <param name="right">The second line to compare.</param>
+    /// <returns><c>true</c> if the lines are not equal; otherwise, <c>false</c>.</returns>
+    public static bool operator !=(Line left, Line right)
+    {
+        return !(left == right);
     }
 
     /// <summary>
@@ -337,7 +450,7 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     /// </summary>
     /// <param name="obj">The object to compare with the current <see cref="Line"/>. May be <c>null</c> or of a different type.</param>
     /// <returns>
-    /// <c>true</c> if <paramref name="obj"/> is a <see cref="Line"/> and has the same <see cref="Point"/> and <see cref="Direction"/>; otherwise <c>false</c>.
+    /// <c>true</c> if <paramref name="obj"/> is a <see cref="Line"/> equal to this instance; otherwise <c>false</c>.
     /// </returns>
     public override bool Equals(object? obj)
     {
@@ -347,19 +460,70 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     /// <summary>
     /// Returns a hash code for this <see cref="Line"/> instance.
     /// </summary>
-    /// <returns>
-    /// A 32-bit signed integer hash code generated by combining the <see cref="Point"/>
-    /// and <see cref="Direction"/> members.
-    /// </returns>
-    /// <remarks>
-    /// The hash intentionally combines only <see cref="Point"/> and <see cref="Direction"/>
-    /// to remain consistent with <see cref="Equals(Line)"/>, which compares those two members.
-    /// The <see cref="Normal"/> is excluded because its value is derived from <see cref="Direction"/>
-    /// (and possibly a flip) and including it could break the hash/equality contract.
-    /// </remarks>
+    /// <returns>A 32-bit hash code derived from the stable 64-bit line hash key.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine(Point, Direction);
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
+
+    private static Vector2 CanonicalizeDirection(Vector2 direction)
+    {
+        if (direction.X < 0f) return -direction;
+        if (direction.X == 0f && direction.Y < 0f) return -direction;
+        return direction;
+    }
+
+    private static Vector2 GetCanonicalNormal(Vector2 direction)
+    {
+        return new Vector2(-direction.Y, direction.X);
+    }
+
+    private static bool IsInvalidDirection(Vector2 direction, double scale)
+    {
+        return Quantize(direction.X, scale) == 0L && Quantize(direction.Y, scale) == 0L;
+    }
+
+    private static bool QuantizedEquals(Vector2 a, Vector2 b, double scale)
+    {
+        return Quantize(a.X, scale) == Quantize(b.X, scale) &&
+               Quantize(a.Y, scale) == Quantize(b.Y, scale);
+    }
+
+    private static ulong HashQuantized(ulong hash, float value, double scale)
+    {
+        long quantized = Quantize(value, scale);
+
+        unchecked
+        {
+            hash ^= (ulong)quantized;
+            hash *= FnvPrime;
+        }
+
+        return hash;
+    }
+
+    private static long Quantize(float value, double scale)
+    {
+        if (float.IsNaN(value)) return long.MinValue;
+        if (float.IsPositiveInfinity(value)) return long.MaxValue;
+        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
+
+        long quantized = (long)Math.Round(value * scale);
+        return quantized == 0L ? 0L : quantized;
+    }
+
+    private static double ToScale(int decimalPlaces)
+    {
+        if (decimalPlaces <= 0) return 1.0;
+
+        double scale = 1.0;
+        for (int i = 0; i < decimalPlaces; i++)
+        {
+            scale *= 10.0;
+        }
+
+        return scale;
     }
 }
 

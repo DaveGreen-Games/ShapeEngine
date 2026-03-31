@@ -9,7 +9,6 @@ using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
-using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.PointsDef;
 
@@ -23,6 +22,9 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
 {
     #region Helper
     
+    private const int DefaultDecimalPlaces = 3;
+    private const ulong FnvOffset = 14695981039346656037UL;
+    private const ulong FnvPrime = 1099511628211UL;
     protected static Points pointsBuffer = new();
     private static Segments segmentsBuffer1 = new();
     private static Segments segmentsBuffer2 = new();
@@ -48,8 +50,56 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     #endregion
 
     #region Equals & HashCode
-    /// <inheritdoc />
-    public override int GetHashCode() { return Game.GetHashCode(this); }
+    /// <summary>
+    /// Creates a stable 64-bit hash key for the current point collection by hashing points in order.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+
+        double scale = ToScale(decimalPlaces);
+        ulong hash = FnvOffset;
+        unchecked
+        {
+            hash ^= (ulong)Count;
+            hash *= FnvPrime;
+
+            for (int i = 0; i < Count; i++)
+            {
+                hash = HashQuantized(hash, this[i].X, scale);
+                hash = HashQuantized(hash, this[i].Y, scale);
+            }
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of the current point collection hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of the current point collection hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+
+    /// <summary>
+    /// Returns a 32-bit hash code derived from the stable 64-bit point collection hash key.
+    /// </summary>
+    /// <returns>A 32-bit hash code for the current point collection.</returns>
+    public override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
+    
     /// <summary>
     /// Determines whether the specified <see cref="Points"/> instance is equal to the current instance.
     /// </summary>
@@ -60,13 +110,103 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// </remarks>
     public bool Equals(Points? other)
     {
+        return Equals(other, DefaultDecimalPlaces);
+    }
+
+    /// <summary>
+    /// Determines whether the specified <see cref="Points"/> instance is equal to the current instance using quantized comparison.
+    /// </summary>
+    /// <param name="other">The <see cref="Points"/> instance to compare with the current instance.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point coordinates before comparison.</param>
+    /// <returns>True if the specified <see cref="Points"/> is equal to the current instance after quantization; otherwise, false.</returns>
+    public bool Equals(Points? other, int decimalPlaces)
+    {
         if (other == null) return false;
         if (Count != other.Count) return false;
+
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+        double scale = ToScale(decimalPlaces);
         for (var i = 0; i < Count; i++)
         {
-            if (!this[i].IsSimilar(other[i])) return false;
+            if (!QuantizedEquals(this[i], other[i], scale)) return false;
         }
         return true;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current point collection.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current point collection.</param>
+    /// <returns>True if the specified object is a <see cref="Points"/> instance equal to the current one; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is Points other && Equals(other);
+    }
+
+    /// <summary>
+    /// Determines whether two point collections are equal.
+    /// </summary>
+    /// <param name="left">The first point collection to compare.</param>
+    /// <param name="right">The second point collection to compare.</param>
+    /// <returns>True if the point collections are equal; otherwise, false.</returns>
+    public static bool operator ==(Points? left, Points? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two point collections are not equal.
+    /// </summary>
+    /// <param name="left">The first point collection to compare.</param>
+    /// <param name="right">The second point collection to compare.</param>
+    /// <returns>True if the point collections are not equal; otherwise, false.</returns>
+    public static bool operator !=(Points? left, Points? right)
+    {
+        return !(left == right);
+    }
+
+    private static bool QuantizedEquals(Vector2 a, Vector2 b, double scale)
+    {
+        return Quantize(a.X, scale) == Quantize(b.X, scale) &&
+               Quantize(a.Y, scale) == Quantize(b.Y, scale);
+    }
+
+    private static ulong HashQuantized(ulong hash, float value, double scale)
+    {
+        long quantized = Quantize(value, scale);
+
+        unchecked
+        {
+            hash ^= (ulong)quantized;
+            hash *= FnvPrime;
+        }
+
+        return hash;
+    }
+
+    private static long Quantize(float value, double scale)
+    {
+        if (float.IsNaN(value)) return long.MinValue;
+        if (float.IsPositiveInfinity(value)) return long.MaxValue;
+        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
+
+        long quantized = (long)Math.Round(value * scale);
+        return quantized == 0L ? 0L : quantized;
+    }
+
+    private static double ToScale(int decimalPlaces)
+    {
+        if (decimalPlaces <= 0) return 1.0;
+
+        double scale = 1.0;
+        for (int i = 0; i < decimalPlaces; i++)
+        {
+            scale *= 10.0;
+        }
+
+        return scale;
     }
     #endregion
 

@@ -23,6 +23,9 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
 {
     #region Helper
 
+    private const int DefaultDecimalPlaces = 3;
+    private const ulong FnvOffset = 14695981039346656037UL;
+    private const ulong FnvPrime = 1099511628211UL;
     private static Points pointsBuffer = new();
     private static Segments segmentsBuffer = new();
     private static Polygon? circleSectorOutlineTriangulationPolyCache = null;
@@ -195,14 +198,69 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// <returns><c>true</c> if the specified circle is equal to the current circle; otherwise, <c>false</c>.</returns>
     public bool Equals(Circle other)
     {
-        return Center == other.Center && ShapeMath.EqualsF(Radius, other.Radius);
+        return Equals(other, DefaultDecimalPlaces);
     }
+
+    /// <summary>
+    /// Determines whether the specified <see cref="Circle"/> is equal to the current circle using quantized comparison.
+    /// </summary>
+    /// <param name="other">The circle to compare with the current circle.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before comparison.</param>
+    /// <returns><c>true</c> if the circles are equal after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(Circle other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+
+        double scale = ToScale(decimalPlaces);
+        return QuantizedEquals(Center, other.Center, scale) && Quantize(Radius, scale) == Quantize(other.Radius, scale);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for the current circle.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+
+        double scale = ToScale(decimalPlaces);
+        ulong hash = FnvOffset;
+        unchecked
+        {
+            hash ^= 3UL;
+            hash *= FnvPrime;
+            hash = HashQuantized(hash, Center.X, scale);
+            hash = HashQuantized(hash, Center.Y, scale);
+            hash = HashQuantized(hash, Radius, scale);
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of the current circle hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of the current circle hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
     
     /// <summary>
     /// Returns the hash code for the current circle.
     /// </summary>
-    /// <returns>A hash code for the current circle.</returns>
-    public readonly override int GetHashCode() => HashCode.Combine(Center, Radius);
+    /// <returns>A 32-bit hash code derived from the stable 64-bit circle hash key.</returns>
+    public readonly override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
 
     /// <summary>
     /// Gets the closed shape type represented by this shape.
@@ -247,6 +305,48 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     {
         if (obj is Circle c) return Equals(c);
         return false;
+    }
+
+    private static bool QuantizedEquals(Vector2 a, Vector2 b, double scale)
+    {
+        return Quantize(a.X, scale) == Quantize(b.X, scale) &&
+               Quantize(a.Y, scale) == Quantize(b.Y, scale);
+    }
+
+    private static ulong HashQuantized(ulong hash, float value, double scale)
+    {
+        long quantized = Quantize(value, scale);
+
+        unchecked
+        {
+            hash ^= (ulong)quantized;
+            hash *= FnvPrime;
+        }
+
+        return hash;
+    }
+
+    private static long Quantize(float value, double scale)
+    {
+        if (float.IsNaN(value)) return long.MinValue;
+        if (float.IsPositiveInfinity(value)) return long.MaxValue;
+        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
+
+        long quantized = (long)Math.Round(value * scale);
+        return quantized == 0L ? 0L : quantized;
+    }
+
+    private static double ToScale(int decimalPlaces)
+    {
+        if (decimalPlaces <= 0) return 1.0;
+
+        double scale = 1.0;
+        for (int i = 0; i < decimalPlaces; i++)
+        {
+            scale *= 10.0;
+        }
+
+        return scale;
     }
     #endregion
     

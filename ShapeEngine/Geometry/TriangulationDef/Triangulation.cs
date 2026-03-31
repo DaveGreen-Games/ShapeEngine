@@ -6,7 +6,6 @@ using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Random;
 using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
-using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.TriangulationDef;
 
@@ -19,8 +18,11 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 /// <item>Detecting intersections with other shapes or colliders</item>
 /// </list>
 /// </summary>
-public partial class Triangulation : ShapeList<Triangle>
+public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulation>
 {
+    private const ulong FnvOffset = 14695981039346656037UL;
+    private const ulong FnvPrime = 1099511628211UL;
+
     #region Helper
 
     private static Triangulation queueBuffer = new();
@@ -34,44 +36,168 @@ public partial class Triangulation : ShapeList<Triangle>
     /// <summary>
     /// Initializes a new instance of the <see cref="Triangulation"/> class.
     /// </summary>
-    public Triangulation() { }
+    public Triangulation()
+    {
+        DecimalPlaces = ClipperImmediate2D.DecimalPlaces;
+    }
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified capacity.
+    /// Initializes a new empty instance of the <see cref="Triangulation"/> class with the specified capacity and optional hash/equality precision.
     /// </summary>
-    /// <param name="capacity">The number of triangles the collection can initially store.</param>
-    public Triangulation(int capacity) : base(capacity) { }
+    /// <param name="capacity">The initial number of triangles the collection can store without resizing.</param>
+    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ClipperImmediate2D.DecimalPlaces"/>.</param>
+    public Triangulation(int capacity, int decimalPlaces = -1) : base(capacity)
+    {
+        DecimalPlaces = decimalPlaces <= 0 ? ClipperImmediate2D.DecimalPlaces : decimalPlaces;
+    }
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified triangles.
+    /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified triangles and optional hash/equality precision.
     /// </summary>
-    /// <param name="triangles">The collection of triangles to initialize with.</param>
-    public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
+    /// <param name="triangles">The triangles to add to the collection in enumeration order.</param>
+    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ClipperImmediate2D.DecimalPlaces"/>.</param>
+    public Triangulation(IEnumerable<Triangle> triangles, int decimalPlaces = -1)
+    {
+        DecimalPlaces = decimalPlaces <= 0 ? ClipperImmediate2D.DecimalPlaces : decimalPlaces;
+        AddRange(triangles);
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Triangulation"/> class from a flat vertex list and optional hash/equality precision.
+    /// </summary>
+    /// <param name="vertices">The vertex list whose values are grouped in consecutive triples to form triangles.</param>
+    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ClipperImmediate2D.DecimalPlaces"/>.</param>
+    /// <remarks>Any trailing vertices that do not form a complete triangle are ignored.</remarks>
+    public Triangulation(IReadOnlyList<Vector2> vertices, int decimalPlaces = -1)
+    {
+        DecimalPlaces = decimalPlaces <= 0 ? ClipperImmediate2D.DecimalPlaces : decimalPlaces;
+        for (int i = 0; i < vertices.Count; i += 3)
+        {
+            if (i + 2 >= vertices.Count) break;
+            Add(new Triangle(vertices[i], vertices[i + 1], vertices[i + 2]));
+        }
+    }
+    #endregion
+
+    #region Properties
+    /// <summary>
+    /// Gets the decimal precision used for quantized hashing and equality comparisons.
+    /// </summary>
+    public int DecimalPlaces { get; }
     #endregion
         
-    //TODO: Fix and improve
     #region Equals & HashCode
     /// <summary>
-    /// Returns a hash code for this triangulation.
+    /// Creates a stable 64-bit hash key for the current triangulation by hashing triangle vertices in order.
     /// </summary>
-    /// <returns>A hash code for the current object.</returns>
-    public override int GetHashCode() => Game.GetHashCode(this);
+    /// <param name="decimalPlaces">
+    /// The number of decimal places used to quantize vertex coordinates before hashing.
+    /// Pass a negative value to use this triangulation's <see cref="DecimalPlaces"/>.
+    /// </param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = -1)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPlaces;
+
+        ulong hash = FnvOffset;
+        unchecked
+        {
+            hash ^= (ulong)Count;
+            hash *= FnvPrime;
+
+            for (int i = 0; i < Count; i++)
+            {
+                hash ^= this[i].GetHashKey(decimalPlaces);
+                hash *= FnvPrime;
+            }
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of the current triangulation hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">
+    /// The number of decimal places used to quantize vertex coordinates before hashing.
+    /// Pass a negative value to use this triangulation's <see cref="DecimalPlaces"/>.
+    /// </param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = -1) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of the current triangulation hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">
+    /// The number of decimal places used to quantize vertex coordinates before hashing.
+    /// Pass a negative value to use this triangulation's <see cref="DecimalPlaces"/>.
+    /// </param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = -1) => GetHashKeyHex(decimalPlaces);
+
+    /// <summary>
+    /// Returns a 32-bit hash code derived from the stable 64-bit triangulation hash key.
+    /// </summary>
+    /// <returns>A 32-bit hash code for the current triangulation.</returns>
+    public override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
 
     /// <summary>
     /// Determines whether the specified <see cref="Triangulation"/> is equal to the current instance.
     /// </summary>
     /// <param name="other">The triangulation to compare with the current instance.</param>
     /// <returns><c>true</c> if the specified triangulation is equal to the current instance; otherwise, <c>false</c>.</returns>
-    /// <remarks>Equality is determined by comparing the count and each triangle in order.</remarks>
+    /// <remarks>The comparison uses the coarser precision of the two triangulations and compares triangles in order.</remarks>
     public bool Equals(Triangulation? other)
     {
-        if (other == null) return false;
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
         if (Count != other.Count) return false;
+
+        int decimalPlaces = Math.Max(DecimalPlaces, other.DecimalPlaces);
         for (var i = 0; i < Count; i++)
         {
-            if (this[i] != other[i]) return false;
+            if (!this[i].Equals(other[i], decimalPlaces)) return false;
         }
+
         return true;
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current triangulation.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current triangulation.</param>
+    /// <returns><c>true</c> if <paramref name="obj"/> is a <see cref="Triangulation"/> equal to this instance; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is Triangulation other && Equals(other);
+    }
+
+    /// <summary>
+    /// Determines whether two triangulations are equal.
+    /// </summary>
+    /// <param name="left">The first triangulation to compare.</param>
+    /// <param name="right">The second triangulation to compare.</param>
+    /// <returns><c>true</c> if both triangulations are equal; otherwise, <c>false</c>.</returns>
+    public static bool operator ==(Triangulation? left, Triangulation? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two triangulations are not equal.
+    /// </summary>
+    /// <param name="left">The first triangulation to compare.</param>
+    /// <param name="right">The second triangulation to compare.</param>
+    /// <returns><c>true</c> if the triangulations are not equal; otherwise, <c>false</c>.</returns>
+    public static bool operator !=(Triangulation? left, Triangulation? right)
+    {
+        return !(left == right);
     }
     #endregion
 
@@ -351,6 +477,7 @@ public partial class Triangulation : ShapeList<Triangle>
 
         TriMesh mesh = new(triangulation.Count * 3);
         triangulation.ToTriMesh(mesh);
-        return triangulation;
+        return mesh;
     }
+
 }

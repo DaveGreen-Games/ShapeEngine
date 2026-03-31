@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Clipper2Lib;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
@@ -13,7 +14,6 @@ using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Random;
 using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
-using Game = ShapeEngine.Core.GameDef.Game;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace ShapeEngine.Geometry.PolygonDef;
@@ -142,24 +142,21 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// <remarks>
     /// Equality is determined by comparing the number of vertices and the similarity of each corresponding vertex.
     /// </remarks>
-    public bool Equals(Polygon? other)
-    {
-        if (other == null) return false;
-        
-        if (Count != other.Count) return false;
-        for (var i = 0; i < Count; i++)
-        {
-            if (!this[i].IsSimilar(other[i])) return false;
-            //if (this[i] != other[i]) return false;
-        }
-        return true;
-    }
+    public bool Equals(Polygon? other) => base.Equals(other);
+
+    /// <summary>
+    /// Determines whether the specified polygon is equal to the current polygon using quantized comparison.
+    /// </summary>
+    /// <param name="other">The polygon to compare with the current polygon.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point coordinates before comparison.</param>
+    /// <returns>True if the polygons are equal after quantization; otherwise, false.</returns>
+    public bool Equals(Polygon? other, int decimalPlaces) => base.Equals(other, decimalPlaces);
     
     /// <summary>
     /// Returns a hash code for the polygon.
     /// </summary>
     /// <returns>A hash code for the current polygon.</returns>
-    public override int GetHashCode() => Game.GetHashCode(this);
+    public override int GetHashCode() => base.GetHashCode();
 
     /// <summary>
     /// Gets the closed shape type represented by this polygon.
@@ -178,9 +175,30 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     /// </summary>
     /// <param name="obj">The object to compare with the current polygon.</param>
     /// <returns>True if the object is a <see cref="Polygon"/> and is equal to the current polygon; otherwise, false.</returns>
-    public override bool Equals(object? obj)
+    public override bool Equals(object? obj) => obj is Polygon other && Equals(other);
+
+    /// <summary>
+    /// Determines whether two polygons are equal.
+    /// </summary>
+    /// <param name="left">The first polygon to compare.</param>
+    /// <param name="right">The second polygon to compare.</param>
+    /// <returns>True if the polygons are equal; otherwise, false.</returns>
+    public static bool operator ==(Polygon? left, Polygon? right)
     {
-        return Equals(obj as Polygon);
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two polygons are not equal.
+    /// </summary>
+    /// <param name="left">The first polygon to compare.</param>
+    /// <param name="right">The second polygon to compare.</param>
+    /// <returns>True if the polygons are not equal; otherwise, false.</returns>
+    public static bool operator !=(Polygon? left, Polygon? right)
+    {
+        return !(left == right);
     }
     #endregion
 

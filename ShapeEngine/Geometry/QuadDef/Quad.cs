@@ -20,6 +20,9 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
 {
     #region Helper
 
+    private const int DefaultDecimalPlaces = 3;
+    private const ulong FnvOffset = 14695981039346656037UL;
+    private const ulong FnvPrime = 1099511628211UL;
     private static Points pointsBuffer = new();
 
     #endregion
@@ -672,7 +675,66 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// </summary>
     /// <param name="other">The quad to compare to this instance.</param>
     /// <returns><c>true</c> if the quads are equal; otherwise, <c>false</c>.</returns>
-    public bool Equals(Quad other) => A.Equals(other.A) && B.Equals(other.B) && C.Equals(other.C) && D.Equals(other.D);
+    public bool Equals(Quad other) => Equals(other, DefaultDecimalPlaces);
+
+    /// <summary>
+    /// Determines whether this instance and another specified <see cref="Quad"/> object have the same value using quantized comparison.
+    /// </summary>
+    /// <param name="other">The quad to compare to this instance.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before comparison.</param>
+    /// <returns><c>true</c> if the quads are equal after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(Quad other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+
+        double scale = ToScale(decimalPlaces);
+        return QuantizedEquals(A, other.A, scale) &&
+               QuantizedEquals(B, other.B, scale) &&
+               QuantizedEquals(C, other.C, scale) &&
+               QuantizedEquals(D, other.D, scale);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for this quad.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+
+        double scale = ToScale(decimalPlaces);
+        ulong hash = FnvOffset;
+        unchecked
+        {
+            hash ^= 4UL;
+            hash *= FnvPrime;
+            hash = HashQuantized(hash, A.X, scale);
+            hash = HashQuantized(hash, A.Y, scale);
+            hash = HashQuantized(hash, B.X, scale);
+            hash = HashQuantized(hash, B.Y, scale);
+            hash = HashQuantized(hash, C.X, scale);
+            hash = HashQuantized(hash, C.Y, scale);
+            hash = HashQuantized(hash, D.X, scale);
+            hash = HashQuantized(hash, D.Y, scale);
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of this quad hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of this quad hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
 
     /// <summary>
     /// Determines whether this instance and a specified object, which must also be a <see cref="Quad"/>, have the same value.
@@ -684,12 +746,58 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// <summary>
     /// Returns the hash code for this <see cref="Quad"/>.
     /// </summary>
-    /// <returns>A 32-bit signed integer hash code.</returns>
-    public override int GetHashCode() => HashCode.Combine(A, B, C, D);
+    /// <returns>A 32-bit hash code derived from the stable 64-bit quad hash key.</returns>
+    public override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
 
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Quad;
 
     public ShapeType GetShapeType() => ShapeType.Quad;
+
+    private static bool QuantizedEquals(Vector2 a, Vector2 b, double scale)
+    {
+        return Quantize(a.X, scale) == Quantize(b.X, scale) &&
+               Quantize(a.Y, scale) == Quantize(b.Y, scale);
+    }
+
+    private static ulong HashQuantized(ulong hash, float value, double scale)
+    {
+        long quantized = Quantize(value, scale);
+
+        unchecked
+        {
+            hash ^= (ulong)quantized;
+            hash *= FnvPrime;
+        }
+
+        return hash;
+    }
+
+    private static long Quantize(float value, double scale)
+    {
+        if (float.IsNaN(value)) return long.MinValue;
+        if (float.IsPositiveInfinity(value)) return long.MaxValue;
+        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
+
+        long quantized = (long)Math.Round(value * scale);
+        return quantized == 0L ? 0L : quantized;
+    }
+
+    private static double ToScale(int decimalPlaces)
+    {
+        if (decimalPlaces <= 0) return 1.0;
+
+        double scale = 1.0;
+        for (int i = 0; i < decimalPlaces; i++)
+        {
+            scale *= 10.0;
+        }
+
+        return scale;
+    }
 
     #endregion
 

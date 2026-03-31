@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
@@ -9,7 +8,6 @@ using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
-using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.PolylineDef;
 
@@ -79,32 +77,52 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     /// <remarks>
     /// Equality is determined by comparing the number of points and the similarity of each corresponding point.
     /// </remarks>
-    public bool Equals(Polyline? other)
-    {
-        if (other == null) return false;
-        if (Count != other.Count) return false;
-        for (var i = 0; i < Count; i++)
-        {
-            if (!this[i].IsSimilar(other[i])) return false;
-            //if (this[i] != other[i]) return false;
-        }
-        return true;
-    }
+    public bool Equals(Polyline? other) => base.Equals(other);
+
+    /// <summary>
+    /// Determines whether the specified <see cref="Polyline"/> is equal to the current <see cref="Polyline"/> using quantized comparison.
+    /// </summary>
+    /// <param name="other">The <see cref="Polyline"/> to compare with the current polyline.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point coordinates before comparison.</param>
+    /// <returns><c>true</c> if the polylines are equal after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(Polyline? other, int decimalPlaces) => base.Equals(other, decimalPlaces);
     
     /// <summary>
     /// Determines whether the specified object is equal to the current <see cref="Polyline"/>.
     /// </summary>
     /// <param name="obj">The object to compare with the current polyline.</param>
     /// <returns><c>true</c> if the specified object is a <see cref="Polyline"/> and is equal to the current polyline; otherwise, <c>false</c>.</returns>
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as Polyline);
-    }
+    public override bool Equals(object? obj) => obj is Polyline other && Equals(other);
+
     /// <summary>
     /// Returns a hash code for the current <see cref="Polyline"/>.
     /// </summary>
     /// <returns>A hash code for the current polyline.</returns>
-    public override int GetHashCode() => Game.GetHashCode(this);
+    public override int GetHashCode() => base.GetHashCode();
+
+    /// <summary>
+    /// Determines whether two polylines are equal.
+    /// </summary>
+    /// <param name="left">The first polyline to compare.</param>
+    /// <param name="right">The second polyline to compare.</param>
+    /// <returns><c>true</c> if the polylines are equal; otherwise, <c>false</c>.</returns>
+    public static bool operator ==(Polyline? left, Polyline? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two polylines are not equal.
+    /// </summary>
+    /// <param name="left">The first polyline to compare.</param>
+    /// <param name="right">The second polyline to compare.</param>
+    /// <returns><c>true</c> if the polylines are not equal; otherwise, <c>false</c>.</returns>
+    public static bool operator !=(Polyline? left, Polyline? right)
+    {
+        return !(left == right);
+    }
 
     public ShapeType GetShapeType() => ShapeType.PolyLine;
 
