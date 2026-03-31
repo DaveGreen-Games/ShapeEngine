@@ -2,31 +2,21 @@ using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.PolygonDef;
-using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.TriangulationDef;
-using ShapeEngine.StaticLib;
 
 
 
 //TODO:
 // - Go through Polygon/Polyline/Points and clean up (no duplicates, clear naming, result parameter instead of return value, no extra static functions that could be instance functions, etc.)
-// - ClipperImmediate2D needs Draw functions for filled polygons and all types of outlines and all types of polyline drawing (so internal buffers can be used)
-// - Keep Cache System? Does it make sense? Can it be simplified? How is cache kept clean, what happens to cached triangulations of polygons that have changed?
 // - PolygonDrawing / PolylineDrawing overhaul with ClipperImmediate2d
 // - Quad/Rect Chamfered Corners using ClipperImmeadiate2D
-// - Conversion for Polyline?
-
-
-//TODO: Remove all functions that use Polygons, Polygon, Polyline, or Polylines parameter and replace it with IReadOnlyList or IReadOnlyList<IReadOnlyList>
 namespace ShapeEngine.ShapeClipper;
 
 //TODO: Rename
 public static class ClipperImmediate2D
 {
     #region Public Settings
-    /// <summary>Max cached triangulations (simple cap; cache clears when exceeded).</summary>
-    public static int MaxTriangulationCacheEntries = 512;
     
     public static int DecimalPlaces
     {
@@ -51,7 +41,7 @@ public static class ClipperImmediate2D
     public static ShapeClipper64 ClipEngine { get; private set; } = new();
     #endregion
     
-    #region Reused Buffers
+    #region Buffers
 
     private static readonly Path64 path64Buffer = new();
     private static readonly Path64 path64Buffer2 = new();
@@ -62,68 +52,60 @@ public static class ClipperImmediate2D
     private static readonly Paths64 _tmpStroke = new();
     private static readonly TriMesh _triMeshBuffer = new();
     private static readonly Paths64PooledBuffer paths64ConversionBuffer = new();
+    
     #endregion
 
-    #region Cache
-    private static int _nextTriId = 1;
-    private static readonly Dictionary<TriKey, int> _keyToId = new(256);
-    private static readonly Dictionary<int, TriMesh> _idToMesh = new(256);
-    private static readonly Stack<TriMesh> _meshPool = new();
+    #region TriMesh Pool
+    private static readonly TriMeshPool meshPool = new(32);
     #endregion
     
     #region Drawing
-    //Info: Caching should be used for static polygons / polylines only! Otherwise create triangulation and then move, scale, rotate triangulation and then draw triangulation each frame
-    public static void DrawPolygonOutline(IReadOnlyList<Vector2> polygonCCW, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false, bool cached = false)
+    
+    public static void DrawPolygonOutline(IReadOnlyList<Vector2> polygonCCW, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
         if (polygonCCW.Count < 3 || thickness <= 0f) return;
 
-        if (cached)
+        var mesh = meshPool.RentMesh();
+        try
         {
-            int id = CachePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay);
-            DrawCachedTriangulation(id, color);
+            CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, mesh);
+            mesh.Draw(color);
         }
-        else
-        {
-            var mesh = RentMesh();
-            try
-            {
-                CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, mesh);
-                mesh.Draw(color);
-            }
-            finally { ReturnMesh(mesh); }
-        }
+        finally { meshPool.ReturnMesh(mesh); }
     }
 
-    public static void DrawPolyline(IReadOnlyList<Vector2> polyline, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false, bool cached = false)
+    public static void DrawPolyline(IReadOnlyList<Vector2> polyline, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
         if (polyline.Count < 2 || thickness <= 0f) return;
 
-        if (cached)
+        var mesh = meshPool.RentMesh();
+        try
         {
-            int id = CachePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay);
-            DrawCachedTriangulation(id, color);
+            CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, mesh);
+            mesh.Draw(color);
         }
-        else
-        {
-            var mesh = RentMesh();
-            try
-            {
-                CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, mesh);
-                mesh.Draw(color);
-            }
-            finally { ReturnMesh(mesh); }
-        }
+        finally { meshPool.ReturnMesh(mesh); }
     }
 
-    public static void DrawCachedTriangulation(int triangulationId, ColorRgba color)
-    {
-        if (triangulationId == 0) return;
-        if (!_idToMesh.TryGetValue(triangulationId, out var mesh)) return;
-        mesh.Draw(color);
-    }
+    
+    //TODO: Add DrawPolygon function (draws filled polygon)
+    
+    //TODO: Add DrawPolygonWithHoles (Polygons)
+    
+    //TODO: Add DrawPolygonOutlinePercentage/Perimeter (Polygon.ToPolylinePercentage/Perimeter)
+    
+    //TODO: Add DrawPolylinePercentage/Perimeter (Polyline.ToPolylinePercentage/Perimeter)
+    
+    
     #endregion
     
     #region Create Outline Triangulation
+    //TODO: Add CreatePolygonOutlineTriangulation for Polygons polygonWithHoles!
+    
+    //TODO: Add CreatePolygonOutlineTriangulation for perimeter/percentage
+    
+    //TODO: Add CreatePolylineTriangulation for perimeter/percentage
+    
     public static void CreatePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
@@ -228,99 +210,6 @@ public static class ClipperImmediate2D
         _triMeshBuffer.ToTriangulation(result);
     }
     
-    #endregion
-    
-    #region Cached Triangulation
-    
-    public static int CachePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay)
-    {
-        if (polygonCCW.Count < 3 || thickness <= 0f) return 0;
-
-        var key = TriKey.FromPolygonOutline(polygonCCW, thickness, miterLimit, beveled, useDelaunay, DecimalPlaces);
-        if (_keyToId.TryGetValue(key, out int id)) return id;
-
-        EnsureCacheSpace();
-
-        id = _nextTriId++;
-        var mesh = RentMesh();
-        CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, mesh);
-
-        _keyToId[key] = id;
-        _idToMesh[id] = mesh;
-        return id;
-    }
-
-    public static int CachePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
-    {
-        if (polyline.Count < 2 || thickness <= 0f) return 0;
-
-        var key = TriKey.FromPolyline(polyline, thickness, miterLimit, beveled, endType, useDelaunay, DecimalPlaces);
-        if (_keyToId.TryGetValue(key, out int id)) return id;
-
-        EnsureCacheSpace();
-
-        id = _nextTriId++;
-        var mesh = RentMesh();
-        CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, mesh);
-
-        _keyToId[key] = id;
-        _idToMesh[id] = mesh;
-        return id;
-    }
-
-    public static int CachePolygonTriangulation(Paths64 polygonWithHoles, bool useDelaunay)
-    {
-        if (polygonWithHoles.Count == 0) return 0;
-
-        var key = TriKey.FromPaths64(polygonWithHoles, useDelaunay, DecimalPlaces);
-        if (_keyToId.TryGetValue(key, out int id)) return id;
-
-        EnsureCacheSpace();
-
-        id = _nextTriId++;
-        var mesh = RentMesh();
-        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, mesh);
-
-        _keyToId[key] = id;
-        _idToMesh[id] = mesh;
-        return id;
-    }
-
-    public static int CachePolygonTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, bool useDelaunay)
-    {
-        if (polygonWithHoles.Count == 0) return 0;
-        paths64ConversionBuffer.PrepareBuffer(polygonWithHoles.Count);
-        polygonWithHoles.ToPaths64(paths64ConversionBuffer.Buffer);
-        var key = TriKey.FromPaths64(paths64ConversionBuffer.Buffer, useDelaunay, DecimalPlaces);
-        if (_keyToId.TryGetValue(key, out int id)) return id;
-
-        EnsureCacheSpace();
-
-        id = _nextTriId++;
-        var mesh = RentMesh();
-        CreatePolygonTriangulation(paths64ConversionBuffer.Buffer, useDelaunay, mesh);
-
-        _keyToId[key] = id;
-        _idToMesh[id] = mesh;
-        return id;
-    }
-    
-    public static bool GetCachedTriangulation(int triangulationId, out TriMesh mesh)
-    {
-        return _idToMesh.TryGetValue(triangulationId, out mesh!);
-    }
-
-    public static void ClearTriangulationCache()
-    {
-        _keyToId.Clear();
-
-        foreach (var kv in _idToMesh)
-        {
-            kv.Value.Clear();
-            _meshPool.Push(kv.Value);
-        }
-        _idToMesh.Clear();
-    }
     #endregion
 
     #region Inflate
@@ -1132,6 +1021,15 @@ public static class ClipperImmediate2D
     }
     #endregion
     
+}
+
+
+/*
+public static class TriMeshCacheOld
+{
+    /// <summary>Max cached triangulations (simple cap; cache clears when exceeded).</summary>
+    public static int MaxTriangulationCacheEntries = 512;
+    
     #region Internal Cache
     private static void EnsureCacheSpace()
     {
@@ -1277,6 +1175,107 @@ public static class ClipperImmediate2D
     }
     #endregion
     
+    #region Cache
+    private static int _nextTriId = 1;
+    private static readonly Dictionary<TriKey, int> _keyToId = new(256);
+    private static readonly Dictionary<int, TriMesh> _idToMesh = new(256);
+    private static readonly Stack<TriMesh> _meshPool = new();
+    #endregion
+    
+    #region Cached Triangulation
+    
+    public static int CachePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay)
+    {
+        if (polygonCCW.Count < 3 || thickness <= 0f) return 0;
+
+        var key = TriKey.FromPolygonOutline(polygonCCW, thickness, miterLimit, beveled, useDelaunay, DecimalPlaces);
+        if (_keyToId.TryGetValue(key, out int id)) return id;
+
+        EnsureCacheSpace();
+
+        id = _nextTriId++;
+        var mesh = RentMesh();
+        CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, mesh);
+
+        _keyToId[key] = id;
+        _idToMesh[id] = mesh;
+        return id;
+    }
+
+    public static int CachePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
+    {
+        if (polyline.Count < 2 || thickness <= 0f) return 0;
+
+        var key = TriKey.FromPolyline(polyline, thickness, miterLimit, beveled, endType, useDelaunay, DecimalPlaces);
+        if (_keyToId.TryGetValue(key, out int id)) return id;
+
+        EnsureCacheSpace();
+
+        id = _nextTriId++;
+        var mesh = RentMesh();
+        CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, mesh);
+
+        _keyToId[key] = id;
+        _idToMesh[id] = mesh;
+        return id;
+    }
+
+    public static int CachePolygonTriangulation(Paths64 polygonWithHoles, bool useDelaunay)
+    {
+        if (polygonWithHoles.Count == 0) return 0;
+
+        var key = TriKey.FromPaths64(polygonWithHoles, useDelaunay, DecimalPlaces);
+        if (_keyToId.TryGetValue(key, out int id)) return id;
+
+        EnsureCacheSpace();
+
+        id = _nextTriId++;
+        var mesh = RentMesh();
+        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, mesh);
+
+        _keyToId[key] = id;
+        _idToMesh[id] = mesh;
+        return id;
+    }
+
+    public static int CachePolygonTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, bool useDelaunay)
+    {
+        if (polygonWithHoles.Count == 0) return 0;
+        paths64ConversionBuffer.PrepareBuffer(polygonWithHoles.Count);
+        polygonWithHoles.ToPaths64(paths64ConversionBuffer.Buffer);
+        var key = TriKey.FromPaths64(paths64ConversionBuffer.Buffer, useDelaunay, DecimalPlaces);
+        if (_keyToId.TryGetValue(key, out int id)) return id;
+
+        EnsureCacheSpace();
+
+        id = _nextTriId++;
+        var mesh = RentMesh();
+        CreatePolygonTriangulation(paths64ConversionBuffer.Buffer, useDelaunay, mesh);
+
+        _keyToId[key] = id;
+        _idToMesh[id] = mesh;
+        return id;
+    }
+    
+    public static bool GetCachedTriangulation(int triangulationId, out TriMesh mesh)
+    {
+        return _idToMesh.TryGetValue(triangulationId, out mesh!);
+    }
+
+    public static void ClearTriangulationCache()
+    {
+        _keyToId.Clear();
+
+        foreach (var kv in _idToMesh)
+        {
+            kv.Value.Clear();
+            _meshPool.Push(kv.Value);
+        }
+        _idToMesh.Clear();
+    }
+    
+    #endregion
+    
     #region Internal TriMesh Pooling
     private static TriMesh RentMesh()
     {
@@ -1297,17 +1296,13 @@ public static class ClipperImmediate2D
             _meshPool.Push(mesh);
         }
     }
-    
-    //NOTE: Moved to TriMesh
-    private static float Cross(in Vector2 a, in Vector2 b) => a.X * b.Y - a.Y * b.X;
-
-    //NOTE: Moved to ClipperScale struct
-    private static double Pow10(int dp)
-    {
-        if (dp <= 0) return 1.0;
-        double s = 1.0;
-        for (int i = 0; i < dp; i++) s *= 10.0;
-        return s;
-    }
     #endregion
+    
+    public static void DrawCachedTriangulation(int triangulationId, ColorRgba color)
+    {
+        if (triangulationId == 0) return;
+        if (!_idToMesh.TryGetValue(triangulationId, out var mesh)) return;
+        mesh.Draw(color);
+    }
 }
+*/
