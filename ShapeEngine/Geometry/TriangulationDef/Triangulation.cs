@@ -49,6 +49,7 @@ public partial class Triangulation : ShapeList<Triangle>
     public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
     #endregion
         
+    //TODO: Fix and improve
     #region Equals & HashCode
     /// <summary>
     /// Returns a hash code for this triangulation.
@@ -332,9 +333,24 @@ public partial class Triangulation : ShapeList<Triangle>
         dst.Clear();
         foreach (var t in this)
         {
-            dst.Triangles.Add(t.A);
-            dst.Triangles.Add(t.B);
-            dst.Triangles.Add(t.C);
+            dst.AddTriangle(t.A, t.B, t.C);
         }
+    }
+    
+    /// <summary>
+    /// Implicitly converts a <see cref="Triangulation"/> into a <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="triangulation">The triangulation to convert.</param>
+    /// <returns>
+    /// A new <see cref="TriMesh"/> containing the triangle vertices from <paramref name="triangulation"/>,
+    /// or <c>null</c> if <paramref name="triangulation"/> is <c>null</c>.
+    /// </returns>
+    public static implicit operator TriMesh?(Triangulation? triangulation)
+    {
+        if (triangulation == null) return null;
+
+        TriMesh mesh = new(triangulation.Count * 3);
+        triangulation.ToTriMesh(mesh);
+        return triangulation;
     }
 }
