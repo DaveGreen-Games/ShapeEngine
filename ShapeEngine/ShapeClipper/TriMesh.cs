@@ -245,19 +245,11 @@ public sealed class TriMesh : IEquatable<TriMesh>
 
         var triangles = triangleVertices;
         int trianglePointCount = triangles.Count;
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        ulong hash = hashQuantizer.StartHash(trianglePointCount);
+        for (int i = 0; i < trianglePointCount; i++)
         {
-            hash ^= (ulong)trianglePointCount;
-            hash *= DecimalPrecision.FnvPrime;
-
-            for (int i = 0; i < trianglePointCount; i++)
-            {
-                var p = triangles[i];
-                hash = DecimalPrecision.HashQuantized(hash, p.X, scale);
-                hash = DecimalPrecision.HashQuantized(hash, p.Y, scale);
-            }
+            hash = hashQuantizer.Add(hash, triangles[i]);
         }
 
         return hash;
@@ -682,12 +674,12 @@ public sealed class TriMesh : IEquatable<TriMesh>
         int trianglePointCount = triangles.Count;
         if (trianglePointCount != otherTriangles.Count) return false;
 
-        double scale = DecimalPrecision.GetScaleFactor(Math.Max(DecimalPlaces, other.DecimalPlaces));
+        DecimalQuantizer quantizer = new(Math.Max(DecimalPlaces, other.DecimalPlaces));
         for (int i = 0; i < trianglePointCount; i++)
         {
             var a = triangles[i];
             var b = otherTriangles[i];
-            if (!DecimalPrecision.QuantizedEquals(a, b, scale)) return false;
+            if (!quantizer.QuantizedEquals(a, b)) return false;
         }
 
         return true;

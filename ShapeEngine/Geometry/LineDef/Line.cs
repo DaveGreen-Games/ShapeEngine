@@ -352,22 +352,22 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        bool invalidA = IsInvalidDirection(Direction, scale);
-        bool invalidB = IsInvalidDirection(other.Direction, scale);
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        bool invalidA = IsInvalidDirection(Direction, quantizer);
+        bool invalidB = IsInvalidDirection(other.Direction, quantizer);
         if (invalidA || invalidB)
         {
-            return invalidA && invalidB && DecimalPrecision.QuantizedEquals(Point, other.Point, scale);
+            return invalidA && invalidB && quantizer.QuantizedEquals(Point, other.Point);
         }
 
         Vector2 direction = CanonicalizeDirection(Direction);
         Vector2 otherDirection = CanonicalizeDirection(other.Direction);
-        if (!DecimalPrecision.QuantizedEquals(direction, otherDirection, scale)) return false;
+        if (!quantizer.QuantizedEquals(direction, otherDirection)) return false;
 
         Vector2 normal = GetCanonicalNormal(direction);
         float offset = Vector2.Dot(normal, Point);
         float otherOffset = Vector2.Dot(normal, other.Point);
-        return DecimalPrecision.Quantize(offset, scale) == DecimalPrecision.Quantize(otherOffset, scale);
+        return quantizer.QuantizedEquals(offset, otherOffset);
     }
 
     /// <summary>
@@ -379,31 +379,18 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        if (IsInvalidDirection(Direction, quantizer))
         {
-            if (IsInvalidDirection(Direction, scale))
-            {
-                hash ^= 1UL;
-                hash *= DecimalPrecision.FnvPrime;
-                hash = DecimalPrecision.HashQuantized(hash, Point.X, scale);
-                hash = DecimalPrecision.HashQuantized(hash, Point.Y, scale);
-                return hash;
-            }
-
-            Vector2 direction = CanonicalizeDirection(Direction);
-            Vector2 normal = GetCanonicalNormal(direction);
-            float offset = Vector2.Dot(normal, Point);
-
-            hash ^= 3UL;
-            hash *= DecimalPrecision.FnvPrime;
-            hash = DecimalPrecision.HashQuantized(hash, direction.X, scale);
-            hash = DecimalPrecision.HashQuantized(hash, direction.Y, scale);
-            hash = DecimalPrecision.HashQuantized(hash, offset, scale);
+            return hashQuantizer.GetHash(Point);
         }
 
-        return hash;
+        Vector2 direction = CanonicalizeDirection(Direction);
+        Vector2 normal = GetCanonicalNormal(direction);
+        float offset = Vector2.Dot(normal, Point);
+
+        return hashQuantizer.GetHash(direction.X, direction.Y, offset);
     }
 
     /// <summary>
@@ -476,10 +463,10 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
         return new Vector2(-direction.Y, direction.X);
     }
 
-    private static bool IsInvalidDirection(Vector2 direction, double scale)
+    private static bool IsInvalidDirection(Vector2 direction, DecimalQuantizer quantizer)
     {
-        return DecimalPrecision.Quantize(direction.X, scale) == 0L &&
-               DecimalPrecision.Quantize(direction.Y, scale) == 0L;
+        return quantizer.Quantize(direction.X) == 0L &&
+               quantizer.Quantize(direction.Y) == 0L;
     }
 
 }

@@ -56,6 +56,7 @@ public partial class Segments : ShapeList<Segment>
         return true;
     }
     
+    //TODO: Fix with new hash system
     /// <summary>
     /// Gets the hash code for the list of segments.
     /// </summary>

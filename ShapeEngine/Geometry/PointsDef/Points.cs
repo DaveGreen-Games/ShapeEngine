@@ -57,18 +57,11 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        ulong hash = hashQuantizer.StartHash(Count);
+        for (int i = 0; i < Count; i++)
         {
-            hash ^= (ulong)Count;
-            hash *= DecimalPrecision.FnvPrime;
-
-            for (int i = 0; i < Count; i++)
-            {
-                hash = DecimalPrecision.HashQuantized(hash, this[i].X, scale);
-                hash = DecimalPrecision.HashQuantized(hash, this[i].Y, scale);
-            }
+            hash = hashQuantizer.Add(hash, this[i]);
         }
 
         return hash;
@@ -123,10 +116,10 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         if (Count != other.Count) return false;
 
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
+        DecimalQuantizer quantizer = new(decimalPlaces);
         for (var i = 0; i < Count; i++)
         {
-            if (!DecimalPrecision.QuantizedEquals(this[i], other[i], scale)) return false;
+            if (!quantizer.QuantizedEquals(this[i], other[i])) return false;
         }
         return true;
     }

@@ -297,9 +297,9 @@ public readonly partial struct Ray : IShapeTypeProvider, IEquatable<Ray>
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        return DecimalPrecision.QuantizedEquals(Point, other.Point, scale) &&
-               DecimalPrecision.QuantizedEquals(Direction, other.Direction, scale);
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(Point, other.Point) &&
+               quantizer.QuantizedEquals(Direction, other.Direction);
     }
 
     /// <summary>
@@ -311,19 +311,8 @@ public readonly partial struct Ray : IShapeTypeProvider, IEquatable<Ray>
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
-        {
-            hash ^= 4UL;
-            hash *= DecimalPrecision.FnvPrime;
-            hash = DecimalPrecision.HashQuantized(hash, Point.X, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Point.Y, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Direction.X, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Direction.Y, scale);
-        }
-
-        return hash;
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(Point, Direction);
     }
 
     /// <summary>

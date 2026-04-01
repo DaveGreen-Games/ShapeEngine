@@ -291,11 +291,11 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        return DecimalPrecision.Quantize(X, scale) == DecimalPrecision.Quantize(other.X, scale) &&
-               DecimalPrecision.Quantize(Y, scale) == DecimalPrecision.Quantize(other.Y, scale) &&
-               DecimalPrecision.Quantize(Width, scale) == DecimalPrecision.Quantize(other.Width, scale) &&
-               DecimalPrecision.Quantize(Height, scale) == DecimalPrecision.Quantize(other.Height, scale);
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(X, other.X) &&
+               quantizer.QuantizedEquals(Y, other.Y) &&
+               quantizer.QuantizedEquals(Width, other.Width) &&
+               quantizer.QuantizedEquals(Height, other.Height);
     }
 
     /// <summary>
@@ -307,19 +307,8 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
-        {
-            hash ^= 4UL;
-            hash *= DecimalPrecision.FnvPrime;
-            hash = DecimalPrecision.HashQuantized(hash, X, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Y, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Width, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Height, scale);
-        }
-
-        return hash;
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(X, Y, Width, Height);
     }
 
     /// <summary>

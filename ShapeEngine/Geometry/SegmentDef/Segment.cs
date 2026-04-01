@@ -422,9 +422,9 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        return DecimalPrecision.QuantizedEquals(Start, other.Start, scale) &&
-               DecimalPrecision.QuantizedEquals(End, other.End, scale);
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(Start, other.Start) &&
+               quantizer.QuantizedEquals(End, other.End);
     }
 
     /// <summary>
@@ -436,19 +436,8 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
-        {
-            hash ^= 2UL;
-            hash *= DecimalPrecision.FnvPrime;
-            hash = DecimalPrecision.HashQuantized(hash, Start.X, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Start.Y, scale);
-            hash = DecimalPrecision.HashQuantized(hash, End.X, scale);
-            hash = DecimalPrecision.HashQuantized(hash, End.Y, scale);
-        }
-
-        return hash;
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(Start, End);
     }
 
     /// <summary>

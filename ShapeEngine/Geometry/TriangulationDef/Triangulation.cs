@@ -97,17 +97,14 @@ public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulati
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPlaces;
 
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        ulong hash = hashQuantizer.StartHash(Count);
+        for (int i = 0; i < Count; i++)
         {
-            hash ^= (ulong)Count;
-            hash *= DecimalPrecision.FnvPrime;
-
-            for (int i = 0; i < Count; i++)
-            {
-                hash ^= this[i].GetHashKey(decimalPlaces);
-                hash *= DecimalPrecision.FnvPrime;
-            }
+            Triangle triangle = this[i];
+            hash = hashQuantizer.Add(hash, triangle.A);
+            hash = hashQuantizer.Add(hash, triangle.B);
+            hash = hashQuantizer.Add(hash, triangle.C);
         }
 
         return hash;

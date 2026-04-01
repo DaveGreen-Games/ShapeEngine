@@ -209,9 +209,9 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        return DecimalPrecision.QuantizedEquals(Center, other.Center, scale) &&
-               DecimalPrecision.Quantize(Radius, scale) == DecimalPrecision.Quantize(other.Radius, scale);
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(Center, other.Center) &&
+               quantizer.QuantizedEquals(Radius, other.Radius);
     }
 
     /// <summary>
@@ -223,18 +223,8 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
-        ulong hash = DecimalPrecision.FnvOffset;
-        unchecked
-        {
-            hash ^= 3UL;
-            hash *= DecimalPrecision.FnvPrime;
-            hash = DecimalPrecision.HashQuantized(hash, Center.X, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Center.Y, scale);
-            hash = DecimalPrecision.HashQuantized(hash, Radius, scale);
-        }
-
-        return hash;
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(Center.X, Center.Y, Radius);
     }
 
     /// <summary>
