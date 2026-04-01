@@ -565,8 +565,6 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
 
     #region Equality
     
-    //TODO: Fix with new hash code system
-    
     /// <summary>
     /// Returns a hash code for the current <see cref="IntersectionPoints"/> instance.
     /// </summary>
