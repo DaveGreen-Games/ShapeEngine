@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
@@ -20,9 +21,6 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 /// </summary>
 public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulation>
 {
-    private const ulong FnvOffset = 14695981039346656037UL;
-    private const ulong FnvPrime = 1099511628211UL;
-
     #region Helper
 
     private static Triangulation queueBuffer = new();
@@ -99,16 +97,16 @@ public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulati
     {
         if (decimalPlaces < 0) decimalPlaces = DecimalPlaces;
 
-        ulong hash = FnvOffset;
+        ulong hash = DecimalPrecision.FnvOffset;
         unchecked
         {
             hash ^= (ulong)Count;
-            hash *= FnvPrime;
+            hash *= DecimalPrecision.FnvPrime;
 
             for (int i = 0; i < Count; i++)
             {
                 hash ^= this[i].GetHashKey(decimalPlaces);
-                hash *= FnvPrime;
+                hash *= DecimalPrecision.FnvPrime;
             }
         }
 

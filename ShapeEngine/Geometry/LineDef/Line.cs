@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -13,10 +14,6 @@ namespace ShapeEngine.Geometry.LineDef;
 /// </summary>
 public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
 {
-    private const int DefaultDecimalPlaces = 3;
-    private const ulong FnvOffset = 14695981039346656037UL;
-    private const ulong FnvPrime = 1099511628211UL;
-
     /// <summary>
     /// The maximum length used for line calculations, primarily as a safeguard for infinite lines in geometric operations.
     /// </summary>
@@ -337,7 +334,7 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     /// </remarks>
     public bool Equals(Line other)
     {
-        return Equals(other, DefaultDecimalPlaces);
+        return Equals(other, DecimalPrecision.DefaultDecimalPlaces);
     }
 
     /// <summary>
@@ -353,24 +350,24 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     /// </remarks>
     public bool Equals(Line other, int decimalPlaces)
     {
-        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = ToScale(decimalPlaces);
+        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
         bool invalidA = IsInvalidDirection(Direction, scale);
         bool invalidB = IsInvalidDirection(other.Direction, scale);
         if (invalidA || invalidB)
         {
-            return invalidA && invalidB && QuantizedEquals(Point, other.Point, scale);
+            return invalidA && invalidB && DecimalPrecision.QuantizedEquals(Point, other.Point, scale);
         }
 
         Vector2 direction = CanonicalizeDirection(Direction);
         Vector2 otherDirection = CanonicalizeDirection(other.Direction);
-        if (!QuantizedEquals(direction, otherDirection, scale)) return false;
+        if (!DecimalPrecision.QuantizedEquals(direction, otherDirection, scale)) return false;
 
         Vector2 normal = GetCanonicalNormal(direction);
         float offset = Vector2.Dot(normal, Point);
         float otherOffset = Vector2.Dot(normal, other.Point);
-        return Quantize(offset, scale) == Quantize(otherOffset, scale);
+        return DecimalPrecision.Quantize(offset, scale) == DecimalPrecision.Quantize(otherOffset, scale);
     }
 
     /// <summary>
@@ -378,20 +375,20 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
-    public ulong GetHashKey(int decimalPlaces = DefaultDecimalPlaces)
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
     {
-        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = ToScale(decimalPlaces);
-        ulong hash = FnvOffset;
+        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
+        ulong hash = DecimalPrecision.FnvOffset;
         unchecked
         {
             if (IsInvalidDirection(Direction, scale))
             {
                 hash ^= 1UL;
-                hash *= FnvPrime;
-                hash = HashQuantized(hash, Point.X, scale);
-                hash = HashQuantized(hash, Point.Y, scale);
+                hash *= DecimalPrecision.FnvPrime;
+                hash = DecimalPrecision.HashQuantized(hash, Point.X, scale);
+                hash = DecimalPrecision.HashQuantized(hash, Point.Y, scale);
                 return hash;
             }
 
@@ -400,10 +397,10 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
             float offset = Vector2.Dot(normal, Point);
 
             hash ^= 3UL;
-            hash *= FnvPrime;
-            hash = HashQuantized(hash, direction.X, scale);
-            hash = HashQuantized(hash, direction.Y, scale);
-            hash = HashQuantized(hash, offset, scale);
+            hash *= DecimalPrecision.FnvPrime;
+            hash = DecimalPrecision.HashQuantized(hash, direction.X, scale);
+            hash = DecimalPrecision.HashQuantized(hash, direction.Y, scale);
+            hash = DecimalPrecision.HashQuantized(hash, offset, scale);
         }
 
         return hash;
@@ -414,14 +411,14 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
-    public string GetHashKeyHex(int decimalPlaces = DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
 
     /// <summary>
     /// Creates a string representation of this line hash key.
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A stable hexadecimal hash key string.</returns>
-    public string GetHashKeyString(int decimalPlaces = DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
 
     /// <summary>
     /// Determines whether two lines are equal.
@@ -481,49 +478,9 @@ public readonly partial struct Line : IShapeTypeProvider, IEquatable<Line>
 
     private static bool IsInvalidDirection(Vector2 direction, double scale)
     {
-        return Quantize(direction.X, scale) == 0L && Quantize(direction.Y, scale) == 0L;
+        return DecimalPrecision.Quantize(direction.X, scale) == 0L &&
+               DecimalPrecision.Quantize(direction.Y, scale) == 0L;
     }
 
-    private static bool QuantizedEquals(Vector2 a, Vector2 b, double scale)
-    {
-        return Quantize(a.X, scale) == Quantize(b.X, scale) &&
-               Quantize(a.Y, scale) == Quantize(b.Y, scale);
-    }
-
-    private static ulong HashQuantized(ulong hash, float value, double scale)
-    {
-        long quantized = Quantize(value, scale);
-
-        unchecked
-        {
-            hash ^= (ulong)quantized;
-            hash *= FnvPrime;
-        }
-
-        return hash;
-    }
-
-    private static long Quantize(float value, double scale)
-    {
-        if (float.IsNaN(value)) return long.MinValue;
-        if (float.IsPositiveInfinity(value)) return long.MaxValue;
-        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
-
-        long quantized = (long)Math.Round(value * scale);
-        return quantized == 0L ? 0L : quantized;
-    }
-
-    private static double ToScale(int decimalPlaces)
-    {
-        if (decimalPlaces <= 0) return 1.0;
-
-        double scale = 1.0;
-        for (int i = 0; i < decimalPlaces; i++)
-        {
-            scale *= 10.0;
-        }
-
-        return scale;
-    }
 }
 

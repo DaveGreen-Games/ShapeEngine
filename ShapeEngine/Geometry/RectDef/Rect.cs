@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_cs;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
@@ -22,9 +23,6 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
 {
     #region Helper
 
-    private const int DefaultDecimalPlaces = 3;
-    private const ulong FnvOffset = 14695981039346656037UL;
-    private const ulong FnvPrime = 1099511628211UL;
     private static Points pointsBuffer = new();
 
     #endregion
@@ -281,7 +279,7 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </summary>
     /// <param name="other">The rectangle to compare with the current rectangle.</param>
     /// <returns><c>true</c> if the specified rectangle is equal to the current rectangle; otherwise, <c>false</c>.</returns>
-    public bool Equals(Rect other) => Equals(other, DefaultDecimalPlaces);
+    public bool Equals(Rect other) => Equals(other, DecimalPrecision.DefaultDecimalPlaces);
 
     /// <summary>
     /// Determines whether the specified <see cref="Rect"/> is equal to the current <see cref="Rect"/> using quantized comparison.
@@ -291,13 +289,13 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// <returns><c>true</c> if the specified rectangle is equal to the current rectangle after quantization; otherwise, <c>false</c>.</returns>
     public bool Equals(Rect other, int decimalPlaces)
     {
-        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = ToScale(decimalPlaces);
-        return Quantize(X, scale) == Quantize(other.X, scale) &&
-               Quantize(Y, scale) == Quantize(other.Y, scale) &&
-               Quantize(Width, scale) == Quantize(other.Width, scale) &&
-               Quantize(Height, scale) == Quantize(other.Height, scale);
+        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
+        return DecimalPrecision.Quantize(X, scale) == DecimalPrecision.Quantize(other.X, scale) &&
+               DecimalPrecision.Quantize(Y, scale) == DecimalPrecision.Quantize(other.Y, scale) &&
+               DecimalPrecision.Quantize(Width, scale) == DecimalPrecision.Quantize(other.Width, scale) &&
+               DecimalPrecision.Quantize(Height, scale) == DecimalPrecision.Quantize(other.Height, scale);
     }
 
     /// <summary>
@@ -305,20 +303,20 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
-    public ulong GetHashKey(int decimalPlaces = DefaultDecimalPlaces)
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
     {
-        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = ToScale(decimalPlaces);
-        ulong hash = FnvOffset;
+        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
+        ulong hash = DecimalPrecision.FnvOffset;
         unchecked
         {
             hash ^= 4UL;
-            hash *= FnvPrime;
-            hash = HashQuantized(hash, X, scale);
-            hash = HashQuantized(hash, Y, scale);
-            hash = HashQuantized(hash, Width, scale);
-            hash = HashQuantized(hash, Height, scale);
+            hash *= DecimalPrecision.FnvPrime;
+            hash = DecimalPrecision.HashQuantized(hash, X, scale);
+            hash = DecimalPrecision.HashQuantized(hash, Y, scale);
+            hash = DecimalPrecision.HashQuantized(hash, Width, scale);
+            hash = DecimalPrecision.HashQuantized(hash, Height, scale);
         }
 
         return hash;
@@ -329,14 +327,14 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
-    public string GetHashKeyHex(int decimalPlaces = DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
 
     /// <summary>
     /// Creates a string representation of this rectangle hash key.
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A stable hexadecimal hash key string.</returns>
-    public string GetHashKeyString(int decimalPlaces = DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
 
     /// <summary>
     /// Determines whether two <see cref="Rect"/> instances are equal.
@@ -377,41 +375,6 @@ public readonly partial struct Rect : IEquatable<Rect>, IShapeTypeProvider, IClo
         return unchecked((int)(hashKey ^ (hashKey >> 32)));
     }
 
-    private static ulong HashQuantized(ulong hash, float value, double scale)
-    {
-        long quantized = Quantize(value, scale);
-
-        unchecked
-        {
-            hash ^= (ulong)quantized;
-            hash *= FnvPrime;
-        }
-
-        return hash;
-    }
-
-    private static long Quantize(float value, double scale)
-    {
-        if (float.IsNaN(value)) return long.MinValue;
-        if (float.IsPositiveInfinity(value)) return long.MaxValue;
-        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
-
-        long quantized = (long)Math.Round(value * scale);
-        return quantized == 0L ? 0L : quantized;
-    }
-
-    private static double ToScale(int decimalPlaces)
-    {
-        if (decimalPlaces <= 0) return 1.0;
-
-        double scale = 1.0;
-        for (int i = 0; i < decimalPlaces; i++)
-        {
-            scale *= 10.0;
-        }
-
-        return scale;
-    }
 
     #endregion
     

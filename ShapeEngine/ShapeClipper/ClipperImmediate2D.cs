@@ -1,6 +1,7 @@
 using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.TriangulationDef;
@@ -20,20 +21,20 @@ public static class ClipperImmediate2D
     
     public static int DecimalPlaces
     {
-        get => scale.DecimalPlaces;
+        get => precision.DecimalPlaces;
         set
         {
-            scale = new(value);
-            OffsetEngine.Scale = scale;
+            precision = new(value);
+            OffsetEngine.Scale = precision;
         }
     }
 
-    public static double Scale => scale.Scale;
-    public static double InvScale => scale.InvScale;
+    public static double Scale => precision.Scale;
+    public static double InvScale => precision.InvScale;
     #endregion
     
     #region Private Settings
-    private static ShapeClipperScale scale = new(4);
+    private static DecimalPrecision precision = new(4);
     #endregion
     
     #region Reused Clipper Engines

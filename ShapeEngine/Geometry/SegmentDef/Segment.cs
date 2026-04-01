@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolylineDef;
@@ -17,9 +18,6 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
 {
     #region Helper
 
-    private const int DefaultDecimalPlaces = 3;
-    private const ulong FnvOffset = 14695981039346656037UL;
-    private const ulong FnvPrime = 1099511628211UL;
     private static Points pointsBuffer = new();
 
     #endregion
@@ -411,7 +409,7 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
     /// <returns></returns>
     public bool Equals(Segment other)
     {
-        return Equals(other, DefaultDecimalPlaces);
+        return Equals(other, DecimalPrecision.DefaultDecimalPlaces);
     }
 
     /// <summary>
@@ -422,10 +420,11 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
     /// <returns>True if the start and end points match in order after quantization; otherwise, false.</returns>
     public bool Equals(Segment other, int decimalPlaces)
     {
-        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = ToScale(decimalPlaces);
-        return QuantizedEquals(Start, other.Start, scale) && QuantizedEquals(End, other.End, scale);
+        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
+        return DecimalPrecision.QuantizedEquals(Start, other.Start, scale) &&
+               DecimalPrecision.QuantizedEquals(End, other.End, scale);
     }
 
     /// <summary>
@@ -433,20 +432,20 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
-    public ulong GetHashKey(int decimalPlaces = DefaultDecimalPlaces)
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
     {
-        if (decimalPlaces < 0) decimalPlaces = DefaultDecimalPlaces;
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
 
-        double scale = ToScale(decimalPlaces);
-        ulong hash = FnvOffset;
+        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
+        ulong hash = DecimalPrecision.FnvOffset;
         unchecked
         {
             hash ^= 2UL;
-            hash *= FnvPrime;
-            hash = HashQuantized(hash, Start.X, scale);
-            hash = HashQuantized(hash, Start.Y, scale);
-            hash = HashQuantized(hash, End.X, scale);
-            hash = HashQuantized(hash, End.Y, scale);
+            hash *= DecimalPrecision.FnvPrime;
+            hash = DecimalPrecision.HashQuantized(hash, Start.X, scale);
+            hash = DecimalPrecision.HashQuantized(hash, Start.Y, scale);
+            hash = DecimalPrecision.HashQuantized(hash, End.X, scale);
+            hash = DecimalPrecision.HashQuantized(hash, End.Y, scale);
         }
 
         return hash;
@@ -457,14 +456,14 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
-    public string GetHashKeyHex(int decimalPlaces = DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
 
     /// <summary>
     /// Creates a string representation of this segment hash key.
     /// </summary>
     /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
     /// <returns>A stable hexadecimal hash key string.</returns>
-    public string GetHashKeyString(int decimalPlaces = DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
 
     /// <summary>
     /// Returns the hash code for this segment.
@@ -510,47 +509,7 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
         return false;
     }
 
-    private static bool QuantizedEquals(Vector2 a, Vector2 b, double scale)
-    {
-        return Quantize(a.X, scale) == Quantize(b.X, scale) &&
-               Quantize(a.Y, scale) == Quantize(b.Y, scale);
-    }
 
-    private static ulong HashQuantized(ulong hash, float value, double scale)
-    {
-        long quantized = Quantize(value, scale);
-
-        unchecked
-        {
-            hash ^= (ulong)quantized;
-            hash *= FnvPrime;
-        }
-
-        return hash;
-    }
-
-    private static long Quantize(float value, double scale)
-    {
-        if (float.IsNaN(value)) return long.MinValue;
-        if (float.IsPositiveInfinity(value)) return long.MaxValue;
-        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
-
-        long quantized = (long)Math.Round(value * scale);
-        return quantized == 0L ? 0L : quantized;
-    }
-
-    private static double ToScale(int decimalPlaces)
-    {
-        if (decimalPlaces <= 0) return 1.0;
-
-        double scale = 1.0;
-        for (int i = 0; i < decimalPlaces; i++)
-        {
-            scale *= 10.0;
-        }
-
-        return scale;
-    }
     #endregion
 
     #region Lightning

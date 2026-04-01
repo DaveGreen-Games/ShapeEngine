@@ -1,12 +1,13 @@
 using System.Numerics;
 using Clipper2Lib;
+using ShapeEngine.Core;
 
 namespace ShapeEngine.ShapeClipper;
 
 public class ShapeClipperOffset
 {
     private ClipperOffset offsetEngine;
-    public ShapeClipperScale Scale;
+    public DecimalPrecision Scale;
     private readonly Path64 bufferPath64 = new(256);
     
     public double MiterLimit

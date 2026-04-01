@@ -2,6 +2,7 @@ using System.Numerics;
 using Clipper2Lib;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
@@ -18,9 +19,6 @@ namespace ShapeEngine.ShapeClipper;
 public sealed class TriMesh : IEquatable<TriMesh>
 {
     #region Constants
-    
-    private const ulong FnvOffset = 14695981039346656037UL;
-    private const ulong FnvPrime = 1099511628211UL;
     
     #endregion
     
@@ -202,7 +200,7 @@ public sealed class TriMesh : IEquatable<TriMesh>
             Vector2 a = triangleVertices[i];
             Vector2 b = triangleVertices[i + 1];
             Vector2 c = triangleVertices[i + 2];
-            Geometry.TriangleDef.Triangle t = new(a, b, c);
+            Triangle t = new(a, b, c);
             dst.Add(t);
         }
     }
@@ -247,18 +245,18 @@ public sealed class TriMesh : IEquatable<TriMesh>
 
         var triangles = triangleVertices;
         int trianglePointCount = triangles.Count;
-        double scale = ToScale(decimalPlaces);
-        ulong hash = FnvOffset;
+        double scale = DecimalPrecision.GetScaleFactor(decimalPlaces);
+        ulong hash = DecimalPrecision.FnvOffset;
         unchecked
         {
             hash ^= (ulong)trianglePointCount;
-            hash *= FnvPrime;
+            hash *= DecimalPrecision.FnvPrime;
 
             for (int i = 0; i < trianglePointCount; i++)
             {
                 var p = triangles[i];
-                hash = HashQuantized(hash, p.X, scale);
-                hash = HashQuantized(hash, p.Y, scale);
+                hash = DecimalPrecision.HashQuantized(hash, p.X, scale);
+                hash = DecimalPrecision.HashQuantized(hash, p.Y, scale);
             }
         }
 
@@ -684,12 +682,12 @@ public sealed class TriMesh : IEquatable<TriMesh>
         int trianglePointCount = triangles.Count;
         if (trianglePointCount != otherTriangles.Count) return false;
 
-        double scale = ToScale(Math.Max(DecimalPlaces, other.DecimalPlaces));
+        double scale = DecimalPrecision.GetScaleFactor(Math.Max(DecimalPlaces, other.DecimalPlaces));
         for (int i = 0; i < trianglePointCount; i++)
         {
             var a = triangles[i];
             var b = otherTriangles[i];
-            if (!QuantizedEquals(a, b, scale)) return false;
+            if (!DecimalPrecision.QuantizedEquals(a, b, scale)) return false;
         }
 
         return true;
@@ -799,49 +797,5 @@ public sealed class TriMesh : IEquatable<TriMesh>
         return pivot + (point - pivot).Rotate(amountRad);
     }
     
-    #endregion
-    
-    #region Private Hash Functions
-    private static bool QuantizedEquals(Vector2 a, Vector2 b, double scale)
-    {
-        return Quantize(a.X, scale) == Quantize(b.X, scale) &&
-               Quantize(a.Y, scale) == Quantize(b.Y, scale);
-    }
-
-    private static ulong HashQuantized(ulong hash, float value, double scale)
-    {
-        long quantized = Quantize(value, scale);
-
-        unchecked
-        {
-            hash ^= (ulong)quantized;
-            hash *= FnvPrime;
-        }
-
-        return hash;
-    }
-
-    private static long Quantize(float value, double scale)
-    {
-        if (float.IsNaN(value)) return long.MinValue;
-        if (float.IsPositiveInfinity(value)) return long.MaxValue;
-        if (float.IsNegativeInfinity(value)) return long.MinValue + 1;
-
-        long quantized = (long)Math.Round(value * scale);
-        return quantized == 0L ? 0L : quantized;
-    }
-
-    private static double ToScale(int decimalPlaces)
-    {
-        if (decimalPlaces <= 0) return 1.0;
-
-        double scale = 1.0;
-        for (int i = 0; i < decimalPlaces; i++)
-        {
-            scale *= 10.0;
-        }
-
-        return scale;
-    }
     #endregion
 }
