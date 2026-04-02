@@ -219,7 +219,17 @@ public class ShapeDrawingTestExample : ExampleScene
 
         BuildShapes();
 
-        Title = $"{GetCurrentShape()} :: {GetCurrentCase().Name}";
+        Title = $"{GetCurrentShape()} {GetCurrentCase().Name}";
+    }
+
+    protected override void OnActivate(Scene oldScene)
+    {
+        Title = $"{GetCurrentShape()} {GetCurrentCase().Name}";
+    }
+
+    override protected void OnDeactivate()
+    {
+        Title = "Shape Drawing Test";
     }
 
     protected override void OnDrawGameExample(ScreenInfo game)
@@ -288,7 +298,7 @@ public class ShapeDrawingTestExample : ExampleScene
 
     private void BuildParamSliders()
     {
-        paramSliders[ParamId.Thickness] = new("Thickness", 6f, 1f, 32f) { Integer = false };
+        paramSliders[ParamId.Thickness] = new("Thickness", 6f, 1f, 64f) { Integer = false };
         paramSliders[ParamId.Smoothness] = new("Smoothness", 0.5f, 0f, 1f) { Percentage = true };
         paramSliders[ParamId.Percentage] = new("Percentage", 0.6f, -1f, 1f) { Percentage = true };
         paramSliders[ParamId.Scale] = new("Scale", 0.6f, 0f, 1f) { Percentage = true };
@@ -380,8 +390,8 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Corners Relative", () => quad.DrawCornersRelative(LineThickness, DrawColor, CornerFactor), ParamId.Thickness, ParamId.CornerFactor),
             new("Draw Chamfered Corners", () => quad.DrawChamferedCorners(DrawColor, CornerLength), ParamId.CornerLength),
             new("Draw Chamfered Corners Relative", () => quad.DrawChamferedCornersRelative(DrawColor, CornerFactor), ParamId.CornerFactor),
-            new("Draw Chamfered Corners Lines", () => quad.DrawChamferedCornersLines(LineThickness, DrawColor, CornerLength), ParamId.Thickness, ParamId.CornerLength),
-            new("Draw Chamfered Corners Lines Relative", () => quad.DrawChamferedCornersLinesRelative(LineThickness, DrawColor, CornerFactor), ParamId.Thickness, ParamId.CornerFactor),
+            new("Draw Chamfered Corners Lines", () => quad.DrawChamferedCornersLines(LineThickness, DrawColor, CornerLength * 0.25f, CornerLength, CornerLength * 0.25f, CornerLength), ParamId.Thickness, ParamId.CornerLength),
+            new("Draw Chamfered Corners Lines Relative", () => quad.DrawChamferedCornersLinesRelative(LineThickness, DrawColor, CornerFactor, CornerFactor * 0.5f, CornerFactor, CornerFactor * 0.5f), ParamId.Thickness, ParamId.CornerFactor),
         ];
 
         cases[ShapeType.Polygon] =
