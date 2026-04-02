@@ -195,6 +195,7 @@ public static class PolygonDrawing
 
     #endregion
 
+    //TODO: Rework with ClipperImmediate2d system!
     #region Draw
 
     /// <summary>
@@ -223,8 +224,7 @@ public static class PolygonDrawing
 
     #endregion
     
-    //TODO: Rework all below with new ClipperImmediate2d system!
-    
+    //TODO: Rework with ClipperImmediate2d system!
     #region Draw Lines Perimeter & Percentage
     
     /// <summary>
@@ -666,7 +666,8 @@ public static class PolygonDrawing
     }
     #endregion
     
-    #region Draw Lines Perimeter & Percentage Capped
+    //TODO: Remove completely -> CapType moves to normal Lines Perimeter & Percentage!
+    #region Draw Lines Perimeter & Percentage Capped 
 
     /// <summary>
     /// Draws a portion of the polygon's perimeter as a thick line with capped ends, starting at a given index.
@@ -792,7 +793,7 @@ public static class PolygonDrawing
 
     #endregion
     
-    //TODO: still creates artifacts in corners (ignore?)
+    //TODO: Rework with ClipperImmediate2d system!
     #region Draw Lines
 
     /// <summary>
@@ -1025,7 +1026,7 @@ public static class PolygonDrawing
 
     #endregion
 
-    //TODO: still creates artifacts in corners (ignore?)
+    //TODO: Remove completely
     #region Draw Lines Convex
 
     /// <summary>

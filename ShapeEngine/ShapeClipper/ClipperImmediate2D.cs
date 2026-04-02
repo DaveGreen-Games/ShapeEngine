@@ -2,16 +2,11 @@ using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.TriangulationDef;
 
-
-
-//TODO:
-// - Go through Polygon/Polyline/Points and clean up (no duplicates, clear naming, result parameter instead of return value, no extra static functions that could be instance functions, etc.)
-// - PolygonDrawing / PolylineDrawing overhaul with ClipperImmediate2d
-// - Quad/Rect Chamfered Corners using ClipperImmeadiate2D
 namespace ShapeEngine.ShapeClipper;
 
 //TODO: Rename
@@ -93,9 +88,9 @@ public static class ClipperImmediate2D
     
     //TODO: Add DrawPolygonWithHoles (Polygons)
     
-    //TODO: Add DrawPolygonOutlinePercentage/Perimeter (Polygon.ToPolylinePercentage/Perimeter)
+    //TODO: Add DrawPolygonOutlinePercentage/Perimeter (Polygon.ToPolylinePercentage/Perimeter) -> use LineCapType parameter and ToShapeClipperEndType conversion
     
-    //TODO: Add DrawPolylinePercentage/Perimeter (Polyline.ToPolylinePercentage/Perimeter)
+    //TODO: Add DrawPolylinePercentage/Perimeter (Polyline.ToPolylinePercentage/Perimeter) -> use LineCapType parameter and ToShapeClipperEndType conversion
     
     
     #endregion
@@ -1019,6 +1014,27 @@ public static class ClipperImmediate2D
     public static ShapeClipperClipType ToShapeClipperClipType(this ClipType clipType)
     {
         return (ShapeClipperClipType)clipType;
+    }
+
+    //TODO: Docs
+    public static ShapeClipperEndType ToShapeClipperEndType(this LineCapType capType)
+    {
+        if (capType is LineCapType.None) return ShapeClipperEndType.Butt;
+        if (capType is LineCapType.Extended) return ShapeClipperEndType.Square;
+        if (capType is LineCapType.Capped) return ShapeClipperEndType.Round;
+        if (capType is LineCapType.CappedExtended) return ShapeClipperEndType.Round;
+        else return ShapeClipperEndType.Butt;
+    }
+    
+    //TODO: Docs
+    public static LineCapType ToLineCapType(this ShapeClipperEndType endType)
+    {
+        if (endType is ShapeClipperEndType.Polygon) return LineCapType.None;
+        if (endType is ShapeClipperEndType.Joined) return LineCapType.None;
+        if (endType is ShapeClipperEndType.Butt) return LineCapType.None;
+        if (endType is ShapeClipperEndType.Square) return LineCapType.Extended;
+        if (endType is ShapeClipperEndType.Round) return LineCapType.CappedExtended;
+        else return LineCapType.None;
     }
     #endregion
     
