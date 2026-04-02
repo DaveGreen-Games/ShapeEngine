@@ -1,7 +1,4 @@
 using System.Numerics;
-using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.PointsDef;
-using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
@@ -330,19 +327,18 @@ public partial class Polyline
         // }
     }
     
-    //TODO: Fix docs
     /// <summary>
-    /// Triangulates the stroked outline of the initial portion of this polyline up to the specified traveled distance and writes the result into the provided <see cref="Triangulation"/>.
+    /// Triangulates the stroked outline of a partial section of this polyline, measured by traveled distance, and writes the generated triangles into the provided <see cref="Triangulation"/>.
     /// </summary>
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
-    /// <param name="perimeterToDraw">The distance to trace along the polyline before triangulating the stroke.</param>
-    /// <param name="thickness">The stroke thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
-    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="perimeterToDraw">The distance to trace along the polyline before triangulating the resulting stroked section.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated partial stroke.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePerimeter(float, Polyline)"/>, then triangulates that stroked path.
+    /// This method does not modify the polyline itself. It delegates to the clipping backend to derive the partial stroke and triangulate it.
     /// </remarks>
     public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
@@ -350,19 +346,18 @@ public partial class Polyline
         ClipperImmediate2D.CreatePolylineTriangulationPerimeter(this, perimeterToDraw, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     
-    //TODO: Fix docs
     /// <summary>
-    /// Triangulates the stroked outline of the initial portion of this polyline up to the specified traveled distance and writes the result into the provided <see cref="TriMesh"/>.
+    /// Triangulates the stroked outline of a partial section of this polyline, measured by traveled distance, and writes the generated geometry into the provided <see cref="TriMesh"/>.
     /// </summary>
     /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
-    /// <param name="perimeterToDraw">The distance to trace along the polyline before triangulating the stroke.</param>
-    /// <param name="thickness">The stroke thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
-    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="perimeterToDraw">The distance to trace along the polyline before triangulating the resulting stroked section.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated partial stroke.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePerimeter(float, Polyline)"/>, then triangulates that stroked path.
+    /// This method does not modify the polyline itself. It delegates to the clipping backend to derive the partial stroke and triangulate it.
     /// </remarks>
     public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
@@ -409,43 +404,39 @@ public partial class Polyline
         // ToPolylinePerimeter(totalPerimeter * f, result);
     }
 
-    //TODO: Fix docs
     /// <summary>
-    /// Triangulates the stroked outline of the initial portion of this polyline defined by a fraction of its total length and writes the result into the provided <see cref="Triangulation"/>.
+    /// Triangulates the stroked outline of a partial section of this polyline, measured as a fraction of its total length, and writes the generated triangles into the provided <see cref="Triangulation"/>.
     /// </summary>
-    /// <param name="polygon">Unused parameter retained for API compatibility.</param>
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
-    /// <param name="f">The fraction of the total polyline length to include before triangulating the stroke.</param>
-    /// <param name="thickness">The stroke thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
-    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="f">The fraction of the total polyline length to include before triangulating the resulting stroked section.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated partial stroke.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePercentage(float, Polyline)"/>, then triangulates that stroked path.
+    /// This method does not modify the polyline itself. It delegates to the clipping backend to derive the partial stroke and triangulate it.
     /// </remarks>
-    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, float thickness, 
+    public void TriangulateOutlinePercentage(Triangulation result, float f, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolylineTriangulationPercentage(this, f, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
    
-    //TODO: Fix docs
     /// <summary>
-    /// Triangulates the stroked outline of the initial portion of this polyline defined by a fraction of its total length and writes the result into the provided <see cref="TriMesh"/>.
+    /// Triangulates the stroked outline of a partial section of this polyline, measured as a fraction of its total length, and writes the generated geometry into the provided <see cref="TriMesh"/>.
     /// </summary>
-    /// <param name="polygon">Unused parameter retained for API compatibility.</param>
     /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
-    /// <param name="f">The fraction of the total polyline length to include before triangulating the stroke.</param>
-    /// <param name="thickness">The stroke thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for stroke joins.</param>
-    /// <param name="beveled">Whether joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated partial polyline.</param>
+    /// <param name="f">The fraction of the total polyline length to include before triangulating the resulting stroked section.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated partial stroke.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first builds a temporary partial polyline with <see cref="ToPolylinePercentage(float, Polyline)"/>, then triangulates that stroked path.
+    /// This method does not modify the polyline itself. It delegates to the clipping backend to derive the partial stroke and triangulate it.
     /// </remarks>
-    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, float thickness, 
+    public void TriangulateOutlinePercentage(TriMesh result, float f, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolylineTriangulationPercentage(this, f, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);

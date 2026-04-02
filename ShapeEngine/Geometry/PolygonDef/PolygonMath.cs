@@ -1020,20 +1020,19 @@ public partial class Polygon
         // }
     }
     
-    //TODO: fix docs
     /// <summary>
-    /// Triangulates a stroked portion of the polygon perimeter and writes the generated triangles into the provided <see cref="Triangulation"/>.
+    /// Triangulates the stroked outline of a partial section of this polygon's perimeter, measured by traveled distance, and writes the generated triangles into the provided <see cref="Triangulation"/>.
     /// </summary>
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
-    /// <param name="perimeterToDraw">The positive perimeter length to trace before triangulating the outline.</param>
-    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
-    /// <param name="thickness">The outline thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
-    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="perimeterToDraw">The perimeter distance to trace before triangulating the resulting open stroke.</param>
+    /// <param name="startIndex">The vertex index at which tracing starts. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive perimeter segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated perimeter section.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first converts the requested perimeter segment into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// This method does not modify the polygon itself. It delegates to the clipping backend to derive the partial perimeter stroke and triangulate it.
     /// </remarks>
     public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
@@ -1041,20 +1040,19 @@ public partial class Polygon
         ClipperImmediate2D.CreatePolygonOutlineTriangulationPerimeter(this, perimeterToDraw, startIndex, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     
-    //TODO: fix docs
     /// <summary>
-    /// Triangulates a stroked portion of the polygon perimeter and writes the generated triangles into the provided <see cref="TriMesh"/>.
+    /// Triangulates the stroked outline of a partial section of this polygon's perimeter, measured by traveled distance, and writes the generated geometry into the provided <see cref="TriMesh"/>.
     /// </summary>
     /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
-    /// <param name="perimeterToDraw">The positive perimeter length to trace before triangulating the outline.</param>
-    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
-    /// <param name="thickness">The outline thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
-    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="perimeterToDraw">The perimeter distance to trace before triangulating the resulting open stroke.</param>
+    /// <param name="startIndex">The vertex index at which tracing starts. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive perimeter segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated perimeter section.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first converts the requested perimeter segment into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// This method does not modify the polygon itself. It delegates to the clipping backend to derive the partial perimeter stroke and triangulate it.
     /// </remarks>
     public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
@@ -1102,45 +1100,41 @@ public partial class Polygon
         // ToPolylinePerimeter(totalPerimeter * f, startIndex, result);
     }
     
-    //TODO: fix docs
     /// <summary>
-    /// Triangulates a stroked portion of the polygon perimeter defined by a percentage of its total length and writes the generated triangles into the provided <see cref="Triangulation"/>.
+    /// Triangulates the stroked outline of a partial section of this polygon's perimeter, measured as a fraction of its total length, and writes the generated triangles into the provided <see cref="Triangulation"/>.
     /// </summary>
-    /// <param name="polygon">Unused polygon parameter retained for API compatibility; the current polygon instance is used to generate the perimeter segment.</param>
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
-    /// <param name="f">The fraction of the total perimeter to trace before triangulating the outline.</param>
-    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
-    /// <param name="thickness">The outline thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
-    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="f">The fraction of the total perimeter to trace before triangulating the resulting open stroke.</param>
+    /// <param name="startIndex">The vertex index at which tracing starts. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive perimeter segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated perimeter section.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first converts the requested perimeter fraction into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// This method does not modify the polygon itself. It delegates to the clipping backend to derive the partial perimeter stroke and triangulate it.
     /// </remarks>
-    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, int startIndex, float thickness, 
+    public void TriangulateOutlinePercentage(Triangulation result, float f, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolygonOutlineTriangulationPercentage(this, f, startIndex, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
    
-    //TODO: fix docs
     /// <summary>
-    /// Triangulates a stroked portion of the polygon perimeter defined by a percentage of its total length and writes the generated triangles into the provided <see cref="TriMesh"/>.
+    /// Triangulates the stroked outline of a partial section of this polygon's perimeter, measured as a fraction of its total length, and writes the generated geometry into the provided <see cref="TriMesh"/>.
     /// </summary>
-    /// <param name="polygon">Unused polygon parameter retained for API compatibility; the current polygon instance is used to generate the perimeter segment.</param>
     /// <param name="result">The destination triangle mesh that receives the generated vertices and indices.</param>
-    /// <param name="f">The fraction of the total perimeter to trace before triangulating the outline.</param>
-    /// <param name="startIndex">The starting vertex index for tracing the perimeter. The value is wrapped to the polygon's valid index range.</param>
-    /// <param name="thickness">The outline thickness to triangulate.</param>
-    /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
-    /// <param name="beveled">Whether sharp joins that exceed the miter limit should be beveled.</param>
-    /// <param name="endType">The end-cap style to use for the generated open polyline outline.</param>
+    /// <param name="f">The fraction of the total perimeter to trace before triangulating the resulting open stroke.</param>
+    /// <param name="startIndex">The vertex index at which tracing starts. The value is wrapped to the polygon's valid index range.</param>
+    /// <param name="thickness">The stroke thickness used to build the outline geometry.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for joins between consecutive perimeter segments.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should fall back to beveled corners.</param>
+    /// <param name="capType">The cap style to use at the open ends of the generated perimeter section.</param>
     /// <param name="useDelaunay">Whether to apply Delaunay refinement when creating the triangulation.</param>
     /// <remarks>
-    /// This method first converts the requested perimeter fraction into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
+    /// This method does not modify the polygon itself. It delegates to the clipping backend to derive the partial perimeter stroke and triangulate it.
     /// </remarks>
-    public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, int startIndex, float thickness, 
+    public void TriangulateOutlinePercentage(TriMesh result, float f, int startIndex, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
         ClipperImmediate2D.CreatePolygonOutlineTriangulationPercentage(this, f, startIndex, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
