@@ -21,11 +21,6 @@ namespace ShapeEngine.Geometry.PolylineDef;
 /// </remarks>
 public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
 {
-    #region Helper
-
-    private static Polyline buffer = new();
-
-    #endregion
     
     #region Constructors
     /// <summary>

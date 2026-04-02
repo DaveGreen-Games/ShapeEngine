@@ -985,39 +985,42 @@ public partial class Polygon
     /// </remarks>
     public void ToPolylinePerimeter(float perimeterToDraw, int startIndex, Polyline result)
     {
-        if (perimeterToDraw <= 0f) return;
+        ClipperImmediate2D.ToPolylinePerimeter(this, perimeterToDraw, startIndex, result);
         
-        if (Count <= 1) return;
-        
-        result.Clear();
-        
-        bool ccw = perimeterToDraw > 0;
-        float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
-        float accumulatedPerimeter = 0f;
-        int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
-
-        //create polyline based on perimeter & start index
-        while (absPerimeterToDraw > accumulatedPerimeter)
-        {
-            int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
-            var cur = this[currentIndex];
-            var next = this[nextIndex];
-            currentIndex = nextIndex;
-            result.Add(cur);
-            float segmentLength = (next - cur).Length();
-
-            if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
-            {
-                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
-                var end = cur.Lerp(next, f);
-                result.Add(end);
-                break;
-            }
-
-            accumulatedPerimeter += segmentLength;
-        }
+        // if (perimeterToDraw <= 0f) return;
+        //
+        // if (Count <= 1) return;
+        //
+        // result.Clear();
+        //
+        // bool ccw = perimeterToDraw > 0;
+        // float absPerimeterToDraw = MathF.Abs(perimeterToDraw);
+        // float accumulatedPerimeter = 0f;
+        // int currentIndex = ShapeMath.WrapIndex(Count, startIndex);
+        //
+        // //create polyline based on perimeter & start index
+        // while (absPerimeterToDraw > accumulatedPerimeter)
+        // {
+        //     int nextIndex = ShapeMath.WrapIndex(Count, currentIndex + (ccw ? 1 : -1));
+        //     var cur = this[currentIndex];
+        //     var next = this[nextIndex];
+        //     currentIndex = nextIndex;
+        //     result.Add(cur);
+        //     float segmentLength = (next - cur).Length();
+        //
+        //     if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
+        //     {
+        //         float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
+        //         var end = cur.Lerp(next, f);
+        //         result.Add(end);
+        //         break;
+        //     }
+        //
+        //     accumulatedPerimeter += segmentLength;
+        // }
     }
     
+    //TODO: fix docs
     /// <summary>
     /// Triangulates a stroked portion of the polygon perimeter and writes the generated triangles into the provided <see cref="Triangulation"/>.
     /// </summary>
@@ -1033,12 +1036,12 @@ public partial class Polygon
     /// This method first converts the requested perimeter segment into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
     /// </remarks>
     public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, int startIndex, float thickness, 
-        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+        float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
-        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+        ClipperImmediate2D.CreatePolygonOutlineTriangulationPerimeter(this, perimeterToDraw, startIndex, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     
+    //TODO: fix docs
     /// <summary>
     /// Triangulates a stroked portion of the polygon perimeter and writes the generated triangles into the provided <see cref="TriMesh"/>.
     /// </summary>
@@ -1054,10 +1057,9 @@ public partial class Polygon
     /// This method first converts the requested perimeter segment into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
     /// </remarks>
     public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, int startIndex, float thickness, 
-        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+        float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ToPolylinePerimeter(perimeterToDraw, startIndex, polylinePerimeterBuffer);
-        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+        ClipperImmediate2D.CreatePolygonOutlineTriangulationPerimeter(this, perimeterToDraw, startIndex, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     #endregion
 
@@ -1073,32 +1075,34 @@ public partial class Polygon
     /// </remarks>
     public void ToPolylinePercentage(float f, int startIndex, Polyline result)
     {
-        if (f <= 0) return;
-        
-        if (Count <= 1) return;
-
-        if (f >= 1f)
-        {
-            result.Clear();
-            foreach (var p in this)
-            {
-                result.Add(p);   
-            }
-            return;
-        }
-        
-        float totalPerimeter = 0f;
-        
-        for (var i = 0; i < Count; i++)
-        {
-            var start = this[i];
-            var end = this[(i + 1) % Count];
-            float l = (end - start).Length();
-            totalPerimeter += l;
-        }
-        ToPolylinePerimeter(totalPerimeter * f, startIndex, result);
+        ClipperImmediate2D.ToPolylinePercentage(this, f, startIndex, result);
+        // if (f <= 0) return;
+        //
+        // if (Count <= 1) return;
+        //
+        // if (f >= 1f)
+        // {
+        //     result.Clear();
+        //     foreach (var p in this)
+        //     {
+        //         result.Add(p);   
+        //     }
+        //     return;
+        // }
+        //
+        // float totalPerimeter = 0f;
+        //
+        // for (var i = 0; i < Count; i++)
+        // {
+        //     var start = this[i];
+        //     var end = this[(i + 1) % Count];
+        //     float l = (end - start).Length();
+        //     totalPerimeter += l;
+        // }
+        // ToPolylinePerimeter(totalPerimeter * f, startIndex, result);
     }
-   
+    
+    //TODO: fix docs
     /// <summary>
     /// Triangulates a stroked portion of the polygon perimeter defined by a percentage of its total length and writes the generated triangles into the provided <see cref="Triangulation"/>.
     /// </summary>
@@ -1115,12 +1119,12 @@ public partial class Polygon
     /// This method first converts the requested perimeter fraction into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
     /// </remarks>
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, Triangulation result, float f, int startIndex, float thickness, 
-        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+        float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
-        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+        ClipperImmediate2D.CreatePolygonOutlineTriangulationPercentage(this, f, startIndex, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
    
+    //TODO: fix docs
     /// <summary>
     /// Triangulates a stroked portion of the polygon perimeter defined by a percentage of its total length and writes the generated triangles into the provided <see cref="TriMesh"/>.
     /// </summary>
@@ -1137,10 +1141,9 @@ public partial class Polygon
     /// This method first converts the requested perimeter fraction into a temporary <see cref="Polyline"/>, then triangulates that stroked path.
     /// </remarks>
     public void TriangulateOutlinePercentage(IReadOnlyList<Vector2> polygon, TriMesh result, float f, int startIndex, float thickness, 
-        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+        float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ToPolylinePercentage(f, startIndex, polylinePerimeterBuffer);
-        ClipperImmediate2D.CreatePolylineTriangulation(polylinePerimeterBuffer, thickness, miterLimit, beveled, endType, useDelaunay, result);
+        ClipperImmediate2D.CreatePolygonOutlineTriangulationPercentage(this, f, startIndex, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     #endregion
 

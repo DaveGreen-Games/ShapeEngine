@@ -44,11 +44,19 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
     #region Helper Members
     
     private static IntersectionPoints intersectionPointsReference = new(4);
+    
+    
+    
+    //TODO: Can it be offloaded to ClipperImmediate2D?
     private static Triangulation triangulationBuffer = new();
-    private static Polyline polylinePerimeterBuffer = new();
+    
+    //TODO: Can it be offloaded to ClipperImmediate2D?
     private static Paths64 clipResultBuffer = new();
     private static Polygon clipPolygonBuffer = new();
     private static Paths64PooledBuffer clipPooledBuffer = new();
+    
+    
+    
     private static List<WeightedItem<Triangle>> weightedTrianglesBuffer = new();
     private static List<Triangle> pickedTrianglesBuffer = new();
     private static Segments segmentsBuffer = new();
