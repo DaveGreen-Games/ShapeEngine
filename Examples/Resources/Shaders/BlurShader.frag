@@ -7,22 +7,21 @@ uniform sampler2D texture0;
 // NOTE Render size values must be passed from code
 uniform float renderWidth = 800;
 uniform float renderHeight = 450;
-
-float offset[3] = float[](0.0, 1.3846153846, 3.2307692308);
-float weight[3] = float[](0.2270270270, 0.3162162162, 0.0702702703);
+uniform float blurStrength = 15.0;
 
 
 void main()
 {
-    
-    vec4 texelColor = texture(texture0, fragTexCoord)*weight[0];
-    for (int i = 1; i < 3; i++)
-    {
-        texelColor += texture(texture0, fragTexCoord + vec2(offset[i])/renderWidth)*weight[i];
-        texelColor += texture(texture0, fragTexCoord - vec2(offset[i])/renderWidth)*weight[i];
-                
-    }
-    finalColor = texelColor;
+    vec2 texelSize = vec2(1.0 / max(renderWidth, 1.0), 1.0 / max(renderHeight, 1.0));
+    vec2 blurOffset = texelSize * max(blurStrength, 0.0);
+
+    vec4 center = texture(texture0, fragTexCoord);
+    vec4 left = texture(texture0, fragTexCoord - vec2(blurOffset.x, 0.0));
+    vec4 right = texture(texture0, fragTexCoord + vec2(blurOffset.x, 0.0));
+    vec4 up = texture(texture0, fragTexCoord + vec2(0.0, blurOffset.y));
+    vec4 down = texture(texture0, fragTexCoord - vec2(0.0, blurOffset.y));
+
+    finalColor = (center + left + right + up + down) * 0.2;
 }
 
 //previous version
