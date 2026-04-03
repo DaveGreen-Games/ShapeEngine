@@ -378,6 +378,10 @@ public class GameloopExamples : Game
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/Darkness.frag", out var darkness))
             {
                 ShapeShader darknessShader = new(darkness, darknessID, false, 6);
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueFloat(darknessShader.Shader, "maxDis", 0.5f);
+                ShapeShader.SetValueColor(darknessShader.Shader, "color", ColorRgba.Black);
                 shapeShaders.Add(darknessShader);
             }
             
@@ -522,6 +526,13 @@ public class GameloopExamples : Game
             {
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", w);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", h);
+            }
+
+            var darknessShader = ScreenShaders.Get(darknessID);
+            if (darknessShader != null)
+            {
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderHeight", h);
             }
         
             var bloomShader = ScreenShaders.Get(bloomShaderID);
