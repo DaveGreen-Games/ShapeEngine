@@ -366,6 +366,10 @@ public class GameloopExamples : Game
             {
                 ShapeShader bloomShader = new(bloom, bloomShaderID, false, orderCount++);
                 ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
+                ShapeShader.SetValueFloat(bloomShader.Shader, "threshold", 0.75f);
+                ShapeShader.SetValueFloat(bloomShader.Shader, "softThreshold", 0.15f);
+                ShapeShader.SetValueFloat(bloomShader.Shader, "blurSpread", 5f);//1.5
+                ShapeShader.SetValueFloat(bloomShader.Shader, "bloomIntensity", 3.0f);//1.0
                 shapeShaders.Add(bloomShader);
             }
 
