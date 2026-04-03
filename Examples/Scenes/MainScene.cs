@@ -39,6 +39,8 @@ namespace Examples.Scenes
         private readonly InputActionLabel quitLabel;
 
         private readonly TextureSurface textureSurface;
+
+        private List<uint> deactivatedShaderIds = new();
         
         public MainScene()
         {
@@ -253,11 +255,31 @@ namespace Examples.Scenes
         protected override void OnActivate(Scene oldScene)
         {
             navigator.StartNavigation();
+            var shaders = GameloopExamples.Instance.ScreenShaders;
+            if (shaders != null)
+            {
+                deactivatedShaderIds.Clear();
+                var activeShaders = shaders.GetActiveShaders();
+                foreach (var shader in activeShaders)
+                {
+                    shader.Enabled = false;
+                    deactivatedShaderIds.Add(shader.ID);
+                }
+            }
         }
 
         protected override void OnDeactivate()
         {
             navigator.EndNavigation();
+            var shaders = GameloopExamples.Instance.ScreenShaders;
+            if (shaders != null && deactivatedShaderIds.Count > 0)
+            {
+                foreach (var id in deactivatedShaderIds)
+                {
+                    var shader = shaders.Get(id);
+                    if(shader != null) shader.Enabled = true;
+                }
+            }
         }
 
         protected override void OnClose()
