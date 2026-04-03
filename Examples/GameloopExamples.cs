@@ -413,6 +413,10 @@ public class GameloopExamples : Game
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag", out var chromaticAberration))
             {
                 ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, orderCount);
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "amount", new Vector2(2f, 2f));
                 shapeShaders.Add(chromaticAberrationShader);
             }
             
@@ -546,6 +550,13 @@ public class GameloopExamples : Game
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderWidth", w);
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderHeight", h);
             }
+
+            var chromaticAberrationShader = ScreenShaders.Get(chromaticAberrationID);
+            if (chromaticAberrationShader != null)
+            {
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderHeight", h);
+            }
         
             var bloomShader = ScreenShaders.Get(bloomShaderID);
             if (bloomShader != null)
@@ -613,6 +624,13 @@ public class GameloopExamples : Game
                 ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", game.RelativeMousePositionCentered);
             }
             
+            var chromaticAberrationShader = ScreenShaders.Get(chromaticAberrationID);
+            if (chromaticAberrationShader != null && chromaticAberrationShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "amount", new Vector2(5, 5));
+            }
+            
             var overdrawShader = ScreenShaders.Get(overdrawID);
             if (overdrawShader != null && overdrawShader.Enabled)
             {
@@ -623,12 +641,11 @@ public class GameloopExamples : Game
                 }
             
             }
-
-            var blurStrength = game.RelativeMousePosition.X * 15;
             
             var blurShader = ScreenShaders.Get(blurID);
             if (blurShader != null)
             {
+                var blurStrength = game.RelativeMousePosition.X * 15;
                 ShapeShader.SetValueFloat(blurShader.Shader, "blurStrength", blurStrength);
             }
 
