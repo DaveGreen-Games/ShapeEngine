@@ -398,6 +398,8 @@ public class GameloopExamples : Game
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/AlphaCircle.frag", out var alphaCircle))
             {
                 ShapeShader alphaCircleShader = new(alphaCircle, alphaCircleID, false, 8);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderHeight", Window.CurScreenSize.Height);
                 ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0f, 0f));
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "minDis", 0.25f);
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "maxDis", 1f);
@@ -534,6 +536,13 @@ public class GameloopExamples : Game
                 ShapeShader.SetValueFloat(darknessShader.Shader, "renderWidth", w);
                 ShapeShader.SetValueFloat(darknessShader.Shader, "renderHeight", h);
             }
+
+            var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
+            if (alphaCircleShader != null)
+            {
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderHeight", h);
+            }
         
             var bloomShader = ScreenShaders.Get(bloomShaderID);
             if (bloomShader != null)
@@ -593,6 +602,12 @@ public class GameloopExamples : Game
             if (darknessShader != null && darknessShader.Enabled)
             {
                 ShapeShader.SetValueVector2(darknessShader.Shader, "origin", game.RelativeMousePositionCentered);
+            }
+            
+            var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
+            if (alphaCircleShader != null && alphaCircleShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", game.RelativeMousePositionCentered);
             }
             
             var overdrawShader = ScreenShaders.Get(overdrawID);
@@ -683,7 +698,7 @@ public class GameloopExamples : Game
             {
                 var currentShader = ScreenShaders.Get(currentShaderID);
                 if (currentShader != null) currentShader.Enabled = false;
-            
+
                 var shadersIds = ScreenShaders.GetAllIDs();
                 var nextShaderIDIndex = shadersIds.IndexOf(currentShaderID);
                 nextShaderIDIndex += 1;
@@ -696,7 +711,7 @@ public class GameloopExamples : Game
                     currentShaderID = nextId;
                     nextShader.Enabled = true;
                 }
-            
+
             }
         }
         paletteInfoBox.Update(time.Delta);
