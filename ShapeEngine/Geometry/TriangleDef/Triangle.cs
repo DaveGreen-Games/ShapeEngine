@@ -26,7 +26,8 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     #region Helper
 
     private static Points pointsBuffer = new();
-
+    private static Triangulation triangulationBuffer = new();
+    private static Triangulation triangulationBuffer2 = new();
     #endregion
     
     #region Members
@@ -309,8 +310,16 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// <remarks>
     /// This creates three triangles by connecting the centroid to each edge of the triangle.
     /// </remarks>
-    public void Triangulate(Triangulation result) => this.Triangulate(result, GetCentroid());
-    
+    public void Triangulate(Triangulation result)
+    {
+        var p = GetCentroid();
+        result.Clear();
+        
+        result.Add(new(A, B, p));
+        result.Add(new(B, C, p));
+        result.Add(new(C, A, p));
+    }
+
     /// <summary>
     /// Triangulates this triangle by adding random interior points and performing point-cloud triangulation into <paramref name="result"/>.
     /// </summary>
@@ -345,28 +354,56 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         triangulationPointList.TriangulatePointCloud(result);
     }
     
+    
     /// <summary>
-    /// Triangulates this triangle based on a target minimum area and writes the result into <paramref name="result"/>.
+    /// Recursively subdivides this triangle into smaller triangles until each resulting triangle has an area less than or equal to <paramref name="minArea"/>.
     /// </summary>
     /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
-    /// <param name="minArea">The minimum area that each resulting triangle should have.</param>
+    /// <param name="minArea">The maximum allowed area for each resulting triangle. Must be greater than 0.</param>
+    /// <returns><see langword="true"/> if triangulation succeeds; otherwise, <see langword="false"/> when <paramref name="minArea"/> is less than or equal to 0.</returns>
     /// <remarks>
-    /// If <paramref name="minArea"/> is less than or equal to zero, <paramref name="result"/> receives only this triangle.
-    /// Otherwise, the method estimates how many interior random points to generate from the ratio of triangle area to <paramref name="minArea"/>, then delegates to <see cref="Triangulate(Triangulation, int)"/>.
+    /// Larger triangles are split using random interior points until all generated triangles satisfy the area threshold.
+    /// Only triangles with positive area are included in the output.
     /// </remarks>
-    public void Triangulate(Triangulation result, float minArea)
+    public bool Triangulate(Triangulation result, float minArea)
     {
+        if (minArea <= 0) return false;
+        
         result.Clear();
-        if (minArea <= 0)
+        if(GetArea() <= minArea)
         {
-            result.Add(new(A, B, C));
-            return;
+            result.Add(this);
+            return true;
         }
 
-        float triArea = GetArea();
-        float pieceCount = triArea / minArea;
-        int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
-        Triangulate(result, points);
+        triangulationBuffer.Clear();
+        //only adds valid triangles to result (area > 0)
+        Triangulate(triangulationBuffer2, GetRandomPointInside());
+        foreach (var tri in triangulationBuffer2)
+        {
+            var area = tri.GetArea();
+            if(area <= minArea) result.Add(tri);
+            else triangulationBuffer.Add(tri);
+        }
+
+        while (triangulationBuffer.Count > 0)
+        {
+            var lastIndex = triangulationBuffer.Count - 1;
+            var t = triangulationBuffer[lastIndex];
+            triangulationBuffer.RemoveAt(lastIndex);
+            
+            var randomP = t.GetRandomPointInside();
+            //only adds valid triangles to result (area > 0)
+            t.Triangulate(triangulationBuffer2, randomP);
+            foreach (var tri in triangulationBuffer2)
+            {
+                var area = tri.GetArea();
+                if(area <= minArea) result.Add(tri);
+                else triangulationBuffer.Add(tri);
+            }
+        }
+
+        return true;
     }
     
     /// <summary>
@@ -377,15 +414,21 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// <remarks>
     /// The resulting triangulation contains three triangles: A-B-P, B-C-P, and C-A-P.
     /// This method does not verify that the point is actually inside the triangle.
+    /// Only valid triangles (area > 0) are added to result.
     /// </remarks>
     public void Triangulate(Triangulation result, Vector2 p)
     {
         result.Clear();
-        result.Add(new(A, B, p));
-        result.Add(new(B, C, p));
-        result.Add(new(C, A, p));
+        
+        Triangle t = new (A, B, p);
+        if(t.GetArea() > 0) result.Add(t);
+        
+        t = new (B, C, p);
+        if(t.GetArea() > 0) result.Add(t);
+        
+        t = new (C, A, p);
+        if(t.GetArea() > 0) result.Add(t);
     }
-    
     
     /// <summary>
     /// Creates a smaller triangle inside this triangle by interpolating along each edge.

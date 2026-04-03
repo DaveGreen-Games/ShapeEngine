@@ -82,13 +82,18 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void DrawGame(ScreenInfo game)
         {
-            var alpha = (int)(400 * lifetimeF);
-            if(alpha > 255) alpha = 255;
-            var c = color.ColorRgba.SetAlpha((byte)alpha);
+            if(lifetimeF > 0.8f)
+            {
+                shape.Draw(color.ColorRgba);
+                shape.DrawLines(1f, ColorRgba.Black, 4f, true);
+            }
+            else
+            {
+                var scaledShape = shape.ScaleSize(lifetimeF, shape.GetCentroid());
+                scaledShape.Draw(color.ColorRgba);
+                scaledShape.DrawLines(1f, ColorRgba.Black, 4f, true);
+            }
             
-            // shape.DrawLines(2f * lifetimeF, c);
-            
-            shape.Draw(c);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)
@@ -670,6 +675,9 @@ namespace Examples.Scenes.ExampleScenes
             if (!Polygon.Generate(point, Rng.Instance.RandI(6, 12), 35, 100, cutShapeBuffer)) return;
             if(cutShapeBuffer.Count > 0) FractureAsteroid(a, cutShapeBuffer);
         }
+       
+        
+        //Issue: To many pieces are generated 
         private void FractureAsteroid(Asteroid a, Polygon cutShape)
         {
             RemoveAsteroid(a);
@@ -683,6 +691,7 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             var center = cutShape.GetCentroid();
+            Console.WriteLine($"Asteroid Fractured: with {fractureInfoBuffer.Pieces.Count} Pieces.");
             foreach (var piece in fractureInfoBuffer.Pieces)
             {
                 // Vector2 center = piece.GetCentroid();

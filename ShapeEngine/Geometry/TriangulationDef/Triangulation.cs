@@ -390,11 +390,13 @@ public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulati
     public void Subdivide(Triangulation result, float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
     {
         if (this.Count <= 0) return;
+        result.Clear();
         queueBuffer.Clear();
         if (Count == 1)
         {
             subdivBuffer.Clear();
-            this[0].Triangulate(subdivBuffer, minArea);
+            // this[0].Triangulate(subdivBuffer, minArea);
+            this[0].Triangulate(subdivBuffer, this[0].GetRandomPointInside());
             queueBuffer.AddRange(subdivBuffer);
         }
         else
@@ -415,7 +417,8 @@ public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulati
             else if (triArea > maxArea) //always subdivide because too big
             {
                 subdivBuffer.Clear();
-                tri.Triangulate(subdivBuffer, minArea);
+                // tri.Triangulate(subdivBuffer, minArea);
+                tri.Triangulate(subdivBuffer, tri.GetRandomPointInside());
                 queueBuffer.AddRange(subdivBuffer);
             }
             else //subdivde or keep
@@ -433,7 +436,8 @@ public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulati
                 else
                 {
                     subdivBuffer.Clear();
-                    tri.Triangulate(subdivBuffer, minArea);
+                    // tri.Triangulate(subdivBuffer, minArea);
+                    tri.Triangulate(subdivBuffer, tri.GetRandomPointInside());
                     queueBuffer.AddRange(subdivBuffer);
                 }
             }
