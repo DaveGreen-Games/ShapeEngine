@@ -741,12 +741,11 @@ public class GameloopExamples : Game
                     nextShader.Enabled = true;
                 }
                     
-                Console.WriteLine($"Active Shaders:");
-                foreach (var shader in ScreenShaders.GetActiveShaders())
-                {
-                    Console.WriteLine($"- {shader.Order}: {GetShaderName(shader.Order)}");
-                }
-
+                // Console.WriteLine($"Active Shaders:");
+                // foreach (var shader in ScreenShaders.GetActiveShaders())
+                // {
+                //     Console.WriteLine($"- {shader.Order}: {GetShaderName(shader.Order)}");
+                // }
             }
         }
         paletteInfoBox.Update(time.Delta);
@@ -764,8 +763,6 @@ public class GameloopExamples : Game
         else if (order == 8) return "AlphaCircle";
         else if (order == 9) return "ChromaticAberration";
         else return "Unknown";
-        
-        
     }
     
 
