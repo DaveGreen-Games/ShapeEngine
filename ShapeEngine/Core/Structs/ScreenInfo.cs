@@ -65,6 +65,7 @@ public readonly struct ScreenInfo
             return pos / size;
         }
     }
+    
     /// <summary>
     /// Returns the mouse position normalized and centered around the area's midpoint.
     /// Values are in range approximately -1..1 where (0,0) is the center of <see cref="Area"/>.
@@ -81,6 +82,7 @@ public readonly struct ScreenInfo
             return MousePos / size;
         }
     }
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="ScreenInfo"/> struct.
     /// </summary>
@@ -92,6 +94,7 @@ public readonly struct ScreenInfo
         MousePos = mousePos;
         FixedFramerateInterpolationFactor = 1f;
     }
+    
     internal ScreenInfo(Rect area, Vector2 mousePos, double fixedFramerateInterpolationFactor)
     {
         Area = area;
