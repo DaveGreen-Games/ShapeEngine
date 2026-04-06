@@ -444,18 +444,39 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Converts a point in absolute coordinates to a relative (0-1) position within the rectangle.
+    /// Converts a point in absolute coordinates to a relative position within the rectangle.
     /// </summary>
     /// <param name="p">The absolute point to convert.</param>
-    /// <returns>The relative (0-1) position within the rectangle.</returns>
-    public Vector2 PointToRelative(Vector2 p)
+    /// <param name="clamped">Whether to clamp the result to 0-1 range.</param>
+    /// <returns>The relative position within the rectangle.</returns>
+    public Vector2 PointToRelative(Vector2 p, bool clamped = true)
     {
         var dif = p - TopLeft;
-        var intensity = dif / Size;
-
-        float xFactor = intensity.X < 0f ? 0f : intensity.X > 1f ? 1f : intensity.X;
-        float yFactor = intensity.Y < 0f ? 0f : intensity.Y > 1f ? 1f : intensity.Y;
+    
+        float xFactor = Width == 0f ? 0f : dif.X / Width;
+        float yFactor = Height == 0f ? 0f : dif.Y / Height;
+    
+        if(clamped)
+        {
+            xFactor = xFactor < 0f ? 0f : xFactor > 1f ? 1f : xFactor;
+            yFactor = yFactor < 0f ? 0f : yFactor > 1f ? 1f : yFactor;
+        }
+        
         return new(xFactor, yFactor);
+    }
+
+    /// <summary>
+    /// Converts an absolute point to a centered relative position within the rectangle.
+    /// </summary>
+    /// <param name="p">The absolute point to convert.</param>
+    /// <returns>
+    /// A centered relative position where the rectangle maps from <c>\-1</c> to <c>1</c> on each axis,
+    /// with the result clamped to the rectangle bounds.
+    /// </returns>
+    public Vector2 PointToRelativeCentered(Vector2 p)
+    {
+       var relative = PointToRelative(p, true);
+       return relative * 2f - Vector2.One;
     }
 
     /// <summary>
@@ -465,9 +486,23 @@ public readonly partial struct Rect
     /// <returns>The absolute point in the rectangle.</returns>
     public Vector2 PointToAbsolute(Vector2 relativePoint)
     {
-        return relativePoint * Size;
+        return TopLeft + relativePoint * Size;
     }
 
+    /// <summary>
+    /// Converts a centered relative position to an absolute point within the rectangle.
+    /// </summary>
+    /// <param name="relativePointCentered">
+    /// A centered relative position where <c>\-1</c> maps to the minimum edge,
+    /// <c>0</c> maps to the center, and <c>1</c> maps to the maximum edge.
+    /// </param>
+    /// <returns>The absolute point in the rectangle.</returns>
+    public Vector2 PointToAbsoluteCentered(Vector2 relativePointCentered)
+    {
+        var relativePoint = (relativePointCentered + Vector2.One) * 0.5f;
+        return TopLeft + relativePoint * Size;
+    }
+    
     /// <summary>
     /// Returns a value between 0 and 1 for the x axis based on where the value is within the rectangle's width.
     /// </summary>
