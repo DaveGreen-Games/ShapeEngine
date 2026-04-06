@@ -100,9 +100,10 @@ public class GameloopExamples : Game
     private readonly uint depthID = ShapeID.NextID;
     private readonly uint rippleID = ShapeID.NextID;
     private float rippleTimer = 0f;
-    private readonly uint chromaticAberrationID = ShapeID.NextID;
+    private readonly uint explosionShockwaveID = ShapeID.NextID;
     private readonly uint blurID = ShapeID.NextID;
     private readonly uint alphaCircleID = ShapeID.NextID;
+    private readonly uint chromaticAberrationID = ShapeID.NextID;
     private uint currentShaderID;
 
     public RectNode UIRects;
@@ -471,12 +472,40 @@ public class GameloopExamples : Game
             // var chromaticAberration = ContentLoader.LoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag", out var chromaticAberration))
             {
-                ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, orderCount);
+                ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, orderCount++);
                 ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
                 ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", new Vector2(0f, 0f));
                 ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "amount", new Vector2(2f, 2f));
                 shapeShaders.Add(chromaticAberrationShader);
+            }
+            
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/ExplosionShockwaveShader.frag", out var explosionShockwave))
+            {
+                ShapeShader explosionShockwaveShader = new(explosionShockwave, explosionShockwaveID, false, orderCount);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "globalStrength", 1.0f);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "maxCombinedOffset", 0.08f);
+
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave0", 0f, 0f, 0f, 0.04f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave1", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave2", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave3", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave4", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave5", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave6", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave7", 0f, 0f, 0f, 0f);
+
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams0", 1.0f, 0.08f, 1.5f, 1.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams1", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams2", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams3", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams4", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams5", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams6", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams7", 1.0f, 0.08f, 1.5f, 0.0f);
+                shapeShaders.Add(explosionShockwaveShader);
             }
             
             currentShaderID = crtShaderID;
@@ -622,6 +651,13 @@ public class GameloopExamples : Game
             {
                 ShapeShader.SetValueFloat(rippleShader.Shader, "renderWidth", w);
                 ShapeShader.SetValueFloat(rippleShader.Shader, "renderHeight", h);
+            }
+
+            var explosionShockwaveShader = ScreenShaders.Get(explosionShockwaveID);
+            if (explosionShockwaveShader != null)
+            {
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderHeight", h);
             }
 
             var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
@@ -835,7 +871,7 @@ public class GameloopExamples : Game
                 
                 var shadersIds = ScreenShaders.GetAllIDs();
                 var nextShaderIDIndex = shadersIds.IndexOf(currentShaderID) + 1;
-                if (nextShaderIDIndex >= shadersIds.Count) {nextShaderIDIndex = 0;}
+                if (nextShaderIDIndex >= shadersIds.Count - 1) {nextShaderIDIndex = 0;} //skip shockwave shader in cycling
 
                 var nextId = shadersIds[nextShaderIDIndex];
                 var nextShader = ScreenShaders.Get(nextId);
@@ -867,9 +903,10 @@ public class GameloopExamples : Game
         else if (order == 8) return "RadialAtmosphere";
         else if (order == 9) return "Depth";
         else if (order == 10) return "Ripple";
-        else if (order == 11) return "Blur";
-        else if (order == 12) return "AlphaCircle";
-        else if (order == 13) return "ChromaticAberration";
+        else if (order == 11) return "ExplosionShockwave";
+        else if (order == 12) return "Blur";
+        else if (order == 13) return "AlphaCircle";
+        else if (order == 14) return "ChromaticAberration";
         else return "Unknown";
     }
     
