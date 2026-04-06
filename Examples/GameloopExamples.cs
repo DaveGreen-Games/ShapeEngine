@@ -94,9 +94,12 @@ public class GameloopExamples : Game
     private readonly uint pixelationShaderID = ShapeID.NextID;
     private readonly uint bloomShaderID = ShapeID.NextID;
     private readonly uint tintID = ShapeID.NextID;
+    private readonly uint grayscaleID = ShapeID.NextID;
     private readonly uint darknessID = ShapeID.NextID;
     private readonly uint radialAtmosphereID = ShapeID.NextID;
     private readonly uint depthID = ShapeID.NextID;
+    private readonly uint rippleID = ShapeID.NextID;
+    private float rippleTimer = 0f;
     private readonly uint chromaticAberrationID = ShapeID.NextID;
     private readonly uint blurID = ShapeID.NextID;
     private readonly uint alphaCircleID = ShapeID.NextID;
@@ -382,6 +385,12 @@ public class GameloopExamples : Game
                 ShapeShader.SetValueFloat(tintShader.Shader, "blend", 0.5f);
                 shapeShaders.Add(tintShader);
             }
+
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/GrayscaleShader.frag", out var grayscale))
+            {
+                ShapeShader grayscaleShader = new(grayscale, grayscaleID, false, orderCount++);
+                shapeShaders.Add(grayscaleShader);
+            }
             
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/Darkness.frag", out var darkness))
             {
@@ -420,6 +429,20 @@ public class GameloopExamples : Game
                 ShapeShader.SetValueFloat(depthShader.Shader, "desaturationStrength", 0.35f);
                 ShapeShader.SetValueFloat(depthShader.Shader, "blurStrength", 8.0f);
                 shapeShaders.Add(depthShader);
+            }
+
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/RippleShader.frag", out var ripple))
+            {
+                ShapeShader rippleShader = new(ripple, rippleID, false, orderCount++);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueFloat(rippleShader.Shader, "magnitude", 0.03f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "frequency", 24.0f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "animation", 0.0f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "radius", 1.0f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "falloff", 2.0f);
+                shapeShaders.Add(rippleShader);
             }
             
             // var blur = ContentLoader.LoadFragmentShader("Resources/Shaders/BlurShader.frag");
@@ -594,6 +617,13 @@ public class GameloopExamples : Game
                 ShapeShader.SetValueFloat(depthShader.Shader, "renderHeight", h);
             }
 
+            var rippleShader = ScreenShaders.Get(rippleID);
+            if (rippleShader != null)
+            {
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderHeight", h);
+            }
+
             var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
             if (alphaCircleShader != null)
             {
@@ -705,6 +735,16 @@ public class GameloopExamples : Game
             {
                 ShapeShader.SetValueVector2(depthShader.Shader, "origin", game.RelativeMousePositionCentered);
                 ShapeShader.SetValueFloat(depthShader.Shader, "blurStrength", blurStrength);
+            }
+
+            rippleTimer += time.Delta * 2f;
+            var animationFactor = ShapeMath.WrapF(rippleTimer, 0f, 1f);
+
+            var rippleShader = ScreenShaders.Get(rippleID);
+            if (rippleShader != null && rippleShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "animation", animationFactor);
             }
             
             var blurShader = ScreenShaders.Get(blurID);
@@ -822,12 +862,14 @@ public class GameloopExamples : Game
         else if (order == 3) return "Pixel";
         else if (order == 4) return "Bloom";
         else if (order == 5) return "Tint";
-        else if (order == 6) return "Darkness";
-        else if (order == 7) return "RadialAtmosphere";
-        else if (order == 8) return "Depth";
-        else if (order == 9) return "Blur";
-        else if (order == 10) return "AlphaCircle";
-        else if (order == 11) return "ChromaticAberration";
+        else if (order == 6) return "Grayscale";
+        else if (order == 7) return "Darkness";
+        else if (order == 8) return "RadialAtmosphere";
+        else if (order == 9) return "Depth";
+        else if (order == 10) return "Ripple";
+        else if (order == 11) return "Blur";
+        else if (order == 12) return "AlphaCircle";
+        else if (order == 13) return "ChromaticAberration";
         else return "Unknown";
     }
     
