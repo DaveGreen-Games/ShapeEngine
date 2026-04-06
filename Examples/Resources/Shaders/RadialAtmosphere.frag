@@ -1,8 +1,8 @@
 #version 330
 
-// Radial blur / focus-falloff post-process shader.
+// Fake depth / focus-falloff post-process shader.
 // Uses screen-space distance from origin as a radial depth value and applies
-// blur and optional desaturation as pixels get farther away.
+// fog, darkness, blur, and desaturation as pixels get farther away.
 
 // Input vertex attributes (from vertex shader)
 in vec2 fragTexCoord;
@@ -18,6 +18,9 @@ uniform float renderHeight = 450.0;
 uniform vec2 origin = vec2(0.0, 0.0);
 uniform float minDis = 0.2;
 uniform float maxDis = 1.0;
+uniform vec4 fogColor = vec4(0.05, 0.08, 0.12, 1.0);
+uniform float fogStrength = 0.45;
+uniform float darknessStrength = 0.35;
 uniform float desaturationStrength = 0.4;
 uniform float blurStrength = 2.0;
 
@@ -70,8 +73,8 @@ void main()
 
     float innerRadius = min(minDis, maxDis);
     float outerRadius = max(minDis, maxDis);
-    float radialAmount = smoothstep(innerRadius, outerRadius, length(delta));
-    float effectAmount = radialAmount;
+    float fakeDepth = smoothstep(innerRadius, outerRadius, length(delta));
+    float effectAmount = fakeDepth;
 
     vec2 texelSize = vec2(1.0 / max(renderWidth, 1.0), 1.0 / max(renderHeight, 1.0));
     vec2 blurOffset = texelSize * max(blurStrength, 0.0);
@@ -79,10 +82,13 @@ void main()
     vec4 blurred = sampleBlur9(fragTexCoord, blurOffset);
     vec3 rgb = mix(source.rgb, blurred.rgb, effectAmount);
     float alpha = mix(source.a, blurred.a, effectAmount);
+    float visibleAmount = effectAmount * alpha;
 
     float luminance = dot(rgb, vec3(0.299, 0.587, 0.114));
-    rgb = mix(rgb, vec3(luminance), clamp(desaturationStrength, 0.0, 1.0) * effectAmount * alpha);
+    rgb = mix(rgb, vec3(luminance), clamp(desaturationStrength, 0.0, 1.0) * visibleAmount);
+
+    rgb = mix(rgb, fogColor.rgb, clamp(fogStrength, 0.0, 1.0) * visibleAmount);
+    rgb *= 1.0 - (clamp(darknessStrength, 0.0, 1.0) * visibleAmount);
 
     finalColor = vec4(rgb, alpha);
 }
-
