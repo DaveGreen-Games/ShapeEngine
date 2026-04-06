@@ -62,7 +62,10 @@ public abstract class PayloadDeliverySystem
         {
             var payload = payloads[i];
             payload.Update(dt);
-            if(payload.IsFinished()) payloads.RemoveAt(i);
+            if(payload.IsFinished())
+            {
+                payloads.RemoveAt(i);
+            }
         }
         
         

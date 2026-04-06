@@ -18,11 +18,172 @@ using ShapeEngine.Input;
 using Size = ShapeEngine.Core.Structs.Size;
 using ShapeEngine.Random;
 
-// using Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 namespace Examples.Scenes.ExampleScenes;
 
 public class EndlessSpaceCollision : ExampleScene
 {
+    
+    private class ShockwaveEffect
+    {
+        private Vector2 origin;
+        private float magnitude; // distortion strength
+        private float maxRadius; // maximum ring radius in centered/aspect-corrected space
+        private float bandWidth; // ring thickness / softness
+        private float lifeFalloff; // how quickly the wave fades over its lifetime
+        private bool enabled; // > 0.5 = active, <= 0.5 = ignored
+        private float progress; // 0.0 -> just started, 1.0 -> finished
+        private int index;
+        private ShapeShader shader;
+
+        private float duration;
+        private float timer;
+
+        public bool IsFinished => !enabled;
+
+        public ShockwaveEffect(ShapeShader shader, int index)
+        {
+            this.shader = shader;
+            this.index = index;
+            this.enabled = false;
+            this.progress = 0f;
+            this.origin = Vector2.Zero;
+            this.magnitude = 0f;
+            this.maxRadius = 1f;
+            this.bandWidth = 0.08f;
+            this.lifeFalloff = 1.5f;
+            this.duration = 0f;
+            this.timer = 0f;
+
+            Apply();
+        }
+
+        public void Update(float dt)
+        {
+            if(!enabled) return;
+            
+            timer += dt;
+            if (timer >= duration)
+            {
+                timer = duration;
+                progress = 1f;
+                enabled = false;
+            }
+            else
+            {
+                progress = timer / duration;
+            }
+
+            Apply();
+        }
+
+        public bool Start(Vector2 effectOrigin, float effectDuration, float effectMagnitude, float effectMaxRadius, float effectBandWidth, float effectLifeFalloff)
+        {
+            if(enabled) return false; // already active, can't start
+
+            enabled = true;
+            progress = 0f;
+            origin = effectOrigin;
+            duration = effectDuration;
+            timer = 0f;
+            magnitude = effectMagnitude;
+            maxRadius = effectMaxRadius;
+            bandWidth = effectBandWidth;
+            lifeFalloff = effectLifeFalloff;
+
+            Apply();
+            
+            return true;
+        }
+
+        public void Stop()
+        {
+            if(!enabled) return;
+
+            timer = duration;
+            enabled = false;
+            progress = 1f;
+            
+            Apply();
+        }
+
+        private void Apply()
+        {
+            ShapeShader.SetValueVector4(shader.Shader, $"shockwave{index}", origin.X, origin.Y, progress, magnitude);
+            ShapeShader.SetValueVector4(shader.Shader, $"shockwaveParams{index}", maxRadius, bandWidth, lifeFalloff, enabled ? 1f : 0f);
+        }
+    }
+    
+    private class ShockwaveEffectHandler
+    {
+        private Stack<ShockwaveEffect> availableEffects = new(8);
+        private List<ShockwaveEffect> rentedEffects = new(8);
+        private readonly int count = 8;
+        
+        
+        public ShockwaveEffectHandler(ShapeShader? shader)
+        {
+            if (shader != null)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    var effect = new ShockwaveEffect(shader, i);
+                    availableEffects.Push(effect);
+                }
+            }
+        }
+        
+
+        public void Update(float dt)
+        {
+            for (int i = rentedEffects.Count - 1; i >= 0; i--)
+            {
+                var effect = rentedEffects[i];
+                effect.Update(dt);
+                if (effect.IsFinished)
+                {
+                    rentedEffects.RemoveAt(i);
+                    availableEffects.Push(effect);
+                }
+            }
+        }
+
+        public void Stop()
+        {
+            for (int i = 0; i < rentedEffects.Count; i++)
+            {
+                var effect = rentedEffects[i];
+                effect.Stop();
+                availableEffects.Push(effect);
+            }
+            
+            rentedEffects.Clear();
+        }
+
+        public void Start(Vector2 effectOrigin, float effectDuration, float effectMagnitude, float effectMaxRadius = 1f, float effectBandWidth = 0.08f, float effectLifeFalloff = 1.5f)
+        {
+            var effect = RentEffect();
+
+            if (effect != null)
+            {
+                var started = effect.Start(effectOrigin, effectDuration, effectMagnitude, effectMaxRadius, effectBandWidth, effectLifeFalloff);
+                if(started)
+                {
+                    rentedEffects.Add(effect);
+                }
+                else
+                {
+                    availableEffects.Push(effect);
+                }
+            }
+        }
+
+        private ShockwaveEffect? RentEffect()
+        {
+            if(availableEffects.Count > 0) return availableEffects.Pop();
+            return null;
+        }
+    }
+    
     private class ScreenTextureHandler : CustomScreenTextureHandler
     {
         private readonly float parallaxFactor;
@@ -121,6 +282,10 @@ public class EndlessSpaceCollision : ExampleScene
 
     private bool gameOverScreenActive = false;
     private readonly BroadphaseSpatialHash spatialHash;
+
+    private readonly ShockwaveEffectHandler shockwaveEffectHandler;
+    
+    
     public EndlessSpaceCollision()
     {
         drawInputDeviceInfo = false;
@@ -240,6 +405,9 @@ public class EndlessSpaceCollision : ExampleScene
             starTextureHandlers.Add(textureHandler);
             
         }
+        
+        var shader = GameloopExamples.Instance.ExplosionShockwaveShader;
+        shockwaveEffectHandler = new(shader);
     }
 
     
@@ -299,6 +467,10 @@ public class EndlessSpaceCollision : ExampleScene
         follower.SetTarget(ship);
 
         GameloopExamples.Instance.MouseControlEnabled = false;
+
+
+        var shader = GameloopExamples.Instance.ExplosionShockwaveShader;
+        if (shader != null) shader.Enabled = true;
     }
     protected override void OnDeactivate()
     {
@@ -310,6 +482,12 @@ public class EndlessSpaceCollision : ExampleScene
         GameloopExamples.Instance.ResetCamera();
         
         GameloopExamples.Instance.MouseControlEnabled = true;
+        
+        shockwaveEffectHandler.Stop();
+        
+        var shader = GameloopExamples.Instance.ExplosionShockwaveShader;
+        if (shader != null) shader.Enabled = false;
+        
     }
     private void OnColorPaletteChanged()
     {
@@ -360,10 +538,13 @@ public class EndlessSpaceCollision : ExampleScene
 
         AddAsteroids(AsteroidCount);
         
+        shockwaveEffectHandler.Stop();
     }
 
     protected override void OnClose()
     {
+        shockwaveEffectHandler.Stop();
+        
         foreach (var t in starTextures)
         {
             t.Unload();
@@ -641,9 +822,12 @@ public class EndlessSpaceCollision : ExampleScene
                 }
 
                 float scoreBonus = 1f; // ShapeMath.LerpFloat(0.5f, 2, DifficultyFactor);
+                var relativePosition = game.Area.PointToRelativeCentered(a.Transform.Position);
                 
                 if (a.Big)
                 {
+                    shockwaveEffectHandler.Start(relativePosition, 0.8f, 0.04f, 1.5f, 0.08f, 2f);
+                    
                     killedBigAsteroids++;
                     CurScore += BigAsteroidScore * scoreBonus;
                     DifficultyScore += BigAsteroidScore * scoreBonus;
@@ -664,6 +848,8 @@ public class EndlessSpaceCollision : ExampleScene
                 }
                 else
                 {
+                    shockwaveEffectHandler.Start(relativePosition, 0.5f, 0.03f, 1.0f, 0.06f, 4f);
+                    
                     CurScore += SmallAsteroidScore * scoreBonus;
                     DifficultyScore += SmallAsteroidScore * scoreBonus;
                 }
@@ -711,6 +897,9 @@ public class EndlessSpaceCollision : ExampleScene
                 
             }
         }
+        
+        shockwaveEffectHandler.Update(time.Delta);
+        
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {

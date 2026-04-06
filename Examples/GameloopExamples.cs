@@ -88,7 +88,7 @@ public class GameloopExamples : Game
     private List<string> fontNames = new();
     private MainScene? mainScene = null;
 
-    private readonly Vector2 crtCurvature = new(6, 4);
+    private readonly Vector2 crtCurvature = new Vector2(6, 4);
     private readonly uint crtShaderID = ShapeID.NextID;
     private readonly uint sobelShaderID = ShapeID.NextID;
     private readonly uint pixelationShaderID = ShapeID.NextID;
@@ -166,6 +166,8 @@ public class GameloopExamples : Game
     
     private List<ScreenTexture> gameTextures = new(5);
     private int curGameTextureIndex = 0;
+    
+    public ShapeShader? ExplosionShockwaveShader => ScreenShaders?.Get(explosionShockwaveID);
     
     public new static GameloopExamples Instance  => examplesInstance?? throw new NullReferenceException("Instance is not initialized! You need to create a GameloopExamples instance before accessing this property!");
     private static GameloopExamples? examplesInstance;
