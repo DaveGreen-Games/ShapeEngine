@@ -342,6 +342,33 @@ public static class PolygonDrawing
 
     #endregion
 
+    #region Draw Lines Glow
+
+    #region Glow
+    /// <summary>
+    /// Draws the polygon outline as a layered glow by rendering multiple outline passes
+    /// with interpolated thickness and color values.
+    /// </summary>
+    /// <param name="polygon">The polygon whose outline will be drawn.</param>
+    /// <param name="thicknessRange">The outline thickness range used from the first pass to the final pass.</param>
+    /// <param name="colorRange">The color range used from the first pass to the final pass.</param>
+    /// <param name="steps">The number of glow passes to render. A value of 1 draws a single pass using the maximum thickness and color.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins before beveling is applied.</param>
+    /// <param name="beveled">If true, sharp joins are beveled instead of using extended miters.</param>
+    /// <param name="useDelaunay">If true, applies Delaunay refinement when triangulating the outline mesh.</param>
+    /// <remarks>
+    /// Useful for stylized outlines such as halos, selection rings, and expanding border effects.
+    /// </remarks>
+    public static void DrawGlow(this Polygon polygon, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        ClipperImmediate2D.DrawPolygonOutlineGlow(polygon, thicknessRange, colorRange, steps, miterLimit, beveled, useDelaunay);
+    }
+    
+    #endregion
+
+    #endregion
+    
     #region Draw Lines Scaled
 
     /// <summary>

@@ -207,50 +207,27 @@ public static class PolylineDrawing
     
     #endregion
 
-    //TODO: Rework ( polygon drawing needs the same function as well!)
-    // - calculate 1 triangulation 
-    // - then draw triangulation, scale triangulation, then draw scaled triangulation, repeat for steps
-    // - probably add function to ClipperImmediate2D for caching triangulation?
+
     #region Glow
-    
     /// <summary>
-    /// Draws the polyline with a glow effect, interpolating width and color along each segment.
+    /// Draws the polyline as a layered glow by rendering multiple stroked passes
+    /// with interpolated thickness and color values.
     /// </summary>
     /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="width">The starting width of the glow. Should be bigger than <c>endWidth</c>.</param>
-    /// <param name="endWidth">The ending width of the glow. Should be smaller than <c>width</c>.</param>
-    /// <param name="color">The starting color of the glow.</param>
-    /// <param name="endColorRgba">The ending color of the glow.</param>
-    /// <param name="steps">The number of interpolation steps for the glow effect.</param>
-    /// <param name="capType">The type of line cap to use at segment ends.</param>
-    /// <param name="capPoints">The number of points used for the cap rendering.</param>
+    /// <param name="thicknessRange">The stroke thickness range used from the first pass to the final pass.</param>
+    /// <param name="colorRange">The color range used from the first pass to the final pass.</param>
+    /// <param name="steps">The number of glow passes to render. A value of 1 draws a single pass using the maximum thickness and color.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins before beveling is applied.</param>
+    /// <param name="beveled">If true, sharp joins are beveled instead of using extended miters.</param>
+    /// <param name="capType">The cap style used for the open ends of the polyline.</param>
+    /// <param name="useDelaunay">If true, applies Delaunay refinement when triangulating the stroke mesh.</param>
     /// <remarks>
-    /// This method creates a glowing outline effect by drawing multiple segments on top of each other, interpolating width and color across all steps.
-    /// <list type="bullet">
-    /// <item><description>The first step uses <paramref name="width"/> and <paramref name="color"/>.</description></item>
-    /// <item><description>The last step uses <paramref name="endWidth"/> and <paramref name="endColorRgba"/>.</description></item>
-    /// <item><description>Intermediate steps interpolate between <paramref name="width"/> / <paramref name="endWidth"/> and <paramref name="color"/> / <paramref name="endColorRgba"/>.</description></item>
-    /// <item><description>Because steps are drawn on top of each other <paramref name="width"/> should be bigger than <paramref name="endWidth"/>.</description></item>
-    /// </list>
+    /// This is useful for soft outlines, energy trails, and other expanding stroke effects.
     /// </remarks>
-    public static void DrawGlow(this Polyline polyline, float width, float endWidth, ColorRgba color,
-        ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawGlow(this Polyline polyline, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
+        float miterLimit = 2f, bool beveled = false,  LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        if (polyline.Count < 2 || steps <= 0) return;
-
-        if (steps == 1)
-        {
-            Draw(polyline, width, color, capType, capPoints);
-            return;
-        }
-    
-        for (var s = 0; s < steps; s++)
-        {
-            var f = s / (float)(steps - 1);
-            var currentWidth = ShapeMath.LerpFloat(width, endWidth, f);
-            var currentColor = color.Lerp(endColorRgba, f);
-            Draw(polyline, currentWidth, currentColor, capType, capPoints);
-        }
+        ClipperImmediate2D.DrawPolylineGlow(polyline, thicknessRange, colorRange, steps, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay);
     }
     
     #endregion

@@ -178,8 +178,8 @@ public class ShapeDrawingTestExample : ExampleScene
         paramSliders[ParamId.StartAngleDeg].SetCurValue(0f);
         paramSliders[ParamId.EndAngleDeg].SetCurValue(220f);
         paramSliders[ParamId.DrawType].SetCurValue(0);
-        paramSliders[ParamId.Width].SetCurValue(20f);
-        paramSliders[ParamId.EndWidth].SetCurValue(4f);
+        paramSliders[ParamId.Width].SetCurValue(4f);
+        paramSliders[ParamId.EndWidth].SetCurValue(24f);
         paramSliders[ParamId.Steps].SetCurValue(8);
         paramSliders[ParamId.VertexRadius].SetCurValue(12f);
         paramSliders[ParamId.MiterLimit].SetCurValue(4f);
@@ -313,9 +313,9 @@ public class ShapeDrawingTestExample : ExampleScene
         paramSliders[ParamId.StartAngleDeg] = new("Start°", 0f, 0f, 360f);
         paramSliders[ParamId.EndAngleDeg] = new("End°", 220f, 0f, 360f);
         paramSliders[ParamId.DrawType] = new("Type", 0, 0, 2) { Integer = true };
-        paramSliders[ParamId.Width] = new("Width", 20f, 2f, 40f);
-        paramSliders[ParamId.EndWidth] = new("End", 4f, 1f, 20f);
-        paramSliders[ParamId.Steps] = new("Steps", 8, 1, 16) { Integer = true };
+        paramSliders[ParamId.Width] = new("Width", 4f, 1f, 20f);
+        paramSliders[ParamId.EndWidth] = new("End", 24f, 2f, 40f);
+        paramSliders[ParamId.Steps] = new("Steps", 8, 1, 24) { Integer = true };
         paramSliders[ParamId.VertexRadius] = new("Vertex", 12f, 2f, 32f);
         paramSliders[ParamId.MiterLimit] = new("Miter", 4f, 2f, 8f);
     }
@@ -404,6 +404,7 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw Cornered Absolute Transparent", () => polygon.DrawCorneredAbsoluteTransparent(CornerLength, LineInfo, MiterLimit), ParamId.Thickness, ParamId.CornerLength, ParamId.MiterLimit),
             new("Draw Cornered Relative Transparent", () => polygon.DrawCorneredRelativeTransparent(CornerFactor, LineInfo, MiterLimit), ParamId.Thickness, ParamId.CornerFactor, ParamId.MiterLimit),
             new("Draw Cornered", () => polygon.DrawCornered(CornerLength, LineInfo), ParamId.Thickness, ParamId.CornerLength),
+            new("Draw Lines Glow", () => polygon.DrawGlow(new ValueRange(Width, EndWidth), new ValueRangeColor(DrawColor, DrawColor.SetAlpha(0)), Steps, 4f, false, false), ParamId.Width, ParamId.EndWidth, ParamId.Steps),
         ];
 
         cases[ShapeType.Polyline] =
@@ -411,7 +412,7 @@ public class ShapeDrawingTestExample : ExampleScene
             new("Draw", () => polyline.Draw(LineInfo), ParamId.Thickness),
             new("Draw Perimeter", () => polyline.DrawPerimeter(polyline.GetLength() * Percentage, LineInfo), ParamId.Thickness, ParamId.Percentage),
             new("Draw Percentage", () => polyline.DrawPercentage(Percentage, LineInfo), ParamId.Thickness, ParamId.Percentage),
-            new("Draw Glow", () => polyline.DrawGlow(Width, EndWidth, DrawColor, DrawColor.SetAlpha(0), Steps, LineCapType.CappedExtended, 4), ParamId.Width, ParamId.EndWidth, ParamId.Steps),
+            new("Draw Glow", () => polyline.DrawGlow(new ValueRange(Width, EndWidth), new ValueRangeColor(DrawColor, DrawColor.SetAlpha(0)), Steps, 4f, false, LineCapType.Capped, false), ParamId.Width, ParamId.EndWidth, ParamId.Steps),
         ];
     }
 

@@ -2,6 +2,7 @@ using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
@@ -212,6 +213,100 @@ public static class ClipperImmediate2D
        _triMeshBuffer.Draw(color);
     }
 
+    /// <summary>
+    /// Draws a glowing polygon outline by rendering multiple outline passes with
+    /// thickness and color interpolated across the supplied ranges.
+    /// </summary>
+    /// <param name="polygonCCW">The polygon vertices, expected in counterclockwise order.</param>
+    /// <param name="thicknessRange">The outline thickness range used from the first pass to the final pass.</param>
+    /// <param name="colorRange">The color range used from the first pass to the final pass.</param>
+    /// <param name="steps">The number of glow passes to render. A value of 1 draws a single pass using the maximum thickness and color.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <remarks>
+    /// The first pass is triangulated at <see cref="ValueRange.Min"/> and subsequent passes
+    /// scale the generated mesh about its centroid while interpolating colors.
+    /// </remarks>
+    public static void DrawPolygonOutlineGlow(IReadOnlyList<Vector2> polygonCCW, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (polygonCCW.Count < 3 || steps <= 0) return;
+        
+        if (steps == 1)
+        {
+            DrawPolygonOutline(polygonCCW, thicknessRange.Max, colorRange.Max, miterLimit, beveled, useDelaunay);
+            return;
+        }
+
+        if (thicknessRange.Min <= 0) return;
+        if (!thicknessRange.HasPositiveRange()) return;
+        if (!colorRange.HasRange()) return;
+
+        var currentWidth = thicknessRange.Min;
+        CreatePolygonOutlineTriangulation(polygonCCW, currentWidth, miterLimit, beveled, useDelaunay, _triMeshBuffer);
+        _triMeshBuffer.Draw(colorRange.Min);
+        var center = _triMeshBuffer.GetCentroid();
+        for (var s = 1; s < steps; s++)
+        {
+            var f = s / (float)(steps - 1);
+            var nextWidth = thicknessRange.Lerp(f);
+            var scale = nextWidth / currentWidth;
+            var currentColor = colorRange.Lerp(f);
+            _triMeshBuffer.Scale(scale, center);
+            _triMeshBuffer.Draw(currentColor);
+            currentWidth = nextWidth;
+        }
+    }
+
+    /// <summary>
+    /// Draws a glowing polyline by rendering multiple stroke passes with thickness
+    /// and color interpolated across the supplied ranges.
+    /// </summary>
+    /// <param name="polyline">The polyline vertices.</param>
+    /// <param name="thicknessRange">The stroke thickness range used from the first pass to the final pass.</param>
+    /// <param name="colorRange">The color range used from the first pass to the final pass.</param>
+    /// <param name="steps">The number of glow passes to render. A value of 1 draws a single pass using the maximum thickness and color.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="endType">The cap style used at the open ends of the polyline.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <remarks>
+    /// The first pass is triangulated at <see cref="ValueRange.Min"/> and subsequent passes
+    /// scale the generated mesh about its centroid while interpolating colors.
+    /// </remarks>
+    public static void DrawPolylineGlow(IReadOnlyList<Vector2> polyline, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
+        float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
+    {
+        if (polyline.Count < 2 || steps <= 0) return;
+        
+        if (steps == 1)
+        {
+            DrawPolyline(polyline, thicknessRange.Max, colorRange.Max, miterLimit, beveled, endType, useDelaunay);
+            return;
+        }
+        
+        if (thicknessRange.Min <= 0) return;
+        if (!thicknessRange.HasPositiveRange()) return;
+        if (!colorRange.HasRange()) return;
+        
+        var currentWidth = thicknessRange.Min;
+        CreatePolylineTriangulation(polyline, currentWidth, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
+        _triMeshBuffer.Draw(colorRange.Min);
+        var center = _triMeshBuffer.GetCentroid();
+        for (var s = 1; s < steps; s++)
+        {
+            var f = s / (float)(steps - 1);
+            var nextWidth = thicknessRange.Lerp(f);
+            var scale = nextWidth / currentWidth;
+            var currentColor = colorRange.Lerp(f);
+            _triMeshBuffer.Scale(scale, center);
+            _triMeshBuffer.Draw(currentColor);
+            currentWidth = nextWidth;
+        }
+    }
+    
+    
     #endregion
     
     #region Create Outline Triangulation Perimeter

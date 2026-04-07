@@ -228,6 +228,18 @@ public sealed class TriMesh : IEquatable<TriMesh>
         CopyTransformed(result, static p => p);
     }
     
+    /// <summary>
+    /// Calculates the centroid of the entire mesh.
+    /// </summary>
+    /// <returns>
+    /// The area-weighted centroid when the mesh contains at least one non-degenerate triangle;
+    /// otherwise the arithmetic mean of all stored vertices, or (0,0) when the mesh is empty.
+    /// </returns>
+    public Vector2 GetCentroid()
+    {
+        if (TryGetAreaWeightedCentroid(out Vector2 centroid)) return centroid;
+        return GetMeanVertexCentroid();
+    }
     #endregion
     
     #region Hash
@@ -437,32 +449,54 @@ public sealed class TriMesh : IEquatable<TriMesh>
     }
 
     /// <summary>
-    /// Uniformly scales all vertices of this mesh in place by the specified factor.
+    /// Uniformly scales the entire mesh in place relative to its centroid.
     /// </summary>
     /// <param name="scale">The scale factor applied to each vertex.</param>
     public void Scale(float scale)
     {
-        var triangles = triangleVertices;
-        int vertexCount = triangles.Count;
-        for (int i = 0; i < vertexCount; i++)
-        {
-            triangles[i] *= scale;
-        }
+        Scale(scale, GetCentroid());
     }
 
     /// <summary>
-    /// Non-uniformly scales all vertices of this mesh in place by the specified vector.
+    /// Non-uniformly scales the entire mesh in place relative to its centroid.
     /// </summary>
     /// <param name="scale">The component-wise scale factor applied to each vertex.</param>
     public void Scale(Vector2 scale)
+    {
+        Scale(scale, GetCentroid());
+    }
+
+    /// <summary>
+    /// Uniformly scales all vertices of this mesh in place relative to the specified pivot.
+    /// </summary>
+    /// <param name="scale">The scale factor applied to each vertex relative to <paramref name="pivot"/>.</param>
+    /// <param name="pivot">The fixed point that remains stationary while the mesh is scaled.</param>
+    public void Scale(float scale, Vector2 pivot)
     {
         var triangles = triangleVertices;
         int vertexCount = triangles.Count;
         for (int i = 0; i < vertexCount; i++)
         {
-            triangles[i] *= scale;
+            triangles[i] = pivot + (triangles[i] - pivot) * scale;
         }
     }
+
+    /// <summary>
+    /// Non-uniformly scales all vertices of this mesh in place relative to the specified pivot.
+    /// </summary>
+    /// <param name="scale">The component-wise scale factor applied to each vertex relative to <paramref name="pivot"/>.</param>
+    /// <param name="pivot">The fixed point that remains stationary while the mesh is scaled.</param>
+    public void Scale(Vector2 scale, Vector2 pivot)
+    {
+        var triangles = triangleVertices;
+        int vertexCount = triangles.Count;
+        for (int i = 0; i < vertexCount; i++)
+        {
+            triangles[i] = pivot + (triangles[i] - pivot) * scale;
+        }
+    }
+
+    
 
     /// <summary>
     /// Rotates all vertices of this mesh in place by the specified angle around the given pivot.
@@ -534,14 +568,25 @@ public sealed class TriMesh : IEquatable<TriMesh>
     /// <param name="scale">The scale factor applied to each copied vertex.</param>
     public void ScaleCopy(TriMesh result, float scale)
     {
+        ScaleCopy(result, scale, GetCentroid());
+    }
+
+    /// <summary>
+    /// Copies this mesh into <paramref name="result"/>, scaling each vertex by the specified factor around the given pivot.
+    /// </summary>
+    /// <param name="result">The destination mesh.</param>
+    /// <param name="scale">The scale factor applied to each copied vertex.</param>
+    /// <param name="pivot">The fixed point that remains stationary while the copied mesh is scaled.</param>
+    public void ScaleCopy(TriMesh result, float scale, Vector2 pivot)
+    {
         if (result == null) throw new ArgumentNullException(nameof(result));
         if (ReferenceEquals(result, this))
         {
-            Scale(scale);
+            Scale(scale, pivot);
             return;
         }
 
-        CopyTransformed(result, p => p * scale);
+        CopyTransformed(result, p => pivot + (p - pivot) * scale);
     }
 
     /// <summary>
@@ -551,14 +596,25 @@ public sealed class TriMesh : IEquatable<TriMesh>
     /// <param name="scale">The component-wise scale factor applied to each copied vertex.</param>
     public void ScaleCopy(TriMesh result, Vector2 scale)
     {
+        ScaleCopy(result, scale, GetCentroid());
+    }
+
+    /// <summary>
+    /// Copies this mesh into <paramref name="result"/>, scaling each vertex by the specified vector around the given pivot.
+    /// </summary>
+    /// <param name="result">The destination mesh.</param>
+    /// <param name="scale">The component-wise scale factor applied to each copied vertex.</param>
+    /// <param name="pivot">The fixed point that remains stationary while the copied mesh is scaled.</param>
+    public void ScaleCopy(TriMesh result, Vector2 scale, Vector2 pivot)
+    {
         if (result == null) throw new ArgumentNullException(nameof(result));
         if (ReferenceEquals(result, this))
         {
-            Scale(scale);
+            Scale(scale, pivot);
             return;
         }
 
-        CopyTransformed(result, p => p * scale);
+        CopyTransformed(result, p => pivot + (p - pivot) * scale);
     }
 
     /// <summary>
@@ -754,6 +810,57 @@ public sealed class TriMesh : IEquatable<TriMesh>
     }
     
     private static float Cross(in Vector2 a, in Vector2 b) => a.X * b.Y - a.Y * b.X;
+
+    private bool TryGetAreaWeightedCentroid(out Vector2 centroid)
+    {
+        var triangles = triangleVertices;
+        int vertexCount = GetValidVertexCount();
+        if (vertexCount < 3)
+        {
+            centroid = default;
+            return false;
+        }
+
+        Vector2 weightedCentroidSum = default;
+        float totalWeight = 0f;
+        for (int i = 0; i < vertexCount; i += 3)
+        {
+            Vector2 a = triangles[i];
+            Vector2 b = triangles[i + 1];
+            Vector2 c = triangles[i + 2];
+
+            float weight = MathF.Abs(Cross(b - a, c - a));
+            if (weight <= 0f) continue;
+
+            weightedCentroidSum += ((a + b + c) / 3f) * weight;
+            totalWeight += weight;
+        }
+
+        if (totalWeight <= 0f)
+        {
+            centroid = default;
+            return false;
+        }
+
+        centroid = weightedCentroidSum / totalWeight;
+        return true;
+    }
+
+    private Vector2 GetMeanVertexCentroid()
+    {
+        var triangles = triangleVertices;
+        int vertexCount = triangles.Count;
+        if (vertexCount <= 0) return default;
+        if (vertexCount == 1) return triangles[0];
+
+        Vector2 total = default;
+        for (int i = 0; i < vertexCount; i++)
+        {
+            total += triangles[i];
+        }
+
+        return total / vertexCount;
+    }
     
     private void CopyTransformed(TriMesh result, Func<Vector2, Vector2> transformer)
     {
