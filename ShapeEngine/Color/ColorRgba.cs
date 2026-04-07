@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using Raylib_cs;
+using ShapeEngine.Core;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Color;
@@ -1459,10 +1460,41 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     public bool Equals(ColorRgba other) => this == other;
 
     /// <summary>
+    /// Creates a stable 64-bit hash key for this color.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize channel values before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(R, G, B, A);
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of this color hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize channel values before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of this color hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize channel values before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+
+    /// <summary>
     /// Returns a hash code for this ColorRgba.
     /// </summary>
     /// <returns>A hash code for the current ColorRgba, suitable for use in hashing algorithms and data structures like a hash table.</returns>
-    public override int GetHashCode() => ToSysColor().GetHashCode();
+    public override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
     #endregion
     
     #region Clamp
