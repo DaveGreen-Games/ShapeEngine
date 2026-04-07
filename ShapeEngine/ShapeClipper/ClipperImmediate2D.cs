@@ -555,8 +555,6 @@ public static class ClipperImmediate2D
     /// <param name="result">The destination list that receives the traced points.</param>
     public static void ToPolylinePerimeter(IReadOnlyList<Vector2> polygonCCW, float perimeterToDraw, int startIndex, List<Vector2> result)
     {
-        if (perimeterToDraw <= 0f) return;
-        
         if (polygonCCW.Count <= 1) return;
         
         result.Clear();
@@ -578,7 +576,8 @@ public static class ClipperImmediate2D
 
             if (accumulatedPerimeter + segmentLength >= absPerimeterToDraw)
             {
-                float f = (perimeterToDraw - accumulatedPerimeter) / segmentLength;
+                float remainingPerimeter = absPerimeterToDraw - accumulatedPerimeter;
+                float f = segmentLength <= 0f ? 0f : remainingPerimeter / segmentLength;
                 var end = cur.Lerp(next, f);
                 result.Add(end);
                 break;
@@ -597,8 +596,6 @@ public static class ClipperImmediate2D
     /// <param name="result">The destination list that receives the traced points.</param>
     public static void ToPolylinePercentage(IReadOnlyList<Vector2> polygonCCW, float f, int startIndex, List<Vector2> result)
     {
-        if (f <= 0) return;
-        
         if (polygonCCW.Count <= 1) return;
 
         if (f >= 1f)
@@ -632,8 +629,6 @@ public static class ClipperImmediate2D
     /// <param name="result">The destination list that receives the traced points.</param>
     public static void ToPolylinePerimeter(IReadOnlyList<Vector2> polyline, float perimeterToDraw, List<Vector2> result)
     {
-        if (perimeterToDraw <= 0f) return;
-        
         if (polyline.Count <= 1) return;
         
         result.Clear();
@@ -688,8 +683,6 @@ public static class ClipperImmediate2D
     /// <param name="result">The destination list that receives the traced points.</param>
     public static void ToPolylinePercentage(IReadOnlyList<Vector2> polyline, float f, List<Vector2> result)
     {
-        if (f <= 0) return;
-        
         if (polyline.Count <= 1) return;
 
         if (f >= 1f)
