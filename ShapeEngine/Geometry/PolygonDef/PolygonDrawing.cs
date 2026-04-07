@@ -244,7 +244,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolygonOutlineTriangulationPerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
@@ -261,7 +261,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolygonOutlineTriangulationPerimeter(poly, perimeterToDraw, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
@@ -280,7 +280,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolygonOutlineTriangulationPercentage(poly, f, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
@@ -297,7 +297,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolygonOutlineTriangulationPercentage(poly, f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     #endregion
     

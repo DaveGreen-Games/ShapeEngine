@@ -130,7 +130,7 @@ public static class ClipperImmediate2D
     /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
     /// <param name="endType">The cap style used for the generated open outline section.</param>
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
-    public static void DrawPolygonOutlineTriangulationPerimeter(IReadOnlyList<Vector2> polygonCCW, float perimeter, int startIndex, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
+    public static void DrawPolygonOutlinePerimeter(IReadOnlyList<Vector2> polygonCCW, float perimeter, int startIndex, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
         CreatePolygonOutlineTriangulationPerimeter(polygonCCW, perimeter, startIndex, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
         _triMeshBuffer.Draw(color);
@@ -147,7 +147,7 @@ public static class ClipperImmediate2D
     /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
     /// <param name="endType">The cap style used for the generated open stroke section.</param>
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
-    public static void DrawPolylineTriangulationPerimeter(IReadOnlyList<Vector2> polyline, float perimeter, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
+    public static void DrawPolylinePerimeter(IReadOnlyList<Vector2> polyline, float perimeter, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
         CreatePolylineTriangulationPerimeter(polyline, perimeter, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
         _triMeshBuffer.Draw(color);
@@ -165,7 +165,7 @@ public static class ClipperImmediate2D
     /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
     /// <param name="endType">The cap style used for the generated open outline section.</param>
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
-    public static void DrawPolygonOutlineTriangulationPercentage(IReadOnlyList<Vector2> polygonCCW, float f, int startIndex, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
+    public static void DrawPolygonOutlinePercentage(IReadOnlyList<Vector2> polygonCCW, float f, int startIndex, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
         CreatePolygonOutlineTriangulationPercentage(polygonCCW, f, startIndex, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
         _triMeshBuffer.Draw(color);
@@ -182,7 +182,7 @@ public static class ClipperImmediate2D
     /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
     /// <param name="endType">The cap style used for the generated open stroke section.</param>
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
-    public static void DrawPolylineTriangulationPercentage(IReadOnlyList<Vector2> polyline, float f, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
+    public static void DrawPolylinePercentage(IReadOnlyList<Vector2> polyline, float f, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
         CreatePolylineTriangulationPercentage(polyline, f, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
         _triMeshBuffer.Draw(color);

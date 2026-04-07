@@ -65,12 +65,12 @@ public static class PolylineDrawing
     
     public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolylineTriangulationPerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolylineTriangulationPerimeter(polyline, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     
     
@@ -115,12 +115,12 @@ public static class PolylineDrawing
     
     public static void DrawPercentage(this Polyline polyline, float f, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolylineTriangulationPercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolylinePercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     public static void DrawPercentage(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ClipperImmediate2D.DrawPolylineTriangulationPercentage(polyline, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ClipperImmediate2D.DrawPolylinePercentage(polyline, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
 
     
