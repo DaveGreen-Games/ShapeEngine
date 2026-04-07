@@ -7,6 +7,7 @@ using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolylineDef;
@@ -20,24 +21,23 @@ namespace ShapeEngine.Geometry.PolylineDef;
 /// </remarks>
 public static class PolylineDrawing
 {
-    //TODO:
-    // - Clean up and remove unused methods (relative polyline for instance)
-    // - Add regions
-    // - Copy structure of PolygonDrawing
-    // - Use PolygonDrawing for functions that need to be overhauled here
-    // - Add DrawFast methods that dont work with alpha color (just draw segments between vertices with endcaps)
+    //CHECK: Check if *Faster methods are even faster.
     
-    //TODO: Rework all below with new ClipperImmediate2d system!
     
-    /// <summary>
-    /// Draws the polyline using a single color and specified thickness.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="thickness">The thickness of the line segments.</param>
-    /// <param name="color">The color to use for the polyline.</param>
-    /// <param name="capType">The type of line cap to use at segment ends.</param>
-    /// <param name="capPoints">The number of points used for the cap rendering.</param>
-    public static void Draw(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    #region Draw
+    
+    public static void Draw(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
+    {
+        ClipperImmediate2D.DrawPolyline(polyline, thickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+    }
+
+    public static void Draw(this Polyline polyline, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        ClipperImmediate2D.DrawPolyline(polyline, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+    }
+    
+    
+    public static void DrawFast(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (polyline.Count < 2) return;
         for (var i = 0; i < polyline.Count - 1; i++)
@@ -47,13 +47,8 @@ public static class PolylineDrawing
             SegmentDrawing.DrawSegment(start, end, thickness, color, capType, capPoints);
         }
     }
-
-    /// <summary>
-    /// Draws the polyline using the specified <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
-    public static void Draw(this Polyline polyline, LineDrawingInfo lineInfo)
+   
+    public static void DrawFast(this Polyline polyline, LineDrawingInfo lineInfo)
     {
         if (polyline.Count < 2) return;
         for (var i = 0; i < polyline.Count - 1; i++)
@@ -62,144 +57,29 @@ public static class PolylineDrawing
             var end = polyline[i + 1];
             SegmentDrawing.DrawSegment(start, end, lineInfo);
         }
-    }
-
-    /// <summary>
-    /// Draws the polyline using a list of colors, cycling through them for each segment.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="thickness">The thickness of the line segments.</param>
-    /// <param name="colors">A list of colors to use for each segment, cycled as needed.</param>
-    /// <param name="capType">The type of line cap to use at segment ends.</param>
-    /// <param name="capPoints">The number of points used for the cap rendering.</param>
-    /// <remarks>
-    /// If the number of segments exceeds the number of colors, colors are repeated in order.
-    /// </remarks>
-    public static void Draw(this Polyline polyline, float thickness, List<ColorRgba> colors, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    }    
+    
+    #endregion
+    
+    #region Draw Perimeter
+    
+    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            var c = colors[i % colors.Count];
-            SegmentDrawing.DrawSegment(start, end, thickness, c, capType, capPoints);
-        }
+        ClipperImmediate2D.DrawPolylineTriangulationPerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
-
-    /// <summary>
-    /// Draws the polyline using a list of colors and the specified <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="colors">A list of colors to use for each segment, cycled as needed.</param>
-    /// <param name="lineInfo">The drawing information, including thickness and cap type.</param>
-    public static void Draw(this Polyline polyline, List<ColorRgba> colors, LineDrawingInfo lineInfo)
+    
+    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        Draw(polyline, lineInfo.Thickness, colors, lineInfo.CapType, lineInfo.CapPoints);
+        ClipperImmediate2D.DrawPolylineTriangulationPerimeter(polyline, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
-
-    /// <summary>
-    /// Draws the polyline at a specified position, size, and rotation, using a single color and thickness.
-    /// </summary>
-    /// <param name="relative">The polyline with relative points.</param>
-    /// <param name="pos">The position to draw the polyline at (center).</param>
-    /// <param name="size">The scale factor for the polyline.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineThickness">The thickness of the line segments.</param>
-    /// <param name="color">The color to use for the polyline.</param>
-    /// <param name="capType">The type of line cap to use at segment ends.</param>
-    /// <param name="capPoints">The number of points used for the cap rendering.</param>
-    public static void Draw(this Polyline relative, Vector2 pos, float size, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    
+    
+    public static void DrawPerimeterFast(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo)
     {
-        if (relative.Count < 2) return;
-
-        for (var i = 0; i < relative.Count - 1; i++)
-        {
-            var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
-        }
+        DrawPerimeterFast(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
-
-    /// <summary>
-    /// Draws the polyline using a <see cref="Transform2D"/> for position, scale, and rotation, with a single color and thickness.
-    /// </summary>
-    /// <param name="relative">The polyline with relative points.</param>
-    /// <param name="transform">The transform to apply to the polyline.</param>
-    /// <param name="lineThickness">The thickness of the line segments.</param>
-    /// <param name="color">The color to use for the polyline.</param>
-    /// <param name="capType">The type of line cap to use at segment ends.</param>
-    /// <param name="capPoints">The number of points used for the cap rendering.</param>
-    public static void Draw(this Polyline relative, Transform2D transform, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        Draw(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineThickness, color, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws the polyline at a specified position, size, and rotation, using the specified <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="relative">The polyline with relative points.</param>
-    /// <param name="pos">The position to draw the polyline at (center).</param>
-    /// <param name="size">The scale factor for the polyline.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
-    public static void Draw(this Polyline relative, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo) => Draw(relative, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-
-    /// <summary>
-    /// Draws the polyline using a <see cref="Transform2D"/> and the specified <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="relative">The polyline with relative points.</param>
-    /// <param name="transform">The transform to apply to the polyline.</param>
-    /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
-    public static void Draw(this Polyline relative, Transform2D transform, LineDrawingInfo lineInfo) => Draw(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-
-    /// <summary>
-    /// Draws a portion of the polyline's perimeter, as specified by the perimeter length.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="perimeterToDraw">
-    /// The length of the perimeter to draw.
-    /// Negative values draw in the clockwise direction.
-    /// </param>
-    /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
-    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo)
-    {
-        DrawPerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-
-    /// <summary>
-    /// Draws a portion of the polyline's perimeter, as a percentage of the total outline.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="f">
-    /// Specifies the starting corner and the percentage of the outline to draw.
-    /// <list type="bullet">
-    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
-    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
-    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
-    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
-    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
-    public static void DrawPercentage(this Polyline polyline, float f, LineDrawingInfo lineInfo)
-    {
-        DrawPercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-
-    /// <summary>
-    /// Draws a specified length of the polyline's perimeter.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="perimeterToDraw">The length of the perimeter to draw. Negative values draw in the clockwise direction.</param>
-    /// <param name="lineThickness">The thickness of the line segments.</param>
-    /// <param name="color">The color to use for the polyline.</param>
-    /// <param name="capType">The type of line cap to use at segment ends.</param>
-    /// <param name="capPoints">The number of points used for the cap rendering.</param>
-    /// <remarks>
-    /// Useful for animating outlines or drawing partial shapes.
-    /// </remarks>
-    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    
+    public static void DrawPerimeterFast(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (polyline.Count < 3 || perimeterToDraw == 0) return;
 
@@ -229,28 +109,28 @@ public static class PolylineDrawing
         }
     }
 
-    /// <summary>
-    /// Draws a specified percentage of the polyline's outline.
-    /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="f">
-    /// Specifies the starting corner and the percentage of the outline to draw.
-    /// <list type="bullet">
-    /// <item><description>The integer part selects the starting corner (0 = first corner, 1 = second, etc.).</description></item>
-    /// <item><description>The decimal part specifies the percentage of the outline to draw, as a fraction (0.0 to 1.0).</description></item>
-    /// <item><description>Negative values draw in the clockwise direction; positive values draw counter-clockwise.</description></item>
-    /// <item><description>Example: <c>0.35</c> starts at corner 0, draws 35% of the outline counter-clockwise.</description></item>
-    /// <item><description>Example: <c>-2.7</c> starts at corner 2, draws 70% of the outline clockwise.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="lineThickness">The thickness of the line segments.</param>
-    /// <param name="color">The color to use for the polyline.</param>
-    /// <param name="capType">The type of line cap to use at segment ends.</param>
-    /// <param name="capPoints">The number of points used for the cap rendering.</param>
-    /// <remarks>
-    /// Useful for progress indicators or animated outlines.
-    /// </remarks>
-    public static void DrawPercentage(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    #endregion
+    
+    #region Draw Percentage
+    
+    public static void DrawPercentage(this Polyline polyline, float f, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    {
+        ClipperImmediate2D.DrawPolylineTriangulationPercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+    }
+    
+    public static void DrawPercentage(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
+    {
+        ClipperImmediate2D.DrawPolylineTriangulationPercentage(polyline, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+    }
+
+    
+    
+    public static void DrawPercentageFast(this Polyline polyline, float f, LineDrawingInfo lineInfo)
+    {
+        DrawPercentageFast(polyline, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    
+    public static void DrawPercentageFast(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (polyline.Count < 3 || f == 0f) return;
 
@@ -279,6 +159,10 @@ public static class PolylineDrawing
         DrawPerimeter(polyline, perimeter * f * (negative ? -1 : 1), lineThickness, color, capType, capPoints);
     }
 
+    #endregion
+
+    #region Draw Scaled
+    
     /// <summary>
     /// Draws the polyline with each side scaled towards its origin, allowing for variable side lengths.
     /// </summary>
@@ -320,81 +204,15 @@ public static class PolylineDrawing
             SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
-
-    /// <summary>
-    /// Draws the polyline with each side scaled towards its origin, at a specified position, size, and rotation.
-    /// </summary>
-    /// <param name="relative">The polyline with relative points.</param>
-    /// <param name="pos">The position to draw the polyline at (center).</param>
-    /// <param name="size">The scale factor for the polyline.</param>
-    /// <param name="rotDeg">The rotation in degrees.</param>
-    /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
-    /// <param name="sideScaleFactor">
-    /// <para>The scale factor for each side.</para>
-    /// <list type="bullet">
-    /// <item><description>0: No polyline is drawn.</description></item>
-    /// <item><description>1: The normal polyline is drawn.</description></item>
-    /// <item><description>0.5: Each side is half as long.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="sideScaleOrigin">
-    /// The point along the line to scale from, in both directions (0 to 1).
-    /// <list type="bullet">
-    /// <item><description>0: Start of Segment</description></item>
-    /// <item><description>0.5: Center of Segment</description></item>
-    /// <item><description>1: End of Segment</description></item>
-    /// </list>
-    /// </param>
-    /// <remarks>
-    /// Useful for dynamic shape morphing and animation effects.
-    /// </remarks>
-    public static void DrawLinesScaled(this Polyline relative, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
-    {
-        if (relative.Count < 2) return;
-        if (sideScaleFactor <= 0) return;
-
-        if (sideScaleFactor >= 1)
-        {
-            relative.Draw(pos, size, rotDeg, lineInfo);
-            return;
-        }
-
-        for (var i = 0; i < relative.Count - 1; i++)
-        {
-            var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
-        }
-    }
-
-    /// <summary>
-    /// Draws the polyline with each side scaled towards its origin, using a <see cref="Transform2D"/>.
-    /// </summary>
-    /// <param name="relative">The polyline with relative points.</param>
-    /// <param name="transform">The transform to apply to the polyline.</param>
-    /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
-    /// <param name="sideScaleFactor">
-    /// <para>The scale factor for each side.</para>
-    /// <list type="bullet">
-    /// <item><description>0: No polyline is drawn.</description></item>
-    /// <item><description>1: The normal polyline is drawn.</description></item>
-    /// <item><description>0.5: Each side is half as long.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="sideScaleOrigin">
-    /// The point along the line to scale from, in both directions (0 to 1).
-    /// <list type="bullet">
-    /// <item><description>0: Start of Segment</description></item>
-    /// <item><description>0.5: Center of Segment</description></item>
-    /// <item><description>1: End of Segment</description></item>
-    /// </list>
-    /// </param>
-    public static void DrawLinesScaled(this Polyline relative, Transform2D transform, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
-    {
-        DrawLinesScaled(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo, sideScaleFactor, sideScaleOrigin);
-    }
     
+    #endregion
 
+    //TODO: Rework ( polygon drawing needs the same function as well!)
+    // - calculate 1 triangulation 
+    // - then draw triangulation, scale triangulation, then draw scaled triangulation, repeat for steps
+    // - probably add function to ClipperImmediate2D for caching triangulation?
+    #region Glow
+    
     /// <summary>
     /// Draws the polyline with a glow effect, interpolating width and color along each segment.
     /// </summary>
@@ -435,8 +253,10 @@ public static class PolylineDrawing
         }
     }
     
+    #endregion
     
     #region Draw Masked
+    
     /// <summary>
     /// Draws each segment of the polyline using a triangular mask.
     /// </summary>
@@ -456,6 +276,7 @@ public static class PolylineDrawing
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
     }
+    
     /// <summary>
     /// Draws each segment of the polyline using a circular mask.
     /// </summary>
@@ -475,6 +296,7 @@ public static class PolylineDrawing
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
     }
+    
     /// <summary>
     /// Draws each segment of the polyline using a rectangular mask.
     /// </summary>
@@ -494,6 +316,7 @@ public static class PolylineDrawing
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
     }
+  
     /// <summary>
     /// Draws each segment of the polyline using a quadrilateral mask.
     /// </summary>
@@ -533,6 +356,7 @@ public static class PolylineDrawing
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
     }
+    
     /// <summary>
     /// Draws each segment of the polyline using a mask of a generic closed shape type.
     /// </summary>
@@ -555,9 +379,11 @@ public static class PolylineDrawing
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
     }
+    
     #endregion
     
     #region Gapped
+    
     /// <summary>
     /// Draws a gapped outline for a polyline (open or closed), creating a dashed or segmented effect along the polyline's length.
     /// </summary>
@@ -698,6 +524,7 @@ public static class PolylineDrawing
 
         return perimeter;
     }
+    
     #endregion
 }
 
