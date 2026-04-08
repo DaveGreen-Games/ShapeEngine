@@ -1,5 +1,4 @@
 using System.Numerics;
-using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.PolygonDef;
