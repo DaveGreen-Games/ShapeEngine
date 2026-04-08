@@ -707,8 +707,8 @@ public class GameloopExamples : Game
         var circleCenter = tip + dir * size * 2;
         var left = circleCenter + new Vector2(-1, 0) * size;
         var top = circleCenter + new Vector2(0, -1) * size;
-        SegmentDrawing.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
-        SegmentDrawing.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
+        Segment.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
+        Segment.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
         var circle = new Circle(circleCenter, size);
         circle.DrawSectorLines(180, 270, 0f, 1f, colorRgba, 0.65f);
     }

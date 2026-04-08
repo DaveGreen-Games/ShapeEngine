@@ -12,51 +12,47 @@ using ShapeEngine.ShapeClipper;
 namespace ShapeEngine.Geometry.PolylineDef;
 
 /// <summary>
-/// Provides extension methods for drawing polylines with various styles, colors, and transformations.
+/// Provides drawing methods for <see cref="Polyline"/> values.
 /// </summary>
-/// <remarks>
-/// This static class contains a variety of drawing utilities for <see cref="Polyline"/> objects, including support for color gradients,
-/// partial outlines, scaling, and glow effects. All methods are intended for rendering purposes and do not modify the polyline data.
-/// </remarks>
-public static class PolylineDrawing
+public partial class Polyline
 {
     #region Draw
     
-    public static void Draw(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
+    public void Draw(float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolyline(polyline, thickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolyline(this, thickness, color, miterLimit, beveled, capType.ToShapeClipperEndType());
     }
 
-    public static void Draw(this Polyline polyline, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public void Draw(LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolyline(polyline, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolyline(this, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType());
     }
     
     #endregion
     
     #region Draw Perimeter
     
-    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public void DrawPerimeter(float perimeterToDraw, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePerimeter(this, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
-    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
+    public void DrawPerimeter(float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePerimeter(this, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     #endregion
     
     #region Draw Percentage
     
-    public static void DrawPercentage(this Polyline polyline, float f, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public void DrawPercentage(float f, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolylinePercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePercentage(this, f, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
-    public static void DrawPercentage(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
+    public void DrawPercentage(float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolylinePercentage(polyline, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePercentage(this, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     #endregion
 
@@ -65,7 +61,6 @@ public static class PolylineDrawing
     /// <summary>
     /// Draws the polyline with each side scaled towards its origin, allowing for variable side lengths.
     /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
     /// <param name="lineInfo">The drawing information, including thickness, color, and cap type.</param>
     /// <param name="sideScaleFactor">
     /// <para>The scale factor for each side.</para>
@@ -86,21 +81,21 @@ public static class PolylineDrawing
     /// <remarks>
     /// This method is useful for creating effects where the polyline appears to shrink or grow from its sides.
     /// </remarks>
-    public static void DrawLinesScaled(this Polyline polyline, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public void DrawLinesScaled(LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
-        if (polyline.Count < 2) return;
+        if (Count < 2) return;
         if (sideScaleFactor <= 0) return;
 
         if (sideScaleFactor >= 1)
         {
-            polyline.Draw(lineInfo);
+            Draw(lineInfo);
             return;
         }
-        for (var i = 0; i < polyline.Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var start = polyline[i];
-            var end = polyline[(i + 1) % polyline.Count];
-            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            var start = this[i];
+            var end = this[(i + 1) % Count];
+            Segment.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
     
@@ -111,7 +106,6 @@ public static class PolylineDrawing
     /// Draws the polyline as a layered glow by rendering multiple stroked passes
     /// with interpolated thickness and color values.
     /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
     /// <param name="thicknessRange">The stroke thickness range used from the first pass to the final pass.</param>
     /// <param name="colorRange">The color range used from the first pass to the final pass.</param>
     /// <param name="steps">The number of glow passes to render. A value of 1 draws a single pass using the maximum thickness and color.</param>
@@ -122,10 +116,10 @@ public static class PolylineDrawing
     /// <remarks>
     /// This is useful for soft outlines, energy trails, and other expanding stroke effects.
     /// </remarks>
-    public static void DrawGlow(this Polyline polyline, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
+    public void DrawGlow(ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
         float miterLimit = 2f, bool beveled = false,  LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ShapeClipperDrawing2D.DrawPolylineGlow(polyline, thicknessRange, colorRange, steps, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay);
+        ShapeClipperDrawing2D.DrawPolylineGlow(this, thicknessRange, colorRange, steps, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay);
     }
     
     #endregion
@@ -135,18 +129,17 @@ public static class PolylineDrawing
     /// <summary>
     /// Draws each segment of the polyline using a triangular mask.
     /// </summary>
-    /// <param name="polyline">The polyline whose segments will be drawn.</param>
     /// <param name="mask">The <see cref="Triangle"/> used as the clipping mask.</param>
     /// <param name="lineInfo">Drawing parameters such as thickness, color and cap type.</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawMasked(this Polyline polyline, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (polyline.Count < 2) return;
+        if (Count < 2) return;
         
-        for (var i = 0; i < polyline.Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var start = polyline[i];
-            var end = polyline[i + 1];
+            var start = this[i];
+            var end = this[i + 1];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -155,18 +148,17 @@ public static class PolylineDrawing
     /// <summary>
     /// Draws each segment of the polyline using a circular mask.
     /// </summary>
-    /// <param name="polyline">The polyline whose segments will be drawn.</param>
     /// <param name="mask">The <see cref="Circle"/> used as the clipping mask.</param>
     /// <param name="lineInfo">Drawing parameters such as thickness, color and cap type.</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawMasked(this Polyline polyline, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (polyline.Count < 2) return;
+        if (Count < 2) return;
         
-        for (var i = 0; i < polyline.Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var start = polyline[i];
-            var end = polyline[i + 1];
+            var start = this[i];
+            var end = this[i + 1];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -175,18 +167,17 @@ public static class PolylineDrawing
     /// <summary>
     /// Draws each segment of the polyline using a rectangular mask.
     /// </summary>
-    /// <param name="polyline">The polyline whose segments will be drawn.</param>
     /// <param name="mask">The <see cref="Rect"/> used as the clipping mask.</param>
     /// <param name="lineInfo">Drawing parameters such as thickness, color and cap type.</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawMasked(this Polyline polyline, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (polyline.Count < 2) return;
+        if (Count < 2) return;
         
-        for (var i = 0; i < polyline.Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var start = polyline[i];
-            var end = polyline[i + 1];
+            var start = this[i];
+            var end = this[i + 1];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -195,18 +186,17 @@ public static class PolylineDrawing
     /// <summary>
     /// Draws each segment of the polyline using a quadrilateral mask.
     /// </summary>
-    /// <param name="polyline">The polyline whose segments will be drawn.</param>
     /// <param name="mask">The <see cref="Quad"/> used as the clipping mask.</param>
     /// <param name="lineInfo">Drawing parameters such as thickness, color and cap type.</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawMasked(this Polyline polyline, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (polyline.Count < 2) return;
+        if (Count < 2) return;
         
-        for (var i = 0; i < polyline.Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var start = polyline[i];
-            var end = polyline[i + 1];
+            var start = this[i];
+            var end = this[i + 1];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -215,18 +205,17 @@ public static class PolylineDrawing
     /// <summary>
     /// Draws each segment of the polyline using a <see cref="Polygon"/> as the clipping mask.
     /// </summary>
-    /// <param name="polyline">The polyline whose segments will be drawn.</param>
     /// <param name="mask">The <see cref="Polygon"/> used as the clipping mask.</param>
     /// <param name="lineInfo">Drawing parameters such as thickness, color and cap type.</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawMasked(this Polyline polyline, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (polyline.Count < 2) return;
+        if (Count < 2) return;
         
-        for (var i = 0; i < polyline.Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var start = polyline[i];
-            var end = polyline[i + 1];
+            var start = this[i];
+            var end = this[i + 1];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -238,18 +227,17 @@ public static class PolylineDrawing
     /// <typeparam name="T">
     /// The mask type that implements <see cref="IClosedShapeTypeProvider"/> (for example <see cref="Circle"/>, <see cref="Rect"/>, <see cref="Polygon"/>, or <see cref="Quad"/>).
     /// </typeparam>
-    /// <param name="polyline">The polyline whose segments will be drawn.</param>
     /// <param name="mask">The mask instance used for clipping each segment.</param>
     /// <param name="lineInfo">Drawing parameters such as thickness, color and cap type.</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawMasked<T>(this Polyline polyline, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    public void DrawMasked<T>(T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
     {
-        if (polyline.Count < 2) return;
+        if (Count < 2) return;
         
-        for (var i = 0; i < polyline.Count - 1; i++)
+        for (var i = 0; i < Count - 1; i++)
         {
-            var start = polyline[i];
-            var end = polyline[i + 1];
+            var start = this[i];
+            var end = this[i + 1];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -262,7 +250,6 @@ public static class PolylineDrawing
     /// <summary>
     /// Draws a gapped outline for a polyline (open or closed), creating a dashed or segmented effect along the polyline's length.
     /// </summary>
-    /// <param name="polyline">The polyline to draw.</param>
     /// <param name="perimeter">
     /// The total length of the polyline.
     /// If zero or negative, the method calculates it automatically.
@@ -278,11 +265,11 @@ public static class PolylineDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the polyline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no polyline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Polyline polyline, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public float DrawGappedOutline(float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
-            polyline.Draw(lineInfo);
+            Draw(lineInfo);
             return perimeter > 0f ? perimeter : -1f;
         }
 
@@ -295,7 +282,7 @@ public static class PolylineDrawing
 
         if (perimeter <= 0f)
         {
-            perimeter = polyline.GetLength();
+            perimeter = GetLength();
         }
 
         var startDistance = perimeter * gapDrawingInfo.StartOffset;
@@ -304,8 +291,8 @@ public static class PolylineDrawing
         
         
         var curIndex = 0;
-        var curPoint = polyline[0];
-        var nextPoint= polyline[1];
+        var curPoint = this[0];
+        var nextPoint= this[1];
         var curW = nextPoint - curPoint;
         var curDis = curW.Length();
         
@@ -335,7 +322,7 @@ public static class PolylineDrawing
                     
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        Segment.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -343,7 +330,7 @@ public static class PolylineDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            Segment.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     points.Clear();
@@ -353,14 +340,14 @@ public static class PolylineDrawing
             }
             else
             {
-                if (curIndex >= polyline.Count - 2) //last point
+                if (curIndex >= Count - 2) //last point
                 {
                     if (points.Count > 0)
                     {
                         points.Add(nextPoint);
                         if (points.Count == 2)
                         {
-                            SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                            Segment.DrawSegment(points[0], points[1], lineInfo);
                         }
                         else
                         {
@@ -368,17 +355,17 @@ public static class PolylineDrawing
                             {
                                 var p1 = points[i];
                                 var p2 = points[(i + 1) % points.Count];
-                                SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                                Segment.DrawSegment(p1, p2, lineInfo);
                             }
                         }
                         points.Clear();
-                        points.Add(polyline[0]);
+                        points.Add(this[0]);
                     }
                     
                     curDistance += curDis;
                     curIndex = 0;
-                    curPoint = polyline[curIndex];
-                    nextPoint = polyline[(curIndex + 1) % polyline.Count];
+                    curPoint = this[curIndex];
+                    nextPoint = this[(curIndex + 1) % Count];
                     curW = nextPoint - curPoint;
                     curDis = curW.Length();
                 }
@@ -387,9 +374,9 @@ public static class PolylineDrawing
                     if(points.Count > 0) points.Add(nextPoint);
 
                     curDistance += curDis;
-                    curIndex += 1;// (curIndex + 1) % polyline.Count;
-                    curPoint = polyline[curIndex];
-                    nextPoint = polyline[(curIndex + 1) % polyline.Count];
+                    curIndex += 1;// (curIndex + 1) % Count;
+                    curPoint = this[curIndex];
+                    nextPoint = this[(curIndex + 1) % Count];
                     curW = nextPoint - curPoint;
                     curDis = curW.Length();
                 }

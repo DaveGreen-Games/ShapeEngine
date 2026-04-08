@@ -39,7 +39,7 @@ internal class Penetrator : ExplosivePayload
         {
             var w = ShapeMath.LerpFloat(1f, 18f, TravelF);
             var c = Colors.PcMedium.ColorRgba.Lerp(Colors.PcWarm.ColorRgba, TravelF);
-            SegmentDrawing.DrawSegment(StartLocation, TargetLocation, w, c, LineCapType.Capped, 8);
+            Segment.DrawSegment(StartLocation, TargetLocation, w, c, LineCapType.Capped, 8);
             // ShapeDrawing.DrawLineGlow(StartLocation, TargetLocation, 4f, 12f, Colors.PcWarm.ColorRgba, Colors.PcWarm.ColorRgba, 12, LineCapType.Capped, 8);
         }
     }

@@ -14,38 +14,27 @@ using Ray = ShapeEngine.Geometry.RayDef.Ray;
 namespace ShapeEngine.Geometry.PolygonDef;
 
 /// <summary>
-/// Provides extension methods for drawing polygons with various styles and options.
+/// Provides drawing helpers and instance drawing methods for <see cref="Polygon"/> values.
 /// </summary>
-/// <remarks>
-/// These methods extend the <see cref="Polygon"/> class to support a wide range of drawing operations,
-/// including filled, outlined, cornered, and vertex-based renderings.
-/// Many methods support relative transformations and color gradients.
-/// </remarks>
-public static class PolygonDrawing
+public partial class Polygon
 {
-    #region Helper Members
-
-    // private static Triangulation drawHelperTriangulation = [];
-
-    #endregion
 
     #region Draw Masked
 
     /// <summary>
     /// Draws the polygon's edges while applying a triangular mask to each segment.
     /// </summary>
-    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
     /// <param name="mask">The triangular mask used to clip each segment.</param>
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawLinesMasked(this Polygon poly, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (poly.Count < 3) return;
+        if (Count < 3) return;
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
+            var start = this[i];
+            var end = this[(i + 1) % Count];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -54,18 +43,17 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws the polygon's edges while applying a circular mask to each segment.
     /// </summary>
-    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
     /// <param name="mask">The circular mask used to clip each segment.</param>
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawLinesMasked(this Polygon poly, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (poly.Count < 3) return;
+        if (Count < 3) return;
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
+            var start = this[i];
+            var end = this[(i + 1) % Count];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -74,18 +62,17 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws the polygon's edges while applying a rectangular mask to each segment.
     /// </summary>
-    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
     /// <param name="mask">The rectangular mask used to clip each segment.</param>
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawLinesMasked(this Polygon poly, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (poly.Count < 3) return;
+        if (Count < 3) return;
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
+            var start = this[i];
+            var end = this[(i + 1) % Count];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -94,18 +81,17 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws the polygon's edges while applying a quadrilateral mask to each segment.
     /// </summary>
-    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
     /// <param name="mask">The quadrilateral mask used to clip each segment.</param>
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawLinesMasked(this Polygon poly, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (poly.Count < 3) return;
+        if (Count < 3) return;
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
+            var start = this[i];
+            var end = this[(i + 1) % Count];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -114,18 +100,17 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws the polygon's edges while applying a polygonal mask to each segment.
     /// </summary>
-    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
     /// <param name="mask">The polygonal mask used to clip each segment.</param>
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawLinesMasked(this Polygon poly, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        if (poly.Count < 3) return;
+        if (Count < 3) return;
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
+            var start = this[i];
+            var end = this[(i + 1) % Count];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -135,18 +120,17 @@ public static class PolygonDrawing
     /// Draws the polygon's edges while applying a generic closed-shape mask to each segment.
     /// </summary>
     /// <typeparam name="T">Type of the mask implementing <see cref="IClosedShapeTypeProvider"/>.</typeparam>
-    /// <param name="poly">The polygon whose edges will be drawn. Must contain at least 3 points.</param>
     /// <param name="mask">The mask used to clip each segment.</param>
     /// <param name="lineInfo">Line drawing options (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
-    public static void DrawLinesMasked<T>(this Polygon poly, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    public void DrawLinesMasked<T>(T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
     {
-        if (poly.Count < 3) return;
+        if (Count < 3) return;
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
+            var start = this[i];
+            var end = this[(i + 1) % Count];
             var segment = new Segment(start, end);
             segment.DrawMasked(mask, lineInfo, reversedMask);
         }
@@ -160,35 +144,33 @@ public static class PolygonDrawing
     /// Draws a convex non-intersecting polygon (pentagon, hexagon, etc.) filled with the specified color, using the polygon's centroid as the center.
     /// This function should be used when Polygon is known to be convex.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="color">The fill color.</param>
     /// <param name="clockwise">If true, draws triangles in clockwise order; otherwise, counter-clockwise.</param>
-    public static void DrawPolygonConvex(this Polygon poly, ColorRgba color, bool clockwise = false)
+    public void DrawPolygonConvex(ColorRgba color, bool clockwise = false)
     {
-        if (poly.Count < 3) return; // Polygon must have at least 3 points
-        DrawPolygonConvex(poly, poly.GetCentroid(), color, clockwise);
+        if (Count < 3) return; // Polygon must have at least 3 points
+        DrawPolygonConvex(GetCentroid(), color, clockwise);
     }
 
     /// <summary>
     /// Draws a convex non-intersecting polygon (pentagon, hexagon, etc.) filled with the specified color, using the polygon's centroid as the center.
     /// This function should be used when Polygon is known to be convex.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="center">The center point for triangulation.</param>
     /// <param name="color">The fill color.</param>
     /// <param name="clockwise">If true, draws triangles in clockwise order; otherwise, counter-clockwise.</param>
-    public static void DrawPolygonConvex(this Polygon poly, Vector2 center, ColorRgba color, bool clockwise = false)
+    public void DrawPolygonConvex(Vector2 center, ColorRgba color, bool clockwise = false)
     {
-        if (poly.Count < 3) return; // Polygon must have at least 3 points
+        if (Count < 3) return; // Polygon must have at least 3 points
         if (clockwise)
         {
-            for (var i = 0; i < poly.Count - 1; i++) Raylib.DrawTriangle(poly[i], center, poly[i + 1], color.ToRayColor());
-            Raylib.DrawTriangle(poly[^1], center, poly[0], color.ToRayColor());
+            for (var i = 0; i < Count - 1; i++) Raylib.DrawTriangle(this[i], center, this[i + 1], color.ToRayColor());
+            Raylib.DrawTriangle(this[^1], center, this[0], color.ToRayColor());
         }
         else
         {
-            for (var i = 0; i < poly.Count - 1; i++) Raylib.DrawTriangle(poly[i], poly[i + 1], center, color.ToRayColor());
-            Raylib.DrawTriangle(poly[^1], poly[0], center, color.ToRayColor());
+            for (var i = 0; i < Count - 1; i++) Raylib.DrawTriangle(this[i], this[i + 1], center, color.ToRayColor());
+            Raylib.DrawTriangle(this[^1], this[0], center, color.ToRayColor());
         }
     }
 
@@ -199,27 +181,22 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws the polygon filled with the provided color.
     /// </summary>
-    /// <param name="poly">The polygon to draw. Polygons with fewer than 3 points are ignored; triangles are drawn directly.</param>
     /// <param name="color">Fill color used when rendering the polygon.</param>
     /// <remarks>
     /// Caution:This method will triangulate the polygon each call when the polygon contains more than 3 points,
     /// which can be performance-intensive for complex polygons.
     /// Precompute triangulation for best performance and then transform/draw the triangulation as needed.
     /// </remarks>
-    public static void Draw(this Polygon poly, ColorRgba color)
+    public void Draw(ColorRgba color)
     {
-        if (poly.Count < 3) return;
-        if (poly.Count == 3)
+        if (Count < 3) return;
+        if (Count == 3)
         {
-            TriangleDrawing.DrawTriangle(poly[0], poly[1], poly[2], color);
+            Triangle.DrawTriangle(this[0], this[1], this[2], color);
             return;
         }
         
-        ShapeClipperDrawing2D.DrawPolygon(poly, color, false);
-
-        // drawHelperTriangulation.Clear();
-        // poly.Triangulate(drawHelperTriangulation);
-        // drawHelperTriangulation.Draw(color);
+        ShapeClipperDrawing2D.DrawPolygon(this, color, false);
     }
 
     #endregion
@@ -229,7 +206,6 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws a partial section of the polygon outline measured by perimeter distance.
     /// </summary>
-    /// <param name="poly">The polygon whose outline section will be drawn.</param>
     /// <param name="perimeterToDraw">The perimeter distance to trace and render, starting at <paramref name="startIndex"/>.</param>
     /// <param name="startIndex">The index of the polygon vertex where tracing begins.</param>
     /// <param name="lineThickness">The outline thickness in world units.</param>
@@ -240,15 +216,14 @@ public static class PolygonDrawing
     /// <remarks>
     /// This method renders an open outline segment rather than the full closed polygon outline.
     /// </remarks>
-    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
+    public void DrawLinesPerimeter(float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePerimeter(this, perimeterToDraw, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
     /// Draws a partial section of the polygon outline measured by perimeter distance using the specified <see cref="LineDrawingInfo"/>.
     /// </summary>
-    /// <param name="poly">The polygon whose outline section will be drawn.</param>
     /// <param name="perimeterToDraw">The perimeter distance to trace and render, starting at <paramref name="startIndex"/>.</param>
     /// <param name="startIndex">The index of the polygon vertex where tracing begins.</param>
     /// <param name="lineInfo">The line drawing settings that define thickness, color, and cap style.</param>
@@ -257,15 +232,14 @@ public static class PolygonDrawing
     /// <remarks>
     /// This overload reads thickness, color, and cap configuration from <paramref name="lineInfo"/>.
     /// </remarks>
-    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public void DrawLinesPerimeter(float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePerimeter(this, perimeterToDraw, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
     /// Draws a partial section of the polygon outline based on a fraction of the polygon perimeter.
     /// </summary>
-    /// <param name="poly">The polygon whose outline section will be drawn.</param>
     /// <param name="f">The fraction of the total perimeter to render, typically in the range from 0 to 1.</param>
     /// <param name="startIndex">The index of the polygon vertex where tracing begins.</param>
     /// <param name="lineThickness">The outline thickness in world units.</param>
@@ -276,15 +250,14 @@ public static class PolygonDrawing
     /// <remarks>
     /// The traced section starts at <paramref name="startIndex"/> and proceeds along the polygon winding order.
     /// </remarks>
-    public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
+    public void DrawLinesPercentage(float f, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePercentage(this, f, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
     /// Draws a partial section of the polygon outline based on a fraction of the polygon perimeter using the specified <see cref="LineDrawingInfo"/>.
     /// </summary>
-    /// <param name="poly">The polygon whose outline section will be drawn.</param>
     /// <param name="f">The fraction of the total perimeter to render, typically in the range from 0 to 1.</param>
     /// <param name="startIndex">The index of the polygon vertex where tracing begins.</param>
     /// <param name="lineInfo">The line drawing settings that define thickness, color, and cap style.</param>
@@ -293,9 +266,9 @@ public static class PolygonDrawing
     /// <remarks>
     /// This overload reads thickness, color, and cap configuration from <paramref name="lineInfo"/>.
     /// </remarks>
-    public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public void DrawLinesPercentage(float f, int startIndex, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePercentage(this, f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     #endregion
     
@@ -305,7 +278,6 @@ public static class PolygonDrawing
     /// Draws the outline of a polygon with transparent color support.
     /// This method handles miter and beveled joins and allows for custom miter limits.
     /// </summary>
-    /// <param name="poly">The polygon whose outline will be drawn.</param>
     /// <param name="lineThickness">The thickness of the outline in world units.</param>
     /// <param name="color">The color of the outline, including alpha for transparency.</param>
     /// <param name="miterLimit">
@@ -315,16 +287,15 @@ public static class PolygonDrawing
     /// <param name="beveled">
     /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
     /// </param>
-    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
+    public void DrawLines(float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolygonOutline(poly, lineThickness, color, miterLimit, beveled, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(this, lineThickness, color, miterLimit, beveled, false);
     }
 
     /// <summary>
     /// Draws the outline of a polygon with transparent color support using the specified <see cref="LineDrawingInfo"/>.
     /// Handles miter and beveled joins, and allows for custom miter limits.
     /// </summary>
-    /// <param name="poly">The polygon whose outline will be drawn.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="miterLimit">
     /// The miter limit for joins. If the miter length exceeds this value times the line thickness, a bevel is used instead.
@@ -333,21 +304,18 @@ public static class PolygonDrawing
     /// <param name="beveled">
     /// If true, forces beveled joins instead of miters when the miter limit is exceeded.
     /// </param>
-    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
+    public void DrawLines(LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipperDrawing2D.DrawPolygonOutline(poly, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(this, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, false);
     }
 
     #endregion
-
-    #region Draw Lines Glow
 
     #region Glow
     /// <summary>
     /// Draws the polygon outline as a layered glow by rendering multiple outline passes
     /// with interpolated thickness and color values.
     /// </summary>
-    /// <param name="polygon">The polygon whose outline will be drawn.</param>
     /// <param name="thicknessRange">The outline thickness range used from the first pass to the final pass.</param>
     /// <param name="colorRange">The color range used from the first pass to the final pass.</param>
     /// <param name="steps">The number of glow passes to render. A value of 1 draws a single pass using the maximum thickness and color.</param>
@@ -357,14 +325,12 @@ public static class PolygonDrawing
     /// <remarks>
     /// Useful for stylized outlines such as halos, selection rings, and expanding border effects.
     /// </remarks>
-    public static void DrawGlow(this Polygon polygon, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
+    public void DrawGlow(ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
         float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
-        ShapeClipperDrawing2D.DrawPolygonOutlineGlow(polygon, thicknessRange, colorRange, steps, miterLimit, beveled, useDelaunay);
+        ShapeClipperDrawing2D.DrawPolygonOutlineGlow(this, thicknessRange, colorRange, steps, miterLimit, beveled, useDelaunay);
     }
     
-    #endregion
-
     #endregion
     
     #region Draw Lines Scaled
@@ -372,7 +338,6 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws a polygon where each side can be scaled towards the origin of the side.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="sideScaleFactor">
     /// <para>The scale factor for each side.</para>
@@ -393,22 +358,22 @@ public static class PolygonDrawing
     /// <remarks>
     /// Useful for creating stylized or animated polygon outlines.
     /// </remarks>
-    public static void DrawLinesScaled(this Polygon poly, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public void DrawLinesScaled(LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
-        if (poly.Count < 3) return;
+        if (Count < 3) return;
         if (sideScaleFactor <= 0) return;
 
         if (sideScaleFactor >= 1)
         {
-            poly.DrawLines(lineInfo);
+            DrawLines(lineInfo);
             return;
         }
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var start = poly[i];
-            var end = poly[(i + 1) % poly.Count];
-            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            var start = this[i];
+            var end = this[(i + 1) % Count];
+            Segment.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
 
@@ -458,7 +423,7 @@ public static class PolygonDrawing
 
         if (cornerType.type == 0) //collinear
         {
-            SegmentDrawing.DrawSegment(prev, next, lineThickness, color, capType, capPoints);
+            Segment.DrawSegment(prev, next, lineThickness, color, capType, capPoints);
             return;
         }
 
@@ -548,15 +513,14 @@ public static class PolygonDrawing
 
         if (capType is LineCapType.Capped or LineCapType.CappedExtended && capPoints > 0)
         {
-            SegmentDrawing.DrawRoundCap(prev, -dirPrev, lineThickness, capPoints, color);
-            SegmentDrawing.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
+            Segment.DrawRoundCap(prev, -dirPrev, lineThickness, capPoints, color);
+            Segment.DrawRoundCap(next, dirNext, lineThickness, capPoints, color);
         }
     }
 
     /// <summary>
     /// Draws each corner of the polygon with an absolute <paramref name="cornerLength"/>, handling miter/bevel joins, custom cap types and transparent colors are supported.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color used for rendering, including alpha for transparency.</param>
     /// <param name="cornerLength">The length of the corner segment to render.</param>
@@ -565,15 +529,15 @@ public static class PolygonDrawing
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
     /// Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength,
+    public void DrawCorneredAbsoluteTransparent(float lineThickness, ColorRgba color, float cornerLength,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
     {
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
 
             var wPrev = cur - prev;
             var wNext = next - cur;
@@ -604,22 +568,20 @@ public static class PolygonDrawing
     /// Draws each corner of the polygon with an absolute <paramref name="cornerLength"/>, handling miter/bevel joins, custom cap types, and transparent colors.
     /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="cornerLength">The length of the corner segment to render.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
     /// Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f,
+    public void DrawCorneredAbsoluteTransparent(float cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
-        poly.DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+        DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
     }
 
     /// <summary>
     /// Draws each corner of the polygon with an absolute length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color used for rendering, including alpha for transparency.</param>
     /// <param name="cornerLengths">A list of corner segment lengths to render for each corner.</param>
@@ -628,17 +590,17 @@ public static class PolygonDrawing
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
     /// Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths,
+    public void DrawCorneredAbsoluteTransparent(float lineThickness, ColorRgba color, List<float> cornerLengths,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
     {
         if (cornerLengths.Count <= 0) return;
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
             float cornerLength = cornerLengths[i % cornerLengths.Count];
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
 
             var wPrev = cur - prev;
             var wNext = next - cur;
@@ -669,38 +631,36 @@ public static class PolygonDrawing
     /// Draws each corner of the polygon with an absolute length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
     /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="cornerLength">A list of corner segment lengths to render for each corner.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
     /// Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredAbsoluteTransparent(this Polygon poly, List<float> cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f,
+    public void DrawCorneredAbsoluteTransparent(List<float> cornerLength, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
-        poly.DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+        DrawCorneredAbsoluteTransparent(lineInfo.Thickness, lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
     }
 
     /// <summary>
     /// Calculates parameters for drawing a polygon corner with an absolute <paramref name="cornerLength"/> and <paramref name="lineThickness"/>.
     /// Returns true if parameters are valid for drawing, otherwise false.
     /// </summary>
-    /// <param name="poly">The polygon whose corner parameters will be calculated.</param>
     /// <param name="cornerLength">The length of the corner segment to render.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="capType">The type of line cap to use.</param>
     /// <param name="newCornerLength">The calculated corner length to use for drawing.</param>
     /// <param name="newLineThickness">The calculated line thickness to use for drawing.</param>
-    public static bool CaluclateDrawCornerAbsoluteParameters(this Polygon poly, float cornerLength, float lineThickness, LineCapType capType,
+    public bool CaluclateDrawCornerAbsoluteParameters(float cornerLength, float lineThickness, LineCapType capType,
         out float newCornerLength, out float newLineThickness)
     {
         newCornerLength = -1f;
         newLineThickness = -1f;
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
 
             var wNext = next - cur;
 
@@ -749,7 +709,6 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws each corner of the polygon with a relative length based on <paramref name="cornerLengthFactor"/>, handling miter/bevel joins, custom cap types, and transparent colors.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color used for rendering, including alpha for transparency.</param>
     /// <param name="cornerLengthFactor">
@@ -762,17 +721,17 @@ public static class PolygonDrawing
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depeding on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded.
     /// Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredRelativeTransparent(this Polygon poly, float lineThickness, ColorRgba color, float cornerLengthFactor,
+    public void DrawCorneredRelativeTransparent(float lineThickness, ColorRgba color, float cornerLengthFactor,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
     {
         cornerLengthFactor = ShapeMath.Clamp(cornerLengthFactor, 0f, 1f);
 
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
 
             var wPrev = cur - prev;
             var wNext = next - cur;
@@ -804,7 +763,6 @@ public static class PolygonDrawing
     /// Draws each corner of the polygon with a relative length based on <paramref name="cornerLengthFactor"/>, handling miter/bevel joins, custom cap types, and transparent colors.
     /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="cornerLengthFactor">
     /// The factor (0-1) that determines the relative length of each corner segment to render.
     /// 0: No corner is drawn.
@@ -813,16 +771,15 @@ public static class PolygonDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depending on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded. Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredRelativeTransparent(this Polygon poly, float cornerLengthFactor, LineDrawingInfo lineInfo, float miterLimit = 2f,
+    public void DrawCorneredRelativeTransparent(float cornerLengthFactor, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
-        poly.DrawCorneredRelativeTransparent(lineInfo.Thickness, lineInfo.Color, cornerLengthFactor, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
+        DrawCorneredRelativeTransparent(lineInfo.Thickness, lineInfo.Color, cornerLengthFactor, lineInfo.CapType, lineInfo.CapPoints, miterLimit, beveled);
     }
 
     /// <summary>
     /// Draws each corner of the polygon with a relative length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="lineThickness">The thickness of the outline.</param>
     /// <param name="color">The color used for rendering, including alpha for transparency.</param>
     /// <param name="cornerLengthFactors">A list of relative corner length factors (0-1) for each corner.</param>
@@ -830,17 +787,17 @@ public static class PolygonDrawing
     /// <param name="capPoints">The number of points for the cap.</param>
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depending on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded. Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredRelativeTransparent(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengthFactors,
+    public void DrawCorneredRelativeTransparent(float lineThickness, ColorRgba color, List<float> cornerLengthFactors,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2,
         float miterLimit = 2f, bool beveled = false)
     {
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
             float cornerLengthFactor = cornerLengthFactors[i % cornerLengthFactors.Count];
             cornerLengthFactor = ShapeMath.Clamp(cornerLengthFactor, 0f, 1f);
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
 
             var wPrev = cur - prev;
             var wNext = next - cur;
@@ -872,15 +829,14 @@ public static class PolygonDrawing
     /// Draws each corner of the polygon with a relative length specified per corner, handling miter/bevel joins, custom cap types, and transparent colors.
     /// Uses <see cref="LineDrawingInfo"/> for line thickness, color, cap type, and cap points.
     /// </summary>
-    /// <param name="poly">The polygon whose corners will be drawn.</param>
     /// <param name="cornerLengthFactors">A list of relative corner length factors (0-1) for each corner.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="miterLimit">The miter limit for joins. If exceeded, the corner is either squared or beveled depending on <paramref name="beveled"/>.</param>
     /// <param name="beveled">If true, forces beveled joins instead of squared joins when the miter limit is exceeded. Beveling is faster and simpler but does not look as good.</param>
-    public static void DrawCorneredRelativeTransparent(this Polygon poly, List<float> cornerLengthFactors, LineDrawingInfo lineInfo, float miterLimit = 2f,
+    public void DrawCorneredRelativeTransparent(List<float> cornerLengthFactors, LineDrawingInfo lineInfo, float miterLimit = 2f,
         bool beveled = false)
     {
-        poly.DrawCorneredRelativeTransparent(lineInfo.Thickness, lineInfo.Color, cornerLengthFactors, lineInfo.CapType, lineInfo.CapPoints, miterLimit,
+        DrawCorneredRelativeTransparent(lineInfo.Thickness, lineInfo.Color, cornerLengthFactors, lineInfo.CapType, lineInfo.CapPoints, miterLimit,
             beveled);
     }
 
@@ -891,7 +847,6 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with a uniform length for all corners.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="lineThickness">The thickness of the lines.</param>
     /// <param name="color">The color of the lines.</param>
     /// <param name="cornerLength">The length of each corner line.</param>
@@ -900,39 +855,38 @@ public static class PolygonDrawing
     /// <remarks>
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// </remarks>
-    public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength,
+    public void DrawCornered(float lineThickness, ColorRgba color, float cornerLength,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         color = color.SetAlpha(255);
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
-            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+            Segment.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            Segment.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
 
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with a uniform length for all corners, using <see cref="LineDrawingInfo"/>.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="cornerLength">The length of each corner line.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <remarks>
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// </remarks>
-    public static void DrawCornered(this Polygon poly, float cornerLength, LineDrawingInfo lineInfo)
+    public void DrawCornered(float cornerLength, LineDrawingInfo lineInfo)
     {
         lineInfo = lineInfo.SetColor(lineInfo.Color.SetAlpha(255));
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
-            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+            Segment.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
+            Segment.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
         }
     }
 
@@ -940,7 +894,6 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with custom lengths for each corner.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="lineThickness">The thickness of the lines.</param>
     /// <param name="color">The color of the lines.</param>
     /// <param name="cornerLengths">A list of lengths for each corner. Cycles if fewer than corners.</param>
@@ -950,41 +903,40 @@ public static class PolygonDrawing
     /// Useful for stylized or decorative polygon outlines.
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// </remarks>
-    public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths,
+    public void DrawCornered(float lineThickness, ColorRgba color, List<float> cornerLengths,
         LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         color = color.SetAlpha(255);
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
             float cornerLength = cornerLengths[i % cornerLengths.Count];
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
-            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+            Segment.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            Segment.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
 
     /// <summary>
     /// Draws lines from each corner of the polygon outward, with custom lengths for each corner, using <see cref="LineDrawingInfo"/>.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="cornerLengths">A list of lengths for each corner. Cycles if fewer than corners.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <remarks>
     /// A corner is defined by three points: <c>previous [i-1]</c>, <c>current [i]</c>, and <c>next [i+1]</c>.
     /// </remarks>
-    public static void DrawCornered(this Polygon poly, List<float> cornerLengths, LineDrawingInfo lineInfo)
+    public void DrawCornered(List<float> cornerLengths, LineDrawingInfo lineInfo)
     {
         lineInfo = lineInfo.SetColor(lineInfo.Color.SetAlpha(255));
-        for (var i = 0; i < poly.Count; i++)
+        for (var i = 0; i < Count; i++)
         {
             float cornerLength = cornerLengths[i % cornerLengths.Count];
-            var prev = poly[ShapeMath.WrapIndex(poly.Count, i - 1)];
-            var cur = poly[i];
-            var next = poly[ShapeMath.WrapIndex(poly.Count, i + 1)];
-            SegmentDrawing.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
-            SegmentDrawing.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
+            var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+            var cur = this[i];
+            var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+            Segment.DrawSegment(cur, cur + (next - cur).Normalize() * cornerLength, lineInfo);
+            Segment.DrawSegment(cur, cur + (prev - cur).Normalize() * cornerLength, lineInfo);
         }
     }
 
@@ -994,7 +946,6 @@ public static class PolygonDrawing
     /// <summary>
     /// Draws a gapped outline for a polygon, creating a dashed or segmented effect along the polygon's perimeter.
     /// </summary>
-    /// <param name="poly">The polygon to draw.</param>
     /// <param name="perimeter">
     /// The total length of the polygon's perimeter.
     /// If zero or negative, the method calculates it automatically.
@@ -1010,11 +961,11 @@ public static class PolygonDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public float DrawGappedOutline(float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
-            poly.DrawLines(lineInfo);
+            DrawLines(lineInfo);
             return perimeter > 0f ? perimeter : -1f;
         }
 
@@ -1027,10 +978,10 @@ public static class PolygonDrawing
 
         if (perimeter <= 0f)
         {
-            for (int i = 0; i < poly.Count; i++)
+            for (int i = 0; i < Count; i++)
             {
-                var curP = poly[i];
-                var nextP = poly[(i + 1) % poly.Count];
+                var curP = this[i];
+                var nextP = this[(i + 1) % Count];
 
                 perimeter += (nextP - curP).Length();
             }
@@ -1042,8 +993,8 @@ public static class PolygonDrawing
         
         
         var curIndex = 0;
-        var curPoint = poly[0];
-        var nextPoint= poly[1 % poly.Count];
+        var curPoint = this[0];
+        var nextPoint= this[1 % Count];
         var curW = nextPoint - curPoint;
         var curDis = curW.Length();
         
@@ -1070,7 +1021,7 @@ public static class PolygonDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        Segment.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -1078,7 +1029,7 @@ public static class PolygonDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            Segment.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -1093,9 +1044,9 @@ public static class PolygonDrawing
                 if(points.Count > 0) points.Add(nextPoint);
                 
                 curDistance += curDis;
-                curIndex = (curIndex + 1) % poly.Count;
-                curPoint = poly[curIndex];
-                nextPoint = poly[(curIndex + 1) % poly.Count];
+                curIndex = (curIndex + 1) % Count;
+                curPoint = this[curIndex];
+                nextPoint = this[(curIndex + 1) % Count];
                 curW = nextPoint - curPoint;
                 curDis = curW.Length();
             }

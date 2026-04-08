@@ -29,32 +29,32 @@ internal class PayloadKey
             var a = rect.BottomSegment.GetPoint(0.25f);
             var b = rect.BottomSegment.GetPoint(0.75f);
             var c = rect.TopSegment.GetPoint(0.5f);
-            SegmentDrawing.DrawSegment(a, c, lineThickness, color);
-            SegmentDrawing.DrawSegment(b, c, lineThickness, color);
+            Segment.DrawSegment(a, c, lineThickness, color);
+            Segment.DrawSegment(b, c, lineThickness, color);
         }
         else if (Direction == KeyDirection.Right)
         {
             var a = rect.LeftSegment.GetPoint(0.25f);
             var b = rect.LeftSegment.GetPoint(0.75f);
             var c = rect.RightSegment.GetPoint(0.5f);
-            SegmentDrawing.DrawSegment(a, c, lineThickness, color);
-            SegmentDrawing.DrawSegment(b, c, lineThickness, color);
+            Segment.DrawSegment(a, c, lineThickness, color);
+            Segment.DrawSegment(b, c, lineThickness, color);
         }
         else if (Direction == KeyDirection.Down)
         {
             var a = rect.TopSegment.GetPoint(0.25f);
             var b = rect.TopSegment.GetPoint(0.75f);
             var c = rect.BottomSegment.GetPoint(0.5f);
-            SegmentDrawing.DrawSegment(a, c, lineThickness, color);
-            SegmentDrawing.DrawSegment(b, c, lineThickness, color);
+            Segment.DrawSegment(a, c, lineThickness, color);
+            Segment.DrawSegment(b, c, lineThickness, color);
         }
         else if (Direction == KeyDirection.Left)
         {
             var a = rect.RightSegment.GetPoint(0.25f);
             var b = rect.RightSegment.GetPoint(0.75f);
             var c = rect.LeftSegment.GetPoint(0.5f);
-            SegmentDrawing.DrawSegment(a, c, lineThickness, color);
-            SegmentDrawing.DrawSegment(b, c, lineThickness, color);
+            Segment.DrawSegment(a, c, lineThickness, color);
+            Segment.DrawSegment(b, c, lineThickness, color);
         }
     }
 }

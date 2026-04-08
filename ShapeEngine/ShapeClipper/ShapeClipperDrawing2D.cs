@@ -239,6 +239,14 @@ public static class ShapeClipperDrawing2D
         }
     }
     
-    
     #endregion
+    
+    //!!! Make a simple outline version for testing performance and if it is even possible and check agains current implementation
+    //TODO: Add masked drawing functions for:
+    // - Filled
+    // - Outline
+    // - Between Polygon (shape) and Polygon (clip)
+    // - Helper functions between all shape types (transformed into polygons)
+    // - Use masked triangulation functions for creating tri meshes and then draw them
+    // - Update all Shapes DrawMasked functions using this new system
 }

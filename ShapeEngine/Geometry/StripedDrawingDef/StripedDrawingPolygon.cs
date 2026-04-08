@@ -12,6 +12,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.StripedDrawingDef;
 
+//TODO: Move to shape drawing file for specific shape
+
 public static partial class StripedDrawing
 {
     /// <summary>
@@ -462,7 +464,7 @@ public static partial class StripedDrawing
                 {
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
-                    SegmentDrawing.DrawSegment(p1, p2, striped);
+                    Segment.DrawSegment(p1, p2, striped);
                 }
             }
 
@@ -511,7 +513,7 @@ public static partial class StripedDrawing
                 {
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
-                    SegmentDrawing.DrawSegment(p1, p2, info);
+                    Segment.DrawSegment(p1, p2, info);
                 }
             }
 
@@ -560,7 +562,7 @@ public static partial class StripedDrawing
                 {
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
-                    SegmentDrawing.DrawSegment(p1, p2, info);
+                    Segment.DrawSegment(p1, p2, info);
                 }
             }
 
@@ -608,7 +610,7 @@ public static partial class StripedDrawing
                 {
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
-                    SegmentDrawing.DrawSegment(p1, p2, striped);
+                    Segment.DrawSegment(p1, p2, striped);
                 }
             }
 
@@ -663,7 +665,7 @@ public static partial class StripedDrawing
                 {
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
-                    SegmentDrawing.DrawSegment(p1, p2, info);
+                    Segment.DrawSegment(p1, p2, info);
                 }
             }
 
@@ -722,7 +724,7 @@ public static partial class StripedDrawing
                 {
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
-                    SegmentDrawing.DrawSegment(p1, p2, info);
+                    Segment.DrawSegment(p1, p2, info);
                 }
             }
 

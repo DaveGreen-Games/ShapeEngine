@@ -1615,7 +1615,7 @@ public class ShapeIntersectionExample : ExampleScene
                 foreach (var cp in result)
                 {
                     cp.Point.Draw(12f, Colors.Cold, 16);
-                    SegmentDrawing.DrawSegment(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
+                    Segment.DrawSegment(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
                 }
             }
             

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Raylib_cs;
+﻿using Raylib_cs;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Core.Structs;

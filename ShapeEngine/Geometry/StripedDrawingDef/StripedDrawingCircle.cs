@@ -13,6 +13,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.StripedDrawingDef;
 
+//TODO: Move to shape drawing file for specific shape
+
 public static partial class StripedDrawing
 {
     /// <summary>

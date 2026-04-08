@@ -55,7 +55,7 @@ public static class CustomDrawing
         {
             var circle = new Circle(i.Point, lineThickness * 2f);
             circle.Draw(intersectColorRgba, pointSmoothness);
-            SegmentDrawing.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
+            Segment.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
         }
     }
     #endregion
@@ -205,7 +205,7 @@ public static class CustomDrawing
         {
             var tailLength = l - headLength;
             tailEnd = tailPoint + dir * tailLength;
-            SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+            Segment.DrawSegment(tailPoint, tailEnd, info);
         }
 
         var pl = dir.GetPerpendicularLeft();
@@ -213,7 +213,7 @@ public static class CustomDrawing
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        if(headFillColor.A > 0) Triangle.DrawTriangle(headPoint, b, c, headFillColor);
         var triangle = new Triangle(headPoint, b, c);
         triangle.DrawLines(info);
     }
@@ -241,14 +241,14 @@ public static class CustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        Segment.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        if(headFillColor.A > 0) Triangle.DrawTriangle(headPoint, b, c, headFillColor);
         var triangle = new Triangle(headPoint, b, c);
         triangle.DrawLines(info);
     }
@@ -277,7 +277,7 @@ public static class CustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        Segment.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
@@ -285,7 +285,7 @@ public static class CustomDrawing
         var headWidth = l * headWidthFactor;
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        if(headFillColor.A > 0) Triangle.DrawTriangle(headPoint, b, c, headFillColor);
         var triangle = new Triangle(headPoint, b, c);
         triangle.DrawLines(info);
     }

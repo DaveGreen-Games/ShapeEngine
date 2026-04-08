@@ -148,8 +148,8 @@ internal class Autogun
             var targetPos = curTarget.GetBoundingBox().Center;
             pos.Draw(5f, c);
             targetPos.Draw(5f, c);
-            SegmentDrawing.DrawSegment(pos, pos + ShapeVec.VecFromAngleRad(aimingRotRad) * 50, new LineDrawingInfo(8f, c));
-            SegmentDrawing.DrawSegment(pos, targetPos, new LineDrawingInfo(2f, c));
+            Segment.DrawSegment(pos, pos + ShapeVec.VecFromAngleRad(aimingRotRad) * 50, new LineDrawingInfo(8f, c));
+            Segment.DrawSegment(pos, targetPos, new LineDrawingInfo(2f, c));
             
         }
     }

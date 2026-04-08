@@ -108,7 +108,7 @@ internal class ExplosivePayload : IPayload
             var dir = w.Normalize();
             var lineStart = lineEnd - dir * 800f;
             
-            SegmentDrawing.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
+            Segment.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
         }
         
         if (SmokeTimer > 0f)

@@ -5,6 +5,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.StripedDrawingDef;
 
+//TODO: Move to shape drawing file for specific shape
+
 public static partial class StripedDrawing
 {
     /// <summary>
@@ -144,7 +146,7 @@ public static partial class StripedDrawing
             var dir = new Vector2(1, 0).Rotate(curAngleRad);
             var p1 = center + dir * innerRadius;
             var p2 = center + dir * outerRadius;
-            SegmentDrawing.DrawSegment(p1, p2, striped);
+            Segment.DrawSegment(p1, p2, striped);
             curAngleRad += angleSpacingRad;
         }
     }
@@ -186,7 +188,7 @@ public static partial class StripedDrawing
             var dir = new Vector2(1, 0).Rotate(curAngleRad);
             var p1 = center + dir * innerRadius;
             var p2 = center + dir * outerRadius;
-            SegmentDrawing.DrawSegment(p1, p2, info);
+            Segment.DrawSegment(p1, p2, info);
             curAngleRad += angleSpacingRad;
         }
     }
@@ -230,7 +232,7 @@ public static partial class StripedDrawing
             var dir = new Vector2(1, 0).Rotate(curAngleRad);
             var p1 = center + dir * innerRadius;
             var p2 = center + dir * outerRadius;
-            SegmentDrawing.DrawSegment(p1, p2, info);
+            Segment.DrawSegment(p1, p2, info);
             curAngleRad += angleSpacingRad;
         }
     }
@@ -282,7 +284,7 @@ public static partial class StripedDrawing
                 var dir = new Vector2(1, 0).Rotate(curAngleRad);
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
-                SegmentDrawing.DrawSegment(p1, p2, striped);
+                Segment.DrawSegment(p1, p2, striped);
                 curAngleRad -= angleSpacingRad;
             }
         }
@@ -293,7 +295,7 @@ public static partial class StripedDrawing
                 var dir = new Vector2(1, 0).Rotate(curAngleRad);
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
-                SegmentDrawing.DrawSegment(p1, p2, striped);
+                Segment.DrawSegment(p1, p2, striped);
                 curAngleRad += angleSpacingRad;
             }
         }
@@ -349,7 +351,7 @@ public static partial class StripedDrawing
                 var dir = new Vector2(1, 0).Rotate(curAngleRad);
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
-                SegmentDrawing.DrawSegment(p1, p2, info);
+                Segment.DrawSegment(p1, p2, info);
                 curAngleRad -= angleSpacingRad;
             }
         }
@@ -362,7 +364,7 @@ public static partial class StripedDrawing
                 var dir = new Vector2(1, 0).Rotate(curAngleRad);
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
-                SegmentDrawing.DrawSegment(p1, p2, info);
+                Segment.DrawSegment(p1, p2, info);
                 curAngleRad += angleSpacingRad;
             }
         }
@@ -420,7 +422,7 @@ public static partial class StripedDrawing
                 var dir = new Vector2(1, 0).Rotate(curAngleRad);
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
-                SegmentDrawing.DrawSegment(p1, p2, info);
+                Segment.DrawSegment(p1, p2, info);
                 curAngleRad -= angleSpacingRad;
             }
         }
@@ -434,7 +436,7 @@ public static partial class StripedDrawing
                 var dir = new Vector2(1, 0).Rotate(curAngleRad);
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
-                SegmentDrawing.DrawSegment(p1, p2, info);
+                Segment.DrawSegment(p1, p2, info);
                 curAngleRad += angleSpacingRad;
             }
         }

@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
@@ -8,19 +7,15 @@ using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.SegmentDef;
 
 /// <summary>
-/// Provides static methods for drawing line segments and collections of segments with various styles, thicknesses, and effects.
+/// Provides drawing helpers and instance drawing methods for <see cref="Segment"/> values.
 /// </summary>
-/// <remarks>
-/// This class contains extension methods for <see cref="Segment"/> and <see cref="Segments"/> to simplify drawing operations.
-/// </remarks>
-public static class SegmentDrawing
+public readonly partial struct Segment
 {
     
     /// <summary>
@@ -332,9 +327,8 @@ public static class SegmentDrawing
         }
     }
     /// <summary>
-    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> triangle.
+    /// Draws the portion(s) of this segment that are masked by the provided <paramref name="mask"/> triangle.
     /// </summary>
-    /// <param name="segment">The segment to be drawn or clipped against the triangle.</param>
     /// <param name="mask">Triangle used as a closed mask for clipping the segment.</param>
     /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
     /// <param name="reversedMask">
@@ -349,46 +343,45 @@ public static class SegmentDrawing
     /// - No intersections (draws whole segment when outside and <paramref name="reversedMask"/> is false).
     /// Intersection computations are delegated to <see cref="Segment.IntersectTriangle(Triangle)"/>.
     /// </remarks>
-    public static void DrawMasked(this Segment segment, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        bool containsStart = mask.ContainsPoint(segment.Start);
-        bool containsEnd = mask.ContainsPoint(segment.End);
+        bool containsStart = mask.ContainsPoint(Start);
+        bool containsEnd = mask.ContainsPoint(End);
             
         if (containsStart && containsEnd)
         {
-            if(reversedMask) segment.Draw(lineInfo);
+            if(reversedMask) Draw(lineInfo);
             return;
         }
         
-        var result = segment.IntersectTriangle(mask);
+        var result = IntersectTriangle(mask);
         if (result.a.Valid && result.b.Valid)
         {
-            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+            DrawMaskedHelper(Start, End, result.a.Point, result.b.Point, lineInfo, reversedMask);
         }
         else if (result.a.Valid || result.b.Valid)
         {
             var p = result.a.Valid ? result.a.Point : result.b.Point;
             if (reversedMask)
             {
-                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                var newSegment = containsStart ? new Segment(Start, p) : new Segment(p, End);
                 newSegment.Draw(lineInfo);
             }
             else
             {
-                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                var newSegment = containsStart ? new Segment(p, End) : new Segment(Start, p);
                 newSegment.Draw(lineInfo);
             }
         }
         else
         {
-            if(!reversedMask) segment.Draw(lineInfo);
+            if(!reversedMask) Draw(lineInfo);
         }
     }
     
     /// <summary>
-    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> circle.
+    /// Draws the portion(s) of this segment that are masked by the provided <paramref name="mask"/> circle.
     /// </summary>
-    /// <param name="segment">The segment to be drawn or clipped against the circle.</param>
     /// <param name="mask">Circle used as a closed mask for clipping the segment.</param>
     /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
     /// <param name="reversedMask">
@@ -400,46 +393,45 @@ public static class SegmentDrawing
     /// Handles cases where both endpoints are inside, both outside with two intersections,
     /// a single intersection, or no intersections.
     /// </remarks>
-    public static void DrawMasked(this Segment segment, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        bool containsStart = mask.ContainsPoint(segment.Start);
-        bool containsEnd = mask.ContainsPoint(segment.End);
+        bool containsStart = mask.ContainsPoint(Start);
+        bool containsEnd = mask.ContainsPoint(End);
             
         if (containsStart && containsEnd)
         {
-            if(reversedMask) segment.Draw(lineInfo);
+            if(reversedMask) Draw(lineInfo);
             return;
         }
         
-        var result = segment.IntersectCircle(mask);
+        var result = IntersectCircle(mask);
         if (result.a.Valid && result.b.Valid)
         {
-            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+            DrawMaskedHelper(Start, End, result.a.Point, result.b.Point, lineInfo, reversedMask);
         }
         else if (result.a.Valid || result.b.Valid)
         {
             var p = result.a.Valid ? result.a.Point : result.b.Point;
             if (reversedMask)
             {
-                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                var newSegment = containsStart ? new Segment(Start, p) : new Segment(p, End);
                 newSegment.Draw(lineInfo);
             }
             else
             {
-                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                var newSegment = containsStart ? new Segment(p, End) : new Segment(Start, p);
                 newSegment.Draw(lineInfo);
             }
         }
         else
         {
-            if(!reversedMask) segment.Draw(lineInfo);
+            if(!reversedMask) Draw(lineInfo);
         }
     }
     
     /// <summary>
-    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> rectangle.
+    /// Draws the portion(s) of this segment that are masked by the provided <paramref name="mask"/> rectangle.
     /// </summary>
-    /// <param name="segment">The segment to be drawn or clipped against the rectangle.</param>
     /// <param name="mask">Rectangle used as a closed mask for clipping the segment.</param>
     /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
     /// <param name="reversedMask">
@@ -451,46 +443,45 @@ public static class SegmentDrawing
     /// This method handles cases where both endpoints are inside, both outside with two intersections,
     /// a single intersection, or no intersections.
     /// </remarks>
-    public static void DrawMasked(this Segment segment, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        bool containsStart = mask.ContainsPoint(segment.Start);
-        bool containsEnd = mask.ContainsPoint(segment.End);
+        bool containsStart = mask.ContainsPoint(Start);
+        bool containsEnd = mask.ContainsPoint(End);
             
         if (containsStart && containsEnd)
         {
-            if(reversedMask) segment.Draw(lineInfo);
+            if(reversedMask) Draw(lineInfo);
             return;
         }
         
-        var result = segment.IntersectRect(mask);
+        var result = IntersectRect(mask);
         if (result.a.Valid && result.b.Valid)
         {
-            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+            DrawMaskedHelper(Start, End, result.a.Point, result.b.Point, lineInfo, reversedMask);
         }
         else if (result.a.Valid || result.b.Valid)
         {
             var p = result.a.Valid ? result.a.Point : result.b.Point;
             if (reversedMask)
             {
-                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                var newSegment = containsStart ? new Segment(Start, p) : new Segment(p, End);
                 newSegment.Draw(lineInfo);
             }
             else
             {
-                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                var newSegment = containsStart ? new Segment(p, End) : new Segment(Start, p);
                 newSegment.Draw(lineInfo);
             }
         }
         else
         {
-            if(!reversedMask) segment.Draw(lineInfo);
+            if(!reversedMask) Draw(lineInfo);
         }
     }
     
     /// <summary>
-    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> quad.
+    /// Draws the portion(s) of this segment that are masked by the provided <paramref name="mask"/> quad.
     /// </summary>
-    /// <param name="segment">The segment to be drawn or clipped against the quad.</param>
     /// <param name="mask">Quad used as a closed mask for clipping the segment.</param>
     /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
     /// <param name="reversedMask">
@@ -502,46 +493,45 @@ public static class SegmentDrawing
     /// Handles cases where both endpoints are inside, both outside with two intersections,
     /// a single intersection, or no intersections.
     /// </remarks>
-    public static void DrawMasked(this Segment segment, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        bool containsStart = mask.ContainsPoint(segment.Start);
-        bool containsEnd = mask.ContainsPoint(segment.End);
+        bool containsStart = mask.ContainsPoint(Start);
+        bool containsEnd = mask.ContainsPoint(End);
             
         if (containsStart && containsEnd)
         {
-            if(reversedMask) segment.Draw(lineInfo);
+            if(reversedMask) Draw(lineInfo);
             return;
         }
         
-        var result = segment.IntersectQuad(mask);
+        var result = IntersectQuad(mask);
         if (result.a.Valid && result.b.Valid)
         {
-            DrawMaskedHelper(segment.Start, segment.End, result.a.Point, result.b.Point, lineInfo, reversedMask);
+            DrawMaskedHelper(Start, End, result.a.Point, result.b.Point, lineInfo, reversedMask);
         }
         else if (result.a.Valid || result.b.Valid)
         {
             var p = result.a.Valid ? result.a.Point : result.b.Point;
             if (reversedMask)
             {
-                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                var newSegment = containsStart ? new Segment(Start, p) : new Segment(p, End);
                 newSegment.Draw(lineInfo);
             }
             else
             {
-                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                var newSegment = containsStart ? new Segment(p, End) : new Segment(Start, p);
                 newSegment.Draw(lineInfo);
             }
         }
         else
         {
-            if(!reversedMask) segment.Draw(lineInfo);
+            if(!reversedMask) Draw(lineInfo);
         }
     }
    
     /// <summary>
-    /// Draws the portion(s) of <paramref name="segment"/> that are masked by the provided <paramref name="mask"/> polygon.
+    /// Draws the portion(s) of this segment that are masked by the provided <paramref name="mask"/> polygon.
     /// </summary>
-    /// <param name="segment">The segment to be drawn or clipped against the polygon.</param>
     /// <param name="mask">Polygon used as a closed mask for clipping the segment.</param>
     /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
     /// <param name="reversedMask">
@@ -554,17 +544,17 @@ public static class SegmentDrawing
     /// the method augments the intersection list with the segment endpoints and sorts them to determine alternating
     /// inside/outside intervals before drawing the appropriate subsegments.
     /// </remarks>
-    public static void DrawMasked(this Segment segment, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawMasked(Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
-        bool containsStart = mask.ContainsPoint(segment.Start);
+        bool containsStart = mask.ContainsPoint(Start);
 
-        var result = segment.IntersectPolygon(mask);
+        var result = IntersectPolygon(mask);
         if(result == null || result.Count <= 0)
         {
             // If reversedMask: draw when fully inside (containsStart == true)
             // If not reversedMask: draw when fully outside (containsStart == false)
             if ((reversedMask && containsStart) || (!reversedMask && !containsStart))
-                segment.Draw(lineInfo);
+                Draw(lineInfo);
             return;
         }
         if (result.Count == 1)
@@ -572,20 +562,20 @@ public static class SegmentDrawing
             var p = result[0].Point;
             if (reversedMask)
             {
-                var newSegment = containsStart ? new Segment(segment.Start, p) : new Segment(p, segment.End);
+                var newSegment = containsStart ? new Segment(Start, p) : new Segment(p, End);
                 newSegment.Draw(lineInfo);
             }
             else
             {
-                var newSegment = containsStart ? new Segment(p, segment.End) : new Segment(segment.Start, p);
+                var newSegment = containsStart ? new Segment(p, End) : new Segment(Start, p);
                 newSegment.Draw(lineInfo);
             }
 
             return;
         }
-        result.Add(new IntersectionPoint(segment.Start, segment.Normal));
-        result.Add(new IntersectionPoint(segment.End, segment.Normal));
-        if (result.SortClosestFirst(segment.Start))
+        result.Add(new IntersectionPoint(Start, Normal));
+        result.Add(new IntersectionPoint(End, Normal));
+        if (result.SortClosestFirst(Start))
         {
             if (reversedMask)
             {
@@ -611,12 +601,11 @@ public static class SegmentDrawing
     }
     
     /// <summary>
-    /// Draws the portion(s) of <paramref name="segment"/> that are masked by a generic closed-shape <paramref name="mask"/>.
+    /// Draws the portion(s) of this segment that are masked by a generic closed-shape <paramref name="mask"/>.
     /// This generic overload dispatches to the concrete shape-specific overload (Circle, Triangle, Quad, Rect, or Polygon)
     /// based on <c>mask.GetClosedShapeType()</c>.
     /// </summary>
     /// <typeparam name="T">A type that implements <see cref="IClosedShapeTypeProvider"/> and represents the mask shape.</typeparam>
-    /// <param name="segment">The segment to be drawn or clipped against the mask.</param>
     /// <param name="mask">The mask shape that provides its closed-shape type. The method will attempt to cast to the concrete shape type.</param>
     /// <param name="lineInfo">Drawing parameters (thickness, color, cap type and cap points).</param>
     /// <param name="reversedMask">
@@ -627,38 +616,38 @@ public static class SegmentDrawing
     /// If the concrete mask type is not one of the supported closed shapes, no drawing occurs.
     /// Use the concrete overloads when the exact mask type is known to avoid the runtime dispatch and cast.
     /// </remarks>
-    public static void DrawMasked<T>(this Segment segment, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    public void DrawMasked<T>(T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
     {
         switch (mask.GetClosedShapeType())
         {
             case ClosedShapeType.Circle:
                 if (mask is Circle circle)
                 {
-                    segment.DrawMasked(circle, lineInfo, reversedMask);
+                    DrawMasked(circle, lineInfo, reversedMask);
                 }
                 break;
             case ClosedShapeType.Triangle:
                 if (mask is Triangle triangle)
                 {
-                    segment.DrawMasked(triangle, lineInfo, reversedMask);
+                    DrawMasked(triangle, lineInfo, reversedMask);
                 }
                 break;
             case ClosedShapeType.Quad:
                 if (mask is Quad quad)
                 {
-                    segment.DrawMasked(quad, lineInfo, reversedMask);
+                    DrawMasked(quad, lineInfo, reversedMask);
                 }
                 break;
             case ClosedShapeType.Rect:
                 if (mask is Rect rect)
                 {
-                    segment.DrawMasked(rect, lineInfo, reversedMask);
+                    DrawMasked(rect, lineInfo, reversedMask);
                 }
                 break;
             case ClosedShapeType.Poly:
                 if (mask is Polygon poly)
                 {
-                    segment.DrawMasked(poly, lineInfo, reversedMask);
+                    DrawMasked(poly, lineInfo, reversedMask);
                 }
                 break;
         }
@@ -670,92 +659,51 @@ public static class SegmentDrawing
     /// <summary>
     /// Draws the specified <see cref="Segment"/> with the given thickness, color, and cap style.
     /// </summary>
-    /// <param name="segment">The segment to draw.</param>
     /// <param name="thickness">The thickness of the segment.</param>
     /// <param name="color">The color of the segment.</param>
     /// <param name="capType">The type of line cap to use at the ends of the segment.</param>
     /// <param name="capPoints">The number of points used to draw the cap (for rounded or custom caps).</param>
-    public static void Draw(this Segment segment, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
-        => DrawSegment(segment.Start, segment.End, thickness, color, capType, capPoints);
+    public void Draw(float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
+        => DrawSegment(Start, End, thickness, color, capType, capPoints);
     
     /// <summary>
     /// Draws the specified <see cref="Segment"/> using separate cap styles for the start and end.
     /// </summary>
-    /// <param name="segment">The segment to draw.</param>
     /// <param name="thickness">The thickness of the segment. Values below <see cref="LineDrawingInfo.LineMinThickness"/> are clamped.</param>
     /// <param name="color">Color used to draw the segment.</param>
     /// <param name="startCapType">Cap type to apply at the segment start.</param>
     /// <param name="startCapPoints">Number of points for the start cap (rounded/custom). If &lt;= 0 a simple cap is used.</param>
     /// <param name="endCapType">Cap type to apply at the segment end.</param>
     /// <param name="endCapPoints">Number of points for the end cap (rounded/custom). If &lt;= 0 a simple cap is used.</param>
-    public static void DrawSeparateCaps(this Segment segment, float thickness, ColorRgba color, LineCapType startCapType = LineCapType.None, int startCapPoints = 0, LineCapType endCapType = LineCapType.None, int endCapPoints = 0) 
-        => DrawSegmentSeparateCaps(segment.Start, segment.End, thickness, color, startCapType, startCapPoints, endCapType, endCapPoints);
+    public void DrawSeparateCaps(float thickness, ColorRgba color, LineCapType startCapType = LineCapType.None, int startCapPoints = 0, LineCapType endCapType = LineCapType.None, int endCapPoints = 0) 
+        => DrawSegmentSeparateCaps(Start, End, thickness, color, startCapType, startCapPoints, endCapType, endCapPoints);
     
     /// <summary>
     /// Draws the specified <see cref="Segment"/> using the provided <see cref="LineDrawingInfo"/>.
     /// </summary>
-    /// <param name="segment">The segment to draw.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, cap points).</param>
-    public static void Draw(this Segment segment, LineDrawingInfo lineInfo) 
-        => DrawSegment(segment.Start, segment.End, lineInfo);
+    public void Draw(LineDrawingInfo lineInfo) 
+        => DrawSegment(Start, End, lineInfo);
     /// <summary>
     /// Draws the specified <see cref="Segment"/> with rotation and origin, using the provided <see cref="LineDrawingInfo"/>.
     /// </summary>
-    /// <param name="segment">The segment to draw.</param>
     /// <param name="originF">The point to rotate the segment around (0 = start, 1 = end).</param>
     /// <param name="angleRad">The rotation angle in radians.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, cap points).</param>
-    public static void Draw(this Segment segment, float originF, float angleRad, LineDrawingInfo lineInfo)
+    public void Draw(float originF, float angleRad, LineDrawingInfo lineInfo)
     {
         if (angleRad != 0f)
         {
-            segment.ChangeRotation(angleRad, originF).Draw(lineInfo);
+            ChangeRotation(angleRad, originF).Draw(lineInfo);
             return;
 
         }
         
-        DrawSegment(segment.Start, segment.End, lineInfo);
+        DrawSegment(Start, End, lineInfo);
     }
     
     #endregion
 
-    #region Draw Segments
-    /// <summary>
-    /// Draws all segments in the specified <see cref="Segments"/> collection using the provided <see cref="LineDrawingInfo"/>.
-    /// </summary>
-    /// <param name="segments">The collection of segments to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, cap points).</param>
-    public static void Draw(this Segments segments, LineDrawingInfo lineInfo)
-    {
-        if (segments.Count <= 0) return;
-        foreach (var seg in segments)
-        {
-            seg.Draw(lineInfo);
-        }
-    }
-
-    /// <summary>
-    /// Draws all segments in the specified <see cref="Segments"/> collection, cycling through the provided colors.
-    /// </summary>
-    /// <param name="segments">The collection of segments to draw.</param>
-    /// <param name="thickness">The thickness of each segment.</param>
-    /// <param name="colors">A list of colors to use for the segments.
-    /// Colors are cycled if there are more segments than colors.</param>
-    /// <param name="capType">The type of line cap to use at the ends of the segments.</param>
-    /// <param name="capPoints">The number of points used to draw the cap (for rounded or custom caps).</param>
-    public static void Draw(this Segments segments, float thickness, List<ColorRgba> colors, LineCapType capType = LineCapType.None, int capPoints = 0)
-    {
-        if (segments.Count <= 0 || colors.Count <= 0) return;
-        // LineDrawingInfo info = new(thickness, ColorRgba.White, capType, capPoints);
-        for (var i = 0; i < segments.Count; i++)
-        {
-            var c = colors[i % colors.Count];
-            segments[i].Draw(thickness, c, capType, capPoints);
-        }
-    }
-
-    #endregion
-    
     #region Draw Percentage
         /// <summary>
     /// Draws part of a line from start to end depending on f.
@@ -804,7 +752,6 @@ public static class SegmentDrawing
     /// <summary>
     /// Draws a portion of the specified <see cref="Segment"/> based on the percentage <paramref name="f"/>.
     /// </summary>
-    /// <param name="segment">The segment to draw.</param>
     /// <param name="f">The percentage of the segment to draw. Negative values draw from end to start.</param>
     /// <param name="thickness">The thickness of the segment.</param>
     /// <param name="color">The color of the segment.</param>
@@ -813,20 +760,19 @@ public static class SegmentDrawing
     /// <remarks>
     /// Useful for animating the drawing of a segment.
     /// </remarks>
-    public static void DrawPercentage(this Segment segment, float f, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
-        => DrawSegmentPercentage(segment.Start, segment.End, f, thickness, color, capType, capPoints);
+    public void DrawPercentage(float f, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
+        => DrawSegmentPercentage(Start, End, f, thickness, color, capType, capPoints);
     
     /// <summary>
     /// Draws a portion of the specified <see cref="Segment"/> using the provided <see cref="LineDrawingInfo"/> and percentage <paramref name="f"/>.
     /// </summary>
-    /// <param name="segment">The segment to draw.</param>
     /// <param name="f">The percentage of the segment to draw. Negative values draw from end to start.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, cap points).</param>
     /// <remarks>
     /// Useful for animating the drawing of a segment.
     /// </remarks>
-    public static void DrawPercentage(this Segment segment, float f, LineDrawingInfo lineInfo) 
-        => DrawSegmentPercentage(segment.Start, segment.End, f, lineInfo);
+    public void DrawPercentage(float f, LineDrawingInfo lineInfo) 
+        => DrawSegmentPercentage(Start, End, f, lineInfo);
 
     #endregion
     
@@ -877,7 +823,6 @@ public static class SegmentDrawing
     /// <summary>
     /// Draws a glowing effect along the specified <see cref="Segment"/>.
     /// </summary>
-    /// <param name="segment">The segment to draw with a glow effect.</param>
     /// <param name="width">The starting width of the glow.</param>
     /// <param name="endWidth">The ending width of the glow.</param>
     /// <param name="color">The starting color of the glow.</param>
@@ -888,31 +833,9 @@ public static class SegmentDrawing
     /// <remarks>
     /// Creates a gradient glow effect along the segment.
     /// </remarks>
-    public static void DrawGlow(this Segment segment, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public void DrawGlow(float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
-        DrawSegmentGlow(segment.Start, segment.End, width, endWidth, color, endColorRgba, steps, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws a glowing effect along all segments in the specified <see cref="Segments"/> collection.
-    /// </summary>
-    /// <param name="segments">The collection of segments to draw with a glow effect.</param>
-    /// <param name="width">The starting width of the glow.</param>
-    /// <param name="endWidth">The ending width of the glow.</param>
-    /// <param name="color">The starting color of the glow.</param>
-    /// <param name="endColorRgba">The ending color of the glow.</param>
-    /// <param name="steps">The number of steps to interpolate between start and end.</param>
-    /// <param name="capType">The type of line cap to use at the ends of the segments.</param>
-    /// <param name="capPoints">The number of points used to draw the cap (for rounded or custom caps).</param>
-    /// <remarks>
-    /// Creates a gradient glow effect along each segment.
-    /// </remarks>
-    public static void DrawGlow(this Segments segments, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
-    {
-        foreach (var seg in segments)
-        {
-            seg.DrawGlow(width, endWidth, color, endColorRgba, steps, capType, capPoints);
-        }
+        DrawSegmentGlow(Start, End, width, endWidth, color, endColorRgba, steps, capType, capPoints);
     }
 
     #endregion
@@ -921,29 +844,27 @@ public static class SegmentDrawing
         /// <summary>
     /// Draws a segment scaled towards a specified origin along the segment.
     /// </summary>
-    /// <param name="s">The segment to draw.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, capPoints).</param>
     /// <param name="sideScaleFactor">The scale factor for each side <c>(0 = No segment, 1 = Full Segment)</c></param>
     /// <param name="sideScaleOrigin">The point along the segment <c>(0 = Start, 1 = End) to scale from.</c></param>
     /// <remarks>
     /// Useful for creating dynamic or animated segment effects.
     /// </remarks>
-    public static void DrawScaled(this Segment s, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public void DrawScaled(LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0) return;
         if (sideScaleFactor >= 1)
         {
-            s.Draw(lineInfo);
+            Draw(lineInfo);
             return;
         }
         
-        DrawSegment(s.Start, s.End, lineInfo, sideScaleFactor, sideScaleOrigin);
+        DrawSegment(Start, End, lineInfo, sideScaleFactor, sideScaleOrigin);
     }
 
     /// <summary>
     /// Draws a segment scaled towards a specified origin and rotated by a given angle.
     /// </summary>
-    /// <param name="s">The segment to draw.</param>
     /// <param name="originF">The point to rotate the segment around <c>(0 = Start, 1 = End)</c>.</param>
     /// <param name="angleRad">The rotation angle in radians.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, cap points).</param>
@@ -952,21 +873,21 @@ public static class SegmentDrawing
     /// <remarks>
     /// Useful for creating dynamic or animated segment effects with rotation.
     /// </remarks>
-    public static void DrawScaled(this Segment s, float originF, float angleRad, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public void DrawScaled(float originF, float angleRad, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0) return;
         if (sideScaleFactor >= 1)
         {
-            s.Draw(originF, angleRad, lineInfo);
+            Draw(originF, angleRad, lineInfo);
             return;
         }
         
-        if(angleRad == 0f) DrawSegment(s.Start, s.End, lineInfo, sideScaleFactor, sideScaleOrigin);
+        if(angleRad == 0f) DrawSegment(Start, End, lineInfo, sideScaleFactor, sideScaleOrigin);
         else
         {
-            var origin = s.GetPoint(originF);
-            var rStart = origin +  (s.Start - origin).Rotate(angleRad);
-            var rEnd = origin + (s.End - origin).Rotate(angleRad);
+            var origin = GetPoint(originF);
+            var rStart = origin +  (Start - origin).Rotate(angleRad);
+            var rEnd = origin + (End - origin).Rotate(angleRad);
             DrawSegment(rStart, rEnd, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
@@ -977,18 +898,150 @@ public static class SegmentDrawing
     /// <summary>
     /// Draws circles at the start and end vertices of the specified <see cref="Segment"/>.
     /// </summary>
-    /// <param name="segment">The segment whose vertices to draw.</param>
     /// <param name="vertexRadius">The radius of the vertex circles.</param>
     /// <param name="color">The color of the vertex circles.</param>
     /// <param name="smoothness">
-    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="Circle.CircleSideLengthRange"/>.
     /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
     /// The resulting side length determines the number of polygon sides used to approximate the circle.
     /// </param>
-    public static void DrawVertices(this Segment segment, float vertexRadius, ColorRgba color, float smoothness = 0.25f)
+    public void DrawVertices(float vertexRadius, ColorRgba color, float smoothness = 0.25f)
     {
-        segment.Start.Draw(vertexRadius, color, smoothness);
-        segment.End.Draw(vertexRadius, color, smoothness);
+        Start.Draw(vertexRadius, color, smoothness);
+        End.Draw(vertexRadius, color, smoothness);
+    }
+
+    #endregion
+    
+    #region Gapped
+    /// <summary>
+    /// Draws a line segment with gaps, creating a dashed or segmented effect.
+    /// </summary>
+    /// <param name="start">The starting point of the line segment.</param>
+    /// <param name="end">The ending point of the line segment.</param>
+    /// <param name="length">
+    /// The length of the line.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the line (e.g., color, thickness).</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration (number of gaps, gap percentage, etc.).</param>
+    /// <returns>
+    /// The length of the line if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the line is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no line is drawn.
+    /// </remarks>
+    public static float DrawGappedSegment(Vector2 start, Vector2 end, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            DrawSegment(start, end, lineInfo);
+            return length > 0f ? length : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return length > 0f ? length : -1f;
+
+        var linePercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+        var lines = gapDrawingInfo.Gaps;
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var linePercentageRange = linePercentage / lines;
+
+        var w = end - start;
+        if (length <= 0) length = w.Length();
+        if (length <= 0) return -1f;
+        var dir = w / length;
+
+        var lineLength = length * linePercentageRange;
+        var gapLength = length * gapPercentageRange;
+
+        var curDistance = gapDrawingInfo.StartOffset < 1f ? gapDrawingInfo.StartOffset * length : 0f;
+        var curStart = start + dir * curDistance;
+        Vector2 curEnd;
+        var remainingLineLength = 0f;
+        if (curDistance + lineLength >= length)
+        {
+            curEnd = end;
+            var tempLength = (curEnd - curStart).Length();
+            curDistance = 0;
+            remainingLineLength = lineLength - tempLength;
+        }
+        else
+        {
+            curEnd = curStart + dir * lineLength;
+            curDistance += lineLength;
+        }
+
+        int drawnLines = 0;
+        while (drawnLines <= lines)
+        {
+            DrawSegment(curStart, curEnd, lineInfo);
+
+            if (remainingLineLength > 0f)
+            {
+                curStart = start;
+                curEnd = curStart + dir * remainingLineLength;
+                curDistance = remainingLineLength;
+                remainingLineLength = 0f;
+                drawnLines++;
+            }
+            else
+            {
+                if (curDistance + gapLength >= length) //gap overshoots end
+                {
+                    var tempLength = (end - curEnd).Length();
+                    var remaining = gapLength - tempLength;
+                    curDistance = remaining;
+
+                    curStart = start + dir * curDistance;
+                }
+                else //advance gap length to find new start
+                {
+                    curStart = curEnd + dir * gapLength;
+                    curDistance += gapLength;
+                }
+
+                if (curDistance + lineLength >= length) //line overshoots end
+                {
+                    curEnd = end;
+                    var tempLength = (curEnd - curStart).Length();
+                    curDistance = 0;
+                    remainingLineLength = lineLength - tempLength;
+                }
+                else //advance line length to find new end
+                {
+                    curEnd = curStart + dir * lineLength;
+                    curDistance += lineLength;
+                    drawnLines++;
+                }
+            }
+
+        }
+
+        return length;
+    }
+    
+    /// <summary>
+    /// Draws a segment with gaps, creating a dashed or segmented effect.
+    /// </summary>
+    /// <param name="length">
+    /// The length of the segment.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the segment.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// Returns the segment length if positive; otherwise, returns -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience wrapper for <see cref="DrawGappedSegment"/>.
+    /// </remarks>
+    public float DrawGapped(float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        return DrawGappedSegment(Start, End, length, lineInfo, gapDrawingInfo);
     }
 
     #endregion
@@ -1055,138 +1108,8 @@ public static class SegmentDrawing
     }
     #endregion
     
-    #region Gapped
-    /// <summary>
-    /// Draws a line segment with gaps, creating a dashed or segmented effect.
-    /// </summary>
-    /// <param name="start">The starting point of the line segment.</param>
-    /// <param name="end">The ending point of the line segment.</param>
-    /// <param name="length">
-    /// The length of the line.
-    /// If zero or negative, the method calculates it automatically.
-    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.</param>
-    /// <param name="lineInfo">Parameters describing how to draw the line (e.g., color, thickness).</param>
-    /// <param name="gapDrawingInfo">Parameters describing the gap configuration (number of gaps, gap percentage, etc.).</param>
-    /// <returns>
-    /// The length of the line if positive; otherwise, -1.
-    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
-    /// </returns>
-    /// <remarks>
-    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the line is drawn solid.
-    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no line is drawn.
-    /// </remarks>
-    public static float DrawGappedSegment(Vector2 start, Vector2 end, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
-    {
-        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
-        {
-            SegmentDrawing.DrawSegment(start, end, lineInfo);
-            return length > 0f ? length : -1f;
-        }
-
-        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return length > 0f ? length : -1f;
-
-        var linePercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
-        var lines = gapDrawingInfo.Gaps;
-        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
-        var linePercentageRange = linePercentage / lines;
-
-        var w = end - start;
-        if (length <= 0) length = w.Length();
-        if (length <= 0) return -1f;
-        var dir = w / length;
-
-        var lineLength = length * linePercentageRange;
-        var gapLength = length * gapPercentageRange;
-
-        var curDistance = gapDrawingInfo.StartOffset < 1f ? gapDrawingInfo.StartOffset * length : 0f;
-        var curStart = start + dir * curDistance;
-        Vector2 curEnd;
-        var remainingLineLength = 0f;
-        if (curDistance + lineLength >= length)
-        {
-            curEnd = end;
-            var tempLength = (curEnd - curStart).Length();
-            curDistance = 0;
-            remainingLineLength = lineLength - tempLength;
-        }
-        else
-        {
-            curEnd = curStart + dir * lineLength;
-            curDistance += lineLength;
-        }
-
-        int drawnLines = 0;
-        while (drawnLines <= lines)
-        {
-            SegmentDrawing.DrawSegment(curStart, curEnd, lineInfo);
-
-            if (remainingLineLength > 0f)
-            {
-                curStart = start;
-                curEnd = curStart + dir * remainingLineLength;
-                curDistance = remainingLineLength;
-                remainingLineLength = 0f;
-                drawnLines++;
-            }
-            else
-            {
-                if (curDistance + gapLength >= length) //gap overshoots end
-                {
-                    var tempLength = (end - curEnd).Length();
-                    var remaining = gapLength - tempLength;
-                    curDistance = remaining;
-
-                    curStart = start + dir * curDistance;
-                }
-                else //advance gap length to find new start
-                {
-                    curStart = curEnd + dir * gapLength;
-                    curDistance += gapLength;
-                }
-
-                if (curDistance + lineLength >= length) //line overshoots end
-                {
-                    curEnd = end;
-                    var tempLength = (curEnd - curStart).Length();
-                    curDistance = 0;
-                    remainingLineLength = lineLength - tempLength;
-                }
-                else //advance line length to find new end
-                {
-                    curEnd = curStart + dir * lineLength;
-                    curDistance += lineLength;
-                    drawnLines++;
-                }
-            }
-
-        }
-
-        return length;
-    }
-    
-    /// <summary>
-    /// Draws a segment with gaps, creating a dashed or segmented effect.
-    /// </summary>
-    /// <param name="s">The segment to draw.</param>
-    /// <param name="length">
-    /// The length of the segment.
-    /// If zero or negative, the method calculates it automatically.
-    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
-    /// </param>
-    /// <param name="lineInfo">Parameters describing how to draw the segment.</param>
-    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
-    /// <returns>
-    /// Returns the segment length if positive; otherwise, returns -1.
-    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
-    /// </returns>
-    /// <remarks>
-    /// This is a convenience wrapper for <see cref="DrawGappedSegment"/>.
-    /// </remarks>
-    public static float DrawGapped(this Segment s, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
-    {
-        return DrawGappedSegment(s.Start, s.End, length, lineInfo, gapDrawingInfo);
-    }
-
-    #endregion
-    
 }
+
+
+
+

@@ -353,4 +353,11 @@ public static class ShapeClipperTriangulation2D
     }
     
     #endregion
+    
+    //!!! Make a simple outline version for testing performance and if it is even possible and check agains current implementation
+    //TODO: Add masked triangulation functions for:
+    // - Filled
+    // - Outline
+    // - Between Polygon (shape) and Polygon (clip)
+    // - Helper functions between all shape types (transformed into polygons)
 }
