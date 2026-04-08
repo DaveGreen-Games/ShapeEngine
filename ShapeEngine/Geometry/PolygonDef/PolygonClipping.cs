@@ -23,7 +23,7 @@ public partial class Polygon
     public bool ClipIntersection(Polygon other, Polygon result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer[0].ToVector2List(result);
         return true;
@@ -38,7 +38,7 @@ public partial class Polygon
     public bool ClipIntersection(Polygon other, Polygons result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer.ToPolygons(result, true);
         return true;
@@ -53,7 +53,7 @@ public partial class Polygon
     public bool ClipIntersectionMany(Polygons others, Polygons result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Intersection, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Intersection, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer.ToPolygons(result, true);
         return true;
@@ -73,7 +73,7 @@ public partial class Polygon
     public bool ClipDifference(Polygon other, Polygon result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Difference, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer[0].ToVector2List(result);
         return true;
@@ -88,7 +88,7 @@ public partial class Polygon
     public bool ClipDifference(Polygon other, Polygons result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Difference, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer.ToPolygons(result, true);
         return true;
@@ -103,7 +103,7 @@ public partial class Polygon
     public bool ClipDifferenceMany(Polygons others, Polygons result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Difference, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer.ToPolygons(result, true);
         return true;
@@ -123,7 +123,7 @@ public partial class Polygon
     public bool ClipUnion(Polygon other, Polygon result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer[0].ToVector2List(result);
         return true;
@@ -164,7 +164,7 @@ public partial class Polygon
     public bool ClipUnion(Polygon other, Polygons result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer.ToPolygons(result, true);
         return true;
@@ -210,10 +210,10 @@ public partial class Polygon
     /// </remarks>
     public bool ClipUnion(Polygon other, Polygons newShapesResult, Polygons overlapsResult)
     {
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Intersection, clipResultBuffer);
         clipResultBuffer.ToPolygons(overlapsResult, true);
         
-        ClipperImmediate2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, other, ShapeClipperClipType.Union, clipResultBuffer);
         clipResultBuffer.ToPolygons(newShapesResult, true);
         
         return true;
@@ -229,7 +229,7 @@ public partial class Polygon
     public bool ClipUnionMany(Polygons others, Polygons result)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Union, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Union, clipResultBuffer);
         if (clipResultBuffer.Count <= 0) return false;
         clipResultBuffer.ToPolygons(result, true);
         return true;
@@ -247,10 +247,10 @@ public partial class Polygon
     /// </remarks>
     public bool ClipUnionMany(Polygons others, Polygons newShapesResult, Polygons overlapsResult)
     {
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Intersection, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Intersection, clipResultBuffer);
         clipResultBuffer.ToPolygons(overlapsResult, true);
         
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Union, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, others, ShapeClipperClipType.Union, clipResultBuffer);
         clipResultBuffer.ToPolygons(newShapesResult, true);
         
         return true;
@@ -273,11 +273,11 @@ public partial class Polygon
     {
         if (cutOutsResult != null)
         {
-            ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Intersection, clipResultBuffer);
+            ShapeClipper2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Intersection, clipResultBuffer);
             clipResultBuffer.ToPolygons(cutOutsResult, true);
         }
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Difference, clipResultBuffer);
         clipResultBuffer.RemoveAllHoles();
         if(clipResultBuffer.Count <= 0) return false;
         clipResultBuffer[0].ToVector2List(this);
@@ -302,11 +302,11 @@ public partial class Polygon
     public bool Cut(Polygon cutShape, Polygons cutOutsResult, Polygons newShapesResult)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Intersection, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Intersection, clipResultBuffer);
         clipResultBuffer.ToPolygons(cutOutsResult, true);
         
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, cutShape, ShapeClipperClipType.Difference, clipResultBuffer);
         clipResultBuffer.ToPolygons(newShapesResult, true);
         Console.WriteLine($"Shape Clockwise: {this.IsClockwise()}, Cut Shape Clockwise: {cutShape.IsClockwise()}");
         foreach (Polygon polygon in newShapesResult)
@@ -329,11 +329,11 @@ public partial class Polygon
     public bool CutMany(Polygons cutShapes, Polygons cutOutsResult, Polygons newShapesResult)
     {
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, cutShapes, ShapeClipperClipType.Intersection, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, cutShapes, ShapeClipperClipType.Intersection, clipResultBuffer);
         clipResultBuffer.ToPolygons(cutOutsResult, true);
         
         clipResultBuffer.Clear();
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, cutShapes, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, cutShapes, ShapeClipperClipType.Difference, clipResultBuffer);
         clipResultBuffer.ToPolygons(newShapesResult, true);
         return true;
     }
@@ -419,7 +419,7 @@ public partial class Polygon
         clipPolygonBuffer.Add(segment.Start);
         clipPolygonBuffer.Add(segment.End);
         
-        ClipperImmediate2D.ClipEngine.Execute(this, clipPolygonBuffer, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.Execute(this, clipPolygonBuffer, ShapeClipperClipType.Difference, clipResultBuffer);
         if(clipResultBuffer.Count <= 0) return false;
         
         clipResultBuffer.ToPolygons(result, true);
@@ -445,7 +445,7 @@ public partial class Polygon
             buffer.Add(segment.End.ToPoint64());
         }
         
-        ClipperImmediate2D.ClipEngine.ExecuteMany(this, clipPooledBuffer.Buffer, ShapeClipperClipType.Difference, clipResultBuffer);
+        ShapeClipper2D.ClipEngine.ExecuteMany(this, clipPooledBuffer.Buffer, ShapeClipperClipType.Difference, clipResultBuffer);
         if(clipResultBuffer.Count <= 0) return false;
         
         clipResultBuffer.ToPolygons(result, true);

@@ -244,7 +244,7 @@ public partial class Polyline
     /// </remarks>
     public void TriangulateOutline(Triangulation result, float thickness, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
-        ClipperImmediate2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
+        ShapeClipper2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     
     /// <summary>
@@ -261,7 +261,7 @@ public partial class Polyline
     /// </remarks>
     public void TriangulateOutline(TriMesh result, float thickness, float miterLimit = 2f, bool beveled = false, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool useDelaunay = false)
     {
-        ClipperImmediate2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
+        ShapeClipper2D.CreatePolylineTriangulation(this, thickness, miterLimit, beveled, endType, useDelaunay, result);
     }
     #endregion
     
@@ -278,7 +278,7 @@ public partial class Polyline
     /// </remarks>
     public void ToPolylinePerimeter(float perimeterToDraw, Polyline result)
     {
-        ClipperImmediate2D.ToPolylinePerimeter(this, perimeterToDraw, result);
+        ShapeClipper2D.ToPolylinePerimeter(this, perimeterToDraw, result);
         // if (perimeterToDraw <= 0f) return;
         //
         // if (Count <= 1) return;
@@ -343,7 +343,7 @@ public partial class Polyline
     public void TriangulateOutlinePerimeter(Triangulation result, float perimeterToDraw, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ClipperImmediate2D.CreatePolylineTriangulationPerimeter(this, perimeterToDraw, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
+        ShapeClipper2D.CreatePolylineTriangulationPerimeter(this, perimeterToDraw, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     
     /// <summary>
@@ -362,7 +362,7 @@ public partial class Polyline
     public void TriangulateOutlinePerimeter(TriMesh result, float perimeterToDraw, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ClipperImmediate2D.CreatePolylineTriangulationPerimeter(this, perimeterToDraw, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
+        ShapeClipper2D.CreatePolylineTriangulationPerimeter(this, perimeterToDraw, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     #endregion
 
@@ -377,7 +377,7 @@ public partial class Polyline
     /// </remarks>
     public void ToPolylinePercentage(float f, Polyline result)
     {
-        ClipperImmediate2D.ToPolylinePercentage(this, f, result);
+        ShapeClipper2D.ToPolylinePercentage(this, f, result);
         // if (f <= 0) return;
         //
         // if (Count <= 1) return;
@@ -420,7 +420,7 @@ public partial class Polyline
     public void TriangulateOutlinePercentage(Triangulation result, float f, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ClipperImmediate2D.CreatePolylineTriangulationPercentage(this, f, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
+        ShapeClipper2D.CreatePolylineTriangulationPercentage(this, f, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
    
     /// <summary>
@@ -439,7 +439,7 @@ public partial class Polyline
     public void TriangulateOutlinePercentage(TriMesh result, float f, float thickness, 
         float miterLimit = 2f, bool beveled = false, LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ClipperImmediate2D.CreatePolylineTriangulationPercentage(this, f, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
+        ShapeClipper2D.CreatePolylineTriangulationPercentage(this, f, thickness, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay, result);
     }
     #endregion
 }

@@ -74,8 +74,8 @@ public class FractureHelper
      /// </remarks>
     public void Fracture(Polygon shape, Polygon cutShape, FractureInfo result)
     {
-        ClipperImmediate2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Intersection, result.Cutouts);
-        ClipperImmediate2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Difference, result.NewShapes);
+        ShapeClipper2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Intersection, result.Cutouts);
+        ShapeClipper2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Difference, result.NewShapes);
         
         result.Cutouts.RemoveAllHoles();
         result.NewShapes.RemoveAllHoles();

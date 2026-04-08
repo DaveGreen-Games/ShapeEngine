@@ -48,13 +48,13 @@ public sealed class TriMesh : IEquatable<TriMesh>
     /// <summary>
     /// Initializes a new empty mesh using the current default clipper decimal precision.
     /// </summary>
-    public TriMesh() : this(0, ClipperImmediate2D.DecimalPlaces) { }
+    public TriMesh() : this(0, ShapeClipper2D.DecimalPlaces) { }
     
     /// <summary>
     /// Initializes a new empty mesh with the specified initial vertex capacity.
     /// </summary>
     /// <param name="capacity">The initial number of vertices the internal buffer can store without resizing.</param>
-    public TriMesh(int capacity) : this(capacity, ClipperImmediate2D.DecimalPlaces) { }
+    public TriMesh(int capacity) : this(capacity, ShapeClipper2D.DecimalPlaces) { }
 
     /// <summary>
     /// Initializes a new empty mesh with the specified initial capacity and hash/equality precision.
@@ -793,9 +793,9 @@ public sealed class TriMesh : IEquatable<TriMesh>
         
             // Convert int coords back to world coords
             // because y is never flipped - return triangles are in cw order and flipping 0 with 1 turns them into ccw order!
-            Vector2 a = ClipperImmediate2D.ToVec2(tri[1]);
-            Vector2 b = ClipperImmediate2D.ToVec2(tri[0]);
-            Vector2 c = ClipperImmediate2D.ToVec2(tri[2]);
+            Vector2 a = ShapeClipper2D.ToVec2(tri[1]);
+            Vector2 b = ShapeClipper2D.ToVec2(tri[0]);
+            Vector2 c = ShapeClipper2D.ToVec2(tri[2]);
         
             // enforce CCW (defensive)
             if (Cross(b - a, c - a) > 0f)

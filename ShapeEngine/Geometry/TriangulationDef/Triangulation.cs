@@ -36,27 +36,27 @@ public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulati
     /// </summary>
     public Triangulation()
     {
-        DecimalPlaces = ClipperImmediate2D.DecimalPlaces;
+        DecimalPlaces = ShapeClipper2D.DecimalPlaces;
     }
     
     /// <summary>
     /// Initializes a new empty instance of the <see cref="Triangulation"/> class with the specified capacity and optional hash/equality precision.
     /// </summary>
     /// <param name="capacity">The initial number of triangles the collection can store without resizing.</param>
-    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ClipperImmediate2D.DecimalPlaces"/>.</param>
+    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ShapeClipper2D.DecimalPlaces"/>.</param>
     public Triangulation(int capacity, int decimalPlaces = -1) : base(capacity)
     {
-        DecimalPlaces = decimalPlaces <= 0 ? ClipperImmediate2D.DecimalPlaces : decimalPlaces;
+        DecimalPlaces = decimalPlaces <= 0 ? ShapeClipper2D.DecimalPlaces : decimalPlaces;
     }
     
     /// <summary>
     /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified triangles and optional hash/equality precision.
     /// </summary>
     /// <param name="triangles">The triangles to add to the collection in enumeration order.</param>
-    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ClipperImmediate2D.DecimalPlaces"/>.</param>
+    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ShapeClipper2D.DecimalPlaces"/>.</param>
     public Triangulation(IEnumerable<Triangle> triangles, int decimalPlaces = -1)
     {
-        DecimalPlaces = decimalPlaces <= 0 ? ClipperImmediate2D.DecimalPlaces : decimalPlaces;
+        DecimalPlaces = decimalPlaces <= 0 ? ShapeClipper2D.DecimalPlaces : decimalPlaces;
         AddRange(triangles);
     }
     
@@ -64,11 +64,11 @@ public partial class Triangulation : ShapeList<Triangle>, IEquatable<Triangulati
     /// Initializes a new instance of the <see cref="Triangulation"/> class from a flat vertex list and optional hash/equality precision.
     /// </summary>
     /// <param name="vertices">The vertex list whose values are grouped in consecutive triples to form triangles.</param>
-    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ClipperImmediate2D.DecimalPlaces"/>.</param>
+    /// <param name="decimalPlaces">The decimal precision used for quantized hashing and equality comparisons. Pass a negative value to use <see cref="ShapeClipper2D.DecimalPlaces"/>.</param>
     /// <remarks>Any trailing vertices that do not form a complete triangle are ignored.</remarks>
     public Triangulation(IReadOnlyList<Vector2> vertices, int decimalPlaces = -1)
     {
-        DecimalPlaces = decimalPlaces <= 0 ? ClipperImmediate2D.DecimalPlaces : decimalPlaces;
+        DecimalPlaces = decimalPlaces <= 0 ? ShapeClipper2D.DecimalPlaces : decimalPlaces;
         for (int i = 0; i < vertices.Count; i += 3)
         {
             if (i + 2 >= vertices.Count) break;

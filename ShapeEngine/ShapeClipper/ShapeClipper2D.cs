@@ -18,7 +18,7 @@ namespace ShapeEngine.ShapeClipper;
 /// This type reuses shared static buffers and engine instances to reduce allocations during repeated geometry operations.
 /// It is intended for sequential use and is not thread-safe.
 /// </remarks>
-public static class ClipperImmediate2D
+public static class ShapeClipper2D
 {
     #region Public Settings
     
