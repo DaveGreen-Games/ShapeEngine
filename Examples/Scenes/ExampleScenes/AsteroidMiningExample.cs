@@ -676,8 +676,6 @@ namespace Examples.Scenes.ExampleScenes
             if(cutShapeBuffer.Count > 0) FractureAsteroid(a, cutShapeBuffer);
         }
        
-        
-        //Issue: To many pieces are generated 
         private void FractureAsteroid(Asteroid a, Polygon cutShape)
         {
             RemoveAsteroid(a);
