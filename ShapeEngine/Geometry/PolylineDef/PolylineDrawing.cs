@@ -21,9 +21,6 @@ namespace ShapeEngine.Geometry.PolylineDef;
 /// </remarks>
 public static class PolylineDrawing
 {
-    //CHECK: Check if *Faster methods are even faster.
-    
-    
     #region Draw
     
     public static void Draw(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
@@ -35,29 +32,6 @@ public static class PolylineDrawing
     {
         ClipperImmediate2D.DrawPolyline(polyline, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
-    
-    
-    public static void DrawFast(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            SegmentDrawing.DrawSegment(start, end, thickness, color, capType, capPoints);
-        }
-    }
-   
-    public static void DrawFast(this Polyline polyline, LineDrawingInfo lineInfo)
-    {
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            SegmentDrawing.DrawSegment(start, end, lineInfo);
-        }
-    }    
     
     #endregion
     
@@ -72,43 +46,6 @@ public static class PolylineDrawing
     {
         ClipperImmediate2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
-    
-    
-    public static void DrawPerimeterFast(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo)
-    {
-        DrawPerimeterFast(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-    
-    public static void DrawPerimeterFast(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        if (polyline.Count < 3 || perimeterToDraw == 0) return;
-
-        bool reverse = perimeterToDraw < 0;
-        if (reverse) perimeterToDraw *= -1;
-
-        int currentIndex = reverse ? polyline.Count - 1 : 0;
-
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[currentIndex];
-            currentIndex = reverse ? currentIndex - 1 : currentIndex + 1;
-            var end = polyline[currentIndex];
-            var l = (end - start).Length();
-            if (l < perimeterToDraw)
-            {
-                perimeterToDraw -= l;
-                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                float f = perimeterToDraw / l;
-                end = start.Lerp(end, f);
-                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
-                return;
-            }
-        }
-    }
-
     #endregion
     
     #region Draw Percentage
@@ -122,43 +59,6 @@ public static class PolylineDrawing
     {
         ClipperImmediate2D.DrawPolylinePercentage(polyline, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
-
-    
-    
-    public static void DrawPercentageFast(this Polyline polyline, float f, LineDrawingInfo lineInfo)
-    {
-        DrawPercentageFast(polyline, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-    
-    public static void DrawPercentageFast(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        if (polyline.Count < 3 || f == 0f) return;
-
-        bool negative = false;
-        if (f < 0)
-        {
-            negative = true;
-            f *= -1;
-        }
-        if (f >= 1)
-        {
-            Draw(polyline, lineThickness, color, capType, capPoints);
-            return;
-        }
-
-        float perimeter = 0f;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            var l = (end - start).Length();
-            perimeter += l;
-        }
-
-        f = ShapeMath.Clamp(f, 0f, 1f);
-        DrawPerimeter(polyline, perimeter * f * (negative ? -1 : 1), lineThickness, color, capType, capPoints);
-    }
-
     #endregion
 
     #region Draw Scaled
@@ -206,8 +106,7 @@ public static class PolylineDrawing
     }
     
     #endregion
-
-
+    
     #region Glow
     /// <summary>
     /// Draws the polyline as a layered glow by rendering multiple stroked passes
