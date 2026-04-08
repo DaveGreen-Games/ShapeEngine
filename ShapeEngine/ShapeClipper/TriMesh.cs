@@ -793,9 +793,9 @@ public sealed class TriMesh : IEquatable<TriMesh>
         
             // Convert int coords back to world coords
             // because y is never flipped - return triangles are in cw order and flipping 0 with 1 turns them into ccw order!
-            Vector2 a = ShapeClipper2D.ToVec2(tri[1]);
-            Vector2 b = ShapeClipper2D.ToVec2(tri[0]);
-            Vector2 c = ShapeClipper2D.ToVec2(tri[2]);
+            Vector2 a = ShapeClipperConversion2D.ToVec2(tri[1]);
+            Vector2 b = ShapeClipperConversion2D.ToVec2(tri[0]);
+            Vector2 c = ShapeClipperConversion2D.ToVec2(tri[2]);
         
             // enforce CCW (defensive)
             if (Cross(b - a, c - a) > 0f)

@@ -96,7 +96,7 @@ public class ShapeClipperOffset
         if (offset == 0f)
         {
             var path = new Path64();
-            ShapeClipper2D.ToPath64(polygonCCW, path);
+            ShapeClipperConversion2D.ToPath64(polygonCCW, path);
             result.Add(path);
             return;
         }
@@ -142,7 +142,7 @@ public class ShapeClipperOffset
         outPaths.Clear();
 
         bufferPath64.Clear();
-        ShapeClipper2D.ToPath64(polygonCCW, bufferPath64);
+        ShapeClipperConversion2D.ToPath64(polygonCCW, bufferPath64);
 
         JoinType jt = SelectJoinType(miterLimit, beveled);
 
@@ -169,7 +169,7 @@ public class ShapeClipperOffset
         outPaths.Clear();
 
         bufferPath64.Clear();
-        ShapeClipper2D.ToPath64(polyline, bufferPath64);
+        ShapeClipperConversion2D.ToPath64(polyline, bufferPath64);
 
         JoinType jt = SelectJoinType(miterLimit, beveled);
 

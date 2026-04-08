@@ -8,7 +8,6 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.ShapeClipper;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolylineDef;
 
@@ -25,12 +24,12 @@ public static class PolylineDrawing
     
     public static void Draw(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolyline(polyline, thickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolyline(polyline, thickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
 
     public static void Draw(this Polyline polyline, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolyline(polyline, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolyline(polyline, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     #endregion
@@ -39,12 +38,12 @@ public static class PolylineDrawing
     
     public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePerimeter(polyline, perimeterToDraw, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     #endregion
     
@@ -52,12 +51,12 @@ public static class PolylineDrawing
     
     public static void DrawPercentage(this Polyline polyline, float f, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolylinePercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     public static void DrawPercentage(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolylinePercentage(polyline, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolylinePercentage(polyline, f, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     #endregion
 
@@ -126,7 +125,7 @@ public static class PolylineDrawing
     public static void DrawGlow(this Polyline polyline, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
         float miterLimit = 2f, bool beveled = false,  LineCapType capType = LineCapType.CappedExtended, bool useDelaunay = false)
     {
-        ShapeClipper2D.DrawPolylineGlow(polyline, thicknessRange, colorRange, steps, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay);
+        ShapeClipperDrawing2D.DrawPolylineGlow(polyline, thicknessRange, colorRange, steps, miterLimit, beveled, capType.ToShapeClipperEndType(), useDelaunay);
     }
     
     #endregion

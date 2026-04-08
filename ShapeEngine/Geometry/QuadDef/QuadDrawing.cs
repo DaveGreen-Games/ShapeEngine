@@ -1566,7 +1566,7 @@ public static class QuadDrawing
         chamferC.AddToList(chamferedCornersBuffer);
         chamferD.AddToList(chamferedCornersBuffer);
         
-        ShapeClipper2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
     }
    
     /// <summary>
@@ -1638,7 +1638,7 @@ public static class QuadDrawing
         chamferC.AddToList(chamferedCornersBuffer);
         chamferD.AddToList(chamferedCornersBuffer);
         
-        ShapeClipper2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
     }
     
     /// <summary>
@@ -1714,7 +1714,7 @@ public static class QuadDrawing
         chamferC.AddToList(chamferedCornersBuffer);
         chamferD.AddToList(chamferedCornersBuffer);
         
-        ShapeClipper2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
     }
     
     #endregion
@@ -1854,7 +1854,7 @@ public static class QuadDrawing
         chamferC.AddToList(chamferedCornersBuffer);
         chamferD.AddToList(chamferedCornersBuffer);
         
-        ShapeClipper2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f, false, false);
     }
     #endregion
     

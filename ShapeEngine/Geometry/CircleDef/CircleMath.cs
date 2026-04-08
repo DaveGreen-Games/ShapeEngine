@@ -324,7 +324,7 @@ public readonly partial struct Circle
             var p = Center + new Vector2(Radius, 0f).Rotate(startAngleRad + angleStepRad * i);
             circleSectorOutlineTriangulationPolyCache.Add(p);
         }
-        ShapeClipper2D.CreatePolygonOutlineTriangulation(circleSectorOutlineTriangulationPolyCache, lineThickness, miterLimit, beveled, useDelaunay, result);
+        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulation(circleSectorOutlineTriangulationPolyCache, lineThickness, miterLimit, beveled, useDelaunay, result);
     }
     #endregion
 }

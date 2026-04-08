@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.Intrinsics.X86;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
@@ -8,7 +7,6 @@ using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
-using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
 using Ray = ShapeEngine.Geometry.RayDef.Ray;
@@ -217,7 +215,7 @@ public static class PolygonDrawing
             return;
         }
         
-        ShapeClipper2D.DrawPolygon(poly, color, false);
+        ShapeClipperDrawing2D.DrawPolygon(poly, color, false);
 
         // drawHelperTriangulation.Clear();
         // poly.Triangulate(drawHelperTriangulation);
@@ -244,7 +242,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
@@ -261,7 +259,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex,  LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePerimeter(poly, perimeterToDraw, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
@@ -280,7 +278,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineThickness, color, miterLimit, beveled, capType.ToShapeClipperEndType(), false);
     }
     
     /// <summary>
@@ -297,7 +295,7 @@ public static class PolygonDrawing
     /// </remarks>
     public static void DrawLinesPercentage(this Polygon poly, float f, int startIndex, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
+        ShapeClipperDrawing2D.DrawPolygonOutlinePercentage(poly, f, startIndex, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, lineInfo.CapType.ToShapeClipperEndType(), false);
     }
     #endregion
     
@@ -319,7 +317,7 @@ public static class PolygonDrawing
     /// </param>
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolygonOutline(poly, lineThickness, color, miterLimit, beveled, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(poly, lineThickness, color, miterLimit, beveled, false);
     }
 
     /// <summary>
@@ -337,7 +335,7 @@ public static class PolygonDrawing
     /// </param>
     public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo, float miterLimit = 2f, bool beveled = false)
     {
-        ShapeClipper2D.DrawPolygonOutline(poly, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, false);
+        ShapeClipperDrawing2D.DrawPolygonOutline(poly, lineInfo.Thickness, lineInfo.Color, miterLimit, beveled, false);
     }
 
     #endregion
@@ -362,7 +360,7 @@ public static class PolygonDrawing
     public static void DrawGlow(this Polygon polygon, ValueRange thicknessRange, ValueRangeColor colorRange, int steps, 
         float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
     {
-        ShapeClipper2D.DrawPolygonOutlineGlow(polygon, thicknessRange, colorRange, steps, miterLimit, beveled, useDelaunay);
+        ShapeClipperDrawing2D.DrawPolygonOutlineGlow(polygon, thicknessRange, colorRange, steps, miterLimit, beveled, useDelaunay);
     }
     
     #endregion
