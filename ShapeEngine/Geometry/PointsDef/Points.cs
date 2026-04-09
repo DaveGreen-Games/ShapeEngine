@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
@@ -24,7 +25,6 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     #region Helper
     
     protected static Points pointsBuffer = new();
-    private static Segments segmentsBuffer1 = new();
     private static Segments segmentsBuffer2 = new();
     private static HashSet<Vector2> uniquePointsBuffer = new();
     
@@ -608,11 +608,28 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// </remarks>
     public void TriangulatePointCloud(Triangle supraTriangle, Triangulation result)
     {
+        static int ComparePoints(Vector2 a, Vector2 b)
+        {
+            int xCompare = a.X.CompareTo(b.X);
+            return xCompare != 0 ? xCompare : a.Y.CompareTo(b.Y);
+        }
+
+        static (Vector2 Start, Vector2 End) GetUndirectedEdgeKey(Segment edge)
+        {
+            return ComparePoints(edge.Start, edge.End) <= 0
+                ? (edge.Start, edge.End)
+                : (edge.End, edge.Start);
+        }
+
         result.Clear();
         result.Add(supraTriangle);
 
+        //TODO: Make into buffer
+        Dictionary<(Vector2 Start, Vector2 End), (Segment Segment, int Count)> edgeCounts = new();
+
         foreach (var p in this)
         {
+            //TODO: Make into buffer
             Triangulation badTriangles = new();
 
             //Identify 'bad triangles'
@@ -630,14 +647,32 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
                 }
             }
 
-            segmentsBuffer1.Clear();
-            segmentsBuffer1.EnsureCapacity(badTriangles.Count * 3);
+            edgeCounts.Clear();
             foreach (var badTriangle in badTriangles)
             {
-                segmentsBuffer1.AddRange(badTriangle.GetEdges());
+                var edgeAB = badTriangle.SegmentAToB;
+                var keyAB = GetUndirectedEdgeKey(edgeAB);
+                if (edgeCounts.TryGetValue(keyAB, out var abEntry)) edgeCounts[keyAB] = (abEntry.Segment, abEntry.Count + 1);
+                else edgeCounts.Add(keyAB, (edgeAB, 1));
+
+                var edgeBC = badTriangle.SegmentBToC;
+                var keyBC = GetUndirectedEdgeKey(edgeBC);
+                if (edgeCounts.TryGetValue(keyBC, out var bcEntry)) edgeCounts[keyBC] = (bcEntry.Segment, bcEntry.Count + 1);
+                else edgeCounts.Add(keyBC, (edgeBC, 1));
+
+                var edgeCA = badTriangle.SegmentCToA;
+                var keyCA = GetUndirectedEdgeKey(edgeCA);
+                if (edgeCounts.TryGetValue(keyCA, out var caEntry)) edgeCounts[keyCA] = (caEntry.Segment, caEntry.Count + 1);
+                else edgeCounts.Add(keyCA, (edgeCA, 1));
             }
 
-            segmentsBuffer1.GetUniqueSegments(segmentsBuffer2);
+            segmentsBuffer2.Clear();
+            segmentsBuffer2.EnsureCapacity(edgeCounts.Count);
+            foreach (var entry in edgeCounts.Values)
+            {
+                if (entry.Count == 1) segmentsBuffer2.Add(entry.Segment);
+            }
+
             //Create new triangles
             for (int i = 0; i < segmentsBuffer2.Count; i++)
             {

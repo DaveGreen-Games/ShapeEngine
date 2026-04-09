@@ -627,6 +627,8 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// <returns>True if the triangles share at least one vertex; otherwise, false.</returns>
     public bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
 
+    //TODO: Add SharesEdge(Triangle t)
+    
     /// <summary>
     /// Determines whether this triangle is similar to another triangle within floating-point precision.
     /// </summary>

@@ -14,6 +14,7 @@ public partial class Segments : ShapeList<Segment>
 {
     #region Helper
     
+    private static readonly HashSet<Segment> hashSetUndirectedSegmentBuffer = new(SegmentEndpointsUndirectedComparer.Instance);
     private static HashSet<Vector2> hashSetVector2Buffer = new();
     private static HashSet<Segment> hashSetSegmentBuffer = new();
     private static List<Segment> segmentsBuffer = new();
@@ -157,6 +158,7 @@ public partial class Segments : ShapeList<Segment>
     /// <param name="result">The destination collection that will be cleared and populated with the unique segments.</param>
     /// <remarks>
     /// This method does not modify the current collection. Segment uniqueness is determined by the equality comparer used by the internal <see cref="HashSet{T}"/>.
+    /// Uniqueness is directional, so Start of first segment must equal Start of second segment AND End of first segment must equal End of second segment for the segments to be considered equal.
     /// </remarks>
     public void GetUniqueSegments(Segments result)
     {
@@ -170,6 +172,35 @@ public partial class Segments : ShapeList<Segment>
         result.Clear();
         result.EnsureCapacity(hashSetSegmentBuffer.Count);
         result.AddRange(hashSetSegmentBuffer);
+    }
+    
+    //TODO: Add docs
+    public void GetUniqueSegmentsUndirectional(Segments result)
+    {
+        hashSetUndirectedSegmentBuffer.Clear();
+        hashSetUndirectedSegmentBuffer.EnsureCapacity(Count);
+        for (int i = 0; i < Count; i++)
+        {
+            var seg = this[i];
+            hashSetUndirectedSegmentBuffer.Add(seg);
+        }
+        
+        result.Clear();
+        result.EnsureCapacity(hashSetUndirectedSegmentBuffer.Count);
+        result.AddRange(hashSetUndirectedSegmentBuffer);
+        
+        //Simple variant
+        // result.Clear();
+        // result.EnsureCapacity(Count);
+        //
+        // for (int i = 0; i < Count; i++)
+        // {
+        //     var seg = this[i];
+        //     if (!result.ContainsSegmentSimilar(seg))
+        //     {
+        //         result.Add(seg);
+        //     }
+        // }
     }
 
     /// <summary>
@@ -295,5 +326,38 @@ public partial class Segments : ShapeList<Segment>
             result.Add(normalized ? seg.Dir : seg.Displacement);
         }
     }
+
     #endregion
+    
+    
+    private sealed class SegmentEndpointsUndirectedComparer : IEqualityComparer<Segment>
+    {
+        public static readonly SegmentEndpointsUndirectedComparer Instance = new();
+
+        public bool Equals(Segment x, Segment y)
+        {
+            return (x.Start.Equals(y.Start) && x.End.Equals(y.End)) ||
+                   (x.Start.Equals(y.End) && x.End.Equals(y.Start));
+        }
+
+        public int GetHashCode(Segment segment)
+        {
+            var start = segment.Start;
+            var end = segment.End;
+
+            if (Compare(start, end) > 0)
+            {
+                (start, end) = (end, start);
+            }
+
+            return HashCode.Combine(start, end);
+        }
+
+        private static int Compare(Vector2 a, Vector2 b)
+        {
+            int xCompare = a.X.CompareTo(b.X);
+            return xCompare != 0 ? xCompare : a.Y.CompareTo(b.Y);
+        }
+    }
+    
 }
