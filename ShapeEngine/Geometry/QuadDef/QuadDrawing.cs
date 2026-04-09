@@ -12,18 +12,21 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.QuadDef;
 
-//TODO: Add docs
-
 /// <summary>
-/// Provides static methods for drawing quads (quadrilaterals) and their outlines, including partial outlines and vertex markers.
+/// Provides drawing helpers for rendering a <see cref="Quad"/> as a filled shape, outline, partial outline, or decorated variant.
 /// </summary>
 /// <remarks>
-/// This class contains utility methods for rendering quads with various options such as line thickness, color, partial outlines, and scaling.
+/// This partial struct contains rendering-oriented members for quads, including scaled drawing, vignette fills,
+/// chamfered corners, corner markers, masked outlines, and gapped outlines.
 /// </remarks>
 public readonly partial struct Quad
 {
     #region Draw
     
+    /// <summary>
+    /// Draws the quad as a filled shape using two triangles.
+    /// </summary>
+    /// <param name="color">The fill color.</param>
     public void Draw(ColorRgba color)
     {
         var q = this;
@@ -43,7 +46,7 @@ public readonly partial struct Quad
     /// <param name="drawType">
     /// The style of drawing:
     /// <list type="bullet">
-    /// <item><description>0: [Filled] Drawn as 6 filled triangles, effectivly cutting of corners.</description></item>
+    /// <item><description>0: [Filled] Drawn as 6 filled triangles, effectively cutting off the corners.</description></item>
     /// <item><description>1: [Sides] Each side is connected to the quad's center.</description></item>
     /// <item><description>2: [Sides Inverse] The start of 1 side is connected to the end of the next side and is connected to the quad's center.</description></item>
     /// </list>
@@ -97,12 +100,24 @@ public readonly partial struct Quad
     
     #region Draw Lines
     
+    /// <summary>
+    /// Draws the outline of the quad using the supplied line drawing settings.
+    /// </summary>
+    /// <param name="lineInfo">The outline thickness and color information.</param>
     public void DrawLines(LineDrawingInfo lineInfo)
     {
         var q = this;
         q.DrawLines(lineInfo.Thickness, lineInfo.Color);
     }
     
+    /// <summary>
+    /// Draws the outline of the quad with a uniform thickness.
+    /// </summary>
+    /// <param name="lineThickness">The desired outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <remarks>
+    /// The thickness is clamped to half of the quad's smaller dimension to keep the generated geometry valid.
+    /// </remarks>
     public void DrawLines(float lineThickness, ColorRgba color)
     {
         var q = this;
@@ -173,6 +188,14 @@ public readonly partial struct Quad
     
     #region Draw Lines Scaled
     
+    /// <summary>
+    /// Draws a scaled portion of each outline segment of the quad.
+    /// </summary>
+    /// <param name="lineInfo">The outline thickness and color information.</param>
+    /// <param name="sideScaleFactor">
+    /// The portion of each edge to draw. Values less than or equal to zero draw nothing, and values greater than or equal to one draw the full outline.
+    /// </param>
+    /// <param name="sideScaleOrigin">The origin along each edge from which scaling is applied, where 0 is the start, 1 is the end, and 0.5 is centered.</param>
     public void DrawLinesScaled(LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         var q = this;
@@ -197,12 +220,32 @@ public readonly partial struct Quad
     
     #region Draw Lines Percentage
 
+    /// <summary>
+    /// Draws a contiguous portion of the quad outline using the supplied line drawing settings.
+    /// </summary>
+    /// <param name="f">
+    /// The percentage of the perimeter to draw. Negative values reverse the draw direction, and the absolute value is clamped to the range [0, 1].
+    /// </param>
+    /// <param name="startIndex">The starting corner index, wrapped into the range [0, 3].</param>
+    /// <param name="lineInfo">The outline thickness and color information.</param>
     public void DrawLinesPercentage(float f, int startIndex, LineDrawingInfo lineInfo)
     {
         var quad = this;
         quad.DrawLinesPercentage(f, startIndex, lineInfo.Thickness, lineInfo.Color);
     }
     
+    /// <summary>
+    /// Draws a contiguous portion of the quad outline with a uniform thickness.
+    /// </summary>
+    /// <param name="f">
+    /// The percentage of the perimeter to draw. Negative values reverse the draw direction, and the absolute value is clamped to the range [0, 1].
+    /// </param>
+    /// <param name="startIndex">The starting corner index, wrapped into the range [0, 3].</param>
+    /// <param name="lineThickness">The desired outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <remarks>
+    /// A value of 1 draws the full outline, while partial values continue across corners until the requested perimeter fraction is reached.
+    /// </remarks>
     public void DrawLinesPercentage(float f, int startIndex, float lineThickness, ColorRgba color)
     {
         var quad = this;

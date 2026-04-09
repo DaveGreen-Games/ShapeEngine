@@ -5,11 +5,25 @@ using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.RectDef;
 
-//TODO: Add docs
-
+/// <summary>
+/// Provides extension methods for drawing a <see cref="Grid"/> inside rectangular bounds.
+/// </summary>
+/// <remarks>
+/// The grid is rendered by drawing horizontal and vertical line segments spaced evenly across the supplied bounds.
+/// </remarks>
 public static class GridDrawing
 {
     
+    /// <summary>
+    /// Draws the grid lines inside the specified rectangular bounds.
+    /// </summary>
+    /// <param name="grid">The grid definition containing the row and column counts.</param>
+    /// <param name="bounds">The rectangular area that the grid should occupy.</param>
+    /// <param name="lineThickness">The thickness of the grid lines.</param>
+    /// <param name="color">The color of the grid lines.</param>
+    /// <remarks>
+    /// The method draws <c>Rows + 1</c> horizontal lines and <c>Cols + 1</c> vertical lines so the full cell lattice is outlined.
+    /// </remarks>
     public static void Draw(this Grid grid, Rect bounds, float lineThickness, ColorRgba color)
     {
         Vector2 rowSpacing = new(0f, bounds.Height / grid.Rows);
