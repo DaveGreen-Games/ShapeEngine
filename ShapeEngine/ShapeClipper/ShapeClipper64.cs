@@ -14,8 +14,7 @@ namespace ShapeEngine.ShapeClipper;
 public class ShapeClipper64
 {
     #region Helper
-
-    private readonly Clipper64 clipEngine;
+    
     private readonly Paths64PooledBuffer paths64SubjectBuffer = new();
     private readonly Paths64PooledBuffer paths64ClipBuffer = new();
     private readonly Path64 path64SubjectBuffer = new();
@@ -25,6 +24,7 @@ public class ShapeClipper64
     #endregion
     
     #region Members
+    private readonly Clipper64 clipEngine;
     
     /// <summary>
     /// Gets or sets the fill rule used when evaluating subject and clip geometry.
