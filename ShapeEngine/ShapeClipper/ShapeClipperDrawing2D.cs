@@ -249,4 +249,7 @@ public static class ShapeClipperDrawing2D
     // - Helper functions between all shape types (transformed into polygons)
     // - Use masked triangulation functions for creating tri meshes and then draw them
     // - Update all Shapes DrawMasked functions using this new system
+    #region Draw Masked
+    
+    #endregion
 }

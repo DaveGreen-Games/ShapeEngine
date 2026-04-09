@@ -20,8 +20,12 @@ public static class ShapeClipperTriangulation2D
     private static readonly Paths64 _tmpInner = new();
     private static readonly Paths64 _tmpRing = new();
     private static readonly Paths64 _tmpStroke = new();
+    private static readonly Paths64 _tmpResultClosed = new();
     private static readonly List<Vector2> polylineBuffer = new();
     private static readonly TriMesh _triMeshBuffer = new();
+    
+    private static readonly Paths64PooledBuffer paths64ConversionBuffer1 = new(8);
+    private static readonly Paths64PooledBuffer paths64ConversionBuffer2 = new(8);
     #endregion
     
     #region Create Outline Triangulation Perimeter
@@ -173,6 +177,34 @@ public static class ShapeClipperTriangulation2D
     #endregion
     
     #region Create Outline Triangulation
+
+    //TODO: Add Docs
+    public static void CreatePolygonOutlineTriangulation(Paths64 polygonWithHoles, float thickness, float miterLimit, bool beveled, bool useDelaunay, TriMesh result)
+    {
+        if (result == null) throw new ArgumentNullException(nameof(result));
+        result.Clear();
+
+        if (polygonWithHoles.Count <= 0 || thickness <= 0f) return;
+
+        ShapeClipper2D.OffsetEngine.OffsetPaths(polygonWithHoles, +thickness, miterLimit, beveled, _tmpOuter);
+        ShapeClipper2D.OffsetEngine.OffsetPaths(polygonWithHoles, -thickness, miterLimit, beveled, _tmpInner);
+        if (_tmpOuter.Count == 0) return;
+        
+        _tmpRing.Clear();
+        ShapeClipper2D.ClipEngine.Execute(_tmpOuter, _tmpInner, ShapeClipperClipType.Difference, _tmpRing);
+        
+        if (_tmpRing.Count == 0) return;
+    
+        result.TriangulatePaths64ToMesh(_tmpRing, useDelaunay);
+    }
+    
+    //TODO: Add Docs
+    public static void CreatePolygonOutlineTriangulation(Paths64 polygonWithHoles, float thickness, float miterLimit, bool beveled, bool useDelaunay, Triangulation result)
+    {
+        _triMeshBuffer.Clear();
+        CreatePolygonOutlineTriangulation(polygonWithHoles, thickness, miterLimit, beveled, useDelaunay, _triMeshBuffer);
+        _triMeshBuffer.ToTriangulation(result);
+    }
     
     /// <summary>
     /// Triangulates the stroked outline of a polygon into a <see cref="TriMesh"/>.
@@ -303,10 +335,10 @@ public static class ShapeClipperTriangulation2D
         result.Clear();
 
         if (polygonWithHoles.Count == 0) return;
-        ShapeClipper2D.paths64ConversionBuffer.PrepareBuffer(polygonWithHoles.Count);
-        polygonWithHoles.ToPaths64(ShapeClipper2D.paths64ConversionBuffer.Buffer);
+        paths64ConversionBuffer1.PrepareBuffer(polygonWithHoles.Count);
+        polygonWithHoles.ToPaths64(paths64ConversionBuffer1.Buffer);
         
-        result.TriangulatePaths64ToMesh(ShapeClipper2D.paths64ConversionBuffer.Buffer, useDelaunay);
+        result.TriangulatePaths64ToMesh(paths64ConversionBuffer1.Buffer, useDelaunay);
     }
     
     /// <summary>
@@ -333,10 +365,10 @@ public static class ShapeClipperTriangulation2D
         if (result == null) throw new ArgumentNullException(nameof(result));
         result.Clear();
 
-        ShapeClipper2D.paths64ConversionBuffer.PrepareBuffer(1);
-        polygonCCW.ToPaths64(ShapeClipper2D.paths64ConversionBuffer.Buffer);
+        paths64ConversionBuffer1.PrepareBuffer(1);
+        polygonCCW.ToPaths64(paths64ConversionBuffer1.Buffer);
         
-        result.TriangulatePaths64ToMesh(ShapeClipper2D.paths64ConversionBuffer.Buffer, useDelaunay);
+        result.TriangulatePaths64ToMesh(paths64ConversionBuffer1.Buffer, useDelaunay);
     }
     
     /// <summary>
@@ -354,10 +386,50 @@ public static class ShapeClipperTriangulation2D
     
     #endregion
     
-    //!!! Make a simple outline version for testing performance and if it is even possible and check agains current implementation
-    //TODO: Add masked triangulation functions for:
-    // - Filled
-    // - Outline
-    // - Between Polygon (shape) and Polygon (clip)
-    // - Helper functions between all shape types (transformed into polygons)
+    #region Masked Triangulation
+    
+    //TODO: Add Docs
+    public static void CreatePolygonTriangulationMasked(IReadOnlyList<Vector2> polygonCCW, IReadOnlyList<Vector2> polygonMask, bool useDelaunay, TriMesh result)
+    {
+        result.Clear();
+
+        var buffer1 = paths64ConversionBuffer1.Buffer;
+        paths64ConversionBuffer1.PrepareBuffer(1);
+        polygonCCW.ToPaths64(buffer1);
+        
+        var buffer2 = paths64ConversionBuffer2.Buffer;
+        paths64ConversionBuffer2.PrepareBuffer(1);
+        polygonMask.ToPaths64(buffer2);
+        
+        _tmpResultClosed.Clear();
+        
+        ShapeClipper2D.ClipEngine.Execute(buffer1, buffer2, ShapeClipperClipType.Difference, _tmpResultClosed);
+        // _tmpResultClosed.RemoveAllHoles(); //only needed for outline version
+        
+        result.TriangulatePaths64ToMesh(_tmpResultClosed, useDelaunay);
+    }
+    
+    //TODO: Add Docs
+    public static void CreatePolygonOutlineTriangulationMasked(IReadOnlyList<Vector2> polygonCCW, IReadOnlyList<Vector2> polygonMask, float thickness, float miterLimit, bool beveled, bool useDelaunay, bool keepHoles, TriMesh result)
+    {
+        if(thickness <= 0f) return;
+        result.Clear();
+
+        var buffer1 = paths64ConversionBuffer1.Buffer;
+        paths64ConversionBuffer1.PrepareBuffer(1);
+        polygonCCW.ToPaths64(buffer1);
+        
+        var buffer2 = paths64ConversionBuffer2.Buffer;
+        paths64ConversionBuffer2.PrepareBuffer(1);
+        polygonMask.ToPaths64(buffer2);
+        
+        _tmpResultClosed.Clear();
+        
+        ShapeClipper2D.ClipEngine.Execute(buffer1, buffer2, ShapeClipperClipType.Difference, _tmpResultClosed);
+        if(!keepHoles) _tmpResultClosed.RemoveAllHoles();
+        
+        CreatePolygonOutlineTriangulation(_tmpResultClosed, thickness, miterLimit, beveled, useDelaunay, result);
+    }
+    #endregion
+    
 }

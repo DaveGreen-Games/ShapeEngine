@@ -72,7 +72,7 @@ public static class ShapeClipper2D
     private static readonly Path64 path64Buffer = new();
     private static readonly Path64 path64Buffer2 = new();
     private static readonly Paths64 paths64Buffer = new();
-    internal static readonly Paths64PooledBuffer paths64ConversionBuffer = new();
+    private static readonly Paths64PooledBuffer paths64ConversionBuffer = new(32);
    
     #endregion
 

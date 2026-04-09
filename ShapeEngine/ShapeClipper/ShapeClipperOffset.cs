@@ -125,9 +125,68 @@ public class ShapeClipperOffset
 
         OffsetPolylineToPaths64(polyline, offsetPositive, miterLimit, beveled, endType, result);
     }
+    
+    //TODO: Add Docs
+    public void OffsetPaths(Paths64 paths, float offset, float miterLimit, bool beveled, Paths64 result)
+    {
+        if (result == null) throw new ArgumentNullException(nameof(result));
+        result.Clear();
+
+        if (paths.Count <= 0) return;
+
+        if (offset == 0f)
+        {
+            return;
+        }
+
+        OffsetPaths64(paths, offset, miterLimit, beveled, result);
+    }
+
+    //TODO: Add Docs
+    public void OffsetOpenPaths(Paths64 openPaths, float offsetPositive, float miterLimit, bool beveled, ShapeClipperEndType endType, Paths64 result)
+    {
+        if (result == null) throw new ArgumentNullException(nameof(result));
+        result.Clear();
+
+        if (openPaths.Count <= 0 || offsetPositive <= 0f) return;
+
+        OffsetOpenPaths64(openPaths, offsetPositive, miterLimit, beveled, endType, result);
+    }
     #endregion
 
     #region Private
+    
+    //TODO: Add Docs
+    private void OffsetPaths64(Paths64 paths, float offsetWorld, float miterLimit, bool beveled, Paths64 outPaths)
+    {
+        outPaths.Clear();
+
+        JoinType jt = SelectJoinType(miterLimit, beveled);
+
+        offsetEngine.Clear();
+        if (miterLimit > 2f) offsetEngine.MiterLimit = miterLimit;
+
+        offsetEngine.AddPaths(paths, jt, EndType.Polygon);
+
+        double delta = offsetWorld * Scale.Scale;
+        offsetEngine.Execute(delta, outPaths);
+    }
+   
+    //TODO: Add Docs
+    private void OffsetOpenPaths64(Paths64 paths, float offsetWorldPositive, float miterLimit, bool beveled, ShapeClipperEndType endType, Paths64 outPaths)
+    {
+        outPaths.Clear();
+
+        JoinType jt = SelectJoinType(miterLimit, beveled);
+
+        offsetEngine.Clear();
+        if (miterLimit > 2f) offsetEngine.MiterLimit = miterLimit;
+
+        offsetEngine.AddPaths(paths, jt, endType.ToClipperEndType());
+
+        double delta = offsetWorldPositive * Scale.Scale;
+        offsetEngine.Execute(delta, outPaths);
+    }
     
     /// <summary>
     /// Converts a polygon to Clipper coordinates, applies the requested offset, and writes the resulting paths to <paramref name="outPaths"/>.
