@@ -126,7 +126,18 @@ public class ShapeClipperOffset
         OffsetPolylineToPaths64(polyline, offsetPositive, miterLimit, beveled, endType, result);
     }
     
-    //TODO: Add Docs
+    /// <summary>
+    /// Offsets a collection of closed Clipper paths and writes the resulting paths into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="paths">The closed input paths to offset.</param>
+    /// <param name="offset">The offset distance in world units. Positive values expand paths and negative values shrink them.</param>
+    /// <param name="miterLimit">The miter limit to use when selecting join behavior for sharp corners.</param>
+    /// <param name="beveled">Whether non-miter joins should use beveled corners instead of square corners.</param>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated offset paths.</param>
+    /// <remarks>
+    /// If <paramref name="paths"/> is empty, or <paramref name="offset"/> is zero, no output is produced.
+    /// The method assumes the supplied paths are already expressed in Clipper's integer coordinate space.
+    /// </remarks>
     public void OffsetPaths(Paths64 paths, float offset, float miterLimit, bool beveled, Paths64 result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
@@ -142,7 +153,19 @@ public class ShapeClipperOffset
         OffsetPaths64(paths, offset, miterLimit, beveled, result);
     }
 
-    //TODO: Add Docs
+    /// <summary>
+    /// Offsets a collection of open Clipper paths and writes the resulting stroked outlines into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="openPaths">The open input paths to offset.</param>
+    /// <param name="offsetPositive">The positive offset distance in world units used to build the stroked outlines.</param>
+    /// <param name="miterLimit">The miter limit to use when selecting join behavior for sharp corners.</param>
+    /// <param name="beveled">Whether non-miter joins should use beveled corners instead of square corners.</param>
+    /// <param name="endType">The end-cap style to use for each open path.</param>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated offset paths.</param>
+    /// <remarks>
+    /// If <paramref name="openPaths"/> is empty, or <paramref name="offsetPositive"/> is less than or equal to zero, no output is produced.
+    /// The method assumes the supplied paths are already expressed in Clipper's integer coordinate space.
+    /// </remarks>
     public void OffsetOpenPaths(Paths64 openPaths, float offsetPositive, float miterLimit, bool beveled, ShapeClipperEndType endType, Paths64 result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
@@ -156,7 +179,14 @@ public class ShapeClipperOffset
 
     #region Private
     
-    //TODO: Add Docs
+    /// <summary>
+    /// Applies an offset to closed Clipper paths and writes the resulting paths to <paramref name="outPaths"/>.
+    /// </summary>
+    /// <param name="paths">The closed input paths already converted to Clipper coordinates.</param>
+    /// <param name="offsetWorld">The offset distance in world units.</param>
+    /// <param name="miterLimit">The miter limit used to choose join behavior.</param>
+    /// <param name="beveled">Whether non-miter joins should use beveled corners.</param>
+    /// <param name="outPaths">The destination collection for the generated Clipper paths.</param>
     private void OffsetPaths64(Paths64 paths, float offsetWorld, float miterLimit, bool beveled, Paths64 outPaths)
     {
         outPaths.Clear();
@@ -172,7 +202,15 @@ public class ShapeClipperOffset
         offsetEngine.Execute(delta, outPaths);
     }
    
-    //TODO: Add Docs
+    /// <summary>
+    /// Applies an offset to open Clipper paths and writes the resulting stroked outlines to <paramref name="outPaths"/>.
+    /// </summary>
+    /// <param name="paths">The open input paths already converted to Clipper coordinates.</param>
+    /// <param name="offsetWorldPositive">The positive offset distance in world units.</param>
+    /// <param name="miterLimit">The miter limit used to choose join behavior.</param>
+    /// <param name="beveled">Whether non-miter joins should use beveled corners.</param>
+    /// <param name="endType">The end-cap style to use for the open paths.</param>
+    /// <param name="outPaths">The destination collection for the generated Clipper paths.</param>
     private void OffsetOpenPaths64(Paths64 paths, float offsetWorldPositive, float miterLimit, bool beveled, ShapeClipperEndType endType, Paths64 outPaths)
     {
         outPaths.Clear();

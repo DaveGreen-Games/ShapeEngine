@@ -13,9 +13,41 @@ namespace ShapeEngine.ShapeClipper;
 /// </remarks>
 public static class ShapeClipperDrawing2D
 {
-    private static readonly TriMesh _triMeshBuffer = new();
+    #region Buffer
     
-    #region Drawing
+    private static readonly TriMesh triMeshBuffer = new();
+    
+    #endregion
+    
+    #region Draw Polygon
+
+    /// <summary>
+    /// Draws a polygon with holes by triangulating it and rendering the generated mesh.
+    /// </summary>
+    /// <param name="polygonWithHoles">The outer polygon and any hole polygons.</param>
+    /// <param name="color">The color used to draw the generated mesh.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    public static void DrawPolygon(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, ColorRgba color, bool useDelaunay)
+    {
+        ShapeClipperTriangulation2D.CreatePolygonTriangulation(polygonWithHoles, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
+    }
+
+    /// <summary>
+    /// Draws a single polygon by triangulating it and rendering the generated mesh.
+    /// </summary>
+    /// <param name="polygonCCW">The polygon vertices, expected in counterclockwise order.</param>
+    /// <param name="color">The color used to draw the generated mesh.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    public static void DrawPolygon(IReadOnlyList<Vector2> polygonCCW, ColorRgba color, bool useDelaunay)
+    {
+        ShapeClipperTriangulation2D.CreatePolygonTriangulation(polygonCCW, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
+    }
+    
+    #endregion
+    
+    #region Draw Outline
     
     /// <summary>
     /// Draws the stroked outline of a polygon by first triangulating the outline and then rendering the generated mesh.
@@ -30,8 +62,8 @@ public static class ShapeClipperDrawing2D
     {
         if (polygonCCW.Count < 3 || thickness <= 0f) return;
 
-        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
+        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
     }
 
     /// <summary>
@@ -48,9 +80,13 @@ public static class ShapeClipperDrawing2D
     {
         if (polyline.Count < 2 || thickness <= 0f) return;
 
-        ShapeClipperTriangulation2D.CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
+        ShapeClipperTriangulation2D.CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
     }
+    
+    #endregion
+    
+    #region Draw Perimeter
     
     /// <summary>
     /// Draws the triangulated outline of a partial polygon perimeter measured by traveled distance.
@@ -66,8 +102,8 @@ public static class ShapeClipperDrawing2D
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
     public static void DrawPolygonOutlinePerimeter(IReadOnlyList<Vector2> polygonCCW, float perimeter, int startIndex, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
-        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulationPerimeter(polygonCCW, perimeter, startIndex, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
+        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulationPerimeter(polygonCCW, perimeter, startIndex, thickness, miterLimit, beveled, endType, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
     }
 
     /// <summary>
@@ -83,9 +119,13 @@ public static class ShapeClipperDrawing2D
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
     public static void DrawPolylinePerimeter(IReadOnlyList<Vector2> polyline, float perimeter, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
-        ShapeClipperTriangulation2D.CreatePolylineTriangulationPerimeter(polyline, perimeter, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
+        ShapeClipperTriangulation2D.CreatePolylineTriangulationPerimeter(polyline, perimeter, thickness, miterLimit, beveled, endType, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
     }
+    
+    #endregion
+    
+    #region Draw Percentage
     
     /// <summary>
     /// Draws the triangulated outline of a partial polygon perimeter measured as a fraction of the total perimeter.
@@ -101,8 +141,8 @@ public static class ShapeClipperDrawing2D
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
     public static void DrawPolygonOutlinePercentage(IReadOnlyList<Vector2> polygonCCW, float f, int startIndex, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
-        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulationPercentage(polygonCCW, f, startIndex, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
+        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulationPercentage(polygonCCW, f, startIndex, thickness, miterLimit, beveled, endType, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
     }
     
     /// <summary>
@@ -118,34 +158,14 @@ public static class ShapeClipperDrawing2D
     /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
     public static void DrawPolylinePercentage(IReadOnlyList<Vector2> polyline, float f, float thickness, ColorRgba color, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay)
     {
-        ShapeClipperTriangulation2D.CreatePolylineTriangulationPercentage(polyline, f, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
+        ShapeClipperTriangulation2D.CreatePolylineTriangulationPercentage(polyline, f, thickness, miterLimit, beveled, endType, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
     }
 
-    /// <summary>
-    /// Draws a polygon with holes by triangulating it and rendering the generated mesh.
-    /// </summary>
-    /// <param name="polygonWithHoles">The outer polygon and any hole polygons.</param>
-    /// <param name="color">The color used to draw the generated mesh.</param>
-    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
-    public static void DrawPolygon(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, ColorRgba color, bool useDelaunay)
-    {
-        ShapeClipperTriangulation2D.CreatePolygonTriangulation(polygonWithHoles, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
-    }
-
-    /// <summary>
-    /// Draws a single polygon by triangulating it and rendering the generated mesh.
-    /// </summary>
-    /// <param name="polygonCCW">The polygon vertices, expected in counterclockwise order.</param>
-    /// <param name="color">The color used to draw the generated mesh.</param>
-    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
-    public static void DrawPolygon(IReadOnlyList<Vector2> polygonCCW, ColorRgba color, bool useDelaunay)
-    {
-        ShapeClipperTriangulation2D.CreatePolygonTriangulation(polygonCCW, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(color);
-    }
-
+    #endregion
+    
+    #region Draw Glow
+    
     /// <summary>
     /// Draws a glowing polygon outline by rendering multiple outline passes with
     /// thickness and color interpolated across the supplied ranges.
@@ -177,17 +197,17 @@ public static class ShapeClipperDrawing2D
         if (!colorRange.HasRange()) return;
 
         var currentWidth = thicknessRange.Min;
-        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulation(polygonCCW, currentWidth, miterLimit, beveled, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(colorRange.Min);
-        var center = _triMeshBuffer.GetCentroid();
+        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulation(polygonCCW, currentWidth, miterLimit, beveled, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(colorRange.Min);
+        var center = triMeshBuffer.GetCentroid();
         for (var s = 1; s < steps; s++)
         {
             var f = s / (float)(steps - 1);
             var nextWidth = thicknessRange.Lerp(f);
             var scale = nextWidth / currentWidth;
             var currentColor = colorRange.Lerp(f);
-            _triMeshBuffer.Scale(scale, center);
-            _triMeshBuffer.Draw(currentColor);
+            triMeshBuffer.Scale(scale, center);
+            triMeshBuffer.Draw(currentColor);
             currentWidth = nextWidth;
         }
     }
@@ -224,32 +244,62 @@ public static class ShapeClipperDrawing2D
         if (!colorRange.HasRange()) return;
         
         var currentWidth = thicknessRange.Min;
-        ShapeClipperTriangulation2D.CreatePolylineTriangulation(polyline, currentWidth, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.Draw(colorRange.Min);
-        var center = _triMeshBuffer.GetCentroid();
+        ShapeClipperTriangulation2D.CreatePolylineTriangulation(polyline, currentWidth, miterLimit, beveled, endType, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(colorRange.Min);
+        var center = triMeshBuffer.GetCentroid();
         for (var s = 1; s < steps; s++)
         {
             var f = s / (float)(steps - 1);
             var nextWidth = thicknessRange.Lerp(f);
             var scale = nextWidth / currentWidth;
             var currentColor = colorRange.Lerp(f);
-            _triMeshBuffer.Scale(scale, center);
-            _triMeshBuffer.Draw(currentColor);
+            triMeshBuffer.Scale(scale, center);
+            triMeshBuffer.Draw(currentColor);
             currentWidth = nextWidth;
         }
     }
     
     #endregion
     
-    //!!! Make a simple outline version for testing performance and if it is even possible and check agains current implementation
-    //TODO: Add masked drawing functions for:
-    // - Filled
-    // - Outline
-    // - Between Polygon (shape) and Polygon (clip)
-    // - Helper functions between all shape types (transformed into polygons)
-    // - Use masked triangulation functions for creating tri meshes and then draw them
-    // - Update all Shapes DrawMasked functions using this new system
     #region Draw Masked
+    
+    /// <summary>
+    /// Draws a polygon after subtracting a mask polygon from it, triangulating the remaining filled area and rendering the generated mesh.
+    /// </summary>
+    /// <param name="polygonCCW">The source polygon vertices, expected in counterclockwise order.</param>
+    /// <param name="polygonMask">The polygon vertices to subtract from the source polygon.</param>
+    /// <param name="color">The color used to draw the generated mesh.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <remarks>
+    /// This helper delegates to <see cref="ShapeClipperTriangulation2D.CreatePolygonTriangulationMasked(IReadOnlyList{Vector2}, IReadOnlyList{Vector2}, bool, TriMesh)"/>
+    /// and immediately renders the shared temporary mesh buffer.
+    /// </remarks>
+    public static void DrawPolygonTriangulationMasked(IReadOnlyList<Vector2> polygonCCW, IReadOnlyList<Vector2> polygonMask, ColorRgba color, bool useDelaunay)
+    {
+        ShapeClipperTriangulation2D.CreatePolygonTriangulationMasked(polygonCCW, polygonMask, useDelaunay, triMeshBuffer);
+        triMeshBuffer.Draw(color);
+    }
+    
+    /// <summary>
+    /// Draws the outline of a polygon after subtracting a mask polygon from it, triangulating the remaining outline area and rendering the generated mesh.
+    /// </summary>
+    /// <param name="polygonCCW">The source polygon vertices, expected in counterclockwise order.</param>
+    /// <param name="polygonMask">The polygon vertices to subtract from the source polygon.</param>
+    /// <param name="thickness">The outline thickness in world units.</param>
+    /// <param name="color">The color used to draw the generated mesh.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <remarks>
+    /// This overload subtracts <paramref name="polygonMask"/> from <paramref name="polygonCCW"/>, discards holes in the clipped result,
+    /// triangulates the resulting outline through <see cref="ShapeClipperTriangulation2D"/>, and draws the shared temporary mesh buffer.
+    /// </remarks>
+    public static void DrawPolygonOutlineTriangulationMasked(IReadOnlyList<Vector2> polygonCCW, IReadOnlyList<Vector2> polygonMask, float thickness, ColorRgba color, float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulationMasked(polygonCCW, polygonMask, thickness, miterLimit, beveled, useDelaunay, false, triMeshBuffer);
+        triMeshBuffer.Draw(color);
+    }
+    
     
     #endregion
 }

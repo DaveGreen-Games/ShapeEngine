@@ -16,13 +16,13 @@ public static class ShapeClipperTriangulation2D
 {
     #region Buffers
 
-    private static readonly Paths64 _tmpOuter = new();
-    private static readonly Paths64 _tmpInner = new();
-    private static readonly Paths64 _tmpRing = new();
-    private static readonly Paths64 _tmpStroke = new();
-    private static readonly Paths64 _tmpResultClosed = new();
+    private static readonly Paths64 tmpOuter = new();
+    private static readonly Paths64 tmpInner = new();
+    private static readonly Paths64 tmpRing = new();
+    private static readonly Paths64 tmpStroke = new();
+    private static readonly Paths64 tmpResultClosed = new();
     private static readonly List<Vector2> polylineBuffer = new();
-    private static readonly TriMesh _triMeshBuffer = new();
+    private static readonly TriMesh triMeshBuffer = new();
     
     private static readonly Paths64PooledBuffer paths64ConversionBuffer1 = new(8);
     private static readonly Paths64PooledBuffer paths64ConversionBuffer2 = new(8);
@@ -178,7 +178,19 @@ public static class ShapeClipperTriangulation2D
     
     #region Create Outline Triangulation
 
-    //TODO: Add Docs
+    /// <summary>
+    /// Triangulates the stroked outline of a Clipper polygon-with-holes input into a <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygonWithHoles">The closed Clipper paths representing the outer polygon and any holes.</param>
+    /// <param name="thickness">The outline thickness in world units.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="result">The destination mesh that receives the generated geometry.</param>
+    /// <remarks>
+    /// The outline is produced by offsetting the input paths outward and inward, subtracting the inner result from the outer result,
+    /// and triangulating the resulting ring paths.
+    /// </remarks>
     public static void CreatePolygonOutlineTriangulation(Paths64 polygonWithHoles, float thickness, float miterLimit, bool beveled, bool useDelaunay, TriMesh result)
     {
         if (result == null) throw new ArgumentNullException(nameof(result));
@@ -186,24 +198,32 @@ public static class ShapeClipperTriangulation2D
 
         if (polygonWithHoles.Count <= 0 || thickness <= 0f) return;
 
-        ShapeClipper2D.OffsetEngine.OffsetPaths(polygonWithHoles, +thickness, miterLimit, beveled, _tmpOuter);
-        ShapeClipper2D.OffsetEngine.OffsetPaths(polygonWithHoles, -thickness, miterLimit, beveled, _tmpInner);
-        if (_tmpOuter.Count == 0) return;
+        ShapeClipper2D.OffsetEngine.OffsetPaths(polygonWithHoles, +thickness, miterLimit, beveled, tmpOuter);
+        ShapeClipper2D.OffsetEngine.OffsetPaths(polygonWithHoles, -thickness, miterLimit, beveled, tmpInner);
+        if (tmpOuter.Count == 0) return;
         
-        _tmpRing.Clear();
-        ShapeClipper2D.ClipEngine.Execute(_tmpOuter, _tmpInner, ShapeClipperClipType.Difference, _tmpRing);
+        tmpRing.Clear();
+        ShapeClipper2D.ClipEngine.Execute(tmpOuter, tmpInner, ShapeClipperClipType.Difference, tmpRing);
         
-        if (_tmpRing.Count == 0) return;
+        if (tmpRing.Count == 0) return;
     
-        result.TriangulatePaths64ToMesh(_tmpRing, useDelaunay);
+        result.TriangulatePaths64ToMesh(tmpRing, useDelaunay);
     }
     
-    //TODO: Add Docs
+    /// <summary>
+    /// Triangulates the stroked outline of a Clipper polygon-with-holes input into a <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="polygonWithHoles">The closed Clipper paths representing the outer polygon and any holes.</param>
+    /// <param name="thickness">The outline thickness in world units.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
     public static void CreatePolygonOutlineTriangulation(Paths64 polygonWithHoles, float thickness, float miterLimit, bool beveled, bool useDelaunay, Triangulation result)
     {
-        _triMeshBuffer.Clear();
-        CreatePolygonOutlineTriangulation(polygonWithHoles, thickness, miterLimit, beveled, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
+        triMeshBuffer.Clear();
+        CreatePolygonOutlineTriangulation(polygonWithHoles, thickness, miterLimit, beveled, useDelaunay, triMeshBuffer);
+        triMeshBuffer.ToTriangulation(result);
     }
     
     /// <summary>
@@ -222,16 +242,16 @@ public static class ShapeClipperTriangulation2D
 
         if (polygonCCW.Count < 3 || thickness <= 0f) return;
 
-        ShapeClipper2D.OffsetEngine.OffsetPolygon(polygonCCW, +thickness, miterLimit, beveled, _tmpOuter);
-        ShapeClipper2D.OffsetEngine.OffsetPolygon(polygonCCW, -thickness, miterLimit, beveled, _tmpInner);
-        if (_tmpOuter.Count == 0) return;
+        ShapeClipper2D.OffsetEngine.OffsetPolygon(polygonCCW, +thickness, miterLimit, beveled, tmpOuter);
+        ShapeClipper2D.OffsetEngine.OffsetPolygon(polygonCCW, -thickness, miterLimit, beveled, tmpInner);
+        if (tmpOuter.Count == 0) return;
         
-        _tmpRing.Clear();
-        ShapeClipper2D.ClipEngine.Execute(_tmpOuter, _tmpInner, ShapeClipperClipType.Difference, _tmpRing);
+        tmpRing.Clear();
+        ShapeClipper2D.ClipEngine.Execute(tmpOuter, tmpInner, ShapeClipperClipType.Difference, tmpRing);
         
-        if (_tmpRing.Count == 0) return;
+        if (tmpRing.Count == 0) return;
     
-        result.TriangulatePaths64ToMesh(_tmpRing, useDelaunay);
+        result.TriangulatePaths64ToMesh(tmpRing, useDelaunay);
     }
     
     /// <summary>
@@ -245,9 +265,9 @@ public static class ShapeClipperTriangulation2D
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
     public static void CreatePolygonOutlineTriangulation(IReadOnlyList<Vector2> polygonCCW, float thickness, float miterLimit, bool beveled, bool useDelaunay, Triangulation result)
     {
-        _triMeshBuffer.Clear();
-        CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
+        triMeshBuffer.Clear();
+        CreatePolygonOutlineTriangulation(polygonCCW, thickness, miterLimit, beveled, useDelaunay, triMeshBuffer);
+        triMeshBuffer.ToTriangulation(result);
     }
     
     /// <summary>
@@ -267,10 +287,10 @@ public static class ShapeClipperTriangulation2D
 
         if (polyline.Count < 2 || thickness <= 0f) return;
 
-        ShapeClipper2D.OffsetEngine.OffsetPolyline(polyline, thickness, miterLimit, beveled, endType, _tmpStroke);
-        if (_tmpStroke.Count == 0) return;
+        ShapeClipper2D.OffsetEngine.OffsetPolyline(polyline, thickness, miterLimit, beveled, endType, tmpStroke);
+        if (tmpStroke.Count == 0) return;
         
-        result.TriangulatePaths64ToMesh(_tmpStroke, useDelaunay);
+        result.TriangulatePaths64ToMesh(tmpStroke, useDelaunay);
     }
     
     /// <summary>
@@ -285,9 +305,9 @@ public static class ShapeClipperTriangulation2D
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
     public static void CreatePolylineTriangulation(IReadOnlyList<Vector2> polyline, float thickness, float miterLimit, bool beveled, ShapeClipperEndType endType, bool useDelaunay, Triangulation result)
     {
-        _triMeshBuffer.Clear();
-        CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
+        triMeshBuffer.Clear();
+        CreatePolylineTriangulation(polyline, thickness, miterLimit, beveled, endType, useDelaunay, triMeshBuffer);
+        triMeshBuffer.ToTriangulation(result);
     }
 
     #endregion
@@ -318,9 +338,9 @@ public static class ShapeClipperTriangulation2D
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
     public static void CreatePolygonTriangulation(Paths64 polygonWithHoles, bool useDelaunay, Triangulation result)
     {
-        _triMeshBuffer.Clear();
-        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
+        triMeshBuffer.Clear();
+        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, triMeshBuffer);
+        triMeshBuffer.ToTriangulation(result);
     }
     
     /// <summary>
@@ -349,9 +369,9 @@ public static class ShapeClipperTriangulation2D
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
     public static void CreatePolygonTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, bool useDelaunay, Triangulation result)
     {
-        _triMeshBuffer.Clear();
-        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
+        triMeshBuffer.Clear();
+        CreatePolygonTriangulation(polygonWithHoles, useDelaunay, triMeshBuffer);
+        triMeshBuffer.ToTriangulation(result);
     }
     
     /// <summary>
@@ -379,16 +399,25 @@ public static class ShapeClipperTriangulation2D
     /// <param name="result">The destination triangulation that receives the generated triangles.</param>
     public static void CreatePolygonTriangulation(IReadOnlyList<Vector2> polygonCCW, bool useDelaunay, Triangulation result)
     {
-        _triMeshBuffer.Clear();
-        CreatePolygonTriangulation(polygonCCW, useDelaunay, _triMeshBuffer);
-        _triMeshBuffer.ToTriangulation(result);
+        triMeshBuffer.Clear();
+        CreatePolygonTriangulation(polygonCCW, useDelaunay, triMeshBuffer);
+        triMeshBuffer.ToTriangulation(result);
     }
     
     #endregion
     
     #region Masked Triangulation
     
-    //TODO: Add Docs
+    /// <summary>
+    /// Triangulates a polygon after subtracting a mask polygon from it, writing the filled result into a <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygonCCW">The source polygon vertices, expected in counterclockwise order.</param>
+    /// <param name="polygonMask">The polygon vertices to subtract from the source polygon.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="result">The destination mesh that receives the generated geometry.</param>
+    /// <remarks>
+    /// Both polygons are converted to Clipper paths, combined using a difference operation, and the resulting closed paths are triangulated.
+    /// </remarks>
     public static void CreatePolygonTriangulationMasked(IReadOnlyList<Vector2> polygonCCW, IReadOnlyList<Vector2> polygonMask, bool useDelaunay, TriMesh result)
     {
         result.Clear();
@@ -401,15 +430,29 @@ public static class ShapeClipperTriangulation2D
         paths64ConversionBuffer2.PrepareBuffer(1);
         polygonMask.ToPaths64(buffer2);
         
-        _tmpResultClosed.Clear();
+        tmpResultClosed.Clear();
         
-        ShapeClipper2D.ClipEngine.Execute(buffer1, buffer2, ShapeClipperClipType.Difference, _tmpResultClosed);
+        ShapeClipper2D.ClipEngine.Execute(buffer1, buffer2, ShapeClipperClipType.Difference, tmpResultClosed);
         // _tmpResultClosed.RemoveAllHoles(); //only needed for outline version
         
-        result.TriangulatePaths64ToMesh(_tmpResultClosed, useDelaunay);
+        result.TriangulatePaths64ToMesh(tmpResultClosed, useDelaunay);
     }
     
-    //TODO: Add Docs
+    /// <summary>
+    /// Triangulates the outline of a polygon after subtracting a mask polygon from it, writing the result into a <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygonCCW">The source polygon vertices, expected in counterclockwise order.</param>
+    /// <param name="polygonMask">The polygon vertices to subtract from the source polygon.</param>
+    /// <param name="thickness">The outline thickness in world units.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="keepHoles">Whether holes produced by the mask difference should be preserved before outline generation.</param>
+    /// <param name="result">The destination mesh that receives the generated geometry.</param>
+    /// <remarks>
+    /// The method first subtracts <paramref name="polygonMask"/> from <paramref name="polygonCCW"/>, optionally removes any holes from the clipped result,
+    /// and then generates and triangulates an outline from the remaining closed paths.
+    /// </remarks>
     public static void CreatePolygonOutlineTriangulationMasked(IReadOnlyList<Vector2> polygonCCW, IReadOnlyList<Vector2> polygonMask, float thickness, float miterLimit, bool beveled, bool useDelaunay, bool keepHoles, TriMesh result)
     {
         if(thickness <= 0f) return;
@@ -423,13 +466,63 @@ public static class ShapeClipperTriangulation2D
         paths64ConversionBuffer2.PrepareBuffer(1);
         polygonMask.ToPaths64(buffer2);
         
-        _tmpResultClosed.Clear();
+        tmpResultClosed.Clear();
         
-        ShapeClipper2D.ClipEngine.Execute(buffer1, buffer2, ShapeClipperClipType.Difference, _tmpResultClosed);
-        if(!keepHoles) _tmpResultClosed.RemoveAllHoles();
+        ShapeClipper2D.ClipEngine.Execute(buffer1, buffer2, ShapeClipperClipType.Difference, tmpResultClosed);
+        if(!keepHoles) tmpResultClosed.RemoveAllHoles();
         
-        CreatePolygonOutlineTriangulation(_tmpResultClosed, thickness, miterLimit, beveled, useDelaunay, result);
+        CreatePolygonOutlineTriangulation(tmpResultClosed, thickness, miterLimit, beveled, useDelaunay, result);
     }
+   
+    /// <summary>
+    /// Triangulates Clipper paths after subtracting mask paths from them, writing the filled result into a <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygonWithHoles">The closed source paths to triangulate.</param>
+    /// <param name="masks">The closed mask paths to subtract from <paramref name="polygonWithHoles"/>.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="result">The destination mesh that receives the generated geometry.</param>
+    /// <remarks>
+    /// The input is assumed to already be in Clipper path space. The method performs a difference operation and triangulates the remaining closed paths.
+    /// </remarks>
+    public static void CreatePolygonTriangulationMasked(Paths64 polygonWithHoles, Paths64 masks, bool useDelaunay, TriMesh result)
+    {
+        result.Clear();
+        
+        tmpResultClosed.Clear();
+        
+        ShapeClipper2D.ClipEngine.Execute(polygonWithHoles, masks, ShapeClipperClipType.Difference, tmpResultClosed);
+        
+        result.TriangulatePaths64ToMesh(tmpResultClosed, useDelaunay);
+    }
+    
+    /// <summary>
+    /// Triangulates the outline of Clipper paths after subtracting mask paths from them, writing the result into a <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygonWithHoles">The closed source paths whose outline should be triangulated.</param>
+    /// <param name="masks">The closed mask paths to subtract from <paramref name="polygonWithHoles"/>.</param>
+    /// <param name="thickness">The outline thickness in world units.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="keepHoles">Whether holes produced by the mask difference should be preserved before outline generation.</param>
+    /// <param name="result">The destination mesh that receives the generated geometry.</param>
+    /// <remarks>
+    /// The method first subtracts <paramref name="masks"/> from <paramref name="polygonWithHoles"/>, optionally removes holes from the clipped result,
+    /// and then generates and triangulates an outline from the remaining closed paths.
+    /// </remarks>
+    public static void CreatePolygonOutlineTriangulationMasked(Paths64 polygonWithHoles, Paths64 masks, float thickness, float miterLimit, bool beveled, bool useDelaunay, bool keepHoles, TriMesh result)
+    {
+        if(thickness <= 0f) return;
+        result.Clear();
+        
+        tmpResultClosed.Clear();
+        
+        ShapeClipper2D.ClipEngine.Execute(polygonWithHoles, masks, ShapeClipperClipType.Difference, tmpResultClosed);
+        if(!keepHoles) tmpResultClosed.RemoveAllHoles();
+        
+        CreatePolygonOutlineTriangulation(tmpResultClosed, thickness, miterLimit, beveled, useDelaunay, result);
+    }
+    
     #endregion
     
 }
