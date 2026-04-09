@@ -820,7 +820,7 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <param name="vertexRadius">Radius of the drawn circle for each vertex (in world units).</param>
     /// <param name="color">Color of the vertex circles.</param>
     /// <param name="smoothness">
-    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="Circle.CircleSideLengthRange"/>.
     /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
     /// The resulting side length determines the number of polygon sides used to approximate the circle.
     /// </param>
