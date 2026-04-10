@@ -27,7 +27,8 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     protected static Points pointsBuffer = new();
     private static Segments segmentsBuffer2 = new();
     private static HashSet<Vector2> uniquePointsBuffer = new();
-    
+    private static Triangulation badTrianglesBuffer = new();
+    private static Dictionary<(Vector2 Start, Vector2 End), (Segment Segment, int Count)> edgeCountsBuffer = new();
     #endregion
     
     #region Constructors
@@ -624,14 +625,9 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
         result.Clear();
         result.Add(supraTriangle);
 
-        //TODO: Make into buffer
-        Dictionary<(Vector2 Start, Vector2 End), (Segment Segment, int Count)> edgeCounts = new();
-
         foreach (var p in this)
         {
-            //TODO: Make into buffer
-            Triangulation badTriangles = new();
-
+            badTrianglesBuffer.Clear();
             //Identify 'bad triangles'
             for (int triIndex = result.Count - 1; triIndex >= 0; triIndex--)
             {
@@ -642,33 +638,33 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
                 float distSq = Vector2.DistanceSquared(p, circumCircle.Center);
                 if (distSq < circumCircle.Radius * circumCircle.Radius)
                 {
-                    badTriangles.Add(triangle);
+                    badTrianglesBuffer.Add(triangle);
                     result.RemoveAt(triIndex);
                 }
             }
 
-            edgeCounts.Clear();
-            foreach (var badTriangle in badTriangles)
+            edgeCountsBuffer.Clear();
+            foreach (var badTriangle in badTrianglesBuffer)
             {
                 var edgeAB = badTriangle.SegmentAToB;
                 var keyAB = GetUndirectedEdgeKey(edgeAB);
-                if (edgeCounts.TryGetValue(keyAB, out var abEntry)) edgeCounts[keyAB] = (abEntry.Segment, abEntry.Count + 1);
-                else edgeCounts.Add(keyAB, (edgeAB, 1));
+                if (edgeCountsBuffer.TryGetValue(keyAB, out var abEntry)) edgeCountsBuffer[keyAB] = (abEntry.Segment, abEntry.Count + 1);
+                else edgeCountsBuffer.Add(keyAB, (edgeAB, 1));
 
                 var edgeBC = badTriangle.SegmentBToC;
                 var keyBC = GetUndirectedEdgeKey(edgeBC);
-                if (edgeCounts.TryGetValue(keyBC, out var bcEntry)) edgeCounts[keyBC] = (bcEntry.Segment, bcEntry.Count + 1);
-                else edgeCounts.Add(keyBC, (edgeBC, 1));
+                if (edgeCountsBuffer.TryGetValue(keyBC, out var bcEntry)) edgeCountsBuffer[keyBC] = (bcEntry.Segment, bcEntry.Count + 1);
+                else edgeCountsBuffer.Add(keyBC, (edgeBC, 1));
 
                 var edgeCA = badTriangle.SegmentCToA;
                 var keyCA = GetUndirectedEdgeKey(edgeCA);
-                if (edgeCounts.TryGetValue(keyCA, out var caEntry)) edgeCounts[keyCA] = (caEntry.Segment, caEntry.Count + 1);
-                else edgeCounts.Add(keyCA, (edgeCA, 1));
+                if (edgeCountsBuffer.TryGetValue(keyCA, out var caEntry)) edgeCountsBuffer[keyCA] = (caEntry.Segment, caEntry.Count + 1);
+                else edgeCountsBuffer.Add(keyCA, (edgeCA, 1));
             }
 
             segmentsBuffer2.Clear();
-            segmentsBuffer2.EnsureCapacity(edgeCounts.Count);
-            foreach (var entry in edgeCounts.Values)
+            segmentsBuffer2.EnsureCapacity(edgeCountsBuffer.Count);
+            foreach (var entry in edgeCountsBuffer.Values)
             {
                 if (entry.Count == 1) segmentsBuffer2.Add(entry.Segment);
             }
