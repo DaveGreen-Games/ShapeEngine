@@ -174,7 +174,14 @@ public partial class Segments : ShapeList<Segment>
         result.AddRange(hashSetSegmentBuffer);
     }
     
-    //TODO: Add docs
+    /// <summary>
+    /// Collects all unique segments in this collection while ignoring segment direction and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the unique undirected segments.</param>
+    /// <remarks>
+    /// Two segments are considered equal if they share the same endpoints regardless of whether start and end are swapped.
+    /// This method does not modify the current collection.
+    /// </remarks>
     public void GetUniqueSegmentsUndirectional(Segments result)
     {
         hashSetUndirectedSegmentBuffer.Clear();
@@ -328,7 +335,6 @@ public partial class Segments : ShapeList<Segment>
     }
 
     #endregion
-    
     
     private sealed class SegmentEndpointsUndirectedComparer : IEqualityComparer<Segment>
     {
