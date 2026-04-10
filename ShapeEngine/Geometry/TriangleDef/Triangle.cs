@@ -627,7 +627,217 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// <returns>True if the triangles share at least one vertex; otherwise, false.</returns>
     public bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
 
-    //TODO: Add SharesEdge(Triangle t)
+    /// <summary>
+    /// Determines whether this triangle shares an exactly matching edge with another triangle.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle equals any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison is performed using <c>Segment.Equals</c>, so edge direction must also match.
+    /// Use <see cref="SharesEdgeSimilar(Triangle)"/> to treat reversed edge direction as the same edge.
+    /// </remarks>
+    public bool SharesEdge(Triangle t)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if(edge.Equals(otherEdge1) || edge.Equals(otherEdge2) || edge.Equals(otherEdge3)) return true;
+        
+        edge = SegmentBToC;
+        if(edge.Equals(otherEdge1) || edge.Equals(otherEdge2) || edge.Equals(otherEdge3)) return true;
+        
+        edge = SegmentCToA;
+        if(edge.Equals(otherEdge1) || edge.Equals(otherEdge2) || edge.Equals(otherEdge3)) return true;
+
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether this triangle shares an edge with another triangle.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle matches any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison is performed using <c>Segment.IsSimilar</c>, so reversed edge direction is treated as the same edge.
+    /// </remarks>
+    public bool SharesEdgeSimilar(Triangle t)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if(edge.IsSimilar(otherEdge1) || edge.IsSimilar(otherEdge2) || edge.IsSimilar(otherEdge3)) return true;
+        
+        edge = SegmentBToC;
+        if(edge.IsSimilar(otherEdge1) || edge.IsSimilar(otherEdge2) || edge.IsSimilar(otherEdge3)) return true;
+        
+        edge = SegmentCToA;
+        if(edge.IsSimilar(otherEdge1) || edge.IsSimilar(otherEdge2) || edge.IsSimilar(otherEdge3)) return true;
+
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether this triangle shares an exactly matching edge with another triangle and returns the shared segment.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <param name="sharedSegment">
+    /// When this method returns <see langword="true"/>, contains the shared edge from <paramref name="t"/>.
+    /// Otherwise, contains an empty <see cref="Segment"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle equals any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison uses <c>Segment.Equals</c>, so edge direction must also match.
+    /// Use <see cref="SharesEdgeSimilar(Triangle, out Segment)"/> to treat reversed edge direction as the same edge.
+    /// </remarks>
+    public bool SharesEdge(Triangle t, out Segment sharedSegment)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if (edge.Equals(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.Equals(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.Equals(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentBToC;
+        if (edge.Equals(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.Equals(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.Equals(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentCToA;
+        if (edge.Equals(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.Equals(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.Equals(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+
+        sharedSegment = new();
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether this triangle shares an edge with another triangle and returns the shared segment.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <param name="sharedSegment">
+    /// When this method returns <see langword="true"/>, contains the shared edge from <paramref name="t"/>.
+    /// Otherwise, contains an empty <see cref="Segment"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle matches any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison uses <c>Segment.IsSimilar</c>, so reversed edge direction is treated as the same edge.
+    /// </remarks>
+    public bool SharesEdgeSimilar(Triangle t, out Segment sharedSegment)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if (edge.IsSimilar(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentBToC;
+        if (edge.IsSimilar(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentCToA;
+        if (edge.IsSimilar(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+
+        sharedSegment = new();
+        return false;
+    }
     
     /// <summary>
     /// Determines whether this triangle is similar to another triangle within floating-point precision.
