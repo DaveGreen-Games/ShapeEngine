@@ -8,12 +8,10 @@ using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -231,7 +229,7 @@ public class PhysicsExample : ExampleScene
         var universeLineInfo = new LineDrawingInfo(14f, Colors.Warm, LineCapType.Extended, 0);
         var stripedLineInfo = new LineDrawingInfo(14f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
         
-        StripedDrawing.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
+        Circle.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
         
         var insideCircle = new Circle(Vector2.Zero, SectorRadiusInside);
         var outsideCircle = new Circle(Vector2.Zero, SectorRadiusOutside);

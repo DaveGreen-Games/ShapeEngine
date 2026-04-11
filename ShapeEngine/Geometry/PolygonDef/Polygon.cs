@@ -43,7 +43,7 @@ public partial class Polygon : Points, IEquatable<Polygon>, IShapeTypeProvider, 
 {
     #region Helper Members
     
-    private static IntersectionPoints intersectionPointsReference = new(4);
+    private static IntersectionPoints intersectionPointsReference = new(6);
     private static Triangulation triangulationBuffer = new();
     
     private static Paths64 clipResultBuffer = new();

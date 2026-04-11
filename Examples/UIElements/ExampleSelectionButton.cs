@@ -1,10 +1,6 @@
 ﻿using System.Numerics;
 using Examples.Scenes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Geometry.SegmentDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.UI;
 using ShapeEngine.Text;

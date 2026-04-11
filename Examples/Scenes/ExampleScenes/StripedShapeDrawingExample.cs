@@ -7,7 +7,6 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;

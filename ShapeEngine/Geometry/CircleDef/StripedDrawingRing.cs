@@ -3,11 +3,10 @@ using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.Geometry.StripedDrawingDef;
+namespace ShapeEngine.Geometry.CircleDef;
 
-//TODO: Move to shape drawing file for specific shape
 
-public static partial class StripedDrawing
+public readonly partial struct Circle
 {
     /// <summary>
     /// Generates a collection of radial segments that form a striped ring.

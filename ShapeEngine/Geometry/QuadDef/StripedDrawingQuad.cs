@@ -4,7 +4,6 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.PolygonDef;
-using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -12,27 +11,29 @@ using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.Geometry.StripedDrawingDef;
+namespace ShapeEngine.Geometry.QuadDef;
 
-//TODO: Move to shape drawing file for specific shape
-
-public static partial class StripedDrawing
+public readonly partial struct Quad
 {
+    private static IntersectionPoints intersectionPointsBuffer = new IntersectionPoints(6);
+    
+    #region Generate Striped Segments
+    
+    //TODO: Change to Segments result parameter!
     
     /// <summary>
-    /// Generates a collection of line segments representing a striped pattern clipped to the specified triangle.
+    /// Generates a collection of line segments representing a striped pattern clipped to the specified quad.
     /// </summary>
-    /// <param name="triangle">The triangle to populate with striped segments.</param>
     /// <param name="spacing">Distance between adjacent stripe lines. Values = 0 will produce an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
     /// <param name="spacingOffset">Normalized offset in the range [0,1] used to shift the pattern (useful for animation).</param>
-    /// <returns>A <see cref="Segments"/> instance containing segments that lie inside the triangle.</returns>
-    public static Segments GenerateStripedSegments(this Triangle triangle, float spacing, float angleDeg, float spacingOffset = 0f)
+    /// <returns>A <see cref="Segments"/> instance containing segments that lie inside the quad.</returns>
+    public Segments GenerateStripedSegments(float spacing, float angleDeg, float spacingOffset = 0f)
     {
         var segments = new Segments();
         if (spacing <= 0) return segments;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         if (spacing > maxDimension) return segments;
@@ -44,14 +45,14 @@ public static partial class StripedDrawing
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
 
-        var a = triangle.A;
-        var b = triangle.B;
-        var c = triangle.C;
-
+        var a = A;
+        var b = B;
+        var c = C;
+        var d = D;
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -63,20 +64,20 @@ public static partial class StripedDrawing
 
         return segments;
     }
+ 
     /// <summary>
-    /// Generates a collection of line segments representing a striped pattern clipped to the specified triangle,
+    /// Generates a collection of line segments representing a striped pattern clipped to the specified quad,
     /// where the distance between consecutive stripes is determined by a <see cref="CurveFloat"/>.
     /// </summary>
-    /// <param name="triangle">The triangle to populate with striped segments.</param>
     /// <param name="spacingCurve">A curve that defines the spacing along the pattern. The curve must have keys and sampled values must be &gt; 0; otherwise the method returns an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
-    /// <returns>A <see cref="Segments"/> instance containing segments that lie inside the triangle.</returns>
-    public static Segments GenerateStripedSegments(this Triangle triangle, CurveFloat spacingCurve, float angleDeg)
+    /// <returns>A <see cref="Segments"/> instance containing segments that lie inside the quad.</returns>
+    public Segments GenerateStripedSegments(CurveFloat spacingCurve, float angleDeg)
     {
         var segments = new Segments();
         if (!spacingCurve.HasKeys) return segments;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
@@ -91,7 +92,7 @@ public static partial class StripedDrawing
 
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, A, B, C, D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -108,30 +109,30 @@ public static partial class StripedDrawing
 
         return segments;
     }
+    
     /// <summary>
-    /// Generates striped segments clipped to the given outside triangle while excluding the area of an inside shape.
-    /// The method casts parallel lines/rays across the outside triangle and subtracts intersections with the
+    /// Generates striped segments clipped to the given outside quad while excluding the area of an inside shape.
+    /// The method casts parallel lines/rays across the outside quad and subtracts intersections with the
     /// provided inside shape to produce the final visible stripe segments.
     /// </summary>
     /// <typeparam name="T">Type of the inside shape.
     /// Allowed types are handled inside the method.
     /// Supported inside shape types: <see cref="Triangle"/>, <see cref="Circle"/>,
     /// <see cref="Rect"/>, <see cref="Quad"/>, <see cref="Polygon"/>.</typeparam>
-    /// <param name="outsideShape">Triangle that defines the outer boundary for the stripes.</param>
     /// <param name="insideShape">Shape to be excluded from the stripes.</param>
-    /// <param name="spacing">Distance between adjacent stripes. Values &lt;= 0 will produce an empty result.</param>
+    /// <param name="spacing">Distance between adjacent stripes. Values = 0 will produce an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
     /// <param name="spacingOffset">Normalized offset in the range [0,1] used to shift the pattern (useful for animation).</param>
     /// <returns>
-    /// A <see cref="Segments"/> instance containing segments that lie inside <paramref name="outsideShape"/>
+    /// A <see cref="Segments"/> instance containing segments that lie inside this quad
     /// but outside <paramref name="insideShape"/>.
     /// </returns>
-    public static Segments GenerateStripedSegments<T>(this Triangle outsideShape, T insideShape, float spacing, float angleDeg, float spacingOffset = 0f) 
+    public Segments GenerateStripedSegments<T>(T insideShape, float spacing, float angleDeg, float spacingOffset = 0f)  where T : IClosedShapeTypeProvider
     {
         var segments = new Segments();
         if (spacing <= 0) return segments;
-        var center = outsideShape.GetCentroid();
-        outsideShape.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
         if (spacing > maxDimension) return segments;
 
@@ -149,7 +150,7 @@ public static partial class StripedDrawing
         {
             for (int i = 0; i < steps; i++)
             {
-                var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+                var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
                 if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
                 {
                     cur += dir * spacing;
@@ -164,7 +165,7 @@ public static partial class StripedDrawing
                 }
                 else
                 {
-                    AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
+                    Segments.AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
                 }
 
                 cur += dir * spacing;
@@ -174,7 +175,7 @@ public static partial class StripedDrawing
         {
             for (int i = 0; i < steps; i++)
             {
-                var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+                var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
                 if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
                 {
                     cur += dir * spacing;
@@ -189,7 +190,7 @@ public static partial class StripedDrawing
                 }
                 else
                 {
-                    AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
+                    Segments.AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
                 }
 
                 cur += dir * spacing;
@@ -199,7 +200,7 @@ public static partial class StripedDrawing
         {
             for (int i = 0; i < steps; i++)
             {
-                var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+                var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
                 if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
                 {
                     cur += dir * spacing;
@@ -214,7 +215,7 @@ public static partial class StripedDrawing
                 }
                 else
                 {
-                    AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
+                   Segments.AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
                 }
 
                 cur += dir * spacing;
@@ -224,7 +225,7 @@ public static partial class StripedDrawing
         {
             for (int i = 0; i < steps; i++)
             {
-                var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+                var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
                 if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
                 {
                     cur += dir * spacing;
@@ -239,7 +240,7 @@ public static partial class StripedDrawing
                 }
                 else
                 {
-                    AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
+                    Segments.AddSegmentsHelper(cur, outsideShapePoints, insideShapePoints, ref segments);
                 }
 
                 cur += dir * spacing;
@@ -249,14 +250,14 @@ public static partial class StripedDrawing
         {
             for (int i = 0; i < steps; i++)
             {
-                var outsideShapePoints = Line.IntersectLineTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+                var outsideShapePoints = Line.IntersectLineQuad(cur, rayDir, A, B, C, D);
                 if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
                 {
                     cur += dir * spacing;
                     continue;
                 }
 
-                var count = Line.IntersectLinePolygon(cur, rayDir, polygon, ref intersectionPointsReference);
+                var count = Line.IntersectLinePolygon(cur, rayDir, polygon, ref intersectionPointsBuffer);
 
                 if (count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
                 {
@@ -266,45 +267,45 @@ public static partial class StripedDrawing
                 else
                 {
                     //remove all inside shape intersection points that are outside the outside shape
-                    for (int j = intersectionPointsReference.Count - 1; j >= 0; j--)
+                    for (int j = intersectionPointsBuffer.Count - 1; j >= 0; j--)
                     {
-                        var p = intersectionPointsReference[j].Point;
+                        var p = intersectionPointsBuffer[j].Point;
 
-                        if (!outsideShape.ContainsPoint(p)) intersectionPointsReference.RemoveAt(j);
+                        if (!ContainsPoint(p)) intersectionPointsBuffer.RemoveAt(j);
                     }
 
-                    if (outsideShapePoints.a.Valid && !polygon.ContainsPoint(outsideShapePoints.a.Point)) intersectionPointsReference.Add(outsideShapePoints.a);
-                    if (outsideShapePoints.b.Valid && !polygon.ContainsPoint(outsideShapePoints.b.Point)) intersectionPointsReference.Add(outsideShapePoints.b);
+                    if (outsideShapePoints.a.Valid && !polygon.ContainsPoint(outsideShapePoints.a.Point)) intersectionPointsBuffer.Add(outsideShapePoints.a);
+                    if (outsideShapePoints.b.Valid && !polygon.ContainsPoint(outsideShapePoints.b.Point)) intersectionPointsBuffer.Add(outsideShapePoints.b);
 
                     //all points were remove so just draw the outside shape segment (even with only 1 point left, we continue)
-                    if (intersectionPointsReference.Count <= 1)
+                    if (intersectionPointsBuffer.Count <= 1)
                     {
                         cur += dir * spacing;
-                        intersectionPointsReference.Clear();
+                        intersectionPointsBuffer.Clear();
                         continue;
                     }
 
-                    if (intersectionPointsReference.Count == 2) //no sorting or loop needed for exactly 2 points
+                    if (intersectionPointsBuffer.Count == 2) //no sorting or loop needed for exactly 2 points
                     {
-                        var segment = new Segment(intersectionPointsReference[0].Point, intersectionPointsReference[1].Point);
+                        var segment = new Segment(intersectionPointsBuffer[0].Point, intersectionPointsBuffer[1].Point);
                         segments.Add(segment);
                         cur += dir * spacing;
-                        intersectionPointsReference.Clear();
+                        intersectionPointsBuffer.Clear();
                         continue;
                     }
 
                     //now that only valid points remain, sort them by distance from the current point
-                    intersectionPointsReference.SortClosestFirst(cur);
+                    intersectionPointsBuffer.SortClosestFirst(cur);
 
-                    for (int j = 0; j < intersectionPointsReference.Count - 1; j += 2)
+                    for (int j = 0; j < intersectionPointsBuffer.Count - 1; j += 2)
                     {
-                        var p1 = intersectionPointsReference[j].Point;
-                        var p2 = intersectionPointsReference[j + 1].Point;
+                        var p1 = intersectionPointsBuffer[j].Point;
+                        var p2 = intersectionPointsBuffer[j + 1].Point;
                         var segment = new Segment(p1, p2);
                         segments.Add(segment);
                     }
 
-                    intersectionPointsReference.Clear();
+                    intersectionPointsBuffer.Clear();
                 }
 
                 cur += dir * spacing;
@@ -313,20 +314,22 @@ public static partial class StripedDrawing
         return segments;
     }
     
+    #endregion
+    
+    #region Draw Striped
     
     /// <summary>
     /// Draws a striped pattern inside the specified shape.
     /// </summary>
-    /// <param name="triangle">The shape for drawing the striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The line drawing info for how the lines should be drawn.</param>
     /// <param name="spacingOffset">An offset for the spacing between 0 and 1. Can be used for a continuously moving pattern.</param>
-    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
+    public void DrawStriped(float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
         if (spacing <= 0) return;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         if (spacing > maxDimension) return;
@@ -338,14 +341,15 @@ public static partial class StripedDrawing
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
 
-        var a = triangle.A;
-        var b = triangle.B;
-        var c = triangle.C;
+        var a = A;
+        var b = B;
+        var c = C;
+        var d = D;
 
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -359,16 +363,15 @@ public static partial class StripedDrawing
     /// <summary>
     /// Draws an alternating striped pattern inside the specified shape.
     /// </summary>
-    /// <param name="triangle">The shape for drawing the striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The first line drawing info for drawing even lines.</param>
     /// <param name="alternatingStriped">The second line drawing info for drawing odd lines.</param>
-    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
+    public void DrawStriped(float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
     {
         if (spacing <= 0) return;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         if (spacing > maxDimension) return;
@@ -378,14 +381,15 @@ public static partial class StripedDrawing
         var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
 
-        var a = triangle.A;
-        var b = triangle.B;
-        var c = triangle.C;
+        var a = A;
+        var b = B;
+        var c = C;
+        var d = D;
 
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -400,16 +404,14 @@ public static partial class StripedDrawing
     /// <summary>
     /// Draws an alternating striped pattern inside the specified shape.
     /// </summary>
-    /// <param name="triangle">The shape for drawing the striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="alternatingStriped">The line drawing infos for drawing each line. Each info is used in sequence and wraps around if there are more lines.</param>
-    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
+    public void DrawStriped(float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
-        if (alternatingStriped.Length <= 0) return;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         if (spacing > maxDimension) return;
@@ -419,14 +421,15 @@ public static partial class StripedDrawing
         var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
 
-        var a = triangle.A;
-        var b = triangle.B;
-        var c = triangle.C;
+        var a = A;
+        var b = B;
+        var c = C;
+        var d = D;
 
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -442,15 +445,14 @@ public static partial class StripedDrawing
     /// <summary>
     /// Draws a striped pattern inside the specified shape.
     /// </summary>
-    /// <param name="triangle">The shape for drawing the striped pattern inside.</param>
     /// <param name="spacingCurve">The curve to determine the spacing along the shape. The value of each key has to be bigger than 0, otherwise the function will return early!</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The line drawing info for how the lines should be drawn.</param>
-    public static void DrawStriped(this Triangle triangle, CurveFloat spacingCurve, float angleDeg, LineDrawingInfo striped)
+    public void DrawStriped(CurveFloat spacingCurve, float angleDeg, LineDrawingInfo striped)
     {
-        if (spacingCurve.HasKeys == false) return;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        if (!spacingCurve.HasKeys) return;
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
@@ -465,7 +467,7 @@ public static partial class StripedDrawing
 
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, A, B, C, D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -484,16 +486,15 @@ public static partial class StripedDrawing
     /// <summary>
     /// Draws an alternating striped pattern inside the specified shape.
     /// </summary>
-    /// <param name="triangle">The shape for drawing the striped pattern inside.</param>
     /// <param name="spacingCurve">The curve to determine the spacing along the shape. The value of each key has to be bigger than 0, otherwise the function will return early!</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The first line drawing info for drawing even lines.</param>
     /// <param name="alternatingStriped">The second line drawing info for drawing odd lines.</param>
-    public static void DrawStriped(this Triangle triangle, CurveFloat spacingCurve, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
+    public void DrawStriped(CurveFloat spacingCurve, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
     {
         if (!spacingCurve.HasKeys) return;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
@@ -508,7 +509,7 @@ public static partial class StripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, A, B, C, D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -529,16 +530,14 @@ public static partial class StripedDrawing
     /// <summary>
     /// Draws an alternating striped pattern inside the specified shape.
     /// </summary>
-    /// <param name="triangle">The shape for drawing the striped pattern inside.</param>
     /// <param name="spacingCurve">The curve to determine the spacing along the shape. The value of each key has to be bigger than 0, otherwise the function will return early!</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="alternatingStriped">The line drawing infos for drawing each line. Each info is used in sequence and wraps around if there are more lines.</param>
-    public static void DrawStriped(this Triangle triangle, CurveFloat spacingCurve, float angleDeg, params LineDrawingInfo[] alternatingStriped)
+    public void DrawStriped(CurveFloat spacingCurve, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
-        if (alternatingStriped.Length <= 0) return;
-        if (spacingCurve.HasKeys == false) return;
-        var center = triangle.GetCentroid();
-        triangle.GetFurthestVertex(center, out float disSquared, out int _);
+        if (!spacingCurve.HasKeys) return;
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
@@ -554,7 +553,7 @@ public static partial class StripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
+            var intersection = Line.IntersectLineQuad(cur, lineDir, A, B, C, D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -573,22 +572,35 @@ public static partial class StripedDrawing
         }
     }
 
+    #endregion
+    
+    #region Draw Striped Inside Shape
+    
+    //TODO: Docs
+    public void DrawStriped<T>(T insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f) where T : IClosedShapeTypeProvider
+    {
+        if(insideShape is Circle c) DrawStriped(c, spacing, angleDeg, striped, spacingOffset);
+        else if(insideShape is Rect r) DrawStriped(r, spacing, angleDeg, striped, spacingOffset);
+        else if(insideShape is Quad q) DrawStriped(q, spacing, angleDeg, striped, spacingOffset);
+        else if(insideShape is Triangle t) DrawStriped(t, spacing, angleDeg, striped, spacingOffset);
+        else if(insideShape is Polygon p) DrawStriped(p, spacing, angleDeg, striped, spacingOffset);
+    }
+
+    
     /// <summary>
     /// Draws a striped pattern inside the outside shape without drawing in the inside shape.
     /// The inside shape does not have to be completely inside the outside shape.
     /// </summary>
-    /// <param name="outsideShape">The shape for drawing the striped pattern inside.</param>
     /// <param name="insideShape">The shape to not draw any striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The line drawing info for how the lines should be drawn.</param>
     /// <param name="spacingOffset">An offset for the spacing between 0 and 1. Can be used for a continuously moving pattern.</param>
-    public static void DrawStriped(this Triangle outsideShape, Circle insideShape, float spacing, float angleDeg, LineDrawingInfo striped,
-        float spacingOffset = 0f)
+    public void DrawStriped(Circle insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
         if (spacing <= 0) return;
-        var center = outsideShape.GetCentroid();
-        outsideShape.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         if (spacing > maxDimension) return;
@@ -605,7 +617,7 @@ public static partial class StripedDrawing
 
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+            var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
@@ -695,6 +707,20 @@ public static partial class StripedDrawing
                     var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
+
+                // var points = new Points(4);
+                // points.Add(outsideShapePoints.a.Point);
+                // points.Add(outsideShapePoints.b.Point);
+                // points.Add(insideShapePoints.a.Point);
+                // points.Add(insideShapePoints.b.Point);
+                //
+                // points.SortClosestFirst(cur);
+                //
+                // var segment1 = new Segment(points[0], points[1]);
+                // segment1.Draw(striped);
+                //
+                // var segment2 = new Segment(points[2], points[3]);
+                // segment2.Draw(striped);
             }
 
             cur += dir * spacing;
@@ -705,18 +731,16 @@ public static partial class StripedDrawing
     /// Draws a striped pattern inside the outside shape without drawing in the inside shape.
     /// The inside shape does not have to be completely inside the outside shape.
     /// </summary>
-    /// <param name="outsideShape">The shape for drawing the striped pattern inside.</param>
     /// <param name="insideShape">The shape to not draw any striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The line drawing info for how the lines should be drawn.</param>
     /// <param name="spacingOffset">An offset for the spacing between 0 and 1. Can be used for a continuously moving pattern.</param>
-    public static void DrawStriped(this Triangle outsideShape, Triangle insideShape, float spacing, float angleDeg, LineDrawingInfo striped,
-        float spacingOffset = 0f)
+    public void DrawStriped(Triangle insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
         if (spacing <= 0) return;
-        var center = outsideShape.GetCentroid();
-        outsideShape.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
         if (spacing > maxDimension) return;
 
@@ -732,7 +756,7 @@ public static partial class StripedDrawing
 
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+            var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
@@ -831,18 +855,16 @@ public static partial class StripedDrawing
     /// Draws a striped pattern inside the outside shape without drawing in the inside shape.
     /// The inside shape does not have to be completely inside the outside shape.
     /// </summary>
-    /// <param name="outsideShape">The shape for drawing the striped pattern inside.</param>
     /// <param name="insideShape">The shape to not draw any striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The line drawing info for how the lines should be drawn.</param>
     /// <param name="spacingOffset">An offset for the spacing between 0 and 1. Can be used for a continuously moving pattern.</param>
-    public static void DrawStriped(this Triangle outsideShape, Quad insideShape, float spacing, float angleDeg, LineDrawingInfo striped,
-        float spacingOffset = 0f)
+    public void DrawStriped(Quad insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
         if (spacing <= 0) return;
-        var center = outsideShape.GetCentroid();
-        outsideShape.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         if (spacing > maxDimension) return;
@@ -859,7 +881,7 @@ public static partial class StripedDrawing
 
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+            var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
@@ -958,18 +980,16 @@ public static partial class StripedDrawing
     /// Draws a striped pattern inside the outside shape without drawing in the inside shape.
     /// The inside shape does not have to be completely inside the outside shape.
     /// </summary>
-    /// <param name="outsideShape">The shape for drawing the striped pattern inside.</param>
     /// <param name="insideShape">The shape to not draw any striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The line drawing info for how the lines should be drawn.</param>
     /// <param name="spacingOffset">An offset for the spacing between 0 and 1. Can be used for a continuously moving pattern.</param>
-    public static void DrawStriped(this Triangle outsideShape, Rect insideShape, float spacing, float angleDeg, LineDrawingInfo striped,
-        float spacingOffset = 0f)
+    public void DrawStriped(Rect insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
         if (spacing <= 0) return;
-        var center = outsideShape.GetCentroid();
-        outsideShape.GetFurthestVertex(center, out float disSquared, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         if (spacing > maxDimension) return;
@@ -986,7 +1006,7 @@ public static partial class StripedDrawing
 
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+            var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, A, B, C, D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
@@ -1085,18 +1105,16 @@ public static partial class StripedDrawing
     /// Draws a striped pattern inside the outside shape without drawing in the inside shape.
     /// The inside shape does not have to be completely inside the outside shape.
     /// </summary>
-    /// <param name="outsideShape">The shape for drawing the striped pattern inside.</param>
     /// <param name="insideShape">The shape to not draw any striped pattern inside.</param>
     /// <param name="spacing">How far apart the lines are.</param>
     /// <param name="angleDeg">The angle of the striped pattern. 0 degrees would be vertical lines, 90 degrees would be horizontal lines.</param>
     /// <param name="striped">The line drawing info for how the lines should be drawn.</param>
     /// <param name="spacingOffset">An offset for the spacing between 0 and 1. Can be used for a continuously moving pattern.</param>
-    public static void DrawStriped(this Triangle outsideShape, Polygon insideShape, float spacing, float angleDeg, LineDrawingInfo striped,
-        float spacingOffset = 0f)
+    public void DrawStriped(Polygon insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
         if (spacing <= 0) return;
-        var center = outsideShape.GetCentroid();
-        outsideShape.GetFurthestVertex(center, out float disSq, out int _);
+        var center = Center;
+        GetFurthestVertex(center, out float disSq, out int _);
         float maxDimension = MathF.Sqrt(disSq) * 2;
 
         if (spacing > maxDimension) return;
@@ -1113,14 +1131,14 @@ public static partial class StripedDrawing
 
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Line.IntersectLineTriangle(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C);
+            var outsideShapePoints = Line.IntersectLineQuad(cur, lineDir, A, B, C, D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
 
-            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref intersectionPointsReference);
+            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref intersectionPointsBuffer);
 
             if (count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
@@ -1130,49 +1148,50 @@ public static partial class StripedDrawing
             else
             {
                 //remove all inside shape intersection points that are outside the outside shape
-                for (int j = intersectionPointsReference.Count - 1; j >= 0; j--)
+                for (int j = intersectionPointsBuffer.Count - 1; j >= 0; j--)
                 {
-                    var p = intersectionPointsReference[j].Point;
+                    var p = intersectionPointsBuffer[j].Point;
 
-                    if (!outsideShape.ContainsPoint(p)) intersectionPointsReference.RemoveAt(j);
+                    if (!ContainsPoint(p)) intersectionPointsBuffer.RemoveAt(j);
                 }
 
-                if (outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) intersectionPointsReference.Add(outsideShapePoints.a);
-                if (outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) intersectionPointsReference.Add(outsideShapePoints.b);
+                if (outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) intersectionPointsBuffer.Add(outsideShapePoints.a);
+                if (outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) intersectionPointsBuffer.Add(outsideShapePoints.b);
 
                 //all points were remove so just draw the outside shape segment (even with only 1 point left, we continue)
-                if (intersectionPointsReference.Count <= 1)
+                if (intersectionPointsBuffer.Count <= 1)
                 {
                     cur += dir * spacing;
-                    intersectionPointsReference.Clear();
+                    intersectionPointsBuffer.Clear();
                     continue;
                 }
 
-                if (intersectionPointsReference.Count == 2) //no sorting or loop needed for exactly 2 points
+                if (intersectionPointsBuffer.Count == 2) //no sorting or loop needed for exactly 2 points
                 {
-                    var segment = new Segment(intersectionPointsReference[0].Point, intersectionPointsReference[1].Point);
+                    var segment = new Segment(intersectionPointsBuffer[0].Point, intersectionPointsBuffer[1].Point);
                     segment.Draw(striped);
                     cur += dir * spacing;
-                    intersectionPointsReference.Clear();
+                    intersectionPointsBuffer.Clear();
                     continue;
                 }
 
                 //now that only valid points remain, sort them by distance from the current point
-                intersectionPointsReference.SortClosestFirst(cur);
+                intersectionPointsBuffer.SortClosestFirst(cur);
 
-                for (int j = 0; j < intersectionPointsReference.Count - 1; j += 2)
+                for (int j = 0; j < intersectionPointsBuffer.Count - 1; j += 2)
                 {
-                    var p1 = intersectionPointsReference[j].Point;
-                    var p2 = intersectionPointsReference[j + 1].Point;
+                    var p1 = intersectionPointsBuffer[j].Point;
+                    var p2 = intersectionPointsBuffer[j + 1].Point;
                     var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
 
-                intersectionPointsReference.Clear();
+                intersectionPointsBuffer.Clear();
             }
 
             cur += dir * spacing;
         }
     }
 
+    #endregion
 }

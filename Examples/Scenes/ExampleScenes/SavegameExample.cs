@@ -8,12 +8,10 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Input;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Text;
-using Size = System.Drawing.Size;
 
 namespace Examples.Scenes.ExampleScenes;
 

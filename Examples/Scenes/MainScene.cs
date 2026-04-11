@@ -10,24 +10,11 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes
 {
-    // public class TestSaveGame : SavegameObject
-    // {
-    //     public int ID {get; set;}
-    //     public string Text {get; set;}
-    //
-    //     public TestSaveGame(int id, string text)
-    //     {
-    //         this.ID = id;
-    //         this.Text = text;
-    //     }
-    // }
     public class MainScene : Scene
     {
         private readonly List<ExampleScene> examples = new();
