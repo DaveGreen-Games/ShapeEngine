@@ -38,7 +38,6 @@ public class PhysicsExample : ExampleScene
     private readonly List<PhysicsExampleSource.Asteroid> repulsorAsteroids = new();
     
     
-
     public PhysicsExample()
     {
         Title = "Physics!";
@@ -188,8 +187,6 @@ public class PhysicsExample : ExampleScene
 
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        
-        
         var target = camera.BasePosition;
         var count = starSurfaces.Count;
         for (int i = 0; i < count; i++)
@@ -229,7 +226,9 @@ public class PhysicsExample : ExampleScene
         var universeLineInfo = new LineDrawingInfo(14f, Colors.Warm, LineCapType.Extended, 0);
         var stripedLineInfo = new LineDrawingInfo(14f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
         
-        Circle.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
+        var ringThickness = SectorRadiusOutside - SectorRadiusInside;
+        var circle = new Circle(Vector2.Zero, SectorRadiusInside + ringThickness * 0.5f);
+        circle.DrawStripedRing(ringThickness, 1f, stripedLineInfo, 0f);
         
         var insideCircle = new Circle(Vector2.Zero, SectorRadiusInside);
         var outsideCircle = new Circle(Vector2.Zero, SectorRadiusOutside);

@@ -5,34 +5,27 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
-//Q: Change to instance methods?
 public readonly partial struct Circle
 {
     #region Generate Striped Segments
-    //TODO: Change to Segments result parameter!
     
     /// <summary>
-    /// Generates a collection of radial segments that form a striped ring.
-    /// Each segment starts at the ring's inner radius and ends at the outer radius,
-    /// positioned at evenly spaced angles around the specified center.
+    /// Appends radial stripe segments for a full ring (annulus) around this circle.
     /// </summary>
-    /// <param name="center">Center point of the ring.</param>
-    /// <param name="innerRadius">Inner radius of the ring. Negative values are clamped to zero; if greater than <paramref name="outerRadius"/> values are swapped.</param>
-    /// <param name="outerRadius">Outer radius of the ring. Negative values are clamped to zero.</param>
-    /// <param name="angleSpacingDeg">Angular spacing in degrees between consecutive lines. Must be greater than zero.</param>
-    /// <param name="angleOffset">Normalized offset in the range [0,1) applied to the starting angle as a fraction of <paramref name="angleSpacingDeg"/> (default 0).</param>
-    /// <returns>A <see cref="Segments"/> collection containing the generated radial segments.</returns>
-    public static Segments GenerateStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float angleOffset = 0f)
+    /// <param name="result">The <see cref="Segments"/> collection that receives the generated stripe segments. Existing contents are preserved.</param>
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the starting angle by a fraction of <paramref name="angleSpacingDeg"/>.</param>
+    /// <returns><see langword="true"/> if <paramref name="result"/> contains at least one segment after the call; otherwise, <see langword="false"/>.</returns>
+    public bool GenerateStripedRing(Segments result, float ringThickness, float angleSpacingDeg, float angleOffset = 0f)
     {
-        var segments = new Segments();
-        if (angleSpacingDeg <= 0) return segments;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return segments;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        if (angleSpacingDeg <= 0) return false;
+        
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return false;
+
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
 
         float angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
@@ -42,44 +35,40 @@ public readonly partial struct Circle
             var p1 = center + dir * innerRadius;
             var p2 = center + dir * outerRadius;
             var segment = new Segment(p1, p2);
-            segments.Add(segment);
+            result.Add(segment);
             curAngleRad += angleSpacingRad;
         }
 
-        return segments;
+        return result.Count > 0;
     }
-    
+  
     /// <summary>
-    /// Generates radial segments for a sector of a striped ring between two angles.
-    /// Each segment runs from <paramref name="innerRadius"/> to <paramref name="outerRadius"/>
-    /// at evenly spaced angles determined by <paramref name="angleSpacingDeg"/>.
+    /// Appends radial stripe segments for a ring sector between two angles.
     /// </summary>
-    /// <param name="center">Center point of the ring.</param>
-    /// <param name="innerRadius">Inner radius of the ring. Negative values are clamped to zero; if greater than <paramref name="outerRadius"/> values are swapped.</param>
-    /// <param name="outerRadius">Outer radius of the ring. Negative values are clamped to zero.</param>
-    /// <param name="angleSpacingDeg">Angular spacing in degrees between consecutive lines. Must be greater than zero.</param>
-    /// <param name="minAngleDeg">Start angle of the sector in degrees.</param>
-    /// <param name="maxAngleDeg">End angle of the sector in degrees.</param>
-    /// <param name="angleOffset">Normalized offset in the range [0,1) applied to the starting angle as a fraction of <paramref name="angleSpacingDeg"/> (default 0).</param>
-    /// <returns>A <see cref="Segments"/> collection containing the generated radial segments.</returns>
-    public static Segments GenerateStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, 
-        float minAngleDeg, float maxAngleDeg, float angleOffset = 0f )
+    /// <param name="result">The <see cref="Segments"/> collection that receives the generated stripe segments. Existing contents are preserved.</param>
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="minAngleDeg">The starting angle of the striped sector in degrees.</param>
+    /// <param name="maxAngleDeg">The ending angle of the striped sector in degrees.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the first stripe by a fraction of <paramref name="angleSpacingDeg"/> from <paramref name="minAngleDeg"/>.</param>
+    /// <returns><see langword="true"/> if <paramref name="result"/> contains at least one segment after the call; otherwise, <see langword="false"/>.</returns>
+    /// <remarks>
+    /// If <paramref name="maxAngleDeg"/> is less than <paramref name="minAngleDeg"/>, stripes are generated in the negative angular direction.
+    /// </remarks>
+    public bool GenerateStripedRing(Segments result, float ringThickness, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg, float angleOffset = 0f)
     {
-        var segments = new Segments();
+        if (angleSpacingDeg <= 0) return false;
         
-        if (angleSpacingDeg <= 0) return segments;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return segments;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return false;
 
-        if (Math.Abs(minAngleDeg - maxAngleDeg) < 0.00000001f) return segments;
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
+
+        if (Math.Abs(minAngleDeg - maxAngleDeg) < 0.00000001f) return false;
         var dif = maxAngleDeg - minAngleDeg;
         int sign = MathF.Sign(dif);
-        if (sign == 0) return segments;
+        if (sign == 0) return false;
 
         var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         var minAngleRad = minAngleDeg * ShapeMath.DEGTORAD;
@@ -94,7 +83,7 @@ public readonly partial struct Circle
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
                 var segment = new Segment(p1, p2);
-                segments.Add(segment);
+                result.Add(segment);
                 curAngleRad -= angleSpacingRad;
             }
         }
@@ -106,39 +95,33 @@ public readonly partial struct Circle
                 var p1 = center + dir * innerRadius;
                 var p2 = center + dir * outerRadius;
                 var segment = new Segment(p1, p2);
-                segments.Add(segment);
+                result.Add(segment);
                 curAngleRad += angleSpacingRad;
             }
         }
         
-        return segments;
+        return result.Count > 0;
     }
     
+    #endregion
+    
+    #region Draw Striped Ring
+
     /// <summary>
-    /// Draw a striped ring. Draws lines across the circumference of the ring.
-    /// Each line starts on the inner radius and ends on the outer radius.
+    /// Draws a full striped ring using a single line style for every stripe.
     /// </summary>
-    /// <param name="center">The center of the ring.</param>
-    /// <param name="innerRadius">The inner radius of the ring.
-    /// Should be positive and smaller than the outer radius.</param>
-    /// <param name="outerRadius">The outer radius of the ring.
-    /// Should be positive and bigger than the inner radius.</param>
-    /// <param name="angleSpacingDeg">The spacing between each line in degrees.</param>
-    /// <param name="striped">The line drawing info for how to draw the lines.</param>
-    /// <param name="angleOffset">The start offset.
-    /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
-    /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, LineDrawingInfo striped,
-        float angleOffset = 0f)
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="striped">The drawing settings used for each stripe segment.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the starting angle by a fraction of <paramref name="angleSpacingDeg"/>.</param>
+    public void DrawStripedRing(float ringThickness, float angleSpacingDeg, LineDrawingInfo striped, float angleOffset = 0f)
     {
         if (angleSpacingDeg <= 0) return;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return;
+
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
 
         var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
@@ -152,37 +135,23 @@ public readonly partial struct Circle
             curAngleRad += angleSpacingRad;
         }
     }
-
-    #endregion
-    
-    #region Draw Striped Ring
     
     /// <summary>
-    /// Draw an alternating striped ring. Draws lines across the circumference of the ring.
-    /// Each line starts on the inner radius and ends on the outer radius.
+    /// Draws a full striped ring using two alternating line styles.
     /// </summary>
-    /// <param name="center">The center of the ring.</param>
-    /// <param name="innerRadius">The inner radius of the ring.
-    /// Should be positive and smaller than the outer radius.</param>
-    /// <param name="outerRadius">The outer radius of the ring.
-    /// Should be positive and bigger than the inner radius.</param>
-    /// <param name="angleSpacingDeg">The spacing between each line in degrees.</param>
-    /// <param name="striped">The first line drawing info for drawing even lines.</param>
-    /// <param name="alternatingStriped">The second line drawing info for drawing odd lines.</param>
-    /// <param name="angleOffset">The start offset.
-    /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
-    /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, LineDrawingInfo striped,
-        LineDrawingInfo alternatingStriped, float angleOffset = 0f)
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="striped">The drawing settings used for even-indexed stripes.</param>
+    /// <param name="alternatingStriped">The drawing settings used for odd-indexed stripes.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the starting angle by a fraction of <paramref name="angleSpacingDeg"/>.</param>
+    public void DrawStripedRing(float ringThickness, float angleSpacingDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float angleOffset = 0f)
     {
         if (angleSpacingDeg <= 0) return;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return;
+
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
 
         var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
@@ -198,34 +167,24 @@ public readonly partial struct Circle
             curAngleRad += angleSpacingRad;
         }
     }
-
+    
     /// <summary>
-    /// Draw an alternating striped ring. Draws lines across the circumference of the ring.
-    /// Each line starts on the inner radius and ends on the outer radius.
+    /// Draws a full striped ring cycling through the provided line styles.
     /// </summary>
-    /// <param name="center">The center of the ring.</param>
-    /// <param name="innerRadius">The inner radius of the ring.
-    /// Should be positive and smaller than the outer radius.</param>
-    /// <param name="outerRadius">The outer radius of the ring.
-    /// Should be positive and bigger than the inner radius.</param>
-    /// <param name="angleSpacingDeg">The spacing between each line in degrees.</param>
-    /// <param name="angleOffset">The start offset.
-    /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
-    /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    /// <param name="alternatingStriped">The line drawing infos for drawing each line.
-    /// Each info is used in sequence and wraps around if there are more lines.</param>
-    public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float angleOffset,
-        params LineDrawingInfo[] alternatingStriped)
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the starting angle by a fraction of <paramref name="angleSpacingDeg"/>.</param>
+    /// <param name="alternatingStriped">The line styles to cycle through for successive stripes.</param>
+    public void DrawStripedRing(float ringThickness, float angleSpacingDeg, float angleOffset, params LineDrawingInfo[] alternatingStriped)
     {
         if (alternatingStriped.Length <= 0) return;
         if (angleSpacingDeg <= 0) return;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return;
+
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
 
         var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
@@ -242,36 +201,28 @@ public readonly partial struct Circle
             curAngleRad += angleSpacingRad;
         }
     }
-
+    
     /// <summary>
-    /// Draw a sector of a striped ring. Draws lines across the circumference of the ring.
-    /// Each line starts on the inner radius and ends on the outer radius.
+    /// Draws a striped ring sector using a single line style for every stripe.
     /// </summary>
-    /// <param name="center">The center of the ring.</param>
-    /// <param name="innerRadius">The inner radius of the ring.
-    /// Should be positive and smaller than the outer radius.</param>
-    /// <param name="outerRadius">The outer radius of the ring.
-    /// Should be positive and bigger than the inner radius.</param>
-    /// <param name="angleSpacingDeg">The spacing between each line in degrees.</param>
-    /// <param name="minAngleDeg">The start of the sector in degrees.
-    /// Can be negative and/or bigger than maxAngleDeg.</param>
-    /// <param name="maxAngleDeg">The end of the sector in degrees.
-    /// Can be negative and/or smaller than the minAngleDeg.</param>
-    /// <param name="striped">The line drawing info for how to draw the lines.</param>
-    /// <param name="angleOffset">The start offset.
-    /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
-    /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg,
-        LineDrawingInfo striped, float angleOffset = 0f)
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="minAngleDeg">The starting angle of the striped sector in degrees.</param>
+    /// <param name="maxAngleDeg">The ending angle of the striped sector in degrees.</param>
+    /// <param name="striped">The drawing settings used for each stripe segment.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the first stripe by a fraction of <paramref name="angleSpacingDeg"/> from <paramref name="minAngleDeg"/>.</param>
+    /// <remarks>
+    /// If <paramref name="maxAngleDeg"/> is less than <paramref name="minAngleDeg"/>, stripes are drawn in the negative angular direction.
+    /// </remarks>
+    public void DrawStripedRing(float ringThickness, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg, LineDrawingInfo striped, float angleOffset = 0f)
     {
         if (angleSpacingDeg <= 0) return;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return;
+
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
 
         if (Math.Abs(minAngleDeg - maxAngleDeg) < 0.00000001f) return;
         var dif = maxAngleDeg - minAngleDeg;
@@ -306,37 +257,29 @@ public readonly partial struct Circle
             }
         }
     }
-
+    
     /// <summary>
-    /// Draw a sector of an alternating striped ring. Draws lines across the circumference of the ring.
-    /// Each line starts on the inner radius and ends on the outer radius.
+    /// Draws a striped ring sector using two alternating line styles.
     /// </summary>
-    /// <param name="center">The center of the ring.</param>
-    /// <param name="innerRadius">The inner radius of the ring.
-    /// Should be positive and smaller than the outer radius.</param>
-    /// <param name="outerRadius">The outer radius of the ring.
-    /// Should be positive and bigger than the inner radius.</param>
-    /// <param name="angleSpacingDeg">The spacing between each line in degrees.</param>
-    /// <param name="minAngleDeg">The start of the sector in degrees.
-    /// Can be negative and/or bigger than maxAngleDeg.</param>
-    /// <param name="maxAngleDeg">The end of the sector in degrees.
-    /// Can be negative and/or smaller than the minAngleDeg.</param>
-    /// <param name="striped">The first line drawing info for drawing even lines.</param>
-    /// <param name="alternatingStriped">The second line drawing info for drawing odd lines.</param>
-    /// <param name="angleOffset">The start offset.
-    /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
-    /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg,
-        LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float angleOffset = 0f)
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="minAngleDeg">The starting angle of the striped sector in degrees.</param>
+    /// <param name="maxAngleDeg">The ending angle of the striped sector in degrees.</param>
+    /// <param name="striped">The drawing settings used for even-indexed stripes.</param>
+    /// <param name="alternatingStriped">The drawing settings used for odd-indexed stripes.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the first stripe by a fraction of <paramref name="angleSpacingDeg"/> from <paramref name="minAngleDeg"/>.</param>
+    /// <remarks>
+    /// If <paramref name="maxAngleDeg"/> is less than <paramref name="minAngleDeg"/>, stripes are drawn in the negative angular direction.
+    /// </remarks>
+    public void DrawStripedRing(float ringThickness, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float angleOffset = 0f)
     {
         if (angleSpacingDeg <= 0) return;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return;
+
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
 
         if (Math.Abs(minAngleDeg - maxAngleDeg) < 0.00000001f) return;
         var dif = maxAngleDeg - minAngleDeg;
@@ -375,38 +318,29 @@ public readonly partial struct Circle
             }
         }
     }
-
+    
     /// <summary>
-    /// Draw a sector of an alternating striped ring. Draws lines across the circumference of the ring.
-    /// Each line starts on the inner radius and ends on the outer radius.
+    /// Draws a striped ring sector cycling through the provided line styles.
     /// </summary>
-    /// <param name="center">The center of the ring.</param>
-    /// <param name="innerRadius">The inner radius of the ring.
-    /// Should be positive and smaller than the outer radius.</param>
-    /// <param name="outerRadius">The outer radius of the ring.
-    /// Should be positive and bigger than the inner radius.</param>
-    /// <param name="angleSpacingDeg">The spacing between each line in degrees.</param>
-    /// <param name="minAngleDeg">The start of the sector in degrees.
-    /// Can be negative and/or bigger than maxAngleDeg.</param>
-    /// <param name="maxAngleDeg">The end of the sector in degrees.
-    /// Can be negative and/or smaller than the minAngleDeg.</param>
-    /// <param name="angleOffset">The start offset.
-    /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
-    /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    /// <param name="alternatingStriped">The line drawing infos for how to draw each of the lines.
-    /// Each info is used in sequence and wraps around if there are more lines.</param>
-    public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg,
-        float angleOffset, params LineDrawingInfo[] alternatingStriped)
+    /// <param name="ringThickness">The radial thickness of the ring centered on this circle's radius.</param>
+    /// <param name="angleSpacingDeg">The angular spacing in degrees between consecutive stripe segments.</param>
+    /// <param name="minAngleDeg">The starting angle of the striped sector in degrees.</param>
+    /// <param name="maxAngleDeg">The ending angle of the striped sector in degrees.</param>
+    /// <param name="angleOffset">A normalized offset in the range [0,1] that shifts the first stripe by a fraction of <paramref name="angleSpacingDeg"/> from <paramref name="minAngleDeg"/>.</param>
+    /// <param name="alternatingStriped">The line styles to cycle through for successive stripes.</param>
+    /// <remarks>
+    /// If <paramref name="maxAngleDeg"/> is less than <paramref name="minAngleDeg"/>, stripes are drawn in the negative angular direction.
+    /// </remarks>
+    public void DrawStripedRing(float ringThickness, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg, float angleOffset, params LineDrawingInfo[] alternatingStriped)
     {
         if (alternatingStriped.Length <= 0) return;
         if (angleSpacingDeg <= 0) return;
-        if (outerRadius < 0f) outerRadius = 0f;
-        if (innerRadius < 0f) innerRadius = 0f;
-        if (Math.Abs(outerRadius - innerRadius) < 0.00000001f) return;
-        if (outerRadius < innerRadius)
-        {
-            (innerRadius, outerRadius) = (outerRadius, innerRadius);
-        }
+        
+        if(ringThickness <= 0 || Radius <= 0 || Radius - ringThickness <= 0) return;
+
+        var center = Center;
+        var innerRadius = Radius - ringThickness * 0.5f;
+        var outerRadius = Radius + ringThickness * 0.5f;
 
         if (Math.Abs(minAngleDeg - maxAngleDeg) < 0.00000001f) return;
         var dif = maxAngleDeg - minAngleDeg;
