@@ -5,9 +5,12 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
-
+//Q: Change to instance methods?
 public readonly partial struct Circle
 {
+    #region Generate Striped Segments
+    //TODO: Change to Segments result parameter!
+    
     /// <summary>
     /// Generates a collection of radial segments that form a striped ring.
     /// Each segment starts at the ring's inner radius and ends at the outer radius,
@@ -150,6 +153,10 @@ public readonly partial struct Circle
         }
     }
 
+    #endregion
+    
+    #region Draw Striped Ring
+    
     /// <summary>
     /// Draw an alternating striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
@@ -441,5 +448,6 @@ public readonly partial struct Circle
         }
     }
 
+    #endregion
 }
 

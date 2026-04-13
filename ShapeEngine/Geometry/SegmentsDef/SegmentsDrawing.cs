@@ -85,9 +85,6 @@ public partial class Segments
         }
     }
     
-    
-    //TODO: Change to Segments result parameter!
-    
     /// <summary>
     /// Generates striped segments for a supported outer shape and optionally excludes the area covered by a supported inner shape.
     /// Dispatch is based on the runtime type of <paramref name="outsideShape"/>.
@@ -100,26 +97,24 @@ public partial class Segments
     /// The inner excluded shape type. Supported runtime types are <see cref="Circle"/>, <see cref="Triangle"/>,
     /// <see cref="Rect"/>, <see cref="Quad"/>, and <see cref="Polygon"/>.
     /// </typeparam>
+    /// <param name="result">The `Segments` collection to populate with stripe segments that lie inside the outsideShape but outside the insideShape.</param>
     /// <param name="outsideShape">The outer shape to fill with stripe segments.</param>
     /// <param name="insideShape">The inner shape to exclude from the generated stripes.</param>
     /// <param name="spacing">The distance between adjacent stripe lines.</param>
     /// <param name="angleDeg">The stripe angle in degrees, measured from the x\-axis.</param>
     /// <param name="spacingOffset">An optional offset applied along the stripe spacing direction.</param>
-    /// <returns>
-    /// A <see cref="Segments"/> collection containing the generated stripe segments, or an empty collection if
-    /// <paramref name="outsideShape"/> is not a supported runtime type.
-    /// </returns>
-    public static Segments GenerateStripedSegments<TO, TI>(TO outsideShape, TI insideShape, float spacing, float angleDeg, float spacingOffset = 0f) 
+    /// <returns><see langword="true"/> if at least one striped segment was generated and added to <paramref name="result"/>; otherwise, <see langword="false"/>.</returns>
+    public static bool GenerateStripedSegments<TO, TI>(Segments result, TO outsideShape, TI insideShape, float spacing, float angleDeg, float spacingOffset = 0f) 
         where TO : IClosedShapeTypeProvider
         where TI : IClosedShapeTypeProvider
     {
-        if(outsideShape is Circle circle) return circle.GenerateStripedSegments(insideShape, spacing, angleDeg, spacingOffset);
-        if(outsideShape is Triangle triangle) return triangle.GenerateStripedSegments(insideShape, spacing, angleDeg, spacingOffset);
-        if(outsideShape is Rect rect) return rect.GenerateStripedSegments(insideShape, spacing, angleDeg, spacingOffset);
-        if(outsideShape is Quad quad) return quad.GenerateStripedSegments(insideShape, spacing, angleDeg, spacingOffset);
-        if(outsideShape is Polygon polygon) return polygon.GenerateStripedSegments(insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Circle circle) return circle.GenerateStripedSegments(result, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Triangle triangle) return triangle.GenerateStripedSegments(result, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Rect rect) return rect.GenerateStripedSegments(result, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Quad quad) return quad.GenerateStripedSegments(result, insideShape, spacing, angleDeg, spacingOffset);
+        if(outsideShape is Polygon polygon) return polygon.GenerateStripedSegments(result, insideShape, spacing, angleDeg, spacingOffset);
 
-        return [];
+        return false;
     }
 }
 

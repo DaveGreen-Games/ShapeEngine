@@ -16,24 +16,22 @@ public partial class Polygon
 {
     #region Generate Striped Segments
     
-    //TODO: Change to Segments result parameter!
-    
     /// <summary>
     /// Generates a collection of line segments representing a striped pattern clipped to the specified polygon.
     /// </summary>
+    /// <param name="result">The `Segments` collection to populate with stripe segments clipped to this polygon.</param>
     /// <param name="spacing">Distance between adjacent stripe lines. Values = 0 will produce an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
     /// <param name="spacingOffset">Normalized offset in the range [0,1] used to shift the pattern (useful for animation).</param>
-    /// <returns>A <see cref="Segments"/> instance containing segments that lie inside the polygon.</returns>
-    public Segments GenerateStripedSegments(float spacing, float angleDeg, float spacingOffset = 0f)
+    /// <returns><see langword="true"/> if at least one striped segment was generated and added to <paramref name="result"/>; otherwise, <see langword="false"/>.</returns>
+    public bool GenerateStripedSegments(Segments result, float spacing, float angleDeg, float spacingOffset = 0f)
     {
-        var segments = new Segments();
-        if (spacing <= 0) return segments;
+        if (spacing <= 0) return false;
         var center = GetCentroid();
 
         GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
-        if (spacing > maxDimension) return segments;
+        if (spacing > maxDimension) return false;
 
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
@@ -42,6 +40,9 @@ public partial class Polygon
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
 
+        result.Clear();
+        result.EnsureCapacity(steps);
+        
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension; //offsets the point to outside the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
@@ -59,7 +60,7 @@ public partial class Polygon
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
                     var segment = new Segment(p1, p2);
-                    segments.Add(segment);
+                    result.Add(segment);
                 }
             }
 
@@ -68,36 +69,37 @@ public partial class Polygon
             cur += dir * spacing;
         }
 
-        return segments;
+        return result.Count > 0;
     }
     
     /// <summary>
     /// Generates a collection of line segments representing a striped pattern clipped to the specified polygon,
     /// where the distance between consecutive stripes is determined by a <see cref="CurveFloat"/>.
     /// </summary>
+    /// <param name="result">The `Segments` collection to populate with stripe segments clipped to this polygon.</param>
     /// <param name="spacingCurve">A curve that defines the spacing along the pattern. The curve must have keys and sampled values must be &gt; 0; otherwise the method returns an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
-    /// <returns>A <see cref="Segments"/> instance containing segments that lie inside the polygon.</returns>
-    public Segments GenerateStripedSegments(CurveFloat spacingCurve, float angleDeg)
+    /// <returns><see langword="true"/> if at least one striped segment was generated and added to <paramref name="result"/>; otherwise, <see langword="false"/>.</returns>
+    public bool GenerateStripedSegments(Segments result, CurveFloat spacingCurve, float angleDeg)
     {
-        var segments = new Segments();
-        
-        if (!spacingCurve.HasKeys) return segments;
+        if (!spacingCurve.HasKeys) return false;
         var center = GetCentroid();
         GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
-        if (!spacingCurve.Sample(0f, out float spacing)) return segments;
+        if (!spacingCurve.Sample(0f, out float spacing)) return false;
 
-        if (spacing > maxDimension || spacing <= 0) return segments;
+        if (spacing > maxDimension || spacing <= 0) return false;
 
         var start = center - (dir * maxDimension * 0.5f);
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension; //offsets the point to outside the polygon in the opposite direction of the ray
         var targetLength = spacing;
 
+        result.Clear();
+        
         while (targetLength < maxDimension)
         {
             var count = Ray.IntersectRayPolygon(cur, rayDir, this, ref intersectionPointsReference);
@@ -113,20 +115,20 @@ public partial class Polygon
                     var p1 = intersectionPointsReference[j].Point;
                     var p2 = intersectionPointsReference[j + 1].Point;
                     var segment = new Segment(p1, p2);
-                    segments.Add(segment);
+                    result.Add(segment);
                 }
             }
 
             intersectionPointsReference.Clear();
             var time = targetLength / maxDimension;
-            if (!spacingCurve.Sample(time, out spacing)) return segments;
-            if (spacing <= 0f) return segments; //prevents infinite loop
+            if (!spacingCurve.Sample(time, out spacing)) return result.Count > 0;
+            if (spacing <= 0f) return result.Count > 0; //prevents infinite loop
 
             targetLength += spacing;
             cur += dir * spacing;
         }
 
-        return segments;
+        return result.Count > 0;
     }
     
     /// <summary>
@@ -138,24 +140,21 @@ public partial class Polygon
     /// Allowed types are handled inside the method.
     /// Supported inside shape types: <see cref="Triangle"/>, <see cref="Circle"/>,
     /// <see cref="Rect"/>, <see cref="Quad"/>, <see cref="Polygon"/>.</typeparam>
+    /// <param name="result">The `Segments` collection to populate with stripe segments that lie inside this polygon but outside the insideShape.</param>
     /// <param name="insideShape">Shape to be excluded from the stripes.</param>
     /// <param name="spacing">Distance between adjacent stripes. Values = 0 will produce an empty result.</param>
     /// <param name="angleDeg">Orientation of the stripes in degrees (0 = vertical, 90 = horizontal).</param>
     /// <param name="spacingOffset">Normalized offset in the range [0,1] used to shift the pattern (useful for animation).</param>
-    /// <returns>
-    /// A <see cref="Segments"/> instance containing segments that lie inside this polygon
-    /// but outside <paramref name="insideShape"/>.
-    /// </returns>
-    public Segments GenerateStripedSegments<T>(T insideShape, float spacing, float angleDeg, float spacingOffset = 0f)  where T : IClosedShapeTypeProvider
+    /// <returns><see langword="true"/> if at least one striped segment was generated and added to <paramref name="result"/>; otherwise, <see langword="false"/>.</returns>
+    public bool GenerateStripedSegments<T>(Segments result, T insideShape, float spacing, float angleDeg, float spacingOffset = 0f)  where T : IClosedShapeTypeProvider
     {
-        var segments = new Segments();
-        if (spacing <= 0) return segments;
+        if (spacing <= 0) return false;
         var center = GetCentroid();
 
         GetFurthestVertex(center, out float disSquared, out int _);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
 
-        if (spacing > maxDimension) return segments;
+        if (spacing > maxDimension) return false;
 
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
@@ -164,6 +163,9 @@ public partial class Polygon
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
 
+        result.Clear();
+        result.EnsureCapacity(steps);
+        
         var cur = start + dir * spacing;
         cur -= lineDir * maxDimension; //offsets the point to the outside for using rays instead of lines
         
@@ -187,7 +189,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
                 else
@@ -208,7 +210,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
 
@@ -237,7 +239,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
                 else
@@ -258,7 +260,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
 
@@ -287,7 +289,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
                 else
@@ -308,7 +310,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
 
@@ -337,7 +339,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
                 else
@@ -358,7 +360,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
 
@@ -388,7 +390,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
                 else
@@ -413,7 +415,7 @@ public partial class Polygon
                         var p1 = intersectionPointsReference[j].Point;
                         var p2 = intersectionPointsReference[j + 1].Point;
                         var segment = new Segment(p1, p2);
-                        segments.Add(segment);
+                        result.Add(segment);
                     }
                 }
 
@@ -422,7 +424,8 @@ public partial class Polygon
                 cur += dir * spacing;
             }
         }
-        return segments;
+        
+        return result.Count > 0;
     }
     
     #endregion
@@ -743,7 +746,19 @@ public partial class Polygon
     
     #region Draw Striped Inside Shape
     
-    //TODO: Docs
+    /// <summary>
+    /// Draws a striped pattern inside this polygon while excluding the area covered by the specified inner shape.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The closed shape type to exclude from drawing.
+    /// Supported runtime types are <see cref="Circle"/>, <see cref="Rect"/>, <see cref="Quad"/>,
+    /// <see cref="Triangle"/>, and <see cref="Polygon"/>.
+    /// </typeparam>
+    /// <param name="insideShape">The inner shape in which no stripes should be drawn.</param>
+    /// <param name="spacing">The distance between adjacent stripes. Values less than or equal to 0 produce no output.</param>
+    /// <param name="angleDeg">The stripe orientation in degrees, where 0 is vertical and 90 is horizontal.</param>
+    /// <param name="striped">The drawing information used for the generated stripe segments.</param>
+    /// <param name="spacingOffset">A normalized offset in the range \[0, 1\] used to shift the stripe pattern.</param>
     public void DrawStriped<T>(T insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f) where T : IClosedShapeTypeProvider
     {
         if(insideShape is Circle c) DrawStriped(c, spacing, angleDeg, striped, spacingOffset);
