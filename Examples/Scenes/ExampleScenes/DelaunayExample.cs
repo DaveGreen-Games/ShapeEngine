@@ -10,8 +10,6 @@ using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Input;
 
-//Issue: Fix - Does not produce correct results anymore!
-
 namespace Examples.Scenes.ExampleScenes
 {
     public class DelaunayExample : ExampleScene
