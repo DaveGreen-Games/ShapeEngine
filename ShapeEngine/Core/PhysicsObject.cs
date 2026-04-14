@@ -13,6 +13,8 @@ namespace ShapeEngine.Core;
 /// </remarks>
 public abstract class PhysicsObject : GameObject
 {
+    private Vector2 velocity = Vector2.Zero;
+    
     #region Public Properties
     
     /// <summary>
@@ -29,11 +31,24 @@ public abstract class PhysicsObject : GameObject
     /// Gets the normalized direction of the current velocity vector.
     /// </summary>
     public Vector2 CurVelocityDirection { get; private set; } = Vector2.Zero;
-    
+
     /// <summary>
     /// Gets or sets the current velocity vector.
     /// </summary>
-    public Vector2 Velocity { get; set; }
+    public Vector2 Velocity
+    {
+        get => velocity;
+        set
+        {
+            velocity = value;
+            
+            //Q: Is it better to calculate this here or make the getters calculate it directly?
+            CurVelocityMagnitudeSquared = velocity.LengthSquared();
+            CurVelocityMagnitude = MathF.Sqrt(CurVelocityMagnitudeSquared);
+            if(CurVelocityMagnitudeSquared <= 0f) CurVelocityDirection = Vector2.Zero;
+            else CurVelocityDirection = velocity / CurVelocityMagnitude;
+        }
+    }
     
     /// <summary>
     /// Gets or sets the mass of the object. Used for force/impulse calculations.
@@ -92,10 +107,11 @@ public abstract class PhysicsObject : GameObject
     /// <summary>
     /// Gets whether the object is currently in motion <c>(velocity is nonzero)</c>.
     /// </summary>
-    public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
+    public bool IsInMotion => velocity.LengthSquared() > 0.00000001f;
 
     #endregion
     
+    //TODO: Rename function properties to better fit the actual use
     #region Public Functions
     
     /// <summary>
@@ -108,6 +124,7 @@ public abstract class PhysicsObject : GameObject
     /// </summary>
     public void ClearAccumulatedImpulses() => AccumulatedImpulses = new(0f);
     
+    //NOTE: This is actually and acceleration contribution and not a force
     /// <summary>
     /// Adds a force to be applied on the next update.
     /// </summary>
@@ -121,6 +138,7 @@ public abstract class PhysicsObject : GameObject
         else AccumulatedForce += force / Mass;
     }
     
+    //NOTE: This is an acceleration
     /// <summary>
     /// Adds a force to be applied on the next update, without dividing by mass.
     /// </summary>
@@ -170,27 +188,26 @@ public abstract class PhysicsObject : GameObject
 
     private void UpdatePhysicsState(float dt)
     {
+        if(dt <= 0) return;
+        
         ApplyForces(dt); 
-        Transform = Transform.ChangePosition(Velocity * dt);
+        Transform = Transform.ChangePosition(velocity * dt);
         OnPhysicsStateUpdated(dt);
     }
     
     private void ApplyForces(float dt)
     {
+        if(dt <= 0) return;
+        
         var force = ConstAcceleration + AccumulatedForce;
         
-        Velocity += AccumulatedImpulses;
-        Velocity += force * dt;
-        var dragForce = ShapePhysics.CalculateDragForce(Velocity, DragCoefficient, dt);
-        Velocity += dragForce;
+        velocity += AccumulatedImpulses;
+        velocity += force * dt;
+        var dragForce = ShapePhysics.CalculateDragForce(velocity, DragCoefficient, dt);
+        velocity += dragForce;
         
         ClearAccumulatedImpulses();
         ClearAccumulatedForce();
-        
-        CurVelocityMagnitudeSquared = Velocity.LengthSquared();
-        CurVelocityMagnitude = MathF.Sqrt(CurVelocityMagnitudeSquared);
-        if(CurVelocityMagnitudeSquared <= 0f) CurVelocityDirection = Vector2.Zero;
-        else CurVelocityDirection = Velocity / CurVelocityMagnitude;
     }
     
     #endregion
