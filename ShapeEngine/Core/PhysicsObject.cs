@@ -13,26 +13,33 @@ namespace ShapeEngine.Core;
 /// </remarks>
 public abstract class PhysicsObject : GameObject
 {
+    #region Public Properties
+    
     /// <summary>
     /// Gets the squared magnitude of the current velocity vector.
     /// </summary>
     public float CurVelocityMagnitudeSquared {get; private set; }
+  
     /// <summary>
     /// Gets the magnitude (length) of the current velocity vector.
     /// </summary>
     public float CurVelocityMagnitude { get; private set; }
+    
     /// <summary>
     /// Gets the normalized direction of the current velocity vector.
     /// </summary>
     public Vector2 CurVelocityDirection { get; private set; } = Vector2.Zero;
+    
     /// <summary>
     /// Gets or sets the current velocity vector.
     /// </summary>
     public Vector2 Velocity { get; set; }
+    
     /// <summary>
     /// Gets or sets the mass of the object. Used for force/impulse calculations.
     /// </summary>
     public float Mass { get; set; }
+    
     /// <summary>
     /// Gets or sets the drag coefficient <c>(0-1)</c>.
     /// <list type="bullet">
@@ -42,10 +49,12 @@ public abstract class PhysicsObject : GameObject
     /// </summary>
     /// <remarks>Determines the percentage of velocity lost per second.</remarks>
     public float DragCoefficient { get; set; }
+    
     /// <summary>
     /// Gets or sets the constant acceleration applied every update (e.g., gravity).
     /// </summary>
     public Vector2 ConstAcceleration { get; set; }
+    
     /// <summary>
     /// Gets the accumulated force to be applied on the next update.
     /// </summary>
@@ -55,6 +64,7 @@ public abstract class PhysicsObject : GameObject
     /// <see cref="AccumulatedForce"/> will be added to <see cref="Velocity"/> with delta time applied in the physics step.
     /// </remarks>
     public Vector2 AccumulatedForce { get; private set; } = new(0f);
+    
     /// <summary>
     /// Gets the accumulated impulses to be applied on the next update.
     /// </summary>
@@ -65,27 +75,39 @@ public abstract class PhysicsObject : GameObject
     /// </remarks>
     public Vector2 AccumulatedImpulses { get; private set; } = new(0f); 
 
+    #endregion
+    
+    #region Public Getters
+    
     /// <summary>
     /// Gets the current momentum <c>(mass * velocity magnitude)</c>.
     /// </summary>
     public float Momentum => Mass * CurVelocityMagnitude;
+  
     /// <summary>
     /// Gets the current kinetic energy <c>(0.5 * mass * velocity^2)</c>.
     /// </summary>
     public float KineticEnergy => Mass * CurVelocityMagnitudeSquared * 0.5f;
+    
     /// <summary>
     /// Gets whether the object is currently in motion <c>(velocity is nonzero)</c>.
     /// </summary>
     public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
 
+    #endregion
+    
+    #region Public Functions
+    
     /// <summary>
     /// Clears the accumulated force for the next update.
     /// </summary>
     public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
+    
     /// <summary>
     /// Clears the accumulated impulses for the next update.
     /// </summary>
     public void ClearAccumulatedImpulses() => AccumulatedImpulses = new(0f);
+    
     /// <summary>
     /// Adds a force to be applied on the next update.
     /// </summary>
@@ -98,6 +120,7 @@ public abstract class PhysicsObject : GameObject
         if(Mass <= 0) AccumulatedForce += force;
         else AccumulatedForce += force / Mass;
     }
+    
     /// <summary>
     /// Adds a force to be applied on the next update, without dividing by mass.
     /// </summary>
@@ -108,6 +131,7 @@ public abstract class PhysicsObject : GameObject
     {
         AccumulatedForce += force;
     }
+  
     /// <summary>
     /// Adds an impulse to be applied on the next update. If mass is positive, divides by mass.
     /// </summary>
@@ -140,7 +164,9 @@ public abstract class PhysicsObject : GameObject
     /// <param name="dt">Delta time in seconds.</param>
     protected virtual void OnPhysicsStateUpdated(float dt) { }
     
-    #region Private
+    #endregion
+    
+    #region Private Functions
 
     private void UpdatePhysicsState(float dt)
     {
@@ -148,6 +174,7 @@ public abstract class PhysicsObject : GameObject
         Transform = Transform.ChangePosition(Velocity * dt);
         OnPhysicsStateUpdated(dt);
     }
+    
     private void ApplyForces(float dt)
     {
         var force = ConstAcceleration + AccumulatedForce;
@@ -165,8 +192,7 @@ public abstract class PhysicsObject : GameObject
         if(CurVelocityMagnitudeSquared <= 0f) CurVelocityDirection = Vector2.Zero;
         else CurVelocityDirection = Velocity / CurVelocityMagnitude;
     }
-
-
+    
     #endregion
     
 }
