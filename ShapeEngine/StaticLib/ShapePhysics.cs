@@ -418,10 +418,11 @@ public static class ShapePhysics
     
     /// <summary>
     /// Calculates an inverse-square attraction force between two objects.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
     /// </summary>
     /// <remarks>
-    /// This is a gameplay-friendly gravity-style helper in engine units. Masses less than or equal to zero are treated as <c>1</c>.
+    /// This is a gameplay-friendly gravity-style helper in engine units.
+    /// Use <see cref="PhysicsObject.AddForce(Vector2)"/> to apply the returned vectors to physics objects.
+    /// Masses less than or equal to zero are treated as <c>1</c>.
     /// </remarks>
     /// <returns>Returns the resulting force vectors.</returns>
     public static (Vector2 force1, Vector2 force2) CalculateAttraction(Vector2 position1, float mass1, Vector2 position2, float mass2)
@@ -466,10 +467,9 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculate the force for 1 object based on attraction point and force.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates an inverse-distance-squared attraction force from a point.
     /// </summary>
-    /// <returns>Returns the resulting forces. </returns>
+    /// <returns>Returns the resulting force vector.</returns>
     public static Vector2 CalculateAttraction(Vector2 position, Vector2 attractionPoint, float attractionForce)
     {
         // Calculate the direction and distance between the object and the attraction point
@@ -507,8 +507,7 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculate the force for 1 object based on attraction point and force.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a directionally modulated inverse-distance-squared attraction force from a point.
     /// </summary>
     /// <param name="position"></param>
     /// <param name="attractionPoint"></param>
@@ -561,10 +560,9 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculate the force for 1 object based on attraction point and force.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates an attraction force from a point using a custom distance falloff power.
     /// </summary>
-    /// <returns>Returns the resulting forces. </returns>
+    /// <returns>Returns the resulting force vector.</returns>
     public static Vector2 CalculateAttraction(Vector2 position, Vector2 attractionPoint, float attractionForce, float distanceScalePower)
     {
         // Calculate the direction and distance between the object and the attraction point
@@ -610,10 +608,10 @@ public static class ShapePhysics
 
     /// <summary>
     /// Calculates an inverse-square repulsion force between two objects.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
     /// </summary>
     /// <remarks>
     /// This is the non-mutating repulsion counterpart to <see cref="ApplyRepulsion(PhysicsObject,PhysicsObject)"/>.
+    /// Use <see cref="PhysicsObject.AddForce(Vector2)"/> to apply the returned vectors to physics objects.
     /// Masses less than or equal to zero are treated as <c>1</c>.
     /// </remarks>
     /// <returns>Returns the resulting force vectors.</returns>
@@ -659,8 +657,7 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculates a repulsion force for one object based on a repulsion point and force magnitude.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates an inverse-distance-squared repulsion force from a point.
     /// </summary>
     /// <returns>Returns the resulting force vector.</returns>
     public static Vector2 CalculateRepulsion(Vector2 position, Vector2 repulsionPoint, float repulsionForce)
@@ -699,8 +696,7 @@ public static class ShapePhysics
     }
 
     /// <summary>
-    /// Calculates a directionally modulated repulsion force for one object based on a repulsion point and force magnitude.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a directionally modulated inverse-distance-squared repulsion force from a point.
     /// </summary>
     /// <param name="repulsionNormal">Determines the direction from which the attraction force works.
     /// Pointing in the same direction of attractionNormal will result in max attraction force.</param>
@@ -752,8 +748,7 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculates a repulsion force for one object using a custom distance falloff power.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a repulsion force from a point using a custom distance falloff power.
     /// </summary>
     /// <returns>Returns the resulting force vector.</returns>
     public static Vector2 CalculateRepulsion(Vector2 position, Vector2 repulsionPoint, float repulsionForce, float distanceScalePower)
@@ -982,7 +977,7 @@ public static class ShapePhysics
     /// <param name="attractionMass">The mass of the attraction object.</param>
     /// <param name="objectPosition">The position of the object.</param>
     /// <param name="objectVelocity">The velocity of the object.</param>
-    /// <returns>Returns the final force. Use AddForce() in PhysicsObject.</returns>
+    /// <returns>Returns the final force vector.</returns>
     public static Vector2 CalculateReverseAttractionForceRealistic(Vector2 attractionOrigin, float attractionMass, Vector2 objectPosition, Vector2 objectVelocity)
     {
         attractionMass = SanitizeMass(attractionMass);
@@ -1020,7 +1015,7 @@ public static class ShapePhysics
     /// <param name="objectVelocity">The velocity of the object.</param>
     /// <param name="dotRange">Set the multiplier range for pointing towards the center or away from the center.
     /// [0 and 1] would make force 0 when pointing towards the center and max when pointing away.</param>
-    /// <returns>Returns the final force. Use AddForce() in PhysicsObject.</returns>
+    /// <returns>Returns the final force vector.</returns>
     public static Vector2 CalculateReverseAttractionForceRealistic(Vector2 attractionOrigin, float attractionMass, Vector2 objectPosition, Vector2 objectVelocity, ValueRange dotRange)
     {
         attractionMass = SanitizeMass(attractionMass);
@@ -1119,11 +1114,10 @@ public static class ShapePhysics
     }
      
     /// <summary>
-    /// Calculates a force that gets stronger with distance and direction.
-    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
-    /// the force equals attractionForce.
-    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a directionally scaled reverse-attraction force using a distance range.
+    /// At a distance equal to <paramref name="attractionRadius"/> with a velocity directly aligned away from the origin,
+    /// the force equals <paramref name="attractionForce"/>.
+    /// If the velocity points toward the origin or the distance is zero, the force is zero.
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The force to apply, scaled by direction and distance factors.</param>
@@ -1194,11 +1188,10 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculates a force that gets stronger with distance and direction.
-    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
-    /// the force equals attractionForce.
-    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a directionally scaled reverse-attraction force using a distance range and a custom dot remap.
+    /// At a distance equal to <paramref name="attractionRadius"/> with a velocity directly aligned away from the origin,
+    /// the force equals <paramref name="attractionForce"/>, scaled by <paramref name="dotRange"/>.
+    /// If the velocity points toward the origin or the distance is zero, the force is zero.
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The force to apply, scaled by direction and distance factors.</param>
@@ -1273,11 +1266,10 @@ public static class ShapePhysics
     }
 
     /// <summary>
-    /// Calculates a force that gets stronger with distance and direction.
-    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
-    /// the force equals attractionForce.
-    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a directionally scaled reverse-attraction force using a distance range and a custom distance-factor adjustor.
+    /// At a distance equal to <paramref name="attractionRadius"/> with a velocity directly aligned away from the origin,
+    /// the force equals <paramref name="attractionForce"/>, scaled by the adjusted distance factor.
+    /// If the velocity points toward the origin or the distance is zero, the force is zero.
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The force to apply, scaled by direction and distance factors.</param>
@@ -1353,11 +1345,10 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculates a force that gets stronger with distance and direction.
-    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
-    /// the force equals attractionForce.
-    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a directionally scaled reverse-attraction force using a distance range, a custom dot remap, and a custom distance-factor adjustor.
+    /// At a distance equal to <paramref name="attractionRadius"/> with a velocity directly aligned away from the origin,
+    /// the force equals <paramref name="attractionForce"/>, scaled by the remapped dot factor and adjusted distance factor.
+    /// If the velocity points toward the origin or the distance is zero, the force is zero.
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The force to apply, scaled by direction and distance factors.</param>
@@ -1437,9 +1428,8 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculates a force that gets stronger with distance.
-    /// At a distance equal to attractionRadius, the force equals attractionForce.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a reverse-attraction force that scales with a distance range.
+    /// At a distance equal to <paramref name="attractionRadius"/>, the force equals <paramref name="attractionForce"/>.
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The force to apply, scaled by direction and distance factors.</param>
@@ -1463,9 +1453,8 @@ public static class ShapePhysics
     }
 
     /// <summary>
-    /// Calculates a force that gets stronger with distance.
-    /// At a distance equal to attractionRadius, the force equals attractionForce.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a reverse-attraction force that scales with a distance range and a custom distance-factor adjustor.
+    /// At a distance equal to <paramref name="attractionRadius"/>, the force equals <paramref name="attractionForce"/> before the adjustor is applied.
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The force to apply, scaled by direction and distance factors.</param>
@@ -1548,8 +1537,7 @@ public static class ShapePhysics
     }
     
     /// <summary>
-    /// Calculates a force that gets stronger with distance.
-    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// Calculates a reverse-attraction force that scales directly with distance squared.
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The force scaled by distance squared.</param>
