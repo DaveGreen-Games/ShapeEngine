@@ -19,95 +19,7 @@ public static class ShapePhysics
     /// </summary>
     public static float G = 1f;
     
-    
     #region Elastic Collision
-    
-    // public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r)
-    // {
-    //     // Ensure the elasticity parameter is between 0 and 1
-    //     r = Math.Clamp(r, 0.0f, 1.0f);
-    //
-    //     // Calculate the new velocities using the elastic collision formula
-    //     var newVelocity1 = (velocity1 * (mass1 - r * mass2) + velocity2 * (1 + r) * mass2) / (mass1 + mass2);
-    //     var newVelocity2 = (velocity2 * (mass2 - r * mass1) + velocity1 * (1 + r) * mass1) / (mass1 + mass2);
-    //
-    //     return (newVelocity1, newVelocity2);
-    // }
-    // public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float r)
-    // {
-    //     // Ensure the elasticity parameter is between 0 and 1
-    //     r = Math.Clamp(r, 0.0f, 1.0f);
-    //
-    //     // Calculate the relative velocity
-    //     var relativeVelocity = velocity1 - velocity2;
-    //
-    //     // Calculate the normal vector
-    //     var normal = Vector2.Normalize(position1 - position2);
-    //
-    //     // Calculate the velocity along the normal
-    //     float velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
-    //
-    //     // If the objects are moving apart, do nothing
-    //     if (velocityAlongNormal > 0)
-    //     {
-    //         return (velocity1, velocity2);
-    //     }
-    //
-    //     // Calculate the impulse scalar
-    //     float impulseScalar = (-(1 + r) * velocityAlongNormal) / (1 / mass1 + 1 / mass2);
-    //
-    //     // Calculate the impulse
-    //     var impulse = impulseScalar * normal;
-    //
-    //     // Update velocities
-    //     var newVelocity1 = velocity1 + impulse / mass1;
-    //     var newVelocity2 = velocity2 - impulse / mass2;
-    //
-    //     return (newVelocity1, newVelocity2);
-    // }
-    // public static void ApplyElasticCollision(this PhysicsObject obj1, PhysicsObject obj2, float r)
-    // {
-    //     var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
-    //     obj1.Velocity = result.newVelocity1;
-    //     obj2.Velocity = result.newVelocity2;
-    // }
-    // public static void ApplyElasticCollisionSelf(this PhysicsObject obj1, PhysicsObject obj2, float r)
-    // {
-    //     // Ensure the elasticity parameter is between 0 and 1
-    //     r = Math.Clamp(r, 0.0f, 1.0f);
-    //
-    //     // Calculate the relative velocity
-    //     var relativeVelocity = obj1.Velocity - obj1.Velocity;
-    //
-    //     // Calculate the normal vector
-    //     var normal = Vector2.Normalize(obj1.Transform.Position - obj1.Transform.Position);
-    //
-    //     // Calculate the velocity along the normal
-    //     float velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
-    //
-    //     // If the objects are moving apart, do nothing
-    //     if (velocityAlongNormal > 0)
-    //     {
-    //         return;
-    //     }
-    //
-    //     // Calculate the impulse scalar
-    //     float impulseScalar = (-(1 + r) * velocityAlongNormal) / (1 / obj1.Mass + 1 / obj1.Mass);
-    //
-    //     // Calculate the impulse
-    //     var impulse = impulseScalar * normal;
-    //
-    //     // Update velocities
-    //     obj1.Velocity = obj1.Velocity + impulse / obj1.Mass;
-    //     
-    // }
-    // public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision2(this PhysicsObject obj1, PhysicsObject obj2, float r)
-    // {
-    //     var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
-    //     return (result.newVelocity1, result.newVelocity2);
-    // }
-    //
-
     
     /// <summary>
     /// Calculate new velocities for an elastic collision between two circles.
@@ -314,6 +226,7 @@ public static class ShapePhysics
 
         return dragFactor;
     }
+    
     /// <summary>
     /// Calculates the drag force to apply to an object based on its velocity, drag coefficient, and delta time.
     /// The drag force is frame rate independent and always acts opposite to the velocity.
@@ -370,6 +283,7 @@ public static class ShapePhysics
         var factor = CalculateDragFactor(dragCoefficient, deltaTime);
         return velocity * factor;
     }
+    
     /// <summary>
     /// This function calculates a frame rate independent drag force and applies it to the supplied speed.
     /// </summary>
@@ -384,6 +298,7 @@ public static class ShapePhysics
         var factor = CalculateDragFactor(dragCoefficient, deltaTime);
         return speed * factor;
     }
+    
     /// <summary>
     /// This function calculates a frame rate independent drag force and applies it to the supplied velocity.
     /// </summary>
@@ -433,9 +348,11 @@ public static class ShapePhysics
 
         return dragForce;
     }
+    
     #endregion
     
     #region Attraction
+    
     /// <summary>
     /// Calculate the gravitational force between two objects.
     /// Use AddForce() if force should be applied to PhysicsObjects!
@@ -466,6 +383,7 @@ public static class ShapePhysics
 
         return (acceleration1, acceleration2);
     }
+ 
     /// <summary>
     /// Applies the gravitational attraction force between two <see cref="PhysicsObject"/> instances.
     /// The force is calculated using their positions and masses, and applied to both objects.
@@ -506,6 +424,7 @@ public static class ShapePhysics
 
         return forceMagnitude * normalizedDirection;
     }
+    
     /// <summary>
     /// Applies an attraction force to the specified <paramref name="obj"/> towards a given <paramref name="attractionPoint"/>.
     /// The force magnitude is determined by <paramref name="attractionForce"/> and decreases with the square of the distance.
@@ -551,6 +470,7 @@ public static class ShapePhysics
 
         return forceMagnitude * normalizedDirection * dotFactor;
     }
+    
     /// <summary>
     /// Applies an attraction force to the specified <paramref name="obj"/> towards a given <paramref name="attractionPoint"/>.
     /// The force magnitude is determined by <paramref name="attractionForce"/> and decreases with the square of the distance,
@@ -568,8 +488,7 @@ public static class ShapePhysics
         var force = CalculateAttraction(obj.Transform.Position, attractionPoint, attractionForce, attractionNormal);
         obj.AddForce(force);
     }
-
-    //distance scale power parameter
+    
     /// <summary>
     /// Calculate the force for 1 object based on attraction point and force.
     /// Use AddForce() if force should be applied to PhysicsObjects!
@@ -597,23 +516,23 @@ public static class ShapePhysics
 
         return forceMagnitude * normalizedDirection;
     }
-   /// <summary>
-   /// Applies an attraction force to the specified <paramref name="obj"/> towards a given <paramref name="attractionPoint"/>.
-   /// The force magnitude is determined by <paramref name="attractionForce"/> and decreases with distance raised to the power of <paramref name="distanceScalePower"/>.
-   /// </summary>
-   /// <param name="obj">The physics object to apply the force to.</param>
-   /// <param name="attractionPoint">The point towards which the object is attracted.</param>
-   /// <param name="attractionForce">The strength of the attraction force.</param>
-   /// <param name="distanceScalePower">
-   /// The exponent for distance scaling. A value of 2 means the force decreases with the square of the distance.
-   /// </param>
-   public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float distanceScalePower)
-   {
+
+    /// <summary>
+    /// Applies an attraction force to the specified <paramref name="obj"/> towards a given <paramref name="attractionPoint"/>.
+    /// The force magnitude is determined by <paramref name="attractionForce"/> and decreases with distance raised to the power of <paramref name="distanceScalePower"/>.
+    /// </summary>
+    /// <param name="obj">The physics object to apply the force to.</param>
+    /// <param name="attractionPoint">The point towards which the object is attracted.</param>
+    /// <param name="attractionForce">The strength of the attraction force.</param>
+    /// <param name="distanceScalePower">
+    /// The exponent for distance scaling. A value of 2 means the force decreases with the square of the distance.
+    /// </param>
+    public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float distanceScalePower)
+    {
        var force = CalculateAttraction(obj.Transform.Position, attractionPoint, attractionForce, distanceScalePower);
        obj.AddForce(force);
-   }
-
-
+    }
+    
     #endregion
     
     #region Repulsion
@@ -647,6 +566,7 @@ public static class ShapePhysics
 
         return (acceleration1, acceleration2);
     }
+  
     /// <summary>
     /// Applies a repulsion force between two <see cref="PhysicsObject"/> instances.
     /// The force is calculated using their positions and masses,
@@ -734,6 +654,7 @@ public static class ShapePhysics
         // Calculate the acceleration
         return forceMagnitude * normalizedDirection * dotFactor;
     }
+ 
     /// <summary>
     /// Applies a repulsion force to the specified <paramref name="obj"/> away from a given <paramref name="repulsionPoint"/>,
     /// modulated by the direction of <paramref name="repulsionNormal"/>.
@@ -751,7 +672,6 @@ public static class ShapePhysics
         var force = ApplyRepulsion(obj.Transform.Position, repulsionPoint, repulsionForce, repulsionNormal);
         obj.AddForce(force);
     }
-
     
     /// <summary>
     /// Calculate the repulsion force for 1 object based on repulsion point and force.
@@ -780,6 +700,7 @@ public static class ShapePhysics
         // Calculate the acceleration
         return forceMagnitude * normalizedDirection;
     }
+
     /// <summary>
     /// Applies a repulsion force to the specified <paramref name="obj"/> away from a given <paramref name="repulsionPoint"/>.
     /// The force magnitude is determined by <paramref name="repulsionForce"/> and decreases with distance raised to the power of <paramref name="distanceScalePower"/>.
@@ -852,7 +773,6 @@ public static class ShapePhysics
 
     }
     
- 
     /// <summary>
     /// Applies a friction force to the specified <paramref name="obj"/> based on its velocity and the given surface normal.
     /// The friction force acts opposite to the direction of motion and is scaled by the provided <paramref name="frictionForce"/>.
@@ -897,8 +817,7 @@ public static class ShapePhysics
         return true;
     
     }
-
-
+    
     #endregion
 
     #region Reverse Attraction
@@ -939,6 +858,7 @@ public static class ShapePhysics
 
         return (acceleration1, acceleration2);
     }
+ 
     /// <summary>
     /// Calculates a gravitational force between two objects that scales based on distance squared.
     /// The further away the objects are, the stronger the gravitational force will be. (reverse than in reality)
@@ -1007,6 +927,7 @@ public static class ShapePhysics
         }
         return Vector2.Zero;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// The force scales with distance squared and the mass of the attraction object!
@@ -1079,6 +1000,7 @@ public static class ShapePhysics
 
         return false;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// The force scales with distance squared and the mass of the attraction object!
@@ -1115,8 +1037,6 @@ public static class ShapePhysics
 
         return false;
     }
-    
-    
      
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
@@ -1271,6 +1191,7 @@ public static class ShapePhysics
         }
         return false;
     }
+
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
@@ -1310,6 +1231,7 @@ public static class ShapePhysics
         }
         return Vector2.Zero;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
@@ -1349,6 +1271,7 @@ public static class ShapePhysics
 
         return false;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
@@ -1390,6 +1313,7 @@ public static class ShapePhysics
         }
         return Vector2.Zero;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
@@ -1432,8 +1356,6 @@ public static class ShapePhysics
         return false;
     }
     
-    
-    
     /// <summary>
     /// Calculates a force that gets stronger with distance.
     /// At a distance equal to attractionRadius, the force equals attractionForce.
@@ -1459,6 +1381,7 @@ public static class ShapePhysics
        
         return -dir * attractionForce * distanceFactor;
     }
+
     /// <summary>
     /// Calculates a force that gets stronger with distance.
     /// At a distance equal to attractionRadius, the force equals attractionForce.
@@ -1486,6 +1409,7 @@ public static class ShapePhysics
         distanceFactor = distanceFactorAdjustor(distanceFactor);
         return -dir * attractionForce * distanceFactor;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance.
     /// At a distance equal to attractionRadius, the force equals attractionForce.
@@ -1512,6 +1436,7 @@ public static class ShapePhysics
         obj.AddForce(force);
         return true;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance.
     /// At a distance equal to attractionRadius, the force equals attractionForce.
@@ -1562,6 +1487,7 @@ public static class ShapePhysics
        
         return -dir * attractionForce * distanceSquared;
     }
+    
     /// <summary>
     /// Calculates a force that gets stronger with distance.
     /// Adds the calculated force to the obj.
@@ -1584,5 +1510,6 @@ public static class ShapePhysics
         obj.AddForce(force);
         return true;
     }
+   
     #endregion
 }
