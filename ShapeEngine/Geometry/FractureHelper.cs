@@ -12,8 +12,8 @@ namespace ShapeEngine.Geometry;
 /// </remarks>
 public class FractureHelper
 {
-    private static Triangulation buffer = new();
-    private static Triangulation buffer2 = new();
+    private readonly Triangulation buffer = new();
+    private readonly Triangulation buffer2 = new();
     
     /// <summary>
     /// The minimum area for a fracture piece to be kept.
