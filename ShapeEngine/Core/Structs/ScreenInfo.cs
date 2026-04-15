@@ -19,6 +19,11 @@ public readonly struct ScreenInfo
     public readonly Vector2 MousePos;
 
     /// <summary>
+    /// If this screen info is in world space or ui space.
+    /// </summary>
+    public readonly bool UISpace;
+
+    /// <summary>
     /// Interpolation factor used when running with a fixed framerate.
     /// Typical values are in the range [0, 1]; 1 means no interpolation.
     /// </summary>
@@ -47,9 +52,8 @@ public readonly struct ScreenInfo
     /// </returns>
     public ScreenInfo SetFixedFramerateInterpolationFactor(double factor)
     {
-        return new ScreenInfo(Area, MousePos, factor);
+        return new ScreenInfo(Area, MousePos, UISpace, factor);
     }
-    
     
     /// <summary>
     /// Returns the mouse position in a range between 0 and 1.
@@ -60,6 +64,7 @@ public readonly struct ScreenInfo
     {
         get
         {
+            if(UISpace) return MousePos / Area.Size.ToVector2();
             var size = Area.Size.ToVector2();
             var pos = MousePos + size / 2;
             return pos / size;
@@ -70,36 +75,38 @@ public readonly struct ScreenInfo
     /// Returns the mouse position normalized and centered around the area's midpoint.
     /// Values are in range approximately -1..1 where (0,0) is the center of <see cref="Area"/>.
     /// </summary>
-    /// <remarks>
-    /// This divides the mouse coordinates by half the area's size. If the area's width or
-    /// height is zero this will produce Infinity/NaN values; ensure <see cref="Area"/> has a valid size.
-    /// </remarks>
     public Vector2 RelativeMousePositionCentered
     {
         get
         {
-            var size = Area.Size.ToVector2() / 2;
-            return MousePos / size;
+            // var size = Area.Size.ToVector2() / 2;
+            // return (MousePos / size) - new Vector2(1, 1);
+            // return Area.Size.ToVector2() / MousePos;
+            return RelativeMousePosition * 2 - new Vector2(1, 1);
         }
     }
+    
     
     /// <summary>
     /// Initializes a new instance of the <see cref="ScreenInfo"/> struct.
     /// </summary>
     /// <param name="area">The rectangular area of the screen.</param>
     /// <param name="mousePos">The current mouse position in screen coordinates.</param>
-    public ScreenInfo(Rect area, Vector2 mousePos)
+    /// <param name="uiSpace">Wether the mousePos is in world or screen coordinates.</param>
+    public ScreenInfo(Rect area, Vector2 mousePos, bool uiSpace)
     {
         Area = area;
         MousePos = mousePos;
         FixedFramerateInterpolationFactor = 1f;
+        UISpace = uiSpace;
     }
     
-    internal ScreenInfo(Rect area, Vector2 mousePos, double fixedFramerateInterpolationFactor)
+    internal ScreenInfo(Rect area, Vector2 mousePos, bool uiSpace, double fixedFramerateInterpolationFactor)
     {
         Area = area;
         MousePos = mousePos;
         FixedFramerateInterpolationFactor = fixedFramerateInterpolationFactor;
+        UISpace = uiSpace;
     }
     
 }

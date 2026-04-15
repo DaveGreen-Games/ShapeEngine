@@ -432,8 +432,8 @@ public sealed class ScreenTexture
             scaledMousePostionGame = scaledMousePositionUi;
         }
         
-        GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame);
-        GameUiScreenInfo = new(textureRect, scaledMousePositionUi);
+        GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame, false);
+        GameUiScreenInfo = new(textureRect, scaledMousePositionUi, true);
     }
 
     
@@ -518,8 +518,8 @@ public sealed class ScreenTexture
             scaledMousePostionGame = scaledMousePositionUi;
         }
         
-        GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame);
-        GameUiScreenInfo = new(textureRect, scaledMousePositionUi);
+        GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame, false);
+        GameUiScreenInfo = new(textureRect, scaledMousePositionUi, true);
     }
     
     /// <summary>

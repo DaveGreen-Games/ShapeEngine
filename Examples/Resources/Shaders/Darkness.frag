@@ -21,9 +21,10 @@ void main()
     // Texel color fetching from texture sampler
     vec4 source = texture(texture0, fragTexCoord);
 
-    // Shift UVs to -1..1 so origin stays compatible with the existing setup.
-    vec2 uv = (fragTexCoord * 2.0) - 1.0;
-    vec2 center = origin * vec2(1.0, -1.0);
+    // Use normalized 0..1 screen-space coordinates.
+    // fragTexCoord uses bottom-left texture origin, so flip origin.y from the top-left mouse convention.
+    vec2 uv = fragTexCoord;
+    vec2 center = vec2(origin.x, 1.0 - origin.y);
 
     // Compensate for aspect ratio so the visible area stays circular.
     float aspect = renderWidth / max(renderHeight, 1.0);

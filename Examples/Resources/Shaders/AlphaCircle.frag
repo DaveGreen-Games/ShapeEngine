@@ -13,8 +13,9 @@ uniform float maxDis = 1;
 
 void main()
 {
-    vec2 uv = (fragTexCoord * 2) - 1;
-    vec2 delta = uv - (origin * vec2(1, -1));
+    vec2 uv = fragTexCoord;
+    vec2 center = vec2(origin.x, 1.0 - origin.y);
+    vec2 delta = uv - center;
     float aspect = renderWidth / max(renderHeight, 1.0);
     delta.x *= aspect;
     float dis = length(delta);

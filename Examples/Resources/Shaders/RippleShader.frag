@@ -21,8 +21,8 @@ const float TWO_PI = 6.28318530718;
 
 void main()
 {
-    vec2 uvCentered = (fragTexCoord * 2.0) - 1.0;
-    vec2 center = origin * vec2(1.0, -1.0);
+    vec2 uvCentered = fragTexCoord;
+    vec2 center = vec2(origin.x, 1.0 - origin.y);
 
     float aspect = renderWidth / max(renderHeight, 1.0);
     vec2 delta = uvCentered - center;

@@ -400,6 +400,7 @@ public class GameloopExamples : Game
                 ShapeShader darknessShader = new(darkness, darknessID, false, orderCount++);
                 ShapeShader.SetValueFloat(darknessShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(darknessShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(darknessShader.Shader, "origin", new Vector2(0.5f, 0.5f));
                 ShapeShader.SetValueFloat(darknessShader.Shader, "maxDis", 0.5f);
                 ShapeShader.SetValueColor(darknessShader.Shader, "color", ColorRgba.Black);
                 shapeShaders.Add(darknessShader);
@@ -410,7 +411,7 @@ public class GameloopExamples : Game
                 ShapeShader radialAtmosphereShader = new(radialAtmosphere, radialAtmosphereID, false, orderCount++);
                 ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                ShapeShader.SetValueVector2(radialAtmosphereShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueVector2(radialAtmosphereShader.Shader, "origin", new Vector2(0.5f, 0.5f));
                 ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "minDis", 0.25f);
                 ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "maxDis", 0.75f);
                 ShapeShader.SetValueColor(radialAtmosphereShader.Shader, "fogColor", ColorRgba.Black.SetAlpha(250));
@@ -426,7 +427,7 @@ public class GameloopExamples : Game
                 ShapeShader depthShader = new(depth, depthID, false, orderCount++);
                 ShapeShader.SetValueFloat(depthShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(depthShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                ShapeShader.SetValueVector2(depthShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueVector2(depthShader.Shader, "origin", new Vector2(0.5f, 0.5f));
                 ShapeShader.SetValueFloat(depthShader.Shader, "minDis", 0.2f);
                 ShapeShader.SetValueFloat(depthShader.Shader, "maxDis", 0.6f);
                 ShapeShader.SetValueFloat(depthShader.Shader, "desaturationStrength", 0.35f);
@@ -439,7 +440,7 @@ public class GameloopExamples : Game
                 ShapeShader rippleShader = new(ripple, rippleID, false, orderCount++);
                 ShapeShader.SetValueFloat(rippleShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(rippleShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", new Vector2(0.5f, 0.5f));
                 ShapeShader.SetValueFloat(rippleShader.Shader, "magnitude", 0.03f);
                 ShapeShader.SetValueFloat(rippleShader.Shader, "frequency", 24.0f);
                 ShapeShader.SetValueFloat(rippleShader.Shader, "animation", 0.0f);
@@ -465,7 +466,7 @@ public class GameloopExamples : Game
                 ShapeShader alphaCircleShader = new(alphaCircle, alphaCircleID, false, orderCount++);
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0.5f, 0.5f));
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "minDis", 0.25f);
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "maxDis", 1f);
                 shapeShaders.Add(alphaCircleShader);
@@ -477,7 +478,7 @@ public class GameloopExamples : Game
                 ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, orderCount++);
                 ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", new Vector2(0.5f, 0.5f));
                 ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "amount", new Vector2(2f, 2f));
                 shapeShaders.Add(chromaticAberrationShader);
             }
@@ -720,6 +721,8 @@ public class GameloopExamples : Game
         
         if (ScreenShaders != null)
         {
+            var mp = game.RelativeMousePosition;
+            
             var pixelationShader = ScreenShaders.Get(pixelationShaderID);
             if (pixelationShader != null && pixelationShader.Enabled)
             {
@@ -733,19 +736,19 @@ public class GameloopExamples : Game
             var darknessShader = ScreenShaders.Get(darknessID);
             if (darknessShader != null && darknessShader.Enabled)
             {
-                ShapeShader.SetValueVector2(darknessShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueVector2(darknessShader.Shader, "origin", mp);
             }
             
             var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
             if (alphaCircleShader != null && alphaCircleShader.Enabled)
             {
-                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", mp);
             }
             
             var chromaticAberrationShader = ScreenShaders.Get(chromaticAberrationID);
             if (chromaticAberrationShader != null && chromaticAberrationShader.Enabled)
             {
-                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", mp);
                 ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "amount", new Vector2(5, 5));
             }
             
@@ -764,14 +767,14 @@ public class GameloopExamples : Game
             var radialAtmosphereShader = ScreenShaders.Get(radialAtmosphereID);
             if (radialAtmosphereShader != null && radialAtmosphereShader.Enabled)
             {
-                ShapeShader.SetValueVector2(radialAtmosphereShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueVector2(radialAtmosphereShader.Shader, "origin", mp);
                 ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "blurStrength", blurStrength);
             }
 
             var depthShader = ScreenShaders.Get(depthID);
             if (depthShader != null && depthShader.Enabled)
             {
-                ShapeShader.SetValueVector2(depthShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueVector2(depthShader.Shader, "origin", mp);
                 ShapeShader.SetValueFloat(depthShader.Shader, "blurStrength", blurStrength);
             }
 
@@ -781,7 +784,7 @@ public class GameloopExamples : Game
             var rippleShader = ScreenShaders.Get(rippleID);
             if (rippleShader != null && rippleShader.Enabled)
             {
-                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", game.RelativeMousePositionCentered);
+                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", mp);
                 ShapeShader.SetValueFloat(rippleShader.Shader, "animation", animationFactor);
             }
             

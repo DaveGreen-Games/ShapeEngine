@@ -12,7 +12,8 @@ uniform sampler2D texture0;
 // Output fragment color
 out vec4 finalColor;
 
-// NOTE amount is in pixels and origin uses the centered -1..1 convention
+// NOTE amount is in pixels and origin uses the same normalized 0..1 convention as ScreenInfo.RelativeMousePosition.
+// The shader flips origin.y because fragTexCoord uses a bottom-left texture origin.
 uniform float renderWidth = 800.0;
 uniform float renderHeight = 450.0;
 uniform vec2 origin = vec2(0.0, 0.0);
@@ -22,8 +23,8 @@ void main()
 {
     vec4 source = texture(texture0, fragTexCoord);
 
-    vec2 uv = (fragTexCoord * 2.0) - 1.0;
-    vec2 center = origin * vec2(1.0, -1.0);
+    vec2 uv = fragTexCoord;
+    vec2 center = vec2(origin.x, 1.0 - origin.y);
 
     float aspect = renderWidth / max(renderHeight, 1.0);
     vec2 delta = uv - center;

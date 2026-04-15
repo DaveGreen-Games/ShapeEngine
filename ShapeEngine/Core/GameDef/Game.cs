@@ -651,7 +651,7 @@ public partial class Game
         
         GameScreenInfo = gameTexture.GameScreenInfo;
         GameUiScreenInfo = gameTexture.GameUiScreenInfo;
-        UIScreenInfo = new(Window.ScreenArea, mousePosUI);
+        UIScreenInfo = new(Window.ScreenArea, mousePosUI, true);
 
         Input = new InputSystem(inputSettings);
         Input.OnInputDeviceChanged += ResolveOnInputDeviceChanged;
