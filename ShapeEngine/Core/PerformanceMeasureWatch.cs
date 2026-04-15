@@ -128,7 +128,7 @@ public class PerformanceMeasureWatch
     /// </remarks>
     private struct Measurement
     {
-        public TimeSpan Start;
+        public TimeSpan? Start;
         public TimeSpan Total;
         public long Count;
         public TimeSpan Elapsed;
@@ -147,7 +147,7 @@ public class PerformanceMeasureWatch
             Tag = tag;
         }
 
-        private Measurement(TimeSpan start, TimeSpan total, TimeSpan elapsed, long count, TimeSpan min, TimeSpan max, string tag)
+        private Measurement(TimeSpan? start, TimeSpan total, TimeSpan elapsed, long count, TimeSpan min, TimeSpan max, string tag)
         {
             Start = start;
             Total = total;
@@ -163,10 +163,11 @@ public class PerformanceMeasureWatch
         }
         public Measurement TakeMeasurement(TimeSpan end)
         {
-            var elapsed = end - Start;
+            if (Start is null) return this;
+            var elapsed = end - Start.Value;
             var newMin = Min < elapsed ? Min : elapsed;
             var newMax = Max > elapsed ? Max : elapsed;
-            return new Measurement(TimeSpan.Zero, Total + elapsed, elapsed, Count + 1, newMin, newMax, Tag);
+            return new Measurement(null, Total + elapsed, elapsed, Count + 1, newMin, newMax, Tag);
         }
         public TimeSpan Average => Count > 0 ? TimeSpan.FromTicks(Total.Ticks / Count) : TimeSpan.Zero;
     }
@@ -303,7 +304,7 @@ public class PerformanceMeasureWatch
         {
             var key = (title, tag);
             if (!measurements.TryGetValue(key, out var measurement)) return; //it was never started
-            if (measurement.Start == TimeSpan.Zero) return; //it was never started
+            if (measurement.Start is null) return; //it is not currently running
             measurements[key] = measurement.TakeMeasurement(watch.Elapsed);
         }
     }
