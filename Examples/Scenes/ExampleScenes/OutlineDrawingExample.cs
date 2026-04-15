@@ -224,7 +224,7 @@ public class OutlineDrawingExample : ExampleScene
         gapsSlider.SetCurValue(4);
         
         curCircleSmoothness = 0.5f;
-        circleSideSlider.SetCurValue(18);
+        circleSideSlider.SetCurValue(0.5f);
         
         curGapPerimeterPercentage = 0.5f;
         gapPerimeterPercentageSlider.SetCurValue(0.5f);
