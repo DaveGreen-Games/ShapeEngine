@@ -56,5 +56,5 @@ public enum TweenType
     /// <summary>Elastic ease-in-out.</summary>
     ELASTIC_INOUT = 27,
     /// <summary>Ping Pong between 0 to 1 and 1 to 0. </summary>
-    Ping_Pong = 28
+    PING_PONG = 28
 }

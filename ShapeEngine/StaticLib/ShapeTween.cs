@@ -48,7 +48,7 @@ public static class ShapeTween
             case TweenType.ELASTIC_IN: return ElasticIn(t);
             case TweenType.ELASTIC_OUT: return ElasticOut(t);
             case TweenType.ELASTIC_INOUT: return ElasticInOut(t);
-            case TweenType.Ping_Pong: return PingPong(t);
+            case TweenType.PING_PONG: return PingPong(t);
             default: return t;
         }
     }

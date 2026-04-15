@@ -60,7 +60,7 @@ namespace ShapeEngine.Timing
         public bool Update(float dt)
         {
             if (duration <= 0f) return true;
-            if (tweenType == TweenType.Ping_Pong)
+            if (tweenType == TweenType.PING_PONG)
             {
                 float t = timer / duration;
                 float f = ShapeTween.Tween(t, tweenType);
