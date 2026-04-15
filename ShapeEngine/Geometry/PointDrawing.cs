@@ -17,7 +17,7 @@ public static class PointDrawing
     /// <param name="radius">The radius of the circle to draw.</param>
     /// <param name="color">The color of the circle.</param>
     /// <param name="smoothness">
-    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="Circle.CircleSideLengthRange"/>.
     /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
     /// The resulting side length determines the number of polygon sides used to approximate the circle.
     /// </param>
@@ -34,7 +34,7 @@ public static class PointDrawing
     /// <param name="r">The radius of each circle.</param>
     /// <param name="color">The color of the circles.</param>
     /// <param name="smoothness">
-    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="CircleDrawing.CircleSideLengthRange"/>.
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="Circle.CircleSideLengthRange"/>.
     /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
     /// The resulting side length determines the number of polygon sides used to approximate the circle.
     /// </param>
