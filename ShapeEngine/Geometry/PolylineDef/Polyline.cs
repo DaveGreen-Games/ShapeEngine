@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
@@ -9,7 +8,6 @@ using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
-using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.PolylineDef;
 
@@ -23,6 +21,7 @@ namespace ShapeEngine.Geometry.PolylineDef;
 /// </remarks>
 public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
 {
+    
     #region Constructors
     /// <summary>
     /// Initializes a new instance of the <see cref="Polyline"/> class with no points.
@@ -73,32 +72,52 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     /// <remarks>
     /// Equality is determined by comparing the number of points and the similarity of each corresponding point.
     /// </remarks>
-    public bool Equals(Polyline? other)
-    {
-        if (other == null) return false;
-        if (Count != other.Count) return false;
-        for (var i = 0; i < Count; i++)
-        {
-            if (!this[i].IsSimilar(other[i])) return false;
-            //if (this[i] != other[i]) return false;
-        }
-        return true;
-    }
+    public bool Equals(Polyline? other) => base.Equals(other);
+
+    /// <summary>
+    /// Determines whether the specified <see cref="Polyline"/> is equal to the current <see cref="Polyline"/> using quantized comparison.
+    /// </summary>
+    /// <param name="other">The <see cref="Polyline"/> to compare with the current polyline.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point coordinates before comparison.</param>
+    /// <returns><c>true</c> if the polylines are equal after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(Polyline? other, int decimalPlaces) => base.Equals(other, decimalPlaces);
     
     /// <summary>
     /// Determines whether the specified object is equal to the current <see cref="Polyline"/>.
     /// </summary>
     /// <param name="obj">The object to compare with the current polyline.</param>
     /// <returns><c>true</c> if the specified object is a <see cref="Polyline"/> and is equal to the current polyline; otherwise, <c>false</c>.</returns>
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as Polyline);
-    }
+    public override bool Equals(object? obj) => obj is Polyline other && Equals(other);
+
     /// <summary>
     /// Returns a hash code for the current <see cref="Polyline"/>.
     /// </summary>
     /// <returns>A hash code for the current polyline.</returns>
-    public override int GetHashCode() => Game.GetHashCode(this);
+    public override int GetHashCode() => base.GetHashCode();
+
+    /// <summary>
+    /// Determines whether two polylines are equal.
+    /// </summary>
+    /// <param name="left">The first polyline to compare.</param>
+    /// <param name="right">The second polyline to compare.</param>
+    /// <returns><c>true</c> if the polylines are equal; otherwise, <c>false</c>.</returns>
+    public static bool operator ==(Polyline? left, Polyline? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two polylines are not equal.
+    /// </summary>
+    /// <param name="left">The first polyline to compare.</param>
+    /// <param name="right">The second polyline to compare.</param>
+    /// <returns><c>true</c> if the polylines are not equal; otherwise, <c>false</c>.</returns>
+    public static bool operator !=(Polyline? left, Polyline? right)
+    {
+        return !(left == right);
+    }
 
     public ShapeType GetShapeType() => ShapeType.PolyLine;
 
@@ -125,6 +144,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
 
         return new Circle(origin, MathF.Sqrt(maxD));
     }
+    
     /// <summary>
     /// Calculates the axis-aligned bounding box that contains all points of the polyline.
     /// </summary>
@@ -142,12 +162,12 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         return r;
     }
 
-   /// <summary>
-   /// Returns the segments (edges) of the polyline as a <see cref="Segments"/> collection.
-   /// If the points are in counter-clockwise (CCW) order, the segment normals face to the right of the segment direction.
-   /// If <c>InsideNormals</c> is true, the normals face to the left of the segment direction.
-   /// </summary>
-   /// <returns>A <see cref="Segments"/> collection representing the polyline's edges.</returns>
+    /// <summary>
+    /// Returns the segments (edges) of the polyline as a <see cref="Segments"/> collection.
+    /// If the points are in counter-clockwise (CCW) order, the segment normals face to the right of the segment direction.
+    /// If <c>InsideNormals</c> is true, the normals face to the left of the segment direction.
+    /// </summary>
+    /// <returns>A <see cref="Segments"/> collection representing the polyline's edges.</returns>
     public Segments GetEdges()
     {
         if (Count <= 1) return new();
@@ -160,12 +180,32 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         }
         return segments;
     }
+    
     /// <summary>
     /// Converts this <see cref="Polyline"/> to a <see cref="Points"/> collection containing the same points.
     /// </summary>
     /// <returns>A new <see cref="Points"/> instance with the points from this polyline.</returns>
     public Points ToPoints() { return new(this); }
 
+    public bool GetEdgeDirections(List<Vector2> result, bool normalized = false)
+    {
+        if (Count <= 1) return false;
+        result.Clear();
+        if (Count == 2)
+        {
+            result.Add(this[1] - this[0]);
+            return true;
+        }
+        for (var i = 0; i < Count - 1; i++)
+        {
+            var start = this[i];
+            var end = this[i + 1];
+            var a = end - start;
+            result.Add(normalized ? a.Normalize() : a);
+        }
+
+        return true;
+    }
     #endregion
     
     #region Points & Vertex
@@ -175,6 +215,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     /// the polyline will be in clockwise (CW) order if it was counter-clockwise (CCW) before and vice versa.
     /// </summary>
     public void ReverseOrder() => Reverse();
+    
     /// <summary>
     /// Gets the segment (edge) between the two points at the specified index.
     /// </summary>
@@ -194,6 +235,7 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     /// </summary>
     /// <returns>A random <see cref="Vector2"/> vertex from the polyline.</returns>
     public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
+    
     /// <summary>
     /// Gets a random edge (segment) from the polyline.
     /// </summary>
@@ -202,63 +244,67 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
     #endregion
     
     #region Interpolated Edge Points
-
     /// <summary>
-    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// Computes one interpolated point along each edge of the polyline and writes the results into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between <c>0 - 1</c>.</param>
-    /// <returns></returns>
-    public Points? InterpolatedEdgePoints(float t)
+    /// <param name="t">The interpolation factor used for each edge. Values between 0 and 1 produce points between each vertex and the next vertex.</param>
+    /// <param name="result">The destination collection that will be cleared and populated with the interpolated points.</param>
+    /// <remarks>
+    /// If the collection contains fewer than two points, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
+    public new void GetInterpolatedEdgePoints(float t, Points result)
     {
-        if (Count < 2) return null;
+        if (Count < 2) return;
 
-        var result = new Points();
+        result.Clear();
+        result.EnsureCapacity(Count);
         for (int i = 0; i < Count - 1; i++)
         {
             var cur = this[i];
             var next = this[i + 1];
-            var interpolated = cur.Lerp(next, t);// Vector2.Lerp(cur, next, t);
+            var interpolated = cur.Lerp(next, t);
             result.Add(interpolated);
         }
-        
-        return result;
     }
+    
     /// <summary>
-    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// Repeatedly computes interpolated edge points for the polyline and writes the final result into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between <c>0 - 1</c>.</param>
-    /// <param name="steps">Recursive steps. The number of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
-    /// <returns></returns>
-    public Points? InterpolatedEdgePoints(float t, int steps)
+    /// <param name="t">The interpolation factor used for each edge on every pass. Values between 0 and 1 produce points between each vertex and the next vertex.</param>
+    /// <param name="steps">The number of interpolation passes to perform. Values less than or equal to 1 perform a single pass.</param>
+    /// <param name="result">The destination collection that will receive the interpolated points.</param>
+    /// <remarks>
+    /// If the collection contains fewer than two points, the method returns without modifying <paramref name="result"/>.
+    /// </remarks>
+    public new void GetInterpolatedEdgePoints(float t, int steps, Points result)
     {
-        if (Count < 2) return null;
-        if (steps <= 1) return InterpolatedEdgePoints(t);
+        if (Count < 2 || steps <= 0) return;
+        
+        if (steps == 1)
+        {
+            GetInterpolatedEdgePoints(t, result);
+            return;
+        }
 
+        steps = ShapeMath.MinInt(steps, Count - 1);
+        
         int remainingSteps = steps;
-        var result = new Points();
-        var buffer = new Points();
+        result.Clear();
+        
         while (remainingSteps > 0)
         {
             var target = result.Count <= 0 ? this : result;
-            for (int i = 0; i < target.Count; i++)
-            {
-                var cur = target[i];
-                var next = target[i + 1];
-                var interpolated = cur.Lerp(next, t);
-                buffer.Add(interpolated);
-            }
-
-            (result, buffer) = (buffer, result);//switch buffer and result
-            buffer.Clear();
+            target.GetInterpolatedEdgePoints(t, pointsBuffer);
+            result.Clear();
+            result.AddRange(pointsBuffer);
+            pointsBuffer.Clear();
             remainingSteps--;
         }
-
-        
-        return result;
     }
     #endregion
     
     #region Static
+    
     /// <summary>
     /// Creates a polyline shape from a set of relative points and a transformation.
     /// </summary>
@@ -276,7 +322,6 @@ public partial class Polyline : Points, IEquatable<Polyline>, IShapeTypeProvider
         }
         return shape;
     }
-
     
     #endregion
 }

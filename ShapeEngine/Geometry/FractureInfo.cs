@@ -1,5 +1,5 @@
+using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.TriangulationDef;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry;
 
@@ -37,5 +37,11 @@ public class FractureInfo
         this.NewShapes = newShapes;
         this.Cutouts = cutouts;
         this.Pieces = pieces;
+    }
+    public FractureInfo()
+    {
+        this.NewShapes = new();
+        this.Cutouts = new();
+        this.Pieces = new();
     }
 }

@@ -2,6 +2,8 @@ using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.TriangulationDef;
+using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
@@ -94,7 +96,7 @@ public readonly partial struct Circle
     #endregion
 
     #region Math
-
+    
     /// <summary>
     /// Projects the circle's shape points along a given vector.
     /// </summary>
@@ -105,40 +107,100 @@ public readonly partial struct Circle
     public Points? GetProjectedShapePoints(Vector2 v, int pointCount = 8)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
-        float angleStep = (MathF.PI * 2f) / pointCount;
+        
         Points points = new(pointCount * 2);
+        
+        GetProjectedShapePoints(points, v, pointCount);
+        
+        return points;
+    }
+    
+    /// <summary>
+    /// Writes the circle's projected shape points into <paramref name="result"/> by sampling the circle and duplicating each sample offset by <paramref name="v"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the projected shape points.</param>
+    /// <param name="v">The vector along which the sampled circle points are projected.</param>
+    /// <param name="pointCount">The number of circle sample points to generate before projection. Must be at least 4.</param>
+    /// <returns><c>true</c> if valid parameters were provided and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool GetProjectedShapePoints(Points result, Vector2 v, int pointCount = 8)
+    {
+        if (pointCount < 4 || v.LengthSquared() <= 0f) return false;
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        
+        result.Clear();
+        result.EnsureCapacity(pointCount * 2);
+        
         for (var i = 0; i < pointCount; i++)
         {
             var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            points.Add(p);
-            points.Add(p + v);
+            result.Add(p);
+            result.Add(p + v);
         }
 
-        return points;
+        return true;
     }
-
+    
     /// <summary>
     /// Projects the circle's shape into a polygon along a given vector.
     /// </summary>
     /// <param name="v">The vector to project the shape along.</param>
     /// <param name="pointCount">The number of points to generate for the polygon. Default is 8.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>A <see cref="Polygon"/> representing the projected shape,
     /// or null if invalid parameters are provided.</returns>
-    public Polygon? ProjectShape(Vector2 v, int pointCount = 8)
+    public Polygon? ProjectShape(Vector2 v, int pointCount = 8, bool useBuffer = false)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
+        
+        Polygon result = new Polygon();
+
+        ProjectShape(result, v, pointCount, useBuffer);
+        
+        return result;
+    }
+
+    /// <summary>
+    /// Projects the circle's shape into a polygon along the specified vector and writes the convex hull into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that will receive the projected shape.</param>
+    /// <param name="v">The vector along which the circle shape is projected.</param>
+    /// <param name="pointCount">The number of circle sample points to generate before projection. Must be at least 4.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
+    /// <returns><c>true</c> if valid parameters were provided and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method samples the circle, adds a projected copy of each sample offset by <paramref name="v"/>, and computes the convex hull of those points.
+    /// </remarks>
+    public bool ProjectShape(Polygon result, Vector2 v, int pointCount = 8, bool useBuffer = false)
+    {
+        if (pointCount < 4 || v.LengthSquared() <= 0f) return false;
         float angleStep = (MathF.PI * 2f) / pointCount;
-        Points points = new(pointCount * 2);
+        
+        Points buffer;
+
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(pointCount * 2);
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points(pointCount * 2);
+        }
+        
         for (var i = 0; i < pointCount; i++)
         {
             var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            points.Add(p);
-            points.Add(p + v);
+            buffer.Add(p);
+            buffer.Add(p + v);
         }
 
-        return Polygon.FindConvexHull(points);
+        buffer.FindConvexHull(result);
+        return true;
     }
-
+    
     /// <summary>
     /// Floors the circle's center and radius values to the nearest lower integer.
     /// </summary>
@@ -212,5 +274,57 @@ public readonly partial struct Circle
         return GetCircumference() * GetCircumference();
     }
 
+    #endregion
+    
+    #region Generate Circle Sector Outline Triangulation
+    
+    /// <summary>
+    /// Generates a triangulated outline for a circle sector and writes it into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will receive the generated outline triangles.</param>
+    /// <param name="startAngleDeg">The starting sector angle in degrees.</param>
+    /// <param name="endAngleDeg">The ending sector angle in degrees.</param>
+    /// <param name="sides">The number of sides used to approximate the curved arc of the sector.</param>
+    /// <param name="lineThickness">The thickness of the generated outline.</param>
+    /// <param name="miterLimit">The maximum miter length used when generating the outline joins.</param>
+    /// <param name="beveled"><c>true</c> to use beveled joins; otherwise, mitered joins are used.</param>
+    /// <param name="useDelaunay"><c>true</c> to use Delaunay triangulation when generating the outline; otherwise, the default triangulation is used.</param>
+    /// <remarks>
+    /// The method returns immediately without modifying <paramref name="result"/> if the circle radius is not positive, <paramref name="sides"/> is less than 3, the sector angle span is effectively zero, or the absolute angle span is 360 degrees or greater.
+    /// </remarks>
+    public void GenerateCircleSectorOutlineTriangulation(Triangulation result, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, 
+        float miterLimit = 2f, bool beveled = false, bool useDelaunay = false)
+    {
+        if (sides < 3 || Radius <= 0) return;
+        float angleDifDeg = endAngleDeg - startAngleDeg;
+        float angleDifDegAbs = MathF.Abs(angleDifDeg);
+        if (angleDifDegAbs < 0.0001f) return;
+        
+        if (angleDifDegAbs >= 360f)
+        {
+            return;
+        }
+
+        float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+        float anglePieceRad = angleDifDeg * ShapeMath.DEGTORAD;
+        float angleStepRad = anglePieceRad / sides;
+
+        if (circleSectorOutlineTriangulationPolyCache == null)
+        {
+            circleSectorOutlineTriangulationPolyCache = new Polygon(sides + 1);
+        }
+        else
+        {
+            circleSectorOutlineTriangulationPolyCache.Clear();
+        }
+        
+        circleSectorOutlineTriangulationPolyCache.Add(Center);
+        for (var i = 0; i < sides; i++)
+        {
+            var p = Center + new Vector2(Radius, 0f).Rotate(startAngleRad + angleStepRad * i);
+            circleSectorOutlineTriangulationPolyCache.Add(p);
+        }
+        ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulation(circleSectorOutlineTriangulationPolyCache, lineThickness, miterLimit, beveled, useDelaunay, result);
+    }
     #endregion
 }

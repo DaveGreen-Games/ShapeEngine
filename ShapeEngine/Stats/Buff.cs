@@ -14,15 +14,23 @@ public class Buff : IBuff
     /// The list of effects this buff applies.
     /// </summary>
     protected readonly List<BuffEffect> Effects;
+  
+    #region Public Properties
+    
     /// <summary>
     /// The unique identifier for this buff.
     /// </summary>
     public uint Id { get; private set; }
+    
     /// <summary>
     /// Gets the unique identifier for this buff.
     /// </summary>
     /// <returns>The buff's unique ID.</returns>
     public uint GetId() => Id;
+    
+    #endregion
+    
+    #region Constructors
     
     /// <summary>
     /// Initializes a new instance of the <see cref="Buff"/> class with the specified ID.
@@ -33,6 +41,7 @@ public class Buff : IBuff
         Id = id;
         Effects = new();
     }
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="Buff"/> class with the specified ID and effects.
     /// </summary>
@@ -45,10 +54,14 @@ public class Buff : IBuff
         this.Effects.AddRange(effects);
     }
 
+    #endregion
+    
+    #region Public Methods
+    
     /// <summary>
-    /// Creates a copy of this buff.
+    /// Creates a new buff with the same identifier and effects.
     /// </summary>
-    /// <returns>A new <see cref="IBuff"/> instance with the same properties and effects.</returns>
+    /// <returns>A new <see cref="IBuff"/> instance with the same configuration.</returns>
     public virtual IBuff Clone() => new Buff(Id, Effects.ToArray());
 
     /// <summary>
@@ -66,13 +79,15 @@ public class Buff : IBuff
     /// </summary>
     /// <param name="amount">The number of stacks to add.</param>
     public virtual void AddStacks(int amount) { }
+ 
     /// <summary>
     /// Removes stacks from this buff.
-    /// Default implementation does nothing and always returns true.
+    /// Default implementation does not track stacks and reports that the buff should be removed.
     /// </summary>
     /// <param name="amount">The number of stacks to remove.</param>
     /// <returns>True if the buff should be removed; otherwise, false.</returns>
     public virtual bool RemoveStacks(int amount) => true;
+    
     /// <summary>
     /// Applies this buff's effects to the specified stat.
     /// </summary>
@@ -88,27 +103,31 @@ public class Buff : IBuff
             }
         }
     }
+    
     /// <summary>
     /// Updates the buff's state.
     /// Default implementation does nothing.
     /// </summary>
     /// <param name="dt">The time delta since the last update.</param>
     public virtual void Update(float dt) { }
+    
     /// <summary>
     /// Draws the buff in the specified rectangle.
     /// Default implementation does nothing.
     /// </summary>
     /// <param name="rect">The rectangle to draw in.</param>
     public virtual void Draw(Rect rect) { }
+    
     /// <summary>
     /// Determines whether the buff is finished and should be removed.
     /// </summary>
     /// <returns>True if the buff is finished; otherwise, false.</returns>
     public virtual bool IsFinished() => false;
+    
     /// <summary>
-    /// Gets the textual descriptions of all effects for UI or debugging.
+    /// Adds textual descriptions of the current buff effects for UI or debugging.
     /// </summary>
-    /// <param name="result">A list to which effect texts will be added.</param>
+    /// <param name="result">A list to which effect descriptions will be appended.</param>
     public virtual void GetEffectTexts(ref List<string> result)
     {
         foreach (var effect in Effects)
@@ -117,6 +136,10 @@ public class Buff : IBuff
             result.Add(v.ToText());
         }
     }
+    
+    #endregion
+
+    #region Protected Methods
     
     /// <summary>
     /// Gets the current value of a buff effect. Can be overridden for time/stack-based buffs.
@@ -127,4 +150,6 @@ public class Buff : IBuff
     {
         return new (effect.Bonus, effect.Flat);
     }
+    
+    #endregion
 }

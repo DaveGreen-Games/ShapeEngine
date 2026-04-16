@@ -72,5 +72,5 @@ public abstract class CustomScreenTextureHandler
     /// <returns>
     /// A tuple containing the background <see cref="ColorRgba"/> and a <see cref="bool"/> indicating if the background should be cleared.
     /// </returns>
-    public virtual (ColorRgba color, bool clear) GetBackgroundClearColor() => (ColorRgba.Clear, true);
+    public virtual (ColorRgba color, bool clear) GetBackgroundClearColor() => (ColorRgba.Transparent, true);
 }

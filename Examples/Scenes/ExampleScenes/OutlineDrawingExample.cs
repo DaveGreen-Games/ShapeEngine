@@ -33,15 +33,26 @@ public class OutlineDrawingExample : ExampleScene
             this.title = title;
         }
 
-        protected override bool GetPressedState()
+        protected override bool GetButtonPressedState()
         {
-            return ShapeKeyboardButton.SPACE.GetInputState().Down;
+            return ShapeKeyboardButton.SPACE.GetInputState().Pressed;
         }
 
-        protected override bool GetMousePressedState()
+        protected override bool GetMouseButtonPressedState()
         {
-            return ShapeMouseButton.LEFT.GetInputState().Down;
+            return ShapeMouseButton.LEFT.GetInputState().Pressed;
         }
+        
+        protected override bool GetButtonReleasedState()
+        {
+            return ShapeKeyboardButton.SPACE.GetInputState().Released;
+        }
+
+        protected override bool GetMouseButtonReleasedState()
+        {
+            return ShapeMouseButton.LEFT.GetInputState().Released;
+        }
+        
 
         protected override bool GetDecreaseValuePressed()
         {
@@ -111,8 +122,8 @@ public class OutlineDrawingExample : ExampleScene
     private LineDrawingInfo lineInfo;
     private LineDrawingInfo lineInfoOutline;
 
-    private int curCircleSides = 36;
-    
+    // private int curCircleSides = 36;
+    private float curCircleSmoothness = 0.5f;
     private float curSideScalingFactor = 0.5f;
     private float curSideScalingOriginFactor = 0.5f;
     
@@ -162,10 +173,11 @@ public class OutlineDrawingExample : ExampleScene
         triangle = Triangle.Generate(center, size / 2, size);
         rect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
         quad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
-        var generatedPolygon = Polygon.Generate(center, 16, radius / 2, radius);
-        var generatedPolyline = Polygon.Generate(center, 16, radius / 2, radius)?.ToPolyline();
-        poly = generatedPolygon ?? []; 
-        polyline = generatedPolyline ?? [];
+        poly = new();
+        Polygon.Generate(center, 16, radius / 2, radius, poly);
+        polyline = poly.ToPolyline();
+        poly.Clear();
+        Polygon.Generate(center, 16, radius / 2, radius, poly);
 
         sideScalingFactorSlider = new("Scaling", 0.5f, 0f, 1f, true); // new(0.5f, "Scaling", font);
         sideScalingOriginFactorSlider = new("Origin", 0.5f, 0f, 1f, true);
@@ -175,7 +187,7 @@ public class OutlineDrawingExample : ExampleScene
         {
             Percentage = false
         };
-        circleSideSlider = new( "Sides", 18, 3, 120, true)
+        circleSideSlider = new("Smoothness", 0.5f, 0f, 1f, true)
         {
             Percentage = false
         };
@@ -191,7 +203,8 @@ public class OutlineDrawingExample : ExampleScene
         curGaps = (int)(gapsSlider.CurValue);
         curGapPerimeterPercentage = gapPerimeterPercentageSlider.CurValue;
 
-        curCircleSides = (int)circleSideSlider.CurValue;
+        // curCircleSides = (int)circleSideSlider.CurValue;
+        curCircleSmoothness = circleSideSlider.CurValue;
     }
     public override void Reset()
     {
@@ -210,8 +223,8 @@ public class OutlineDrawingExample : ExampleScene
         curGaps = 4;
         gapsSlider.SetCurValue(4);
         
-        curCircleSides = 18;
-        circleSideSlider.SetCurValue(18);
+        curCircleSmoothness = 0.5f;
+        circleSideSlider.SetCurValue(0.5f);
         
         curGapPerimeterPercentage = 0.5f;
         gapPerimeterPercentageSlider.SetCurValue(0.5f);
@@ -291,8 +304,8 @@ public class OutlineDrawingExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        lineInfo = lineInfo.ChangeColor(Colors.Highlight);
-        lineInfoOutline = lineInfoOutline.ChangeColor(Colors.Dark);
+        lineInfo = lineInfo.SetColor(Colors.Highlight);
+        lineInfoOutline = lineInfoOutline.SetColor(Colors.Dark);
         
         var curGappedOutlineInfo = new GappedOutlineDrawingInfo(curGaps, curStartOffset, curGapPerimeterPercentage);
 
@@ -313,14 +326,14 @@ public class OutlineDrawingExample : ExampleScene
         }
         else if (shapeIndex == 1) // Circle
         {
-            circle.DrawLines(lineInfoOutline, curCircleSides);
+            circle.DrawLines(lineInfoOutline, curCircleSmoothness);
             if (gappedMode)
             {
-                circle.DrawGappedOutline(lineInfo, curGappedOutlineInfo, 0f, curCircleSides);
+                circle.DrawGappedOutline(lineInfo, curGappedOutlineInfo, 0f, curCircleSmoothness);
             }
             else
             {
-                circle.DrawLinesScaled(lineInfo, 0f, curCircleSides, curSideScalingFactor, curSideScalingOriginFactor);
+                circle.DrawLinesScaled(0f, lineInfo, curCircleSmoothness, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 2) // Triangle
@@ -332,7 +345,7 @@ public class OutlineDrawingExample : ExampleScene
             }
             else
             {
-                triangle.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
+                triangle.DrawLinesScaled(lineInfo, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 3) // Rect
@@ -344,7 +357,7 @@ public class OutlineDrawingExample : ExampleScene
             }
             else
             {
-                rect.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
+                rect.DrawLinesScaled(lineInfo, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 4) // Quad
@@ -356,7 +369,7 @@ public class OutlineDrawingExample : ExampleScene
             }
             else
             {
-                quad.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
+                quad.DrawLinesScaled(lineInfo, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
         else if (shapeIndex == 5) // Polygon

@@ -16,8 +16,16 @@ public static class PointDrawing
     /// <param name="p">The position of the point.</param>
     /// <param name="radius">The radius of the circle to draw.</param>
     /// <param name="color">The color of the circle.</param>
-    /// <param name="segments">The number of segments to use for the circle. Default is 16.</param>
-    public static void Draw(this Vector2 p, float radius, ColorRgba color, int segments = 16) => CircleDrawing.DrawCircle(p, radius, color, segments);
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="Circle.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    public static void Draw(this Vector2 p, float radius, ColorRgba color, float smoothness = 0.25f)
+    {
+        var circle = new Circle(p, radius);
+        circle.Draw(color, smoothness);
+    }
 
     /// <summary>
     /// Draws each point in a collection as a circle.
@@ -25,12 +33,16 @@ public static class PointDrawing
     /// <param name="points">The collection of points to draw.</param>
     /// <param name="r">The radius of each circle.</param>
     /// <param name="color">The color of the circles.</param>
-    /// <param name="segments">The number of segments to use for each circle. Default is 16.</param>
-    public static void Draw(this Points points, float r, ColorRgba color, int segments = 16)
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="Circle.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    public static void Draw(this Points points, float r, ColorRgba color, float smoothness = 0.25f)
     {
         foreach (var p in points)
         {
-            p.Draw(r, color, segments);
+            p.Draw(r, color, smoothness);
         }
     }
 

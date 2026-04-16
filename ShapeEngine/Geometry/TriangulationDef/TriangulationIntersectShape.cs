@@ -15,306 +15,298 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 
 public partial class Triangulation
 {
+    
     /// <summary>
-    /// Computes intersection points between the triangles and all colliders in the specified <see cref="CollisionObject"/>.
+    /// Computes intersections between this triangulation and all colliders in the specified <see cref="CollisionObject"/>, writing the results into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting collider.</param>
     /// <param name="collisionObject">The collision object containing colliders to test for intersection.</param>
-    /// <returns>
-    /// A <see cref="Dictionary{Collider, IntersectionPoints}"/> mapping each collider to its intersection points,
-    /// or null if no colliders are present or no intersections are found.
-    /// </returns>
-    public Dictionary<Collider, Dictionary<int, IntersectionPoints>?>? Intersect(CollisionObject collisionObject)
+    /// <remarks>
+    /// If <paramref name="collisionObject"/> has no colliders, the method returns immediately without modifying <paramref name="result"/>. Only colliders that produce at least one valid triangle intersection are added.
+    /// </remarks>
+    public void Intersect(Dictionary<Collider, Dictionary<int, IntersectionPoints>> result, CollisionObject collisionObject)
     {
-        if (!collisionObject.HasColliders) return null;
+        if (!collisionObject.HasColliders) return;
+        result.Clear();
 
-        Dictionary<Collider, Dictionary<int, IntersectionPoints>?>? intersections = null;
+        var buffer = new Dictionary<int, IntersectionPoints>();
         foreach (var collider in collisionObject.Colliders)
         {
-            var result = Intersect(collider);
-            if(result == null) continue;
-            intersections ??= new();
-            intersections.Add(collider, result);
+            Intersect(buffer, collider);
+            if(buffer.Count <= 0) continue;
+            result.Add(collider, new Dictionary<int, IntersectionPoints>(buffer));
         }
-        return intersections;
     }
+  
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified collider.
+    /// Computes intersections between the triangles in this triangulation and the specified <paramref name="collider"/>, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="collider">The collider to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
-    /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? Intersect(Collider collider)
+    /// <remarks>If <paramref name="collider"/> is not enabled, the method returns immediately without modifying <paramref name="result"/>. Only triangles with valid intersections are included.</remarks>
+    public void Intersect(Dictionary<int, IntersectionPoints> result, Collider collider)
     {
-        if (!collider.Enabled) return null;
-        Dictionary<int, IntersectionPoints>? result = null;
+        if (!collider.Enabled) return;
+        
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.Intersect(collider);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified line.
+    /// Computes intersections between the triangles in this triangulation and the specified line, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The line to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Line shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Line shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified ray.
+    /// Computes intersections between the triangles in this triangulation and the specified ray, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The ray to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Ray shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Ray shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified segment.
+    /// Computes intersections between the triangles in this triangulation and the specified segment, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The segment to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Segment shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Segment shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified circle.
+    /// Computes intersections between the triangles in this triangulation and the specified circle, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The circle to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Circle shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Circle shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified triangle.
+    /// Computes intersections between the triangles in this triangulation and the specified triangle, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The triangle to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Triangle shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Triangle shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified rectangle.
+    /// Computes intersections between the triangles in this triangulation and the specified rectangle, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The rectangle to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Rect shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Rect shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified quad.
+    /// Computes intersections between the triangles in this triangulation and the specified quad, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The quad to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Quad shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Quad shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified polygon.
+    /// Computes intersections between the triangles in this triangulation and the specified polygon, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The polygon to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
-    /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Polygon shape)
+    /// <remarks>If <paramref name="shape"/> contains fewer than three points, the method returns immediately without modifying <paramref name="result"/>. Otherwise, only triangles with valid intersections are included.</remarks>
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Polygon shape)
     {
-        if (shape.Count < 3) return null;
-        Dictionary<int, IntersectionPoints>? result = null;
+        if (shape.Count < 3) return;
+        
+        result.Clear();
+        
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified polyline.
+    /// Computes intersections between the triangles in this triangulation and the specified polyline, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The polyline to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
-    /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Polyline shape)
+    /// <remarks>If <paramref name="shape"/> contains fewer than two points, the method returns immediately without modifying <paramref name="result"/>. Otherwise, only triangles with valid intersections are included.</remarks>
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Polyline shape)
     {
-        if (shape.Count < 2) return null;
-        Dictionary<int, IntersectionPoints>? result = null;
+        if (shape.Count < 2) return;
+        
+        result.Clear();
+        
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified segments.
+    /// Computes intersections between the triangles in this triangulation and the specified segments collection, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be cleared and populated with one entry per intersecting triangle index.</param>
     /// <param name="shape">The segments to check for intersections.</param>
-    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(Segments shape)
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, Segments shape)
     {
-        Dictionary<int, IntersectionPoints>? result = null;
+        result.Clear();
+        
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             var intersection = tri.IntersectShape(shape);
             if (intersection != null && intersection.Valid)
             {
-                result ??= new();
                 result.Add(i, intersection);
             }
         }
-
-        return result;
     }
 
     /// <summary>
-    /// Checks for intersections between the triangles in this triangulation and the specified shape implementing <see cref="IShape"/>.
+    /// Computes intersections between the triangles in this triangulation and the specified <see cref="IShape"/>, writing them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination dictionary that will be populated by the shape-specific intersection routine.</param>
     /// <param name="shape">The shape to check for intersections.</param>
-    /// <returns>
-    /// A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>.
-    /// Returns <c>null</c> if no intersections are found or the shape type is not supported.
-    /// </returns>
-    public Dictionary<int, IntersectionPoints>? IntersectShape(IShape shape)
+    /// <remarks>
+    /// This method dispatches to the corresponding <c>IntersectShape</c> overload based on <paramref name="shape"/>'s runtime shape type. If the shape type is not handled by the switch, <paramref name="result"/> is left unchanged by this method.
+    /// </remarks>
+    public void IntersectShape(Dictionary<int, IntersectionPoints> result, IShape shape)
     {
-        return shape.GetShapeType() switch
+        switch (shape.GetShapeType())
         {
-            ShapeType.Circle => IntersectShape(shape.GetCircleShape()),
-            ShapeType.Segment => IntersectShape(shape.GetSegmentShape()),
-            ShapeType.Ray => IntersectShape(shape.GetRayShape()),
-            ShapeType.Line => IntersectShape(shape.GetLineShape()),
-            ShapeType.Triangle => IntersectShape(shape.GetTriangleShape()),
-            ShapeType.Rect => IntersectShape(shape.GetRectShape()),
-            ShapeType.Quad => IntersectShape(shape.GetQuadShape()),
-            ShapeType.Poly => IntersectShape(shape.GetPolygonShape()),
-            ShapeType.PolyLine => IntersectShape(shape.GetPolylineShape()),
-            _ => null
-        };
+            case ShapeType.Circle:
+                IntersectShape(result, shape.GetCircleShape());
+                break;
+            case ShapeType.Segment:
+                IntersectShape(result, shape.GetSegmentShape());
+                break;
+            case ShapeType.Ray:
+                IntersectShape(result, shape.GetRayShape());
+                break;
+            case ShapeType.Line:
+                IntersectShape(result, shape.GetLineShape());
+                break;
+            case ShapeType.Triangle:
+                IntersectShape(result, shape.GetTriangleShape());
+                break;
+            case ShapeType.Rect:
+                IntersectShape(result, shape.GetRectShape());
+                break;
+            case ShapeType.Quad:
+                IntersectShape(result, shape.GetQuadShape());
+                break;
+            case ShapeType.Poly:
+                IntersectShape(result, shape.GetPolygonShape());
+                break;
+            case ShapeType.PolyLine:
+                IntersectShape(result, shape.GetPolylineShape());
+                break;
+        }
     }
 
 }

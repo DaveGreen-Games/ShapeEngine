@@ -23,7 +23,8 @@ internal class PathfinderFlag(Vector2 pos, float r)
     public void Draw(ColorRgba color)
     {
         circle.Draw(color.ChangeBrightness(-0.05f));
-        CircleDrawing.DrawCircleLines(circle.Center, circle.Radius * 1.5f, circle.Radius * 0.15f, Colors.PcText.ColorRgba, 4f);
+        var outerCircle = circle.SetRadius(circle.Radius * 1.5f);
+        outerCircle.DrawLines(circle.Radius * 0.15f, Colors.PcText.ColorRgba, 0.3f);
     }
 }
 

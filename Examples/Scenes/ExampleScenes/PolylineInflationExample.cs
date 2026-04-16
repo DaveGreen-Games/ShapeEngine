@@ -10,6 +10,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.ShapeClipper;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -136,10 +137,15 @@ namespace Examples.Scenes.ExampleScenes
                 float disSq = (mousePos - p).LengthSquared();
                 if (pickedVertex == -1 && disSq < (vertexRadius * vertexRadius) * 2f)
                 {
-                    CircleDrawing.DrawCircle(p, vertexRadius * 2f, Colors.Highlight);
+                    var circle = new Circle(p, vertexRadius * 2f);
+                    circle.Draw(Colors.Highlight);
                     pickedVertex = i;
                 }
-                else CircleDrawing.DrawCircle(p, vertexRadius, Colors.Medium);
+                else
+                {
+                    var circle = new Circle(p, vertexRadius);
+                    circle.Draw(Colors.Medium);
+                }
                 if (drawClosest)
                 {
                     disSq = (closest.Point - p).LengthSquared();
@@ -218,13 +224,19 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
 
-            if (drawClosest) CircleDrawing.DrawCircle(closest.Point, vertexRadius, Colors.Warm);
-
-            Polygons? inflatedPolygons = null;
-            if (lerpOffsetDelta > 10f)
+            if (drawClosest)
             {
-                inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
-                foreach (var polygon in inflatedPolygons)
+                var circle = new Circle(closest.Point, vertexRadius);
+                circle.Draw(Colors.Warm);
+            }
+
+            Polygons? inflationResult = null;
+            if (lerpOffsetDelta > 10f && polyline.Count > 1)
+            {
+                inflationResult = new();
+                polyline.InflatePolyline(inflationResult, lerpOffsetDelta, 2f, false, ShapeClipperEndType.Round);
+                // inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
+                foreach (var polygon in inflationResult)
                 {
                     polygon.DrawLines(relativeSize, Colors.Special);
                 }
@@ -234,9 +246,9 @@ namespace Examples.Scenes.ExampleScenes
             if (collisionSegmentValid)
             {
                 var intersectionHappend = false;
-                if (inflatedPolygons != null)
+                if (inflationResult != null)
                 {
-                    foreach (var polygon in inflatedPolygons)
+                    foreach (var polygon in inflationResult)
                     {
                         var intersectionPoints = collisionSegment.IntersectShape(polygon);
                         if (intersectionPoints != null && intersectionPoints.Count > 0)

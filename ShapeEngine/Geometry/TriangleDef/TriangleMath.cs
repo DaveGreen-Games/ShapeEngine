@@ -358,6 +358,46 @@ public readonly partial struct Triangle
     #region Math
 
     /// <summary>
+    /// Gets the length of the shortest side of the triangle.
+    /// </summary>
+    /// <returns>The length of the shortest side.</returns>
+    public float GetMinSideLength()
+    {
+        var sideALengthSquared = SideA.LengthSquared();
+        var sideBLengthSquared = SideB.LengthSquared();
+        var sideCLengthSquared = SideC.LengthSquared();
+        
+        if(sideALengthSquared < sideBLengthSquared && sideALengthSquared < sideCLengthSquared) return MathF.Sqrt(sideALengthSquared);
+        if(sideBLengthSquared < sideALengthSquared && sideBLengthSquared < sideCLengthSquared) return MathF.Sqrt(sideBLengthSquared);
+        return MathF.Sqrt(sideCLengthSquared);
+    }
+
+    /// <summary>
+    /// Gets the length of the longest side of the triangle.
+    /// </summary>
+    /// <returns>The length of the longest side.</returns>
+    public float GetMaxSideLength()
+    {
+        var sideALengthSquared = SideA.LengthSquared();
+        var sideBLengthSquared = SideB.LengthSquared();
+        var sideCLengthSquared = SideC.LengthSquared();
+        
+        if(sideALengthSquared > sideBLengthSquared && sideALengthSquared > sideCLengthSquared) return MathF.Sqrt(sideALengthSquared);
+        if(sideBLengthSquared > sideALengthSquared && sideBLengthSquared > sideCLengthSquared) return MathF.Sqrt(sideBLengthSquared);
+        return MathF.Sqrt(sideCLengthSquared);
+    }
+
+    /// <summary>
+    /// Checks if the triangle's vertices are collinear (lie on a straight line).
+    /// </summary>
+    /// <param name="epsilon">Tolerance for float precision when determining collinearity.</param>
+    /// <returns>True if the area is less than or equal to epsilon, indicating collinearity; otherwise, false.</returns>
+    public bool IsCollinear(float epsilon = 1e-6f)
+    {
+        return GetArea() <= epsilon; 
+    }
+    
+    /// <summary>
     /// Determines whether the triangle is geometrically valid.
     /// </summary>
     /// <returns>True if the triangle has a positive area; otherwise, false.</returns>
@@ -379,6 +419,22 @@ public readonly partial struct Triangle
     /// It is always located inside the triangle, regardless of the triangle's shape.
     /// </remarks>
     public Vector2 GetCentroid() => (A + B + C) / 3;
+
+    /// <summary>
+    /// Calculates and returns the incenter of the triangle.
+    /// </summary>
+    /// <returns>The incenter point, which is the intersection of the angle bisectors of the triangle.</returns>
+    public Vector2 GetIncenter()
+    {
+        var lenAB = SideA.Length();
+        var lenBC = SideB.Length();
+        var lenCA = SideC.Length();
+        var perimeter = lenAB + lenBC + lenCA;
+        // Calculate Incenter (intersection of angle bisectors)
+        // Incenter = (a*A + b*B + c*C) / perimeter
+        Vector2 incenter = (A * lenBC + B * lenCA + C * lenAB) / perimeter;
+        return incenter;
+    }
 
     /// <summary>
     /// Gets the points that form the projected shape when this triangle is extruded along a vector.
@@ -403,29 +459,128 @@ public readonly partial struct Triangle
         };
         return points;
     }
+    
+    /// <summary>
+    /// Writes this triangle's vertices and their projected counterparts into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the original and projected triangle points.</param>
+    /// <param name="v">The vector along which to project the triangle.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Points are written in this order: <see cref="A"/>, <see cref="B"/>, <see cref="C"/>, <c>A + v</c>, <c>B + v</c>, <c>C + v</c>.
+    /// </remarks>
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(6);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(A + v);
+        result.Add(B + v);
+        result.Add(C + v);
+        
+        return true;
+    }
 
     /// <summary>
     /// Projects the triangle along a vector to create a convex hull polygon.
     /// </summary>
     /// <param name="v">The vector along which to project the triangle.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>A convex polygon representing the projected shape, or null if the vector has zero length.</returns>
     /// <remarks>
     /// This method creates a shadow-like projection by extruding the triangle along the vector
     /// and computing the convex hull of all resulting points.
     /// </remarks>
-    public Polygon? ProjectShape(Vector2 v)
+    public Polygon? ProjectShape(Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        
+        Points buffer;
+
+        if (useBuffer)
         {
-            A,
-            B,
-            C,
-            A + v,
-            B + v,
-            C + v
-        };
-        return Polygon.FindConvexHull(points);
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                A + v,
+                B + v,
+                C + v
+            };
+        }
+        
+        var result = new Polygon(6);
+        buffer.FindConvexHull(result);
+        return result;
+    }
+    
+    /// <summary>
+    /// Projects this triangle along the given vector and writes the convex hull of the combined point set into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that receives the convex hull of the original and projected triangle vertices.</param>
+    /// <param name="v">The vector along which to project the triangle.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method constructs a temporary six-point set containing the triangle vertices and those same vertices translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
+    /// </remarks>
+    public bool ProjectShape(Polygon result, Vector2 v, bool useBuffer = false)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        Points buffer;
+
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                A + v,
+                B + v,
+                C + v
+            };
+        }
+        
+        buffer.FindConvexHull(result);
+        return true;
     }
 
     /// <summary>
@@ -476,6 +631,12 @@ public readonly partial struct Triangle
     public float GetPerimeter() => SideA.Length() + SideB.Length() + SideC.Length();
     
     /// <summary>
+    /// Calculates the semi-perimeter (half of the triangle's perimeter).
+    /// </summary>
+    /// <returns>The semi-perimeter as a float: (sideA + sideB + sideC) / 2.</returns>
+    public float GetSemiPerimeter() => GetPerimeter() * 0.5f;
+    
+    /// <summary>
     /// Calculates the squared perimeter of the triangle.
     /// </summary>
     /// <returns>The sum of the squared lengths of all three sides of the triangle.</returns>
@@ -495,6 +656,55 @@ public readonly partial struct Triangle
     /// </remarks>
     public float GetArea() => MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
 
+    /// <summary>
+    /// Calculates the triangle area using Heron's formula (based on side lengths).
+    /// </summary>
+    /// <returns>
+    /// The area of the triangle in square units. Returns 0 for degenerate triangles (invalid or zero-area).
+    /// </returns>
+    /// <remarks>
+    /// Computes side lengths from the triangle's edges and applies:
+    /// area = sqrt(s * (s - a) * (s - b) * (s - c)),
+    /// where s is the semi-perimeter. For numerical stability in many cases, prefer GetArea().
+    /// </remarks>
+    public float GetAreaHeron()
+    {
+        float a = SideA.Length();
+        float b = SideB.Length();
+        float c = SideC.Length();
+        // Calculate semi-perimeter
+        float s = (a + b + c) * 0.5f;
+        return MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
+    }
+    
+    /// <summary>
+    /// Calculates the inradius (radius of the inscribed circle) of the triangle.
+    /// </summary>
+    /// <returns>
+    /// The inradius as a positive float; returns 0 if the triangle is degenerate or has zero area.
+    /// </returns>
+    /// <remarks>
+    /// Computes side lengths, uses Heron's formula to obtain the area, and applies the
+    /// inradius formula: r = area / s, where s is the semi-perimeter.
+    /// </remarks>
+    public float GetInradius()
+    {
+        float a = SideA.Length();
+        float b = SideB.Length();
+        float c = SideC.Length();
+        
+        // Calculate semi-perimeter
+        float s = (a + b + c) * 0.5f;
+        
+        // Calculate area using Heron's formula
+        float area = MathF.Sqrt(s * (s - a) * (s - b) * (s - c));
+    
+        if (area <= 0f) return 0f;
+        
+        // Inradius formula: r = area / s
+        return area / s;
+    }
+    
     /// <summary>
     /// Determines whether the triangle is narrow (has very small angles) based on cross product analysis.
     /// </summary>
@@ -532,6 +742,106 @@ public readonly partial struct Triangle
         prevToCur = (prev - cur).Normalize();
         cross = nextToCur.Cross(prevToCur);
         return MathF.Abs(cross) < narrowValue;
+    }
+    #endregion
+    
+    #region Isoscele Triangle Math (Static)
+    public static float GetIsoscelesSideLength(float baseLength, Vector2 dir1, Vector2 dir2)
+    {
+        float dot = Vector2.Dot(dir1, dir2);
+        // Identity: 2 * sin(theta/2) = sqrt(2 * (1 - cos(theta)))
+        float denom = MathF.Sqrt(2f * (1f - dot)); 
+            
+        // Avoid division by zero
+        if (denom < 0.0001f) return 0;
+            
+        return baseLength / denom;
+    }
+        
+    public static float GetIsoscelesBaseLength(float sideLength, Vector2 dir1, Vector2 dir2)
+    {
+        float dot = Vector2.Dot(dir1, dir2);
+        // Identity: 2 * sin(theta/2) = sqrt(2 * (1 - cos(theta)))
+        float denom = MathF.Sqrt(2f * (1f - dot)); 
+            
+        return sideLength * denom;
+    }
+    #endregion
+    
+    #region Right Triangle Math (Static)
+
+    /// <summary>
+    /// Calculates the length of the hypotenuse given two legs using the Pythagorean theorem.
+    /// </summary>
+    public static float RightTriangleGetHypotenuse(float legA, float legB) => MathF.Sqrt(legA * legA + legB * legB);
+
+    /// <summary>
+    /// Calculates the length of a leg given the hypotenuse and the other leg.
+    /// </summary>
+    /// <returns>The length of the leg, or 0 if the hypotenuse is shorter than the provided leg.</returns>
+    public static float RightTriangleGetLeg(float hypotenuse, float otherLeg)
+    {
+        var val = hypotenuse * hypotenuse - otherLeg * otherLeg;
+        return val <= 0f ? 0f : MathF.Sqrt(val);
+    }
+
+    /// <summary>
+    /// Calculates the opposite side length given an angle (radians) and the hypotenuse (Sin).
+    /// </summary>
+    public static float RightTriangleGetOpposite(float angleRad, float hypotenuse) => MathF.Sin(angleRad) * hypotenuse;
+
+    /// <summary>
+    /// Calculates the opposite side length given an angle (radians) and the adjacent side (Tan).
+    /// </summary>
+    public static float RightTriangleGetOppositeFromAdjacent(float angleRad, float adjacent) => MathF.Tan(angleRad) * adjacent;
+
+    /// <summary>
+    /// Calculates the adjacent side length given an angle (radians) and the hypotenuse (Cos).
+    /// </summary>
+    public static float RightTriangleGetAdjacent(float angleRad, float hypotenuse) => MathF.Cos(angleRad) * hypotenuse;
+
+    /// <summary>
+    /// Calculates the adjacent side length given an angle (radians) and the opposite side (Cot).
+    /// </summary>
+    public static float RightTriangleGetAdjacentFromOpposite(float angleRad, float opposite) => opposite / MathF.Tan(angleRad);
+
+    /// <summary>
+    /// Calculates the hypotenuse length given an angle (radians) and the opposite side (Csc).
+    /// </summary>
+    public static float RightTriangleGetHypotenuseFromOpposite(float angleRad, float opposite) => opposite / MathF.Sin(angleRad);
+
+    /// <summary>
+    /// Calculates the hypotenuse length given an angle (radians) and the adjacent side (Sec).
+    /// </summary>
+    public static float RightTriangleGetHypotenuseFromAdjacent(float angleRad, float adjacent) => adjacent / MathF.Cos(angleRad);
+
+    /// <summary>
+    /// Calculates the angle (radians) given the opposite and adjacent sides (ArcTan).
+    /// </summary>
+    public static float RightTriangleGetAngle(float opposite, float adjacent) => MathF.Atan(opposite / adjacent);
+
+    /// <summary>
+    /// Calculates the angle (radians) given the opposite side and the hypotenuse (ArcSin).
+    /// </summary>
+    public static float RightTriangleGetAngleFromOpposite(float opposite, float hypotenuse)
+    {
+        if (hypotenuse <= 0f) return 0f;
+        var val = opposite / hypotenuse;
+        if (val < -1f) val = -1f;
+        else if (val > 1f) val = 1f;
+        return MathF.Asin(val);
+    }
+
+    /// <summary>
+    /// Calculates the angle (radians) given the adjacent side and the hypotenuse (ArcCos).
+    /// </summary>
+    public static float RightTriangleGetAngleFromAdjacent(float adjacent, float hypotenuse)
+    {
+        if (hypotenuse <= 0f) return 0f;
+        var val = adjacent / hypotenuse;
+        if (val < -1f) val = -1f;
+        else if (val > 1f) val = 1f;
+        return MathF.Acos(val);
     }
 
     #endregion

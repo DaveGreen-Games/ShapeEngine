@@ -3,7 +3,6 @@ using ShapeEngine.Core;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
-using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
@@ -569,7 +568,45 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     /// Returns a hash code for the current <see cref="IntersectionPoints"/> instance.
     /// </summary>
     /// <returns>A hash code for the current object.</returns>
-    public override int GetHashCode() { return Game.GetHashCode(this); }
+    public override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for the current intersection point collection by hashing points in order.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point and normal coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        ulong hash = hashQuantizer.StartHash(Count);
+        for (int i = 0; i < Count; i++)
+        {
+            hash = hashQuantizer.Add(hash, this[i].Point);
+            hash = hashQuantizer.Add(hash, this[i].Normal);
+        }
+
+        return hash;
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of the current intersection point collection hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point and normal coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of the current intersection point collection hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point and normal coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
     
     /// <summary>
     /// Determines whether the specified <see cref="IntersectionPoints"/> is equal to the current <see cref="IntersectionPoints"/>.
@@ -578,11 +615,24 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     /// <returns><c>true</c> if the specified <see cref="IntersectionPoints"/> is equal to the current instance; otherwise, <c>false</c>.</returns>
     public bool Equals(IntersectionPoints? other)
     {
+        return Equals(other, DecimalPrecision.DefaultDecimalPlaces);
+    }
+
+    /// <summary>
+    /// Determines whether the specified <see cref="IntersectionPoints"/> is equal to the current collection using quantized comparison.
+    /// </summary>
+    /// <param name="other">The <see cref="IntersectionPoints"/> to compare with the current instance.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize point and normal coordinates before comparison.</param>
+    /// <returns><c>true</c> if the specified <see cref="IntersectionPoints"/> is equal to the current instance after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(IntersectionPoints? other, int decimalPlaces)
+    {
         if (other == null) return false;
         if (Count != other.Count) return false;
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
         for (var i = 0; i < Count; i++)
         {
-            if (this[i].Equals(other[i])) return false;
+            if (!this[i].Equals(other[i], decimalPlaces)) return false;
         }
         return true;
     }

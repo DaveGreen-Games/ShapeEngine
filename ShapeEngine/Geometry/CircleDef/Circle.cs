@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
@@ -6,11 +7,13 @@ using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
+
 /// <summary>
 /// Represents a 2D circle defined by a center point and a radius.
 /// </summary>
@@ -19,6 +22,13 @@ namespace ShapeEngine.Geometry.CircleDef;
 /// </remarks>
 public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+    private static Segments segmentsBuffer = new();
+    private static Polygon? circleSectorOutlineTriangulationPolyCache = null;
+    #endregion
+    
     #region Members
     /// <summary>
     /// The center position of the circle in 2D space.
@@ -186,17 +196,71 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// <returns><c>true</c> if the specified circle is equal to the current circle; otherwise, <c>false</c>.</returns>
     public bool Equals(Circle other)
     {
-        return Center == other.Center && ShapeMath.EqualsF(Radius, other.Radius);
+        return Equals(other, DecimalPrecision.DefaultDecimalPlaces);
     }
+
+    /// <summary>
+    /// Determines whether the specified <see cref="Circle"/> is equal to the current circle using quantized comparison.
+    /// </summary>
+    /// <param name="other">The circle to compare with the current circle.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before comparison.</param>
+    /// <returns><c>true</c> if the circles are equal after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(Circle other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(Center, other.Center) &&
+               quantizer.QuantizedEquals(Radius, other.Radius);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for the current circle.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(Center.X, Center.Y, Radius);
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of the current circle hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of the current circle hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
     
     /// <summary>
     /// Returns the hash code for the current circle.
     /// </summary>
-    /// <returns>A hash code for the current circle.</returns>
-    public readonly override int GetHashCode() => HashCode.Combine(Center, Radius);
+    /// <returns>A 32-bit hash code derived from the stable 64-bit circle hash key.</returns>
+    public readonly override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
 
+    /// <summary>
+    /// Gets the closed shape type represented by this shape.
+    /// </summary>
+    /// <returns><see cref="ClosedShapeType.Circle"/>.</returns>
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Circle;
 
+    /// <summary>
+    /// Gets the general shape type represented by this shape.
+    /// </summary>
+    /// <returns><see cref="ShapeType.Circle"/>.</returns>
     public ShapeType GetShapeType() => ShapeType.Circle;
 
     /// <summary>
@@ -231,6 +295,8 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         if (obj is Circle c) return Equals(c);
         return false;
     }
+
+
     #endregion
     
     #region Points & Vertext
@@ -245,6 +311,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     {
         return Center + new Vector2(Radius, 0f).Rotate(angleRad + angleStepRad * index);
     }
+    
     /// <summary>
     /// Gets a point on the circle at a specified angle and scale factor.
     /// </summary>
@@ -252,6 +319,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
     /// <param name="f">The scale factor for the radius.(<c>0</c> - <c>1</c>)</param>
     /// <returns>The point position as a <see cref="Vector2"/>.</returns>
     public Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
+    
     /// <summary>
     /// Gets a random point inside the circle.
     /// </summary>
@@ -262,37 +330,59 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var randDir = ShapeVec.VecFromAngleRad(randAngle);
         return Center + randDir * Rng.Instance.RandF(0, Radius);
     }
+  
     /// <summary>
-    /// Gets a collection of random points inside the circle.
+    /// Writes randomly generated points inside the circle into <paramref name="result"/>.
     /// </summary>
     /// <param name="amount">The number of random points to generate.</param>
-    /// <returns>A <see cref="Points"/> collection containing the random points.</returns>
-    public Points GetRandomPoints(int amount)
+    /// <param name="result">The destination collection that will be cleared and populated with the generated points.</param>
+    /// <remarks>
+    /// If <paramref name="amount"/> is less than or equal to 0, the method returns immediately without modifying <paramref name="result"/>.
+    /// </remarks>
+    public void GetRandomPoints(int amount, Points result)
     {
-        var points = new Points();
+        if(amount <= 0) return;
+        result.Clear();
+        result.EnsureCapacity(amount);
         for (int i = 0; i < amount; i++)
         {
-            points.Add(GetRandomPoint());
+            result.Add(GetRandomPoint());
         }
-        return points;
     }
-    /// <summary>
-    /// Gets a random vertex on the circle's edge.
-    /// </summary>
-    /// <returns>A random vertex as a <see cref="Vector2"/>.</returns>
-    public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(GetVertices()); }
 
     /// <summary>
-    /// Gets a random edge segment of the circle.
+    /// Gets a random vertex from a polygonal approximation of the circle.
     /// </summary>
-    /// <returns>A random edge as a <see cref="Segment"/>.</returns>
-    public Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges()); }
+    /// <param name="count">The number of vertices to generate for the approximation before choosing one at random.</param>
+    /// <returns>A randomly selected vertex, or <see cref="Vector2.Zero"/> if no vertices could be generated.</returns>
+    public Vector2 GetRandomVertex(int count = 16)
+    {
+        GetVertices(pointsBuffer, count);
+        if(pointsBuffer.Count <= 0) return Vector2.Zero;
+        return Rng.Instance.RandCollection(pointsBuffer);
+    }
+
+    /// <summary>
+    /// Gets a random edge segment from a polygonal approximation of the circle.
+    /// </summary>
+    /// <param name="count">The number of vertices to generate for the approximation before choosing an edge at random.</param>
+    /// <returns>A randomly selected edge segment, or the default <see cref="Segment"/> if no edges could be generated.</returns>
+    public Segment GetRandomEdge(int count = 16)
+    {
+        GetEdges(segmentsBuffer, count);
+        if(segmentsBuffer.Count <= 0) return new Segment();
+        return Rng.Instance.RandCollection(segmentsBuffer);
+    }
 
     /// <summary>
     /// Gets a random point on the circle's edge.
     /// </summary>
     /// <returns>A random point on the edge as a <see cref="Vector2"/>.</returns>
-    public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+    public Vector2 GetRandomPointOnEdge()
+    {
+        return GetRandomEdge().GetRandomPoint();
+    }
+    
     /// <summary>
     /// Gets a collection of random points on the circle's edge.
     /// </summary>
@@ -307,43 +397,63 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         }
         return points;
     }
+    
+    /// <summary>
+    /// Writes randomly generated points on the circle's polygonal edge approximation into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated edge points.</param>
+    /// <param name="amount">The number of random edge points to generate.</param>
+    public void GetRandomPointsOnEdge(Points result, int amount)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        for (int i = 0; i < amount; i++)
+        {
+            result.Add(GetRandomPointOnEdge());
+        }
+    }
     #endregion
 
     #region Shapes
     /// <summary>
-    /// Gets the edges of the circle as a collection of segments.
+    /// Writes a polygonal edge approximation of the circle into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated edge segments.</param>
     /// <param name="pointCount">The number of points to use for generating the edges. Default is 16.</param>
-    /// <returns>A <see cref="Segments"/> collection representing the edges of the circle.</returns>
-    public Segments GetEdges(int pointCount = 16)
+    /// <remarks>
+    /// The generated segments connect consecutive vertices around the circle, including the closing edge from the last vertex back to the first.
+    /// </remarks>
+    public void GetEdges(Segments result, int pointCount = 16)
     {
         float angleStep = (MathF.PI * 2f) / pointCount;
-        Segments segments = new();
+        result.Clear();
+        result.EnsureCapacity(pointCount);
         for (int i = 0; i < pointCount; i++)
         {
             var start = Center + new Vector2(Radius, 0f).Rotate(-angleStep * i);
             var end = Center + new Vector2(Radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
 
-            segments.Add(new Segment(start, end));
+            result.Add(new Segment(start, end));
         }
-        return segments;
     }
+    
     /// <summary>
-    /// Gets the vertices of the circle as a collection of points.
+    /// Writes a polygonal vertex approximation of the circle into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated vertices.</param>
     /// <param name="count">The number of vertices to generate. Default is 16.</param>
-    /// <returns>A <see cref="Points"/> collection containing the vertices of the circle.</returns>
-    public Points GetVertices(int count = 16)
+    public void GetVertices(Points result, int count = 16)
     {
         float angleStep = (MathF.PI * 2f) / count;
-        Points points = new();
+        result.Clear();
+        result.EnsureCapacity(count);
         for (int i = 0; i < count; i++)
         {
             Vector2 p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
-            points.Add(p);
+            result.Add(p);
         }
-        return points;
     }
+    
     /// <summary>
     /// Converts the circle into a polygon representation.
     /// </summary>
@@ -360,17 +470,19 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         }
         return poly;
     }
+    
     /// <summary>
     /// Converts the circle into a polygon representation and stores the result in the provided <see cref="Polygon"/>.
     /// </summary>
     /// <param name="result">A reference to the <see cref="Polygon"/> to store the result.</param>
     /// <param name="pointCount">The number of points to use for the polygon. Default is 16.</param>
     /// <returns><c>true</c> if the conversion was successful; otherwise, <c>false</c>.</returns>
-    public bool ToPolygon(ref Polygon result, int pointCount = 16)
+    public bool ToPolygon(Polygon result, int pointCount = 16)
     {
         if (Radius <= 0f) return false;
         
-        if (result.Count > 0) result.Clear();
+        result.Clear();
+        result.EnsureCapacity(pointCount);
         float angleStep = (MathF.PI * 2f) / pointCount;
         
         for (var i = 0; i < pointCount; i++)
@@ -381,6 +493,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
 
         return true;
     }
+    
     /// <summary>
     /// Converts the circle into a polyline representation.
     /// </summary>
@@ -397,16 +510,53 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         }
         return polyLine;
     }
+  
     /// <summary>
-    /// Triangulates the circle into a set of triangles.
+    /// Converts the circle into a polyline representation and stores the result in the provided <see cref="Polyline"/>.
     /// </summary>
-    /// <returns>A <see cref="Triangulation"/> representing the triangulated circle.</returns>
-    public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
+    /// <param name="result">The destination polyline that will be cleared and populated with the generated points.</param>
+    /// <param name="pointCount">The number of points to use for the polyline. Default is 16.</param>
+    /// <returns><c>true</c> after the polyline points have been written to <paramref name="result"/>.</returns>
+    public bool ToPolyline(Polyline result, int pointCount = 16)
+    {
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        result.Clear();
+        result.EnsureCapacity(pointCount);
+        for (int i = 0; i < pointCount; i++)
+        {
+            Vector2 p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+            result.Add(p);
+        }
+        return true;
+    }
+    
+    /// <summary>
+    /// Triangulates the circle into a fan of triangles around the center.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
+    /// <param name="pointCount">The number of outer points used to approximate the circle. Default is 16.</param>
+    public void Triangulate(Triangulation result, int pointCount = 16)
+    {
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        result.Clear();
+        var cur = Center + new Vector2(Radius, 0f);
+        
+        for (int i = 0; i < pointCount; i++)
+        {
+            // Vector2 p1 = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+            Vector2 next = Center + new Vector2(Radius, 0f).Rotate(angleStep * (i + 1));
+            var t = new Triangle(Center, next, cur);
+            result.Add(t);
+            cur = next;
+        }
+    }
+    
     /// <summary>
     /// Gets the bounding box of the circle.
     /// </summary>
     /// <returns>A <see cref="Rect"/> representing the bounding box of the circle.</returns>
     public Rect GetBoundingBox() { return new Rect(Center, new Size(Radius, Radius) * 2f, new(0.5f)); }
+    
     /// <summary>
     /// Combines the current circle with another circle.
     /// </summary>
@@ -439,6 +589,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var left = Center + new Vector2(-Radius, 0);
         return (top, right, bottom, left);
     }
+    
     /// <summary>
     /// Gets the top, right, bottom, and left points of the circle as a list.
     /// </summary>
@@ -451,6 +602,25 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var left = Center + new Vector2(-Radius, 0);
         return new() { top, right, bottom, left };
     }
+    
+    /// <summary>
+    /// Gets the top, right, bottom, and left points of the circle and stores them in the provided list.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the top, right, bottom, and left points.</param>
+    public void GetCornersList(List<Vector2> result)
+    {
+        var top = Center + new Vector2(0, -Radius);
+        var right = Center + new Vector2(Radius, 0);
+        var bottom = Center + new Vector2(0, Radius);
+        var left = Center + new Vector2(-Radius, 0);
+        result.Clear();
+        result.EnsureCapacity(4);
+        result.Add(top);
+        result.Add(right);
+        result.Add(bottom);
+        result.Add(left);
+    }
+    
     /// <summary>
     /// Gets the top-left, top-right, bottom-right,
     /// and bottom-left corners of the circle's bounding box.
@@ -465,6 +635,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var bl = Center + new Vector2(-Radius, Radius);
         return (tl, tr, br, bl);
     }
+    
     /// <summary>
     /// Gets the top-left, top-right, bottom-right,
     /// and bottom-left corners of the circle's bounding box as a list.
@@ -478,6 +649,26 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
         var br = Center + new Vector2(Radius, Radius);
         var bl = Center + new Vector2(-Radius, Radius);
         return new() {tl, tr, br, bl};
+    }
+    
+    /// <summary>
+    /// Gets the top-left, top-right, bottom-right, and bottom-left corners of the circle's bounding box
+    /// and stores them in the provided list.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the bounding box corners.</param>
+    public void GetRectCornersList(List<Vector2> result)
+    {
+        var tl = Center + new Vector2(-Radius, -Radius);
+        var tr = Center + new Vector2(Radius, -Radius);
+        var br = Center + new Vector2(Radius, Radius);
+        var bl = Center + new Vector2(-Radius, Radius);
+        
+        result.Clear();
+        result.EnsureCapacity(4);  
+        result.Add(tl);
+        result.Add(tr);
+        result.Add(br);
+        result.Add(bl);
     }
     #endregion
 
@@ -496,6 +687,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
                 left.Radius + right.Radius
             );
     }
+    
     /// <summary>
     /// Subtracts the center and radius of one circle from another.
     /// </summary>
@@ -510,6 +702,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius - right.Radius
         );
     }
+    
     /// <summary>
     /// Multiplies the center and radii of two circles.
     /// </summary>
@@ -524,6 +717,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius * right.Radius
         );
     }
+    
     /// <summary>
     /// Divides the center and  radius of one circle by another.
     /// </summary>
@@ -538,6 +732,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius / right.Radius
         );
     }
+    
     /// <summary>
     /// Adds a vector offset to the circle's center.
     /// </summary>
@@ -552,6 +747,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Subtracts a vector offset from the circle's center.
     /// </summary>
@@ -566,12 +762,13 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Multiplies the circle center by a vector.
     /// </summary>
     /// <param name="left">The circle.</param>
     /// <param name="right">The vector.</param>
-    /// <returns>A new <see cref="Circle"/> with the scaled radius.</returns>
+    /// <returns>A new <see cref="Circle"/> with the scaled center.</returns>
     public static Circle operator *(Circle left, Vector2 right)
     {
         return new
@@ -580,12 +777,13 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Divides the circle center by a vector.
     /// </summary>
     /// <param name="left">The circle.</param>
     /// <param name="right">The vector.</param>
-    /// <returns>A new <see cref="Circle"/> with the scaled radius.</returns>
+    /// <returns>A new <see cref="Circle"/> with the scaled center.</returns>
     public static Circle operator /(Circle left, Vector2 right)
     {
         return new
@@ -594,6 +792,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius
         );
     }
+    
     /// <summary>
     /// Adds a scalar value to the circle's radius.
     /// </summary>
@@ -608,6 +807,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius + right
         );
     }
+    
     /// <summary>
     /// Subtracts a scalar value from the circle's radius.
     /// </summary>
@@ -622,6 +822,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius - right
         );
     }
+    
     /// <summary>
     /// Multiplies the circle's radius by a scalar value.
     /// </summary>
@@ -636,6 +837,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius * right
         );
     }
+    
     /// <summary>
     /// Divides the circle's radius by a scalar value.
     /// </summary>
@@ -650,6 +852,7 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
             left.Radius / right
         );
     }
+    
     #endregion
 
     #region Static
@@ -679,55 +882,85 @@ public readonly partial struct Circle : IEquatable<Circle>, IShapeTypeProvider, 
 
     #region Interpolated Edge Points
     /// <summary>
-    /// Returns a set of interpolated edge points on the circle's circumference.
+    /// Generates interpolated edge points from a polygonal approximation of the circle and writes them into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">
-    /// The interpolation parameter, typically in the range [0, 1], used to offset the starting angle of the points.
-    /// </param>
-    /// <param name="vertexCount">
-    /// The number of edge points to generate along the circle's circumference.
-    /// </param>
-    /// <returns>
-    /// A <see cref="Points"/> collection containing the interpolated edge points, or <c>null</c> if the input is invalid.
-    /// </returns>
-    public Points? GetInterpolatedEdgePoints(float t, int vertexCount)
+    /// <param name="t">The interpolation factor used between each generated vertex and the next vertex.</param>
+    /// <param name="vertexCount">The number of vertices to generate for the circle approximation before interpolation.</param>
+    /// <param name="result">The destination collection that will receive the interpolated edge points.</param>
+    /// <returns><c>true</c> if a valid approximation was generated and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool GetInterpolatedEdgePoints(float t, int vertexCount, Points result)
     {
-        if(vertexCount < 3) return null;
+        if(vertexCount < 3) return false;
         
-        var points = GetVertices(vertexCount);
-        if (points.Count <= 3) return null;
+        GetVertices(pointsBuffer, vertexCount);
+        if (pointsBuffer.Count <= 3) return false;
         
-        return points.GetInterpolatedEdgePoints(t);
+        pointsBuffer.GetInterpolatedEdgePoints(t, result);
+        return true;
     }
+    
     /// <summary>
-    /// Returns a set of interpolated edge points on the circle's circumference,
-    /// using a specified number of interpolation steps and vertices.
+    /// Generates interpolated edge points from a polygonal approximation of the circle using multiple interpolation passes and writes them into <paramref name="result"/>.
     /// </summary>
-    /// <param name="t">
-    /// The interpolation parameter, in the range <c>[0, 1]</c>,
-    /// used to offset the starting angle of the points.
-    /// </param>
-    /// <param name="steps">
-    /// The number of interpolation steps to use between vertices.
-    /// </param>
-    /// <param name="vertexCount">
-    /// The number of edge points (vertices) to generate along the circle's circumference.
-    /// </param>
-    /// <returns>
-    /// A <see cref="Points"/> collection containing the interpolated edge points,
-    /// or <c>null</c> if the input is invalid.
-    /// </returns>
-    public Points? GetInterpolatedEdgePoints(float t, int steps, int vertexCount)
+    /// <param name="t">The interpolation factor used between each generated vertex and the next vertex on each pass.</param>
+    /// <param name="steps">The number of interpolation passes to perform.</param>
+    /// <param name="vertexCount">The number of vertices to generate for the circle approximation before interpolation.</param>
+    /// <param name="result">The destination collection that will receive the interpolated edge points.</param>
+    /// <returns><c>true</c> if a valid approximation was generated and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    public bool GetInterpolatedEdgePoints(float t, int steps, int vertexCount, Points result)
     {
-        if(vertexCount < 3) return null;
+        if(vertexCount < 3) return false;
         
-        var points = GetVertices(vertexCount);
-        if (points.Count <= 3) return null;
+        GetVertices(pointsBuffer, vertexCount);
+        if (pointsBuffer.Count <= 3) return false;
         
-        return points.GetInterpolatedEdgePoints(t, steps);
+        pointsBuffer.GetInterpolatedEdgePoints(t, steps, result);
+        return true;
     }
     
     #endregion
     
+    #region Arc Length
+   
+    /// <summary>
+    /// Converts an angle in radians to the corresponding arc length on this circle using its <see cref="Radius"/>.
+    /// </summary>
+    /// <param name="angleRad">Angle in radians.</param>
+    /// <param name="normalize"><c>true</c> to normalize <paramref name="angleRad"/> into the range [0, 2π) before calculating arc length; otherwise, uses the raw angle value.</param>
+    /// <returns>The arc length along the circle corresponding to <paramref name="angleRad"/>.</returns>
+    /// <exception cref="System.ArgumentException">Thrown when this circle's <see cref="Radius"/> is less than or equal to zero.</exception>
+    public float GetArcLengthFromAngle(float angleRad, bool normalize = true)
+    {
+        if (Radius <= 0f) throw new ArgumentException("radius must be > 0", nameof(Radius));
+        float theta = angleRad;
+        if (normalize)
+        {
+            float twoPi = 2f * MathF.PI;
+            theta %= twoPi;
+            if (theta < 0f) theta += twoPi;
+        }
+        return Radius * theta;
+    }
+    
+    /// <summary>
+    /// Converts an arc length along this circle to the corresponding central angle in radians.
+    /// </summary>
+    /// <param name="arcLength">The length of the arc along the circle.</param>
+    /// <param name="normalize"><c>true</c> to normalize the computed angle into the range [0, 2π); otherwise, returns the raw angle value.</param>
+    /// <returns>The angle in radians corresponding to the provided arc length.</returns>
+    /// <exception cref="System.ArgumentException">Thrown when this circle's <see cref="Radius"/> is less than or equal to zero.</exception>
+    public float GetAngleFromArcLength(float arcLength, bool normalize = true)
+    {
+        if (Radius <= 0f) throw new ArgumentException("radius must be > 0", nameof(Radius));
+        float theta = arcLength / Radius;
+        if (normalize)
+        {
+            float twoPi = 2f * MathF.PI;
+            theta %= twoPi;
+            if (theta < 0f) theta += twoPi;
+        }
+        return theta;
+    }
+    
+    #endregion
 }
-

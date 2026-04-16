@@ -134,173 +134,205 @@ public partial class Segments
         }
     }
 
+    
+    
     /// <summary>
-    /// Creates a new list of segments with the rotation of all segments changed by a given amount.
+    /// Writes copies of all segments into <paramref name="result"/>, with their rotation changed by the specified amount.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated segments.</param>
     /// <param name="rad">The amount of rotation to add in radians.</param>
     /// <param name="originF">The origin of the rotation. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the rotation changed.</returns>
-    public Segments ChangeRotationCopy(float rad, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void ChangeRotationCopy(Segments result, float rad, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].ChangeRotation(rad, originF));
+            result.Add(this[i].ChangeRotation(rad, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the rotation of all segments set to a given value.
+    /// Writes copies of all segments into <paramref name="result"/>, with their rotation set to the specified value.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the rotated segments.</param>
     /// <param name="rad">The new rotation in radians.</param>
     /// <param name="originF">The origin of the rotation. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the rotation set.</returns>
-    public Segments SetRotationCopy(float rad, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void SetRotationCopy(Segments result, float rad, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].SetRotation(rad, originF));
+            result.Add(this[i].SetRotation(rad, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the length of all segments scaled by a given amount.
+    /// Writes copies of all segments into <paramref name="result"/>, with their lengths uniformly scaled by the specified factor.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the scaled segments.</param>
     /// <param name="scale">The amount to scale the length of the segments by.</param>
     /// <param name="originF">The origin of the scaling. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the length scaled.</returns>
-    public Segments ScaleLengthCopy(float scale, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void ScaleLengthCopy(Segments result, float scale, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].ScaleLength(scale, originF));
+            result.Add(this[i].ScaleLength(scale, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the length of all segments scaled by a given size.
+    /// Writes copies of all segments into <paramref name="result"/>, with their lengths scaled by the specified <see cref="Size"/>.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the scaled segments.</param>
     /// <param name="scale">The size to scale the length of the segments by.</param>
     /// <param name="originF">The origin of the scaling. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the length scaled.</returns>
-    public Segments ScaleLengthCopy(Size scale, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void ScaleLengthCopy(Segments result, Size scale, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].ScaleLength(scale, originF));
+            result.Add(this[i].ScaleLength(scale, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the length of all segments changed by a given amount.
+    /// Writes copies of all segments into <paramref name="result"/>, with their lengths changed by the specified amount.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized segments.</param>
     /// <param name="amount">The amount to change the length of the segments by.</param>
     /// <param name="originF">The origin of the change. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the length changed.</returns>
-    public Segments ChangeLengthCopy(float amount, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void ChangeLengthCopy(Segments result, float amount, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].ChangeLength(amount, originF));
+            result.Add(this[i].ChangeLength(amount, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the length of all segments set to a given value.
+    /// Writes copies of all segments into <paramref name="result"/>, with their lengths set to the specified value.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the resized segments.</param>
     /// <param name="length">The new length of the segments.</param>
     /// <param name="originF">The origin of the change. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the length set.</returns>
-    public Segments SetLengthCopy(float length, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void SetLengthCopy(Segments result, float length, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].SetLength(length, originF));
+            result.Add(this[i].SetLength(length, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the position of all segments changed by a given offset.
+    /// Writes copies of all segments into <paramref name="result"/>, translated by the specified offset.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the translated segments.</param>
     /// <param name="offset">The offset to apply to the position of the segments.</param>
-    /// <returns>A new list of segments with the position changed.</returns>
-    public Segments ChangePositionCopy(Vector2 offset)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void ChangePositionCopy(Segments result, Vector2 offset)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].ChangePosition(offset));
+            result.Add(this[i].ChangePosition(offset));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the position of all segments set to a given value.
+    /// Writes copies of all segments into <paramref name="result"/>, with their positions set to the specified value.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the translated segments.</param>
     /// <param name="position">The new position of the segments.</param>
     /// <param name="originF">The origin of the change. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the position set.</returns>
-    public Segments SetPositionCopy(Vector2 position, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void SetPositionCopy(Segments result, Vector2 position, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].SetPosition(position, originF));
+            result.Add(this[i].SetPosition(position, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with a transform applied to all segments.
+    /// Writes copies of all segments into <paramref name="result"/>, with the specified offset transform applied.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed segments.</param>
     /// <param name="offset">The transform to apply.</param>
     /// <param name="originF">The origin of the transform. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the transform applied.</returns>
-    public Segments ApplyOffsetCopy(Transform2D offset, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void ApplyOffsetCopy(Segments result, Transform2D offset, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].ApplyOffset(offset, originF));
+            result.Add(this[i].ApplyOffset(offset, originF));
         }
-
-        return newSegments;
     }
 
     /// <summary>
-    /// Creates a new list of segments with the transform of all segments set to a given value.
+    /// Writes copies of all segments into <paramref name="result"/>, with their transforms set to the specified value.
     /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the transformed segments.</param>
     /// <param name="transform">The new transform of the segments.</param>
     /// <param name="originF">The origin of the transform. 0.5f is the center of the segment.</param>
-    /// <returns>A new list of segments with the transform set.</returns>
-    public Segments SetTransformCopy(Transform2D transform, float originF = 0.5f)
+    /// <remarks>
+    /// This method does not modify the current collection. Each transformed segment is written into <paramref name="result"/>.
+    /// </remarks>
+    public void SetTransformCopy(Segments result, Transform2D transform, float originF = 0.5f)
     {
-        var newSegments = new Segments(Count);
+        result.Clear();
+        result.EnsureCapacity(Count);
+        
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].SetTransform(transform, originF));
+            result.Add(this[i].SetTransform(transform, originF));
         }
-
-        return newSegments;
     }
 
 }

@@ -1,4 +1,5 @@
 using Examples.PayloadSystem;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.StaticLib;
 
@@ -15,17 +16,22 @@ internal class PayloadMarkerSimple : PayloadMarker
     {
         if (!Launched) return;
 
+        
         if (TravelF > 0f)
         {
+            var circle = new Circle(Location, 15f);
             if (visible)
             {
-                CircleDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
-            }  
-            CircleDrawing.DrawCircleSectorLines(Location, 25f, 0, 359 * TravelF, 4f, Colors.Cold, false, 4f);
+                circle.Draw(Colors.Cold, 0.2f);
+            }
+
+            circle = circle.SetRadius(25f);
+            circle.DrawSectorLines(0, 359 * TravelF, 0f, new LineDrawingInfo(4f, Colors.Cold), 0.2f);
         }
         else
         {
-            CircleDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
+            var circle = new Circle(Location, 15f);
+            circle.Draw(Colors.Cold, 0.2f);
         }
         
         

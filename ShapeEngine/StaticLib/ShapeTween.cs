@@ -48,6 +48,7 @@ public static class ShapeTween
             case TweenType.ELASTIC_IN: return ElasticIn(t);
             case TweenType.ELASTIC_OUT: return ElasticOut(t);
             case TweenType.ELASTIC_INOUT: return ElasticInOut(t);
+            case TweenType.PING_PONG: return PingPong(t);
             default: return t;
         }
     }
@@ -467,4 +468,16 @@ public static class ShapeTween
             : (1f + BounceOut(2f * p - 1f)) / 2f;
     }
 
+    /// <summary>
+    /// Returns a value that oscillates between <c>0</c> and <c>1</c> as the input increases.
+    /// </summary>
+    /// <param name="p">The input value. Has to be positive but can increase until float.MaxValue (theoretically)</param>
+    /// <returns>A ping\-ponged value in the range <c>\[0, 1\]</c>.</returns>
+    public static float PingPong(float p)
+    {
+        p %= 2f;
+        if (p < 0f) p += 2f;
+        return p <= 1f ? p : 2f - p;
+    }
+    
 }

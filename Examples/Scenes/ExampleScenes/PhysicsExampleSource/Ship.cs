@@ -5,7 +5,6 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
@@ -190,7 +189,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
         
         
         hullAbsolute.DrawStriped(10f, Transform.RotationDeg + 90, new LineDrawingInfo(2f,c, LineCapType.None, 0), 0f);
-        hullAbsolute.DrawLines(thickness, c, LineCapType.Capped, 6);
+        hullAbsolute.DrawLines(thickness, c, 6);
 
         var radius = hullSize.Radius * 2;
         var center = Transform.Position;

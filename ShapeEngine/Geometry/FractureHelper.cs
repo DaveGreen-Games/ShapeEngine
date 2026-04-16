@@ -1,6 +1,6 @@
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.TriangulationDef;
-using ShapeEngine.StaticLib;
+using ShapeEngine.ShapeClipper;
 
 namespace ShapeEngine.Geometry;
 
@@ -12,6 +12,9 @@ namespace ShapeEngine.Geometry;
 /// </remarks>
 public class FractureHelper
 {
+    private readonly Triangulation buffer = new();
+    private readonly Triangulation buffer2 = new();
+    
     /// <summary>
     /// The minimum area for a fracture piece to be kept.
     /// </summary>
@@ -52,13 +55,13 @@ public class FractureHelper
         this.KeepChance = keepChance;
         this.NarrowValue = narrowValue;
     }
-
+    
     /// <summary>
     /// Fractures a polygon by cutting it with another polygon and subdividing the resulting pieces.
     /// </summary>
     /// <param name="shape">The original polygon to be fractured.</param>
     /// <param name="cutShape">The polygon used to cut the original shape.</param>
-    /// <returns>A <see cref="FractureInfo"/> object containing the new shapes, cutouts, and fracture pieces.</returns>
+    /// <param name="result">A <see cref="FractureInfo"/> object containing the new shapes, cutouts, and fracture pieces.</param>
      /// <remarks>
      /// <list type="bullet">
      ///   <item>
@@ -69,17 +72,22 @@ public class FractureHelper
      ///   </item>
      /// </list>
      /// </remarks>
-    public FractureInfo Fracture(Polygon shape, Polygon cutShape)
+    public void Fracture(Polygon shape, Polygon cutShape, FractureInfo result)
     {
-        var cutOuts = ShapeClipper.Intersect(shape, cutShape).ToPolygons(true);
-        var newShapes = ShapeClipper.Difference(shape, cutShape).ToPolygons(true);
-        Triangulation pieces = new();
-        foreach (var cutOut in cutOuts)
+        ShapeClipper2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Intersection, result.Cutouts);
+        ShapeClipper2D.ClipEngine.Execute(shape, cutShape, ShapeClipperClipType.Difference, result.NewShapes);
+        
+        result.Cutouts.RemoveAllHoles();
+        result.NewShapes.RemoveAllHoles();
+        
+        result.Pieces.Clear();
+        foreach (var cutOut in result.Cutouts)
         {
-            var fracturePieces = cutOut.Triangulate().Subdivide(MinArea, MaxArea, KeepChance, NarrowValue);
-            pieces.AddRange(fracturePieces);
+            buffer.Clear();
+            buffer2.Clear();
+            cutOut.Triangulate(buffer);
+            buffer.Subdivide(buffer2, MinArea, MaxArea, KeepChance, NarrowValue);
+            result.Pieces.AddRange(buffer2);
         }
-
-        return new(newShapes, cutOuts, pieces);
     }
 }

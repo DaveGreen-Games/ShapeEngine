@@ -29,6 +29,7 @@ public partial class Triangulation
 
         return false;
     }
+    
     /// <summary>
     /// Determines if any triangle in this collection overlaps with the specified collider.
     /// </summary>

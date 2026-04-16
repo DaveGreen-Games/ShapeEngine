@@ -1,4 +1,6 @@
 using System.Numerics;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.Structs;
@@ -66,6 +68,22 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     /// </summary>
     public bool IsEmpty() => Position == Vector2.Zero && RotationRad == 0f && BaseSize == Size.Zero;
 
+    /// <summary>
+    /// Returns a <see cref="Circle"/> representing this transform,
+    /// using the current position and the radius of the scaled size.
+    /// </summary>
+    public Circle GetCircle() => new(Position, ScaledSize.Radius);
+
+    /// <summary>
+    /// Returns a <see cref="Rect"/> representing this transform,
+    /// using the current position, scaled size, and the specified alignment anchor.
+    /// </summary>
+    /// <param name="alignment">The anchor point for rectangle alignment.</param>
+    /// <returns>A <see cref="Rect"/> with the specified alignment.</returns>
+    public Rect GetRect(AnchorPoint alignment)
+    {
+        return new Rect(Position, ScaledSize, alignment);
+    }
     #endregion
     
     #region Constructors

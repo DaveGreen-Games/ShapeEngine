@@ -8,12 +8,10 @@ using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -40,7 +38,6 @@ public class PhysicsExample : ExampleScene
     private readonly List<PhysicsExampleSource.Asteroid> repulsorAsteroids = new();
     
     
-
     public PhysicsExample()
     {
         Title = "Physics!";
@@ -67,14 +64,15 @@ public class PhysicsExample : ExampleScene
             var sizeMax = ShapeMath.LerpFloat(1.5f, 3f, f);
             var sizeRange = new ValueRange(sizeMin, sizeMax);
             var color = ColorRgba.Lerp(ColorRgba.White, ColorRgba.White.SetAlpha(220), f);
-            t.BeginDraw(ColorRgba.Clear);
+            t.BeginDraw(ColorRgba.Transparent);
             for (int j = 0; j < starCount; j++)
             {
                 var x = Rng.Instance.RandF(0f, 2048);
                 var y = Rng.Instance.RandF(0f, 2048);
                 var pos = new Vector2(x, y);
                 var size = sizeRange.Rand();
-                CircleDrawing.DrawCircle(pos, size, color);
+                var circle = new Circle(pos, size);
+                circle.Draw(color);
             }
             t.EndDraw();
             
@@ -189,8 +187,6 @@ public class PhysicsExample : ExampleScene
 
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        
-        
         var target = camera.BasePosition;
         var count = starSurfaces.Count;
         for (int i = 0; i < count; i++)
@@ -230,10 +226,14 @@ public class PhysicsExample : ExampleScene
         var universeLineInfo = new LineDrawingInfo(14f, Colors.Warm, LineCapType.Extended, 0);
         var stripedLineInfo = new LineDrawingInfo(14f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
         
-        StripedDrawing.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
+        var ringThickness = SectorRadiusOutside - SectorRadiusInside;
+        var circle = new Circle(Vector2.Zero, SectorRadiusInside + ringThickness * 0.5f);
+        circle.DrawStripedRing(ringThickness, 1f, stripedLineInfo, 0f);
         
-        CircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusInside, universeLineInfo , 0f, 24f);
-        CircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusOutside, universeLineInfo, 0f, 24f);
+        var insideCircle = new Circle(Vector2.Zero, SectorRadiusInside);
+        var outsideCircle = new Circle(Vector2.Zero, SectorRadiusOutside);
+        insideCircle.DrawLines(universeLineInfo, 0.75f);
+        outsideCircle.DrawLines(universeLineInfo, 0.75f);
         
         var textCount = 12;
         var angleStepRad = (360f / textCount) * ShapeMath.DEGTORAD;

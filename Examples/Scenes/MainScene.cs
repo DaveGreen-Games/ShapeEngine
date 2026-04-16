@@ -10,24 +10,11 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes
 {
-    // public class TestSaveGame : SavegameObject
-    // {
-    //     public int ID {get; set;}
-    //     public string Text {get; set;}
-    //
-    //     public TestSaveGame(int id, string text)
-    //     {
-    //         this.ID = id;
-    //         this.Text = text;
-    //     }
-    // }
     public class MainScene : Scene
     {
         private readonly List<ExampleScene> examples = new();
@@ -39,11 +26,14 @@ namespace Examples.Scenes
         private readonly InputActionLabel quitLabel;
 
         private readonly TextureSurface textureSurface;
+
+        private List<uint> deactivatedShaderIds = new();
         
         public MainScene()
         {
             examples.Add(new OutlineDrawingExample());
             examples.Add(new StripedShapeDrawingExample());
+            examples.Add(new ShapeDrawingTestExample());
             examples.Add(new ShapeIntersectionExample());
             examples.Add(new CurveDataExample());
             examples.Add(new PhysicsExample());
@@ -99,7 +89,7 @@ namespace Examples.Scenes
             
             textureSurface = new TextureSurface(2048, 2048);
             textureSurface.SetTextureFilter(TextureFilter.Trilinear);
-            textureSurface.BeginDraw(ColorRgba.Clear);
+            textureSurface.BeginDraw(ColorRgba.Transparent);
             LineDrawingInfo stripedInfo = new(2f, ColorRgba.White, LineCapType.Capped, 6);
             textureSurface.Rect.DrawStriped(16f, 30f, stripedInfo);
             textureSurface.EndDraw();
@@ -252,11 +242,31 @@ namespace Examples.Scenes
         protected override void OnActivate(Scene oldScene)
         {
             navigator.StartNavigation();
+            var shaders = GameloopExamples.Instance.ScreenShaders;
+            if (shaders != null)
+            {
+                deactivatedShaderIds.Clear();
+                var activeShaders = shaders.GetActiveShaders();
+                foreach (var shader in activeShaders)
+                {
+                    shader.Enabled = false;
+                    deactivatedShaderIds.Add(shader.ID);
+                }
+            }
         }
 
         protected override void OnDeactivate()
         {
             navigator.EndNavigation();
+            var shaders = GameloopExamples.Instance.ScreenShaders;
+            if (shaders != null && deactivatedShaderIds.Count > 0)
+            {
+                foreach (var id in deactivatedShaderIds)
+                {
+                    var shader = shaders.Get(id);
+                    if(shader != null) shader.Enabled = true;
+                }
+            }
         }
 
         protected override void OnClose()

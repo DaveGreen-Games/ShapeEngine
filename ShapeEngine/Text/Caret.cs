@@ -61,6 +61,6 @@ public struct Caret
     public void Draw(Vector2 top, float height)
     {
         var bottom = top + new Vector2(0f, height);
-        SegmentDrawing.DrawSegment(top, bottom, WidthRelative * height, Color);
+        Segment.DrawSegment(top, bottom, WidthRelative * height, Color);
     }
 }

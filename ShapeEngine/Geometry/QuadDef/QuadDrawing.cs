@@ -7,23 +7,1934 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.ShapeClipper;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.QuadDef;
 
 /// <summary>
-/// Provides static methods for drawing quads (quadrilaterals) and their outlines, including partial outlines and vertex markers.
+/// Provides drawing helpers for rendering a <see cref="Quad"/> as a filled shape, outline, partial outline, or decorated variant.
 /// </summary>
 /// <remarks>
-/// This class contains utility methods for rendering quads with various options such as line thickness, color, partial outlines, and scaling.
+/// This partial struct contains rendering-oriented members for quads, including scaled drawing, vignette fills,
+/// chamfered corners, corner markers, masked outlines, and gapped outlines.
 /// </remarks>
-public static class QuadDrawing
+public readonly partial struct Quad
 {
+    #region Draw
+    
+    /// <summary>
+    /// Draws the quad as a filled shape using two triangles.
+    /// </summary>
+    /// <param name="color">The fill color.</param>
+    public void Draw(ColorRgba color)
+    {
+        var q = this;
+        Raylib.DrawTriangle(q.A, q.B, q.C, color.ToRayColor());
+        Raylib.DrawTriangle(q.A, q.C, q.D, color.ToRayColor());
+    }
+    
+    #endregion
+    
+    #region Draw Scaled
+    /// <summary>
+    /// Draws a quad with scaled sides based on a specific draw type.
+    /// </summary>
+    /// <param name="color">The color of the drawn shape.</param>
+    /// <param name="sideScaleFactor">The scale factor of the sides (0 to 1). If >= 1, the full quad is drawn. If &lt;= 0, nothing is drawn.</param>
+    /// <param name="sideScaleOrigin">The origin point for scaling the sides (0 = start, 1 = end, 0.5 = center).</param>
+    /// <param name="drawType">
+    /// The style of drawing:
+    /// <list type="bullet">
+    /// <item><description>0: [Filled] Drawn as 6 filled triangles, effectively cutting off the corners.</description></item>
+    /// <item><description>1: [Sides] Each side is connected to the quad's center.</description></item>
+    /// <item><description>2: [Sides Inverse] The start of 1 side is connected to the end of the next side and is connected to the quad's center.</description></item>
+    /// </list>
+    /// </param>
+    public void DrawScaled(ColorRgba color, float sideScaleFactor, float sideScaleOrigin, int drawType)
+    {
+        var q = this;
+        if (sideScaleFactor <= 0) return;
+        if (sideScaleFactor >= 1)
+        {
+            q.Draw(color);
+            return;
+        }
+
+        var s1 = new Segment(q.A, q.B).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+        var s2 = new Segment(q.B, q.C).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+        var s3 = new Segment(q.C, q.D).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+        var s4 = new Segment(q.D, q.A).ScaleSegment(sideScaleFactor, sideScaleOrigin);
+
+        var rayColor = color.ToRayColor();
+        if (drawType == 0)
+        {
+            Raylib.DrawTriangle(s1.Start, s1.End, s2.Start, rayColor);
+            Raylib.DrawTriangle(s4.End, s1.Start, s2.Start, rayColor);
+            
+            Raylib.DrawTriangle(s4.End, s2.Start, s4.Start, rayColor);
+            Raylib.DrawTriangle(s4.Start, s2.Start, s2.End, rayColor);
+            
+            Raylib.DrawTriangle(s4.Start, s2.End, s3.End, rayColor);
+            Raylib.DrawTriangle(s3.End, s2.End, s3.Start, rayColor);
+            
+        }
+        else if (drawType == 1)
+        {
+            var center = q.Center;
+            Raylib.DrawTriangle(s1.Start, s1.End, center, rayColor);
+            Raylib.DrawTriangle(s2.Start, s2.End, center, rayColor);
+            Raylib.DrawTriangle(s3.Start, s3.End, center, rayColor);
+            Raylib.DrawTriangle(s4.Start, s4.End, center, rayColor);
+        }
+        else
+        {
+            var center = q.Center;
+            Raylib.DrawTriangle(s4.End, s1.Start, center, rayColor);
+            Raylib.DrawTriangle(s1.End, s2.Start, center, rayColor);
+            Raylib.DrawTriangle(s2.End, s3.Start, center, rayColor);
+            Raylib.DrawTriangle(s3.End, s4.Start, center, rayColor);
+        }
+    }
+    #endregion
+    
+    #region Draw Lines
+    
+    /// <summary>
+    /// Draws the outline of the quad using the supplied line drawing settings.
+    /// </summary>
+    /// <param name="lineInfo">The outline thickness and color information.</param>
+    public void DrawLines(LineDrawingInfo lineInfo)
+    {
+        var q = this;
+        q.DrawLines(lineInfo.Thickness, lineInfo.Color);
+    }
+    
+    /// <summary>
+    /// Draws the outline of the quad with a uniform thickness.
+    /// </summary>
+    /// <param name="lineThickness">The desired outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <remarks>
+    /// The thickness is clamped to half of the quad's smaller dimension to keep the generated geometry valid.
+    /// </remarks>
+    public void DrawLines(float lineThickness, ColorRgba color)
+    {
+        var q = this;
+        
+        var horizontal = q.C - q.B;
+        var vertical = q.A - q.B;
+        var w = horizontal.Length();
+        var h = vertical.Length();
+        if (w <= 0 || h <= 0) return;
+        var bA = horizontal / w;
+        var bC = vertical / h;
+
+        lineThickness = MathF.Min(lineThickness, MathF.Min(w, h) * 0.5f);
+        
+        var offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
+        
+        var internalBisectorB = bA + bC;
+        if (internalBisectorB.LengthSquared() < 1e-8f)
+        {
+            // edges are colinear; pick a perpendicular as fallback
+            internalBisectorB = new Vector2(-bA.Y, bA.X);
+        }
+        else
+        {
+            internalBisectorB = Vector2.Normalize(internalBisectorB);
+        }
+        
+        var aB = Vector2.Normalize(q.B - q.A);
+        var aD = Vector2.Normalize(q.D - q.A);
+
+        var internalBisectorA = aB + aD;
+        if (internalBisectorA.LengthSquared() < 1e-8f)
+        {
+            // edges are colinear; pick a perpendicular as fallback
+            internalBisectorA = new Vector2(-aB.Y, aB.X);
+        }
+        else
+        {
+            internalBisectorA = Vector2.Normalize(internalBisectorA);
+        }
+        
+        var outsideA = q.A - internalBisectorA * offsetDistance;
+        var insideA = q.A + internalBisectorA * offsetDistance;
+        
+        var outsideB = q.B - internalBisectorB * offsetDistance;
+        var insideB = q.B + internalBisectorB * offsetDistance;
+        
+        var outsideC = q.C + internalBisectorA * offsetDistance;
+        var insideC = q.C - internalBisectorA * offsetDistance;
+        
+        var outsideD = q.D + internalBisectorB * offsetDistance;
+        var insideD = q.D - internalBisectorB * offsetDistance;
+        
+        Triangle.DrawTriangle(outsideA, outsideB, insideA, color);
+        Triangle.DrawTriangle(insideA, outsideB, insideB, color);
+        
+        Triangle.DrawTriangle(outsideB, outsideC, insideB, color);
+        Triangle.DrawTriangle(insideB, outsideC, insideC, color);
+        
+        Triangle.DrawTriangle(outsideC, outsideD, insideC, color);
+        Triangle.DrawTriangle(insideC, outsideD, insideD, color);
+        
+        Triangle.DrawTriangle(outsideD, outsideA, insideD, color);
+        Triangle.DrawTriangle(insideD, outsideA, insideA, color);
+    }
+    
+    #endregion
+    
+    #region Draw Lines Scaled
+    
+    /// <summary>
+    /// Draws a scaled portion of each outline segment of the quad.
+    /// </summary>
+    /// <param name="lineInfo">The outline thickness and color information.</param>
+    /// <param name="sideScaleFactor">
+    /// The portion of each edge to draw. Values less than or equal to zero draw nothing, and values greater than or equal to one draw the full outline.
+    /// </param>
+    /// <param name="sideScaleOrigin">The origin along each edge from which scaling is applied, where 0 is the start, 1 is the end, and 0.5 is centered.</param>
+    public void DrawLinesScaled(LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        var q = this;
+        if (sideScaleFactor <= 0) return;
+        
+        if (sideScaleFactor >= 1)
+        {
+            q.DrawLines(lineInfo);
+            return;
+        }
+        
+        lineInfo = lineInfo.SetThickness(MathF.Min(lineInfo.Thickness, q.GetSize().Min() * 0.5f));   
+        
+        Segment.DrawSegment(q.A, q.B, lineInfo, sideScaleFactor, sideScaleOrigin);
+        Segment.DrawSegment(q.B, q.C, lineInfo, sideScaleFactor, sideScaleOrigin);
+        Segment.DrawSegment(q.C, q.D, lineInfo, sideScaleFactor, sideScaleOrigin);
+        Segment.DrawSegment(q.D, q.A, lineInfo, sideScaleFactor, sideScaleOrigin);
+        
+    }
+    
+    #endregion
+    
+    #region Draw Lines Percentage
+
+    /// <summary>
+    /// Draws a contiguous portion of the quad outline using the supplied line drawing settings.
+    /// </summary>
+    /// <param name="f">
+    /// The percentage of the perimeter to draw. Negative values reverse the draw direction, and the absolute value is clamped to the range [0, 1].
+    /// </param>
+    /// <param name="startIndex">The starting corner index, wrapped into the range [0, 3].</param>
+    /// <param name="lineInfo">The outline thickness and color information.</param>
+    public void DrawLinesPercentage(float f, int startIndex, LineDrawingInfo lineInfo)
+    {
+        var quad = this;
+        quad.DrawLinesPercentage(f, startIndex, lineInfo.Thickness, lineInfo.Color);
+    }
+    
+    /// <summary>
+    /// Draws a contiguous portion of the quad outline with a uniform thickness.
+    /// </summary>
+    /// <param name="f">
+    /// The percentage of the perimeter to draw. Negative values reverse the draw direction, and the absolute value is clamped to the range [0, 1].
+    /// </param>
+    /// <param name="startIndex">The starting corner index, wrapped into the range [0, 3].</param>
+    /// <param name="lineThickness">The desired outline thickness.</param>
+    /// <param name="color">The outline color.</param>
+    /// <remarks>
+    /// A value of 1 draws the full outline, while partial values continue across corners until the requested perimeter fraction is reached.
+    /// </remarks>
+    public void DrawLinesPercentage(float f, int startIndex, float lineThickness, ColorRgba color)
+    {
+        var quad = this;
+        if (f == 0f || lineThickness <= 0) return;
+        var order = GetDrawLinePercentageOrder(quad, f, startIndex);
+        if(order.p <= 0f) return;
+        if(order.p >= 1f)
+        {
+            quad.DrawLines(lineThickness, color);
+            return;
+        }
+        
+        var p1 = order.a;
+        var p2 = order.b;
+        var p3 = order.c;
+        var p4 = order.d;
+        var percentage = order.p;
+        bool ccw = order.ccw;
+        var edge1 = p2 - p1;
+        var edge4 = p1 - p4;
+        float size1 = edge1.Length();
+        float size2 = edge4.Length();
+
+        var rayColor = color.ToRayColor();
+        lineThickness = MathF.Min(lineThickness, MathF.Min(size1, size2) * 0.5f);
+        float offsetDistance = MathF.Sqrt(2f * lineThickness * lineThickness);
+        float totalPerimeter = (size1 + size2) * 2f;
+        float perimeter = totalPerimeter * percentage;
+        float perimeterRemaining = perimeter;
+        
+        var edge2 = p3 - p2;
+        var edge3 = p4 - p3;
+        var n1 = edge1.Normalize();
+        var n2 = edge2.Normalize();
+        var n3 = edge3.Normalize();
+        var n4 = edge4.Normalize();
+        
+        var dir1 = (n1 - n4).Normalize();
+        var dir2 = (n2 - n1).Normalize();
+        var dir3 = (n3 - n2).Normalize();
+        var dir4 = (n4 - n3).Normalize();
+
+        var curPoint = p1;
+        var curInner = curPoint + dir1 * offsetDistance;
+        var curOuter = curPoint- dir1 * offsetDistance;
+
+        var nextPoint = p2;
+        var nextInner= nextPoint + dir2 * offsetDistance;
+        var nextOuter = nextPoint - dir2 * offsetDistance;
+
+        if (perimeterRemaining >= size1)
+        {
+            perimeterRemaining -= size1;
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle(nextInner, curOuter, curInner, rayColor);
+                Raylib.DrawTriangle(nextOuter, curOuter, nextInner, rayColor);
+            }
+        }
+        else
+        {
+            float factor = perimeterRemaining / size1;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+            return;
+        }
+        
+        curInner = nextInner;
+        curOuter = nextOuter;
+        nextPoint = p3;
+        nextInner= nextPoint + dir3 * offsetDistance;
+        nextOuter = nextPoint - dir3 * offsetDistance;
+
+        if (perimeterRemaining >= size2)
+        {
+            perimeterRemaining -= size2;
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( nextInner,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( nextOuter,curOuter, nextInner, rayColor);
+            }
+        }
+        else
+        {
+            float factor = perimeterRemaining / size2;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+            
+            return;
+        }
+        
+        curInner = nextInner;
+        curOuter = nextOuter;
+        nextPoint = p4;
+        nextInner= nextPoint + dir4 * offsetDistance;
+        nextOuter = nextPoint - dir4 * offsetDistance;
+
+        if (perimeterRemaining >= size1)
+        {
+            perimeterRemaining -= size1;
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( nextInner,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( nextOuter,curOuter, nextInner, rayColor);
+            }
+            
+        }
+        else
+        {
+            float factor = perimeterRemaining / size1;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+            
+            return;
+        }
+        
+        curInner = nextInner;
+        curOuter = nextOuter;
+        nextPoint = p1;
+        nextInner= nextPoint + dir1 * offsetDistance;
+        nextOuter = nextPoint - dir1 * offsetDistance;
+
+        if (perimeterRemaining >= size2)
+        {
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, nextInner, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, nextOuter, nextInner, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle(nextInner,curOuter,  curInner, rayColor);
+                Raylib.DrawTriangle(nextOuter,curOuter,  nextInner, rayColor);
+            }
+            
+        }
+        else
+        {
+            float factor = perimeterRemaining / size2;
+            var innerEnd = Vector2.Lerp(curInner, nextInner, factor);
+            var outerEnd = Vector2.Lerp(curOuter, nextOuter, factor);
+            if (ccw)
+            {
+                Raylib.DrawTriangle(curOuter, innerEnd, curInner, rayColor);
+                Raylib.DrawTriangle(curOuter, outerEnd, innerEnd, rayColor);
+            }
+            else
+            {
+                Raylib.DrawTriangle( innerEnd,curOuter, curInner, rayColor);
+                Raylib.DrawTriangle( outerEnd,curOuter, innerEnd, rayColor);
+            }
+        }
+    }
+    #endregion
+ 
+    #region Draw Vignette
+    /// <summary>
+    /// Draws a "vignette" effect inside the quad, creating a circular hole in the center.
+    /// The area between the inner circle and the quad's outer edges is filled with the specified color.
+    /// </summary>
+    /// <param name="circleRadius">The radius of the inner circular hole.</param>
+    /// <param name="circleRotDeg">The starting rotation angle of the inner circle in degrees.</param>
+    /// <param name="color">The color of the filled area.</param>
+    /// <param name="circleSmoothness">
+    /// Determines the smoothness of the inner circle (0.0 to 1.0). 
+    /// Higher values result in more segments and a smoother circle.
+    /// </param>
+    public void DrawVignette(float circleRadius, float circleRotDeg, ColorRgba color, float circleSmoothness = 0.5f)
+    {
+        var q = this;
+        if (circleRadius <= 0)
+        {
+            q.Draw(color);
+            return;
+        }
+
+        // Clamp radius to ensure at least some vignette is drawn
+        var minDimension = q.GetSize().Min();
+        var maxRadius = minDimension * 0.5f - 1f;
+        if (circleRadius > maxRadius)
+        {
+            circleRadius = maxRadius;
+        }
+
+        if (!Circle.CalculateCircleDrawingParameters(circleRadius, circleSmoothness, out float angleStepRad, out int segments)) return;
+
+        var center = q.Center;
+
+        // 1. Calculate Basis Vectors for local coordinate projection
+        // Assuming A=TopLeft, B=BottomLeft -> A->B is Down
+        // Assuming B=BottomLeft, C=BottomRight -> B->C is Right
+        Vector2 rightVec = q.C - q.B;
+        float width = rightVec.Length();
+        if (width <= 0) return;
+        Vector2 rightAxis = rightVec / width;
+
+        Vector2 downVec = q.B - q.A;
+        float height = downVec.Length();
+        if (height <= 0) return;
+        Vector2 downAxis = downVec / height;
+
+        float halfWidth = width * 0.5f;
+        float halfHeight = height * 0.5f;
+        
+        // Map side indices to actual Quad corner vertices for filling gaps.
+        // Side 0 (Right)  -> Side 1 (Bottom) crosses Corner BR (C)
+        // Side 1 (Bottom) -> Side 2 (Left)   crosses Corner BL (B)
+        // Side 2 (Left)   -> Side 3 (Top)    crosses Corner TL (A)
+        // Side 3 (Top)    -> Side 0 (Right)  crosses Corner TR (D)
+        Vector2[] cornerVertices = { q.C, q.B, q.A, q.D };
+        
+        var rayColor = color.ToRayColor();
+        var circleRotRad = circleRotDeg * ShapeMath.DEGTORAD;
+
+        // Helper to project a direction vector onto the Quad's outer boundary
+        // Returns the world position on the edge and the side index (0=Right, 1=Bottom, 2=Left, 3=Top)
+        (Vector2 point, int side) ProjectToEdge(Vector2 direction)
+        {
+            float dotRight = Vector2.Dot(direction, rightAxis);
+            float dotDown = Vector2.Dot(direction, downAxis);
+
+            // Avoid division by zero
+            float denomX = MathF.Abs(dotRight) > 1e-6f ? dotRight : 1e-6f;
+            float denomY = MathF.Abs(dotDown) > 1e-6f ? dotDown : 1e-6f;
+
+            // Calculate distance to vertical (X) and horizontal (Y) boundaries
+            float tX = MathF.Abs(halfWidth / denomX);
+            float tY = MathF.Abs(halfHeight / denomY);
+
+            if (tX < tY)
+            {
+                // Hits vertical side
+                int side = dotRight > 0 ? 0 : 2; // 0: Right, 2: Left
+                return (center + direction * tX, side);
+            }
+            else
+            {
+                // Hits horizontal side
+                int side = dotDown > 0 ? 1 : 3; // 1: Bottom, 3: Top
+                return (center + direction * tY, side);
+            }
+        }
+
+        // 2. Initialize Starting Point
+        Vector2 currentDir = new Vector2(MathF.Cos(circleRotRad), MathF.Sin(circleRotRad));
+        Vector2 startInner = center + currentDir * circleRadius;
+        var startProjection = ProjectToEdge(currentDir);
+        
+        Vector2 currentInner = startInner;
+        Vector2 currentOuter = startProjection.point;
+        int currentSide = startProjection.side;
+
+        // 3. Iterate Segments
+        for (int i = 0; i < segments; i++)
+        {
+            float nextAngle = circleRotRad + angleStepRad * (i + 1);
+            Vector2 nextDir = new Vector2(MathF.Cos(nextAngle), MathF.Sin(nextAngle));
+            
+            // Calculate Next Vertices
+            Vector2 nextInner = center + nextDir * circleRadius;
+            var nextProjection = ProjectToEdge(nextDir);
+            Vector2 nextOuter = nextProjection.point;
+            int nextSide = nextProjection.side;
+
+            // Draw Vignette Segment (2 Triangles forming a quad)
+            // CCW Order: InnerStart -> EndOuter -> StartOuter
+            Raylib.DrawTriangle(currentInner, nextOuter, currentOuter, rayColor);
+            // CCW Order: InnerStart -> EndInner -> EndOuter
+            Raylib.DrawTriangle(currentInner, nextInner, nextOuter, rayColor);
+
+            // Fill Corner Gap if we transitioned between sides (e.g., Right to Bottom)
+            if (currentSide != nextSide)
+            {
+                // The corner to fill corresponds to the current side index before the switch
+                Raylib.DrawTriangle(currentOuter, nextOuter, cornerVertices[currentSide], rayColor);
+            }
+
+            // Advance
+            currentInner = nextInner;
+            currentOuter = nextOuter;
+            currentSide = nextSide;
+        }
+    }
+    #endregion
+    
+    #region Draw Corners
+    /// <summary>
+    /// Draws the corners of the quad with independent lengths for each corner.
+    /// </summary>
+    /// <param name="lineThickness">The thickness of the corner lines.</param>
+    /// <param name="color">The color of the corner lines.</param>
+    /// <param name="tlCorner">The length of the top-left corner.</param>
+    /// <param name="trCorner">The length of the top-right corner.</param>
+    /// <param name="brCorner">The length of the bottom-right corner.</param>
+    /// <param name="blCorner">The length of the bottom-left corner.</param>
+    public void DrawCorners(float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        var quad = this;
+        if (lineThickness <= 0f || color.A <= 0) return;
+        if(tlCorner <= 0 && trCorner <= 0 && brCorner <= 0 && blCorner <= 0) return;
+        
+        var a = quad.A;
+        var b = quad.B;
+        var c = quad.C;
+        var d = quad.D;
+        
+        float w = (d - a).Length();
+        float h = (b - a).Length();
+        if(w <= 0 || h <= 0) return;
+
+        var nL = (a - d).Normalize();
+        var nD = (b - a).Normalize();
+        var nR = (c - b).Normalize();
+        var nU = (d - c).Normalize();
+        
+        float halfWidth = w * 0.5f;
+        float halfHeight = h * 0.5f;
+        
+        bool lineThicknessBiggerThanWidthOrHeight = lineThickness >= halfWidth || lineThickness >= halfHeight;
+        var rayColor = color.ToRayColor();
+        
+        if (tlCorner > 0f)
+        {
+            var cornerLength = tlCorner;
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = a + nU * lineThickness + nL * lineThickness;
+                var newB = a + nD * innerH + nL * lineThickness;
+                var newC = a + nD * innerH + nR * innerW;
+                var newD = a + nU * lineThickness + nR * innerW;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = a + nU * lineThickness + nL * lineThickness;
+                var bl = a + nD * lineThickness + nL * lineThickness;
+                var br = a + nD * lineThickness + nR * lineThickness;
+                var tr = a + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = a + nU * lineThickness + nL * lineThickness;
+                var outerH = a + nU * lineThickness + nR * cornerLengthH;
+                var outerV = a + nD * cornerLengthV + nL * lineThickness;
+                var inner = a + nD * lineThickness + nR * lineThickness;
+                var innerH = a + nD * lineThickness + nR * cornerLengthH;
+                var innerV = a + nD * cornerLengthV + nR * lineThickness;
+                
+                Triangle.DrawTriangle(outer, inner, outerH, rayColor);
+                Triangle.DrawTriangle(inner, innerH, outerH, rayColor);
+                Triangle.DrawTriangle(outer, outerV, inner, rayColor);
+                Triangle.DrawTriangle(inner, outerV, innerV, rayColor);
+                
+            }
+        }
+
+        if (trCorner > 0f)
+        {
+            var cornerLength = trCorner;
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = d + nU * lineThickness + nL * innerW;
+                var newB = d + nD * innerH + nL * innerW;
+                var newC = d + nD * innerH + nR * lineThickness;
+                var newD = d + nU * lineThickness + nR * lineThickness;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = d + nU * lineThickness + nL * lineThickness;
+                var bl = d + nD * lineThickness + nL * lineThickness;
+                var br = d + nD * lineThickness + nR * lineThickness;
+                var tr = d + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = d + nU * lineThickness + nR * lineThickness;
+                var outerH = d + nU * lineThickness + nL * cornerLengthH;
+                var outerV = d + nD * cornerLengthV + nR * lineThickness;
+                var inner = d + nD * lineThickness + nL * lineThickness;
+                var innerH = d + nD * lineThickness + nL * cornerLengthH;
+                var innerV = d + nD * cornerLengthV + nL * lineThickness;
+                
+                Triangle.DrawTriangle(outerH, inner, outer, rayColor);
+                Triangle.DrawTriangle(outerH, innerH, inner, rayColor);
+                Triangle.DrawTriangle(outer, inner, outerV, rayColor);
+                Triangle.DrawTriangle(inner, innerV, outerV, rayColor);
+                
+            }
+        }
+
+        if (brCorner > 0f)
+        {
+            var cornerLength = brCorner;
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = c + nU * innerH + nL * innerW;
+                var newB = c + nD * lineThickness + nL * innerW;
+                var newC = c + nD * lineThickness + nR * lineThickness;
+                var newD = c + nU * innerH + nR * lineThickness;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = c + nU * lineThickness + nL * lineThickness;
+                var bl = c + nD * lineThickness + nL * lineThickness;
+                var br = c + nD * lineThickness + nR * lineThickness;
+                var tr = c + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = c + nD * lineThickness + nR * lineThickness;
+                var outerH = c + nD * lineThickness + nL * cornerLengthH;
+                var outerV = c + nU * cornerLengthV + nR * lineThickness;
+                var inner = c + nU * lineThickness + nL * lineThickness;
+                var innerH = c + nU * lineThickness + nL * cornerLengthH;
+                var innerV = c + nU * cornerLengthV + nL * lineThickness;
+                
+                Triangle.DrawTriangle(outerV, inner, outer, rayColor);
+                Triangle.DrawTriangle(outerV, innerV, inner, rayColor);
+                Triangle.DrawTriangle(outerH, outer, inner, rayColor);
+                Triangle.DrawTriangle(inner, innerH, outerH, rayColor);
+                
+            }
+        }
+
+        if (blCorner > 0f)
+        {
+            var cornerLength = blCorner;
+            
+            if (lineThicknessBiggerThanWidthOrHeight)
+            {
+                var innerW = MathF.Min(MathF.Max(cornerLength, lineThickness), halfWidth);
+                var innerH = MathF.Min(MathF.Max(cornerLength, lineThickness), halfHeight);
+                
+                var newA = b + nU * innerH + nL * lineThickness;
+                var newB = b + nD * lineThickness + nL * lineThickness;
+                var newC = b + nD * lineThickness + nR * innerW;
+                var newD = b + nU * innerH + nR * innerW;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else if (cornerLength < lineThickness)
+            {
+                //just draw a square over the corner
+                var tl = b + nU * lineThickness + nL * lineThickness;
+                var bl = b + nD * lineThickness + nL * lineThickness;
+                var br = b + nD * lineThickness + nR * lineThickness;
+                var tr = b + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                
+            }
+            else
+            {
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                
+                var outer = b + nD * lineThickness + nL * lineThickness;
+                var outerH = b + nD * lineThickness + nR * cornerLengthH;
+                var outerV = b + nU * cornerLengthV + nL * lineThickness;
+                var inner = b + nU * lineThickness + nR * lineThickness;
+                var innerH = b + nU * lineThickness + nR * cornerLengthH;
+                var innerV = b + nU * cornerLengthV + nR * lineThickness;
+                
+                Triangle.DrawTriangle(outerV, outer, inner, rayColor);
+                Triangle.DrawTriangle(outerV, inner, innerV, rayColor);
+                Triangle.DrawTriangle(outer, outerH, inner, rayColor);
+                Triangle.DrawTriangle(inner, outerH, innerH, rayColor);
+                
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Draws all corners of the quad with the same length.
+    /// </summary>
+    /// <param name="lineThickness">The thickness of the corner lines.</param>
+    /// <param name="color">The color of the corner lines.</param>
+    /// <param name="cornerLength">The length of the corner segments.</param>
+    public void DrawCorners(float lineThickness, ColorRgba color, float cornerLength)
+    {
+        if (lineThickness <= 0f || color.A <= 0 || cornerLength <= 0) return;
+        
+        var a = A;
+        var b = B;
+        var c = C;
+        var d = D;
+        
+        float w = (d - a).Length();
+        float h = (b - a).Length();
+        if(w <= 0 || h <= 0) return;
+
+        var nL = (a - d).Normalize();
+        var nD = (b - a).Normalize();
+        var nR = (c - b).Normalize();
+        var nU = (d - c).Normalize();
+        
+        float halfWidth = w * 0.5f;
+        float halfHeight = h * 0.5f;
+        bool widthDominant = w > h;
+        float minHalf = widthDominant ? halfHeight : halfWidth;
+        float maxHalf = widthDominant ? halfWidth : halfHeight;
+        float maxCorner = MathF.Max(lineThickness, cornerLength);
+        var rayColor = color.ToRayColor();
+        
+        if (lineThickness >= minHalf)
+        {
+            if (lineThickness >= maxHalf)
+            {
+                var newA = a + nU * lineThickness + nL * lineThickness;
+                var newB = b + nD * lineThickness + nL * lineThickness;
+                var newC = c + nD * lineThickness + nR * lineThickness;
+                var newD = d + nU * lineThickness + nR * lineThickness;
+                Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                Raylib.DrawTriangle(newA, newC, newD, rayColor);
+            }
+            else
+            {
+                if (widthDominant)
+                {
+                    if (maxCorner >= halfWidth)
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newB = b + nD * lineThickness + nL * lineThickness;
+                        var newC = c + nD * lineThickness + nR * lineThickness;
+                        var newD = d + nU * lineThickness + nR * lineThickness;
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                    else
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newB = b + nD * lineThickness + nL * lineThickness;
+                        var newC = newB + nR * (lineThickness + maxCorner);
+                        var newD = newA + nR * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                        
+                        newC = c + nD * lineThickness + nR * lineThickness;
+                        newD = d + nU * lineThickness + nR * lineThickness;
+                        newA = newD + nL * (lineThickness + maxCorner);
+                        newB = newC + nL * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                }
+                else
+                {
+                    if (maxCorner >= halfHeight)
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newB = b + nD * lineThickness + nL * lineThickness;
+                        var newC = c + nD * lineThickness + nR * lineThickness;
+                        var newD = d + nU * lineThickness + nR * lineThickness;
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                    else
+                    {
+                        var newA = a + nU * lineThickness + nL * lineThickness;
+                        var newD = d + nU * lineThickness + nR * lineThickness;
+                        var newB = newA + nD * (lineThickness + maxCorner);
+                        var newC = newD + nD * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                        
+                        newB = b + nD * lineThickness + nL * lineThickness;
+                        newC = c + nD * lineThickness + nR * lineThickness;
+                        newA = newB + nU * (lineThickness + maxCorner);
+                        newD = newC + nU * (lineThickness + maxCorner);
+                        
+                        Raylib.DrawTriangle(newA, newB, newC, rayColor);
+                        Raylib.DrawTriangle(newA, newC, newD, rayColor);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (cornerLength < lineThickness)
+            {
+                //just draw a squares over each corner
+                
+                //tl
+                var tl = a + nU * lineThickness + nL * lineThickness;
+                var bl = a + nD * lineThickness + nL * lineThickness;
+                var br = a + nD * lineThickness + nR * lineThickness;
+                var tr = a + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                
+                //tr
+                tl = d + nU * lineThickness + nL * lineThickness;
+                bl = d + nD * lineThickness + nL * lineThickness;
+                br = d + nD * lineThickness + nR * lineThickness;
+                tr = d + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                
+                //br
+                tl = c + nU * lineThickness + nL * lineThickness;
+                bl = c + nD * lineThickness + nL * lineThickness;
+                br = c + nD * lineThickness + nR * lineThickness;
+                tr = c + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                
+                //bl
+                tl = b + nU * lineThickness + nL * lineThickness;
+                bl = b + nD * lineThickness + nL * lineThickness;
+                br = b + nD * lineThickness + nR * lineThickness;
+                tr = b + nU * lineThickness + nR * lineThickness;
+                Triangle.DrawTriangle(tl, bl, tr, rayColor);
+                Triangle.DrawTriangle(tr, bl, br, rayColor);
+                    
+            }
+            else
+            {
+                //tl
+                var cornerLengthH = MathF.Min(cornerLength, halfWidth);
+                var cornerLengthV = MathF.Min(cornerLength, halfHeight);
+                    
+                var outer = a + nU * lineThickness + nL * lineThickness;
+                var outerH = a + nU * lineThickness + nR * cornerLengthH;
+                var outerV = a + nD * cornerLengthV + nL * lineThickness;
+                var inner = a + nD * lineThickness + nR * lineThickness;
+                var innerH = a + nD * lineThickness + nR * cornerLengthH;
+                var innerV = a + nD * cornerLengthV + nR * lineThickness;
+                    
+                Triangle.DrawTriangle(outer, inner, outerH, rayColor);
+                Triangle.DrawTriangle(inner, innerH, outerH, rayColor);
+                Triangle.DrawTriangle(outer, outerV, inner, rayColor);
+                Triangle.DrawTriangle(inner, outerV, innerV, rayColor);
+                
+                //tr
+                outer = d + nU * lineThickness + nR * lineThickness;
+                outerH = d + nU * lineThickness + nL * cornerLengthH;
+                outerV = d + nD * cornerLengthV + nR * lineThickness;
+                inner = d + nD * lineThickness + nL * lineThickness;
+                innerH = d + nD * lineThickness + nL * cornerLengthH;
+                innerV = d + nD * cornerLengthV + nL * lineThickness;
+                    
+                Triangle.DrawTriangle(outerH, inner, outer, rayColor);
+                Triangle.DrawTriangle(outerH, innerH, inner, rayColor);
+                Triangle.DrawTriangle(outer, inner, outerV, rayColor);
+                Triangle.DrawTriangle(inner, innerV, outerV, rayColor);
+                
+                //br
+                outer = c + nD * lineThickness + nR * lineThickness;
+                outerH = c + nD * lineThickness + nL * cornerLengthH;
+                outerV = c + nU * cornerLengthV + nR * lineThickness;
+                inner = c + nU * lineThickness + nL * lineThickness;
+                innerH = c + nU * lineThickness + nL * cornerLengthH;
+                innerV = c + nU * cornerLengthV + nL * lineThickness;
+                    
+                Triangle.DrawTriangle(outerV, inner, outer, rayColor);
+                Triangle.DrawTriangle(outerV, innerV, inner, rayColor);
+                Triangle.DrawTriangle(outerH, outer, inner, rayColor);
+                Triangle.DrawTriangle(inner, innerH, outerH, rayColor);
+                
+                //bl
+                outer = b + nD * lineThickness + nL * lineThickness;
+                outerH = b + nD * lineThickness + nR * cornerLengthH;
+                outerV = b + nU * cornerLengthV + nL * lineThickness;
+                inner = b + nU * lineThickness + nR * lineThickness;
+                innerH = b + nU * lineThickness + nR * cornerLengthH;
+                innerV = b + nU * cornerLengthV + nR * lineThickness;
+                    
+                Triangle.DrawTriangle(outerV, outer, inner, rayColor);
+                Triangle.DrawTriangle(outerV, inner, innerV, rayColor);
+                Triangle.DrawTriangle(outer, outerH, inner, rayColor);
+                Triangle.DrawTriangle(inner, outerH, innerH, rayColor);
+                    
+            }
+        }
+    }
+    #endregion
+    
+    #region Draw Corners Relative
+    /// <summary>
+    /// Draws the corners of the quad with independent lengths relative to the quad's minimum dimension.
+    /// </summary>
+    /// <param name="lineThickness">The thickness of the corner lines.</param>
+    /// <param name="color">The color of the corner lines.</param>
+    /// <param name="tlCornerFactor">Factor (0-1) for the top-left corner length relative to the quad's minimum size.</param>
+    /// <param name="trCornerFactor">Factor (0-1) for the top-right corner length relative to the quad's minimum size.</param>
+    /// <param name="brCornerFactor">Factor (0-1) for the bottom-right corner length relative to the quad's minimum size.</param>
+    /// <param name="blCornerFactor">Factor (0-1) for the bottom-left corner length relative to the quad's minimum size.</param>
+    public  void DrawCornersRelative(float lineThickness, ColorRgba color, float tlCornerFactor, float trCornerFactor, float brCornerFactor, float blCornerFactor)
+    {
+        float minSize = GetSize().Min();
+        DrawCorners(lineThickness, color, tlCornerFactor * minSize, trCornerFactor * minSize, brCornerFactor * minSize, blCornerFactor * minSize);
+    }
+    
+    /// <summary>
+    /// Draws all corners of the quad with the same length relative to the quad's minimum dimension.
+    /// </summary>
+    /// <param name="lineThickness">The thickness of the corner lines.</param>
+    /// <param name="color">The color of the corner lines.</param>
+    /// <param name="cornerLengthFactor">Factor (0-1) for the corner length relative to the quad's minimum size.</param>
+    public  void DrawCornersRelative(float lineThickness, ColorRgba color, float cornerLengthFactor)
+    {
+        DrawCornersRelative(lineThickness, color, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
+    }
+    #endregion
+    
+    #region Draw Chamfered Corners
+    /// <summary>
+    /// Draws the quad with chamfered corners of equal length.
+    /// </summary>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLength">The length of the slant for all corners.</param>
+    public void DrawChamferedCorners(ColorRgba color, float cornerLength)
+    {
+        DrawChamferedCorners(color, cornerLength, cornerLength);
+    }
+    
+    /// <summary>
+    /// Draws the quad with chamfered corners with separate horizontal and vertical slant lengths.
+    /// </summary>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLengthHorizontal">The horizontal length of the slant.</param>
+    /// <param name="cornerLengthVertical">The vertical length of the slant.</param>
+    public void DrawChamferedCorners(ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    {
+        var quad = this;
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        if (cornerLengthHorizontal <= 0 && cornerLengthVertical <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
+
+        float halfWidth = size.Width / 2f;
+        float halfHeight = size.Height / 2f;
+        
+        var nD = quad.NormalDown;
+        var nR = quad.NormalRight;
+        var nL = -nR;
+        var nU = -nD;
+        
+        var tl = quad.TopLeft;
+        var br = quad.BottomRight;
+        
+        if (cornerLengthHorizontal >= halfWidth && cornerLengthVertical >= halfHeight)
+        {
+            var p1 = tl + nR * halfWidth;
+            var p2 = tl + nD * halfHeight;
+            var p3 = br + nL * halfWidth;
+            var p4 = br + nU * halfHeight;
+            Triangle.DrawTriangle(p1, p2, p3, color);
+            Triangle.DrawTriangle(p1, p3, p4, color);
+            return;
+        }
+        
+        var bl = quad.BottomLeft;
+        var tr = quad.TopRight;
+
+
+        if (cornerLengthHorizontal >= halfWidth)
+        {
+            var top = tl + nR * halfWidth;
+            var bottom = bl + nR * halfWidth;
+            var tlV = tl + nD * cornerLengthVertical;
+            var blV = bl + nU * cornerLengthVertical;
+            var brV = br + nU * cornerLengthVertical;
+            var trV = tr + nD * cornerLengthVertical;
+            
+            Triangle.DrawTriangle(top, tlV, blV, color);
+            Triangle.DrawTriangle(top, blV, bottom, color);
+            
+            Triangle.DrawTriangle(top, bottom, brV, color);
+            Triangle.DrawTriangle(top, brV, trV, color);
+        }
+        else if (cornerLengthVertical >= halfHeight)
+        {
+            var left = tl + nD * halfHeight;
+            var right = tr + nD * halfHeight;
+            var tlH = tl + nR * cornerLengthHorizontal;
+            var blH = bl + nR * cornerLengthHorizontal;
+            var brH = br + nL * cornerLengthHorizontal;
+            var trH = tr + nL * cornerLengthHorizontal;
+            
+            Triangle.DrawTriangle(tlH, left, blH, color);
+            Triangle.DrawTriangle(tlH, blH, trH, color);
+            
+            Triangle.DrawTriangle(trH, blH, brH, color);
+            Triangle.DrawTriangle(trH, brH, right, color);
+        }
+        else
+        {
+            
+            var tlH = tl + nR * cornerLengthHorizontal;
+            var tlV = tl + nD * cornerLengthVertical;
+        
+            var blV = bl + nU * cornerLengthVertical;
+            var blH = bl + nR * cornerLengthHorizontal;
+        
+            var brH = br + nL * cornerLengthHorizontal;
+            var brV = br + nU * cornerLengthVertical;
+       
+            var trV = tr + nD * cornerLengthVertical;
+            var trH = tr + nL * cornerLengthHorizontal;
+
+            //left triangles
+            Triangle.DrawTriangle(tlV, blV, tlH, color);
+            Triangle.DrawTriangle(tlH, blV, blH, color);
+        
+            //center triangles
+            Triangle.DrawTriangle(tlH, blH, trH, color);
+            Triangle.DrawTriangle(trH, blH, brH, color);
+        
+            //right triangles
+            Triangle.DrawTriangle(trH, brH, trV, color);
+            Triangle.DrawTriangle(trV, brH, brV, color);
+        }
+    }
+    
+    /// <summary>
+    /// Draws the quad with independently chamfered corners.
+    /// </summary>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="tlCorner">The slant length for the top-left corner.</param>
+    /// <param name="trCorner">The slant length for the top-right corner.</param>
+    /// <param name="brCorner">The slant length for the bottom-right corner.</param>
+    /// <param name="blCorner">The slant length for the bottom-left corner.</param>
+    public void DrawChamferedCorners(ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
+    {
+        var quad = this;
+        if (tlCorner <= 0 && trCorner <= 0 && brCorner <= 0 && blCorner <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
+        
+        Vector2 nU = quad.NormalUp;
+        Vector2 nR = quad.NormalRight;
+        
+        Vector2 center = quad.Center;
+        
+        var size = quad.GetSize();
+        var halfWidth = size.Width * 0.5f;
+        var halfHeight = size.Height * 0.5f;
+        
+        Vector2 prev, start;
+        bool startMaxed, prevMaxed;
+        
+        var rayColor = color.ToRayColor();
+        
+        if (tlCorner > 0)
+        {
+            var cornerLengthH = MathF.Min(tlCorner, halfWidth);
+            var cornerLengthV = MathF.Min(tlCorner, halfHeight);
+            Vector2 a = quad.TopLeft + nR * cornerLengthH;
+            Vector2 b = quad.TopLeft - nU * cornerLengthV;
+
+            start = a;
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+
+            startMaxed = tlCorner >= halfWidth;
+            prevMaxed = tlCorner >= halfHeight;
+        }
+        else
+        {
+            Vector2 b = quad.TopLeft;
+            Vector2 a = b + nR * halfWidth;
+            Vector2 c = b - nU * halfHeight;
+            
+            start = a;
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+            
+            startMaxed = true;
+            prevMaxed = true;
+        }
+        
+        if (blCorner > 0)
+        {
+            var cornerLengthH = MathF.Min(blCorner, halfWidth);
+            var cornerLengthV = MathF.Min(blCorner, halfHeight);
+            Vector2 a = quad.BottomLeft + nU * cornerLengthV;
+            Vector2 b = quad.BottomLeft + nR * cornerLengthH;
+
+            if (!prevMaxed || blCorner < halfHeight)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            prevMaxed = blCorner >= halfWidth;
+            
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+        }
+        else
+        {
+            Vector2 b = quad.BottomLeft;
+            Vector2 a = b + nU * halfHeight;
+            Vector2 c = b + nR * halfWidth;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+
+            prevMaxed = true;
+            
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+        }
+
+        if (brCorner > 0)
+        {
+            var cornerLengthH = MathF.Min(brCorner, halfWidth);
+            var cornerLengthV = MathF.Min(brCorner, halfHeight);
+            Vector2 a = quad.BottomRight - nR * cornerLengthH;
+            Vector2 b = quad.BottomRight + nU * cornerLengthV;
+
+            if (!prevMaxed || brCorner < halfWidth)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            prevMaxed = brCorner >= halfHeight;
+            
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+        }
+        else
+        {
+            Vector2 b = quad.BottomRight;
+            Vector2 a = b - nR * halfWidth;
+            Vector2 c = b + nU * halfHeight;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+
+            prevMaxed = true;
+            
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+        }
+        
+        if (trCorner > 0)
+        {
+            var cornerLengthH = MathF.Min(trCorner, halfWidth);
+            var cornerLengthV = MathF.Min(trCorner, halfHeight);
+            Vector2 a = quad.TopRight - nU * cornerLengthV;
+            Vector2 b = quad.TopRight - nR * cornerLengthH;
+
+            if (!prevMaxed || trCorner < halfHeight)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+            
+            if(!startMaxed || trCorner < halfWidth)
+            {
+                Raylib.DrawTriangle(b, start, center, rayColor);
+            }
+        }
+        else
+        {
+            Vector2 b = quad.TopRight;
+            Vector2 a = b - nU * halfHeight;
+            Vector2 c = b - nR * halfWidth;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+
+            if (!startMaxed)
+            {
+                Raylib.DrawTriangle(c, start, center, rayColor);
+            }
+        }
+    }
+    #endregion
+    
+    #region Draw Chamfered Corners Relative
+    /// <summary>
+    /// Draws the quad with slanted (chamfered) corners relative to the quad's dimensions.
+    /// </summary>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLengthFactor">The slant factor (0-1) relative to half the quad's size.</param>
+    public void DrawChamferedCornersRelative(ColorRgba color, float cornerLengthFactor)
+    {
+        var quad = this;
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        if (cornerLengthFactor <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
+        
+        float halfWidth = size.Width / 2f;
+        float halfHeight = size.Height / 2f;
+
+        if (cornerLengthFactor >= 1f) cornerLengthFactor = 1f;
+        DrawChamferedCorners(color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
+    }
+    
+    /// <summary>
+    /// Draws the quad with slanted (chamfered) corners relative to the quad's dimensions, specifying horizontal and vertical factors.
+    /// </summary>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="cornerLengthFactorHorizontal">The horizontal slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="cornerLengthFactorVertical">The vertical slant factor (0-1) relative to half the quad's height.</param>
+    public void DrawChamferedCornersRelative(ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    {
+        var quad = this;
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        if (cornerLengthFactorHorizontal <= 0 && cornerLengthFactorVertical <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
+
+        if (cornerLengthFactorHorizontal >= 1f) cornerLengthFactorHorizontal = 1f;
+        if(cornerLengthFactorVertical >= 1f) cornerLengthFactorVertical = 1f;
+        
+        float cornerLengthH = cornerLengthFactorHorizontal * size.Width * 0.5f;
+        float cornerLengthV = cornerLengthFactorVertical * size.Height * 0.5f;
+        DrawChamferedCorners(color, cornerLengthH, cornerLengthV);
+    }
+
+    /// <summary>
+    /// Draws the quad with independently slanted (chamfered) corners relative to the quad's dimensions.
+    /// </summary>
+    /// <param name="color">The fill color of the shape.</param>
+    /// <param name="tlCornerFactor">Top-left corner slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="trCornerFactor">Top-right corner slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="brCornerFactor">Bottom-right corner slant factor (0-1) relative to half the quad's width.</param>
+    /// <param name="blCornerFactor">Bottom-left corner slant factor (0-1) relative to half the quad's width.</param>
+    public void DrawChamferedCornersRelative(ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
+    {
+        var quad = this;
+        if (tlCornerFactor <= 0 && trCornerFactor <= 0 && brCornerFactor <= 0 && blCornerFactor <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
+
+        if(tlCornerFactor >= 1f) tlCornerFactor = 1f;
+        if(trCornerFactor >= 1f) trCornerFactor = 1f;
+        if(brCornerFactor >= 1f) brCornerFactor = 1f;
+        if(blCornerFactor >= 1f) blCornerFactor = 1f;
+        
+        Vector2 nU = quad.NormalUp;
+        Vector2 nR = quad.NormalRight;
+        
+        Vector2 center = quad.Center;
+        
+        var size = quad.GetSize();
+        var halfWidth = size.Width * 0.5f;
+        var halfHeight = size.Height * 0.5f;
+        
+        Vector2 prev, start;
+        bool startMaxed, prevMaxed;
+        
+        var rayColor = color.ToRayColor();
+        
+        if (tlCornerFactor > 0)
+        {
+            var cornerLengthH = tlCornerFactor * halfWidth;
+            var cornerLengthV = tlCornerFactor * halfHeight;
+            Vector2 a = quad.TopLeft + nR * cornerLengthH;
+            Vector2 b = quad.TopLeft - nU * cornerLengthV;
+
+            start = a;
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+
+            startMaxed = prevMaxed = tlCornerFactor >= 1f;
+        }
+        else
+        {
+            Vector2 b = quad.TopLeft;
+            Vector2 a = b + nR * halfWidth;
+            Vector2 c = b - nU * halfHeight;
+            
+            start = a;
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+            
+            startMaxed = true;
+            prevMaxed = true;
+        }
+        
+        if (blCornerFactor > 0)
+        {
+            var cornerLengthH = blCornerFactor * halfWidth;
+            var cornerLengthV = blCornerFactor * halfHeight;
+            Vector2 a = quad.BottomLeft + nU * cornerLengthV;
+            Vector2 b = quad.BottomLeft + nR * cornerLengthH;
+
+            if (!prevMaxed || blCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            prevMaxed = blCornerFactor >= 1f;
+            
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+        }
+        else
+        {
+            Vector2 b = quad.BottomLeft;
+            Vector2 a = b + nU * halfHeight;
+            Vector2 c = b + nR * halfWidth;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+
+            prevMaxed = true;
+            
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+        }
+
+        if (brCornerFactor > 0)
+        {
+            var cornerLengthH = brCornerFactor * halfWidth;
+            var cornerLengthV = brCornerFactor * halfHeight;
+            Vector2 a = quad.BottomRight - nR * cornerLengthH;
+            Vector2 b = quad.BottomRight + nU * cornerLengthV;
+
+            if (!prevMaxed || brCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            prevMaxed = brCornerFactor >= 1f;
+            
+            prev = b;
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+        }
+        else
+        {
+            Vector2 b = quad.BottomRight;
+            Vector2 a = b - nR * halfWidth;
+            Vector2 c = b + nU * halfHeight;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+
+            prevMaxed = true;
+            
+            prev = c;
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+        }
+        
+        if (trCornerFactor > 0)
+        {
+            var cornerLengthH = trCornerFactor * halfWidth;
+            var cornerLengthV = trCornerFactor * halfHeight;
+            Vector2 a = quad.TopRight - nU * cornerLengthV;
+            Vector2 b = quad.TopRight - nR * cornerLengthH;
+
+            if (!prevMaxed || trCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            Raylib.DrawTriangle(a, b, center, rayColor);
+            
+            if(!startMaxed || trCornerFactor < 1f)
+            {
+                Raylib.DrawTriangle(b, start, center, rayColor);
+            }
+        }
+        else
+        {
+            Vector2 b = quad.TopRight;
+            Vector2 a = b - nU * halfHeight;
+            Vector2 c = b - nR * halfWidth;
+
+            if (!prevMaxed)
+            {
+                Raylib.DrawTriangle(prev, a, center, rayColor);
+            }
+            
+            Raylib.DrawTriangle(a, b, c, rayColor);
+            Raylib.DrawTriangle(a, c, center, rayColor);
+
+            if (!startMaxed)
+            {
+                Raylib.DrawTriangle(c, start, center, rayColor);
+            }
+        }
+    }
+    #endregion
+    
+    #region Draw Chamfered Corners Lines
+    
+    /// <summary>
+    /// Draws the outline of a quad with equally chamfered corners using the specified line thickness.
+    /// </summary>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the chamfered quad is filled instead of outlined.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLength">
+    /// The chamfer length applied uniformly to all four corners. If less than or equal to zero, the regular quad outline is drawn.
+    /// </param>
+    /// <remarks>
+    /// The chamfer length and line thickness are clamped to the quad's minimum half-size to avoid invalid geometry.
+    /// Internally, this method builds inner and outer chamfer polygons and triangulates the outline area.
+    /// </remarks>
+    public void DrawChamferedCornersLines(float lineThickness, ColorRgba color, float cornerLength)
+    {
+        var quad = this;
+        if (lineThickness <= 0)
+        {
+            quad.DrawChamferedCorners(color, cornerLength);
+            return;
+        }
+        
+        if (cornerLength <= 0)
+        {
+            quad.DrawLines(lineThickness, color);
+            return;
+        }
+        
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        var minHalfSize = MathF.Min(halfWidth, halfHeight);
+        lineThickness = MathF.Min(lineThickness, minHalfSize);
+        cornerLength = MathF.Min(cornerLength, minHalfSize);
+        
+        var nR = quad.NormalRight;
+        var nD = quad.NormalDown;
+        var nL = -nR;
+        var nU = -nD;
+        
+        var chamferA = new ChamferedCorner(quad.A, cornerLength, cornerLength, nR, nD);
+        var chamferB = new ChamferedCorner(quad.B, cornerLength, cornerLength, nU, nR);
+        var chamferC = new ChamferedCorner(quad.C, cornerLength, cornerLength, nL, nU);
+        var chamferD = new ChamferedCorner(quad.D, cornerLength, cornerLength, nD, nL);
+        
+        chamferedCornersBuffer.Clear();
+        
+        chamferA.AddToList(chamferedCornersBuffer);
+        chamferB.AddToList(chamferedCornersBuffer);
+        chamferC.AddToList(chamferedCornersBuffer);
+        chamferD.AddToList(chamferedCornersBuffer);
+        
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f);
+    }
+   
+    /// <summary>
+    /// Draws the outline of a quad with chamfered corners using separate horizontal and vertical chamfer lengths.
+    /// </summary>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the chamfered quad is filled instead of outlined.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLengthHorizontal">
+    /// The chamfer length measured along horizontal edges. If less than or equal to zero while the vertical value is positive,
+    /// the method falls back to the uniform chamfer overload using the vertical value.
+    /// </param>
+    /// <param name="cornerLengthVertical">
+    /// The chamfer length measured along vertical edges. If less than or equal to zero while the horizontal value is positive,
+    /// the method falls back to the uniform chamfer overload using the horizontal value.
+    /// </param>
+    /// <remarks>
+    /// When both chamfer lengths are effectively equal, this method forwards to the single-length overload.
+    /// Chamfer lengths are clamped against the corresponding quad half-dimensions, and line thickness is clamped
+    /// against the minimum half-size of the quad.
+    /// </remarks>
+    public void DrawChamferedCornersLines(float lineThickness, ColorRgba color, float cornerLengthHorizontal, float cornerLengthVertical)
+    {
+        var quad = this;
+        if(lineThickness <= 0 && (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0))
+        {
+            quad.Draw(color);
+            return;
+        }
+        
+        if (cornerLengthHorizontal <= 0 || cornerLengthVertical <= 0)
+        {
+            quad.DrawLines(lineThickness, color);
+            return;
+        }
+        
+        if (lineThickness <= 0)
+        {
+            quad.DrawChamferedCorners(color, cornerLengthHorizontal, cornerLengthVertical);
+            return;
+        }
+        
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        var minHalfSize = MathF.Min(halfWidth, halfHeight);
+        lineThickness = MathF.Min(lineThickness, minHalfSize);
+        
+        var cornerLengthW = MathF.Min(cornerLengthHorizontal, halfWidth);
+        var cornerLengthH = MathF.Min(cornerLengthVertical, halfHeight);
+        
+        var nR = quad.NormalRight;
+        var nD = quad.NormalDown;
+        var nL = -nR;
+        var nU = -nD;
+        
+        var chamferA = new ChamferedCorner(quad.A, cornerLengthW, cornerLengthH, nR, nD);
+        var chamferB = new ChamferedCorner(quad.B, cornerLengthH, cornerLengthW, nU, nR);
+        var chamferC = new ChamferedCorner(quad.C, cornerLengthW, cornerLengthH, nL, nU);
+        var chamferD = new ChamferedCorner(quad.D, cornerLengthH, cornerLengthW, nD, nL);
+        
+        chamferedCornersBuffer.Clear();
+        
+        chamferA.AddToList(chamferedCornersBuffer);
+        chamferB.AddToList(chamferedCornersBuffer);
+        chamferC.AddToList(chamferedCornersBuffer);
+        chamferD.AddToList(chamferedCornersBuffer);
+        
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f);
+    }
+    
+    /// <summary>
+    /// Draws the outline of a quad with independently chamfered corners.
+    /// </summary>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the chamfered quad is filled instead of outlined.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="tlCorner">Chamfer length for the top-left corner.</param>
+    /// <param name="blCorner">Chamfer length for the bottom-left corner.</param>
+    /// <param name="brCorner">Chamfer length for the bottom-right corner.</param>
+    /// <param name="trCorner">Chamfer length for the top-right corner.</param>
+    /// <remarks>
+    /// Negative corner values are clamped to zero. Each corner length is also clamped to the quad's minimum half-size
+    /// before geometry is generated. If all corner lengths are zero, the method falls back to drawing a regular quad outline.
+    /// </remarks>
+    public void DrawChamferedCornersLines(float lineThickness, ColorRgba color, float tlCorner, float blCorner, float brCorner, float trCorner)
+    {
+        var quad = this;
+        tlCorner = MathF.Max(0, tlCorner);
+        blCorner = MathF.Max(0, blCorner);
+        brCorner = MathF.Max(0, brCorner);
+        trCorner = MathF.Max(0, trCorner);
+        
+        var cornerSum = tlCorner + blCorner + brCorner + trCorner;
+       
+        if(lineThickness <= 0 && cornerSum <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
+        
+        if (cornerSum <= 0)
+        {
+            quad.DrawLines(lineThickness, color);
+            return;
+        }
+        
+        if (lineThickness <= 0)
+        {
+            quad.DrawChamferedCorners(color, tlCorner, blCorner, brCorner, trCorner);
+            return;
+        }
+        
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        var minHalfSize = MathF.Min(halfWidth, halfHeight);
+        lineThickness = MathF.Min(lineThickness, minHalfSize);
+        
+        var cornerLengthTl = MathF.Min(tlCorner, minHalfSize);
+        var cornerLengthBl = MathF.Min(blCorner, minHalfSize);
+        var cornerLengthBr = MathF.Min(brCorner, minHalfSize);
+        var cornerLengthTr = MathF.Min(trCorner, minHalfSize);
+        
+        var nR = quad.NormalRight;
+        var nD = quad.NormalDown;
+        var nL = -nR;
+        var nU = -nD;
+        
+        var chamferA = new ChamferedCorner(quad.A, cornerLengthTl, nR, nD);
+        var chamferB = new ChamferedCorner(quad.B, cornerLengthBl, nU, nR);
+        var chamferC = new ChamferedCorner(quad.C, cornerLengthBr, nL, nU);
+        var chamferD = new ChamferedCorner(quad.D, cornerLengthTr, nD, nL);
+        
+        chamferedCornersBuffer.Clear();
+        
+        chamferA.AddToList(chamferedCornersBuffer);
+        chamferB.AddToList(chamferedCornersBuffer);
+        chamferC.AddToList(chamferedCornersBuffer);
+        chamferD.AddToList(chamferedCornersBuffer);
+        
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f);
+    }
+    #endregion
+    
+    #region Draw Chamfered Corners Lines Relative
+    
+    /// <summary>
+    /// Draws the outline of a quad with uniformly chamfered corners specified as a relative factor of the quad size.
+    /// </summary>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the filled chamfered quad is drawn instead.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLengthFactor">
+    /// A normalized factor in the range [0, 1] that determines the chamfer amount relative to the quad half-size.
+    /// </param>
+    /// <remarks>
+    /// The factor is clamped to the range [0, 1]. The resulting horizontal and vertical chamfer lengths are derived
+    /// from half the quad width and half the quad height respectively.
+    /// </remarks>
+    public void DrawChamferedCornersLinesRelative(float lineThickness, ColorRgba color, float cornerLengthFactor)
+    {
+        var quad = this;
+        var size = quad.GetSize();
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        cornerLengthFactor = ShapeMath.Clamp(cornerLengthFactor, 0f, 1f);
+        
+        DrawChamferedCornersLines(lineThickness, color, halfWidth * cornerLengthFactor, halfHeight * cornerLengthFactor);
+    }
+    
+    /// <summary>
+    /// Draws the outline of a quad with chamfered corners specified by separate relative horizontal and vertical factors.
+    /// </summary>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the filled chamfered quad is drawn instead.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="cornerLengthFactorHorizontal">
+    /// A normalized factor in the range [0, 1] that scales the chamfer amount relative to half the quad width.
+    /// </param>
+    /// <param name="cornerLengthFactorVertical">
+    /// A normalized factor in the range [0, 1] that scales the chamfer amount relative to half the quad height.
+    /// </param>
+    /// <remarks>
+    /// Both factors are clamped independently to the range [0, 1] before being converted into absolute chamfer lengths.
+    /// </remarks>
+    public void DrawChamferedCornersLinesRelative(float lineThickness, ColorRgba color, float cornerLengthFactorHorizontal, float cornerLengthFactorVertical)
+    {
+        var quad = this;
+        var size = quad.GetSize();
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        cornerLengthFactorHorizontal = ShapeMath.Clamp(cornerLengthFactorHorizontal, 0f, 1f);
+        cornerLengthFactorVertical = ShapeMath.Clamp(cornerLengthFactorVertical, 0f, 1f);
+        float cornerLengthH = cornerLengthFactorHorizontal * halfWidth;
+        float cornerLengthV = cornerLengthFactorVertical * halfHeight;
+        DrawChamferedCornersLines(lineThickness, color, cornerLengthH, cornerLengthV);
+    }
+
+    /// <summary>
+    /// Draws the outline of a quad with independently chamfered corners specified as relative factors.
+    /// </summary>
+    /// <param name="lineThickness">
+    /// The thickness of the outline. If less than or equal to zero, the filled chamfered quad is drawn instead.
+    /// </param>
+    /// <param name="color">The color used to draw the outline.</param>
+    /// <param name="tlCornerFactor">Normalized chamfer factor for the top-left corner.</param>
+    /// <param name="blCornerFactor">Normalized chamfer factor for the bottom-left corner.</param>
+    /// <param name="brCornerFactor">Normalized chamfer factor for the bottom-right corner.</param>
+    /// <param name="trCornerFactor">Normalized chamfer factor for the top-right corner.</param>
+    /// <remarks>
+    /// Each factor is clamped to the range [0, 1]. The effective chamfer distances are derived from the quad half-width
+    /// or half-height depending on the corner edge direction used to construct the chamfer geometry.
+    /// </remarks>
+    public void DrawChamferedCornersLinesRelative(float lineThickness, ColorRgba color, float tlCornerFactor, float blCornerFactor, float brCornerFactor, float trCornerFactor)
+    {
+        var quad = this;
+        tlCornerFactor = ShapeMath.Clamp(tlCornerFactor, 0f, 1f);
+        blCornerFactor = ShapeMath.Clamp(blCornerFactor, 0f, 1f);
+        brCornerFactor = ShapeMath.Clamp(brCornerFactor, 0f, 1f);
+        trCornerFactor = ShapeMath.Clamp(trCornerFactor, 0f, 1f);
+        
+        var cornerFactorSum = tlCornerFactor + blCornerFactor + brCornerFactor + trCornerFactor;
+       
+        if(lineThickness <= 0 && cornerFactorSum <= 0)
+        {
+            quad.Draw(color);
+            return;
+        }
+        
+        if (cornerFactorSum <= 0)
+        {
+            quad.DrawLines(lineThickness, color);
+            return;
+        }
+        
+        if (lineThickness <= 0)
+        {
+            quad.DrawChamferedCornersRelative(color, tlCornerFactor, blCornerFactor, brCornerFactor, trCornerFactor);
+            return;
+        }
+        
+        var size = quad.GetSize();
+        if(size.Width <= 0 || size.Height <= 0) return;
+        
+        float halfWidth = size.Width * 0.5f;
+        float halfHeight = size.Height * 0.5f;
+        var minHalfSize = MathF.Min(halfWidth, halfHeight);
+        lineThickness = MathF.Min(lineThickness, minHalfSize);
+        
+        var cornerLengthPrevTl = MathF.Min(halfWidth * tlCornerFactor, halfWidth);
+        var cornerLengthNextTl = MathF.Min(halfHeight * tlCornerFactor, halfHeight);
+        
+        var cornerLengthPrevBl = MathF.Min(halfHeight * blCornerFactor, halfHeight);
+        var cornerLengthNextBl = MathF.Min(halfWidth * blCornerFactor, halfWidth);
+        
+        var cornerLengthPrevBr = MathF.Min(halfWidth * brCornerFactor, halfWidth);
+        var cornerLengthNextBr = MathF.Min(halfHeight * brCornerFactor, halfHeight);
+        
+        var cornerLengthPrevTr = MathF.Min(halfHeight * trCornerFactor, halfHeight);
+        var cornerLengthNextTr = MathF.Min(halfWidth * trCornerFactor, halfWidth);
+        
+        var nR = quad.NormalRight;
+        var nD = quad.NormalDown;
+        var nL = -nR;
+        var nU = -nD;
+        
+        var chamferA = new ChamferedCorner(quad.A, cornerLengthPrevTl, cornerLengthNextTl, nR, nD);
+        var chamferB = new ChamferedCorner(quad.B, cornerLengthPrevBl, cornerLengthNextBl, nU, nR);
+        var chamferC = new ChamferedCorner(quad.C, cornerLengthPrevBr, cornerLengthNextBr, nL, nU);
+        var chamferD = new ChamferedCorner(quad.D, cornerLengthPrevTr, cornerLengthNextTr, nD, nL);
+        
+        chamferedCornersBuffer.Clear();
+        
+        chamferA.AddToList(chamferedCornersBuffer);
+        chamferB.AddToList(chamferedCornersBuffer);
+        chamferC.AddToList(chamferedCornersBuffer);
+        chamferD.AddToList(chamferedCornersBuffer);
+        
+        ShapeClipperDrawing2D.DrawPolygonOutline(chamferedCornersBuffer, lineThickness, color, 4f);
+    }
+    #endregion
+    
+    #region Draw Vertices
+    /// <summary>
+    /// Draws circles at each vertex of a <see cref="Quad"/>.
+    /// </summary>
+    /// <param name="vertexRadius">The radius of each vertex circle.</param>
+    /// <param name="color">The color of the vertex circles.</param>
+    /// <param name="smoothness">
+    /// The smoothness value (0-1). This controls the visual quality of the circle by inversely interpolating the current <see cref="Circle.CircleSideLengthRange"/>.
+    /// A value of 0 uses the maximum side length (fewer sides, less smooth), while 1 uses the minimum side length (more sides, smoother).
+    /// The resulting side length determines the number of polygon sides used to approximate the circle.
+    /// </param>
+    /// <remarks>
+    /// Useful for visualizing or highlighting the corners of a quad.
+    /// </remarks>
+    public void DrawVertices(float vertexRadius, ColorRgba color, float smoothness = 0.5f)
+    {
+        var q = this;
+        var circle = new Circle(q.A, vertexRadius);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(q.B);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(q.C);
+        circle.Draw(color, smoothness);
+        circle = circle.SetPosition(q.D);
+        circle.Draw(color, smoothness);
+    }
+    #endregion
+    
     #region Draw Masked
     /// <summary>
     /// Draws the quad's outline segments constrained by a <see cref="Triangle"/> mask.
     /// </summary>
-    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
     /// <param name="mask">Triangle mask used to clip each segment's drawing.</param>
     /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
@@ -31,8 +1942,9 @@ public static class QuadDrawing
     /// This extension method forwards the draw call to each segment's <c>DrawMasked</c> overload,
     /// allowing per-segment clipping by the provided triangle mask.
     /// </remarks>
-    public static void DrawLinesMasked(this Quad quad, Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Triangle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
+        var quad = this;
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
@@ -41,7 +1953,6 @@ public static class QuadDrawing
     /// <summary>
     /// Draws the quad's outline segments constrained by a <see cref="Circle"/> mask.
     /// </summary>
-    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
     /// <param name="mask">Circle mask used to clip each segment's drawing.</param>
     /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
@@ -49,8 +1960,9 @@ public static class QuadDrawing
     /// This extension method forwards the draw call to each segment's <c>DrawMasked</c> overload,
     /// allowing per-segment clipping by the provided circle mask.
     /// </remarks>
-    public static void DrawLinesMasked(this Quad quad, Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Circle mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
+        var quad = this;
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
@@ -59,7 +1971,6 @@ public static class QuadDrawing
     /// <summary>
     /// Draws the quad's outline segments constrained by a <see cref="Rect"/> mask.
     /// </summary>
-    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
     /// <param name="mask">Rect mask used to clip each segment's drawing.</param>
     /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
@@ -67,8 +1978,9 @@ public static class QuadDrawing
     /// This extension method forwards the draw call to each segment's <c>DrawMasked</c> overload,
     /// allowing per-segment clipping by the provided rectangle mask.
     /// </remarks>
-    public static void DrawLinesMasked(this Quad quad, Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Rect mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
+        var quad = this;
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
@@ -77,7 +1989,6 @@ public static class QuadDrawing
     /// <summary>
     /// Draws the quad's outline segments constrained by a <see cref="Quad"/> mask.
     /// </summary>
-    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
     /// <param name="mask">Quad mask used to clip each segment's drawing.</param>
     /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
@@ -85,8 +1996,9 @@ public static class QuadDrawing
     /// Forwards the draw call to each segment's <c>DrawMasked</c> overload,
     /// allowing per-segment clipping by the provided quad mask.
     /// </remarks>
-    public static void DrawLinesMasked(this Quad quad, Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Quad mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
+        var quad = this;
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
@@ -95,7 +2007,6 @@ public static class QuadDrawing
     /// <summary>
     /// Draws the quad's outline segments constrained by a <see cref="Polygon"/> mask.
     /// </summary>
-    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
     /// <param name="mask">Polygon mask used to clip each segment's drawing.</param>
     /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
@@ -103,8 +2014,9 @@ public static class QuadDrawing
     /// Forwards the draw call to each segment's <c>DrawMasked</c> overload,
     /// allowing per-segment clipping by the provided polygon mask.
     /// </remarks>
-    public static void DrawLinesMasked(this Quad quad, Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
+    public void DrawLinesMasked(Polygon mask, LineDrawingInfo lineInfo, bool reversedMask = false)
     {
+        var quad = this;
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
@@ -117,7 +2029,6 @@ public static class QuadDrawing
     /// The mask type. Must implement <see cref="IClosedShapeTypeProvider"/> to provide closed-shape semantics
     /// required for segment clipping.
     /// </typeparam>
-    /// <param name="quad">The quad whose sides will be drawn (extension receiver).</param>
     /// <param name="mask">Mask used to clip each segment's drawing.</param>
     /// <param name="lineInfo">Line drawing parameters (thickness, color, cap type, etc.).</param>
     /// <param name="reversedMask">If true, draws the parts inside the mask instead of outside.</param>
@@ -126,8 +2037,9 @@ public static class QuadDrawing
     /// by the provided mask. This generic overload enables using any closed-shape provider without
     /// adding a separate overload for each concrete shape type.
     /// </remarks>
-    public static void DrawLinesMasked<T>(this Quad quad, T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
+    public void DrawLinesMasked<T>(T mask, LineDrawingInfo lineInfo, bool reversedMask = false) where T : IClosedShapeTypeProvider
     {
+        var quad = this;
         quad.SegmentAToB.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentBToC.DrawMasked(mask, lineInfo, reversedMask);
         quad.SegmentCToD.DrawMasked(mask, lineInfo, reversedMask);
@@ -135,393 +2047,203 @@ public static class QuadDrawing
     }
     #endregion
     
-    /// <summary>
-    /// Draws a filled quadrilateral using four vertices.
-    /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="color">The color to fill the quad.</param>
-    /// <remarks>Fills the quad by drawing two triangles.</remarks>
-    public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color)
-    {
-        Raylib.DrawTriangle(a, b, c, color.ToRayColor());
-        Raylib.DrawTriangle(a, c, d, color.ToRayColor());
-    }
-
-    /// <summary>
-    /// Draws the outline of a quadrilateral with specified line thickness and style.
-    /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    /// <remarks>Draws each side of the quad as a separate segment.</remarks>
-    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(c, d, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(d, a, lineThickness, color, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws the outline of a quadrilateral, scaling each side by a specified factor.
-    /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="sideLengthFactor">The factor by which to scale each side (0 = no line, 1 = full length).</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    /// <remarks>
-    /// Each side is drawn from its starting vertex towards its ending vertex, scaled by <paramref name="sideLengthFactor"/>.
-    /// </remarks>
-    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        var side1 = b - a;
-        var end1 = a + side1 * sideLengthFactor;
-        
-        var side2 = c - b;
-        var end2 = b + side2 * sideLengthFactor;
-        
-        var side3 = d - c;
-        var end3 = c + side3 * sideLengthFactor;
-        
-        var side4 = a - d;
-        var end4 = d + side4 * sideLengthFactor;
-        
-        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
-    }
+    #region Gapped
     
     /// <summary>
-    /// Draws a specified percentage of the outline of a quadrilateral.
+    /// Draws a gapped outline for a quadrilateral, creating a dashed or segmented effect along the quad's perimeter.
     /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="f">
-    /// The percentage of the outline to draw. 
-    /// <list type="bullet">
-    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
-    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
-    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
-    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
-    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
-    /// </list>
+    /// <param name="perimeter">
+    /// The total length of the quad's perimeter.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
     /// </param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the quad if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
     /// <remarks>
-    /// Useful for animating outlines or highlighting portions of a quad.
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public float DrawGappedOutline(float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
-        if (f == 0) return;
-
-        bool negative = false;
-        if (f < 0)
+        var quad = this;
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
-            negative = true;
-            f *= -1;
+            quad.DrawLines(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        
+        var shapePoints = new[] {quad.A, quad.B, quad.C, quad.D};
+        int sides = shapePoints.Length;
+
+        if (perimeter <= 0f)
+        {
+            perimeter = 0f;
+            for (int i = 0; i < sides; i++)
+            {
+                var curP = shapePoints[i];
+                var nextP = shapePoints[(i + 1) % sides];
+                perimeter += (nextP - curP).Length();
+            }
         }
         
-        int startCorner = (int)f;
-        float percentage = f - startCorner;
-        if (percentage <= 0) return;
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
         
-        startCorner = ShapeMath.Clamp(startCorner, 0, 3);
+        var curIndex = 0;
+        var curPoint = shapePoints[0]; 
+        var nextPoint= shapePoints[1]; 
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
         
-        if (startCorner == 0)
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
         {
-            if (negative)
+            if (curDistance + curDis >= nextDistance)
             {
-               DrawQuadLinesPercentageHelper(a, d, c, b, percentage, lineThickness, color, capType, capPoints);
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        Segment.DrawSegment(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            Segment.DrawSegment(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
             }
             else
             {
-                DrawQuadLinesPercentageHelper(a, b, c, d, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 1)
-        {
-            if (negative)
-            {
-                DrawQuadLinesPercentageHelper(d, c, b, a, percentage, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawQuadLinesPercentageHelper(b, c, d, a, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 2)
-        {
-            if (negative)
-            {
-                DrawQuadLinesPercentageHelper(c, b, a, d, percentage, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawQuadLinesPercentageHelper(c, d, a, b, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
-        else if (startCorner == 3)
-        {
-            if (negative)
-            {
-                DrawQuadLinesPercentageHelper(b, a, d, c, percentage, lineThickness, color, capType, capPoints);
-            }
-            else
-            {
-                DrawQuadLinesPercentageHelper(d, a, b, c, percentage, lineThickness, color, capType, capPoints);
-            }
-        }
-    }
-    
-    /// <summary>
-    /// Draws the outline of a quadrilateral using a <see cref="LineDrawingInfo"/> structure.
-    /// </summary>
-    /// <param name="a">The first vertex of the quad.</param>
-    /// <param name="b">The second vertex of the quad.</param>
-    /// <param name="c">The third vertex of the quad.</param>
-    /// <param name="d">The fourth vertex of the quad.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo)
-    {
-        SegmentDrawing.DrawSegment(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        SegmentDrawing.DrawSegment(b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        SegmentDrawing.DrawSegment(c, d, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        SegmentDrawing.DrawSegment(d, a, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-
-    /// <summary>
-    /// Draws a filled quadrilateral using the vertices of a <see cref="Quad"/>.
-    /// </summary>
-    /// <param name="q">The quad to draw.</param>
-    /// <param name="color">The color to fill the quad.</param>
-    public static void Draw(this Quad q, ColorRgba color) => DrawQuad(q.A, q.B, q.C, q.D, color);
-
-    /// <summary>
-    /// Draws the outline of a <see cref="Quad"/> with specified line thickness and style.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws the outline of a <see cref="Quad"/>, scaling each side by a specified factor.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="sideLengthFactor">The factor by which to scale each side (0 = no line, 1 = full length).</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    /// <remarks>
-    /// Each side is drawn from its starting vertex towards its ending vertex, scaled by <paramref name="sideLengthFactor"/>.
-    /// </remarks>
-    public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, sideLengthFactor, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws the outline of a <see cref="Quad"/> using a <see cref="LineDrawingInfo"/> structure.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    public static void DrawLines(this Quad q, LineDrawingInfo lineInfo) => DrawQuadLines(q.A, q.B, q.C, q.D, lineInfo);
-
-    /// <summary>
-    /// Draws a specified percentage of the outline of a <see cref="Quad"/>.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="f">
-    /// The percentage of the outline to draw. 
-    /// <list type="bullet">
-    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
-    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
-    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
-    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
-    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="lineThickness">The thickness of the outline.</param>
-    /// <param name="color">The color of the outline.</param>
-    /// <param name="capType">The style of the line caps.</param>
-    /// <param name="capPoints">The number of points used for the cap style.</param>
-    /// <remarks>
-    /// Useful for animating outlines or highlighting portions of a quad.
-    /// </remarks>
-    public static void DrawLinesPercentage(this Quad q, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineThickness, color, capType, capPoints);
-    }
-
-    /// <summary>
-    /// Draws a specified percentage of the outline of a <see cref="Quad"/> using a <see cref="LineDrawingInfo"/> structure.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="f">
-    /// The percentage of the outline to draw. 
-    /// <list type="bullet">
-    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
-    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
-    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
-    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
-    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <remarks>
-    /// Useful for animating outlines or highlighting portions of a quad.
-    /// </remarks>
-    public static void DrawLinesPercentage(this Quad q, float f, LineDrawingInfo lineInfo)
-    {
-        DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-
-    /// <summary>
-    /// Draws circles at each vertex of a <see cref="Quad"/>.
-    /// </summary>
-    /// <param name="q">The quad whose vertices to draw.</param>
-    /// <param name="vertexRadius">The radius of each vertex circle.</param>
-    /// <param name="color">The color of the vertex circles.</param>
-    /// <param name="circleSegments">The number of segments to use for each circle (default is 8).</param>
-    /// <remarks>
-    /// Useful for visualizing or highlighting the corners of a quad.
-    /// </remarks>
-    public static void DrawVertices(this Quad q, float vertexRadius, ColorRgba color, int circleSegments = 8)
-    {
-        CircleDrawing.DrawCircle(q.A, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(q.B, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(q.C, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(q.D, vertexRadius, color, circleSegments);
-    }
-
-    /// <summary>
-    /// Draws the outline of a <see cref="Quad"/> where each side can be scaled towards the origin of the side.
-    /// </summary>
-    /// <param name="q">The quad to outline.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
-    /// <param name="rotDeg">The rotation of the quad in degrees.</param>
-    /// <param name="alignment">The anchor point for rotation alignment.</param>
-    /// <param name="sideScaleFactor">
-    /// <para>The scale factor for each side.</para>
-    /// <list type="bullet">
-    /// <item><description>0: No quad is drawn.</description></item>
-    /// <item><description>1: The normal quad is drawn.</description></item>
-    /// <item><description>0.5: Each side is half as long.</description></item>
-    /// </list>
-    /// </param>
-    /// <param name="sideScaleOrigin">
-    /// The point along the line to scale from, in both directions (0 to 1).
-    /// <list type="bullet">
-    /// <item><description>0: Start of Segment</description></item>
-    /// <item><description>0.5: Center of Segment</description></item>
-    /// <item><description>1: End of Segment</description></item>
-    /// </list>
-    /// </param>
-    /// <remarks>
-    /// Allows for dynamic scaling and rotation of quad outlines, useful for effects and animations.
-    /// </remarks>
-    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignment, float sideScaleFactor, float sideScaleOrigin = 0.5f)
-    {
-        if (sideScaleFactor <= 0) return;
-        
-        if(rotDeg != 0) q = q.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, alignment);
-        
-        if (sideScaleFactor >= 1)
-        {
-            q.DrawLines(lineInfo);
-            return;
-        }
-        
-        SegmentDrawing.DrawSegment(q.A, q.B, lineInfo, sideScaleFactor, sideScaleOrigin);
-        SegmentDrawing.DrawSegment(q.B, q.C, lineInfo, sideScaleFactor, sideScaleOrigin);
-        SegmentDrawing.DrawSegment(q.C, q.D, lineInfo, sideScaleFactor, sideScaleOrigin);
-        SegmentDrawing.DrawSegment(q.D, q.A, lineInfo, sideScaleFactor, sideScaleOrigin);
-        
-    }
-    private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-    {
-        var l1 = (p2 - p1).Length();
-        var l2 = (p3 - p2).Length();
-        var l3 = (p4 - p3).Length();
-        var l4 = (p1 - p4).Length();
-        var perimeterToDraw = (l1 + l2 + l3 + l4) * percentage;
-        
-        // Draw first segment
-        var curP = p1;
-        var nextP = p2;
-        if (perimeterToDraw < l1)
-        {
-            float p = perimeterToDraw / l1;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
-            return;
-        }
                 
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l1;
+                if(points.Count > 0) points.Add(nextPoint);
                 
-        // Draw second segment
-        curP = nextP;
-        nextP = p3;
-        if (perimeterToDraw < l2)
-        {
-            float p = perimeterToDraw / l2;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % sides;
+                curPoint = shapePoints[curIndex];
+                nextPoint = shapePoints[(curIndex + 1) % sides];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
         }
-                
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l2;
-                
-        // Draw third segment
-        curP = nextP;
-        nextP = p4;
-        if (perimeterToDraw < l3)
-        {
-            float p = perimeterToDraw / l3;
-            nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-            return;
-        }
-        
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
-        perimeterToDraw -= l3;
-               
-        // Draw fourth segment
-        curP = nextP;
-        nextP = p1;
-        if (perimeterToDraw < l4)
-        {
-            float p = perimeterToDraw / l4;
-            nextP = curP.Lerp(nextP, p);
-        }
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+
+        return perimeter;
     }
    
+    #endregion
+    
+    #region Helper
+    private static Polygon chamferedCornersBuffer = new(8);
+    
+    private static (Vector2 a, Vector2 b, Vector2 c, Vector2 d, float p, bool ccw) GetDrawLinePercentageOrder(Quad quad, float percentage, int startIndex)
+    {
+        if (percentage == 0f) return (quad.A, quad.B, quad.C, quad.D, 0f, true);
+        bool ccw = true;
+        if (percentage < 0f)
+        {
+            percentage *= -1f;
+            ccw = false;
+        }
+        float perc = ShapeMath.Clamp(percentage, 0f, 1f);
+        var corner = ShapeMath.WrapI(startIndex, 0, 4);
+        
+        if (corner == 0)
+        {
+            return ccw ? (quad.A, quad.B, quad.C, quad.D, perc, ccw) : (quad.A, quad.D, quad.C, quad.B, perc, ccw);
+        }
+        if (corner == 1)
+        {
+            return ccw ? (quad.B, quad.C, quad.D, quad.A, perc, ccw) : (quad.B, quad.A, quad.D, quad.C, perc, ccw);
+        }
+        if (corner == 2)
+        {
+            return ccw ? (quad.C, quad.D, quad.A, quad.B, perc, ccw) : (quad.C, quad.B, quad.A, quad.D, perc, ccw);
+        }
+        
+        return ccw ? (quad.D, quad.A, quad.B, quad.C, perc, ccw) : (quad.D, quad.C, quad.B, quad.A, perc, ccw);
+    }
+    
+    private readonly struct ChamferedCorner
+    {
+        public readonly bool SharpCorner;
+        public readonly Vector2 Corner;
+        public readonly Vector2 Prev;
+        public readonly Vector2 Next;
+        
+        public ChamferedCorner(Vector2 p, float cornerLength, Vector2 normalPrev, Vector2 normalNext)
+        {
+            Corner = p;
+            if (cornerLength <= 0f)
+            {
+                Prev = p;
+                Next = p;
+                SharpCorner = true;
+            }
+            else
+            {
+                Prev = p + normalPrev * cornerLength;
+                Next = p + normalNext * cornerLength;
+                SharpCorner = false;
+            }
+            
+        }
+        
+        public ChamferedCorner(Vector2 p, float cornerLengthPrev, float cornerLengthNext, Vector2 normalPrev, Vector2 normalNext)
+        {
+            Corner = p;
+            Prev = p + normalPrev * cornerLengthPrev;
+            Next = p + normalNext * cornerLengthNext;
+            SharpCorner = false;
+        }
+        
+        public void AddToList(List<Vector2> list)
+        {
+            if(SharpCorner) list.Add(Corner);
+            else
+            {
+                list.Add(Prev);
+                list.Add(Next);
+            }
+        }
+        
+    }
+    #endregion
 }
+

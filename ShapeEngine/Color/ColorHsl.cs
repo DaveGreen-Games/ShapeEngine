@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Raylib_cs;
+using ShapeEngine.Core;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Color;
@@ -339,11 +340,57 @@ public readonly struct ColorHsl : IEquatable<ColorHsl>
     public override bool Equals([NotNullWhen(true)] object? obj) => obj is ColorHsl other && this.Equals(other);
 
     /// <summary>
-    /// Determines whether the specified <see cref="ColorHsl"/> is equal to the current <see cref="ColorHsl"/>.
+    /// Determines whether the specified <see cref="ColorHsl"/> is equal to the current <see cref="ColorHsl"/> using quantized comparison.
     /// </summary>
     /// <param name="other">The <see cref="ColorHsl"/> to compare with the current <see cref="ColorHsl"/>.</param>
-    /// <returns>True if the specified <see cref="ColorHsl"/> is equal to this instance; otherwise, false.</returns>
-    public bool Equals(ColorHsl other) => this == other;
+    /// <param name="decimalPlaces">The number of decimal places used to quantize component values before comparison.</param>
+    /// <returns>True if the specified <see cref="ColorHsl"/> is equal to this instance after quantization; otherwise, false.</returns>
+    public bool Equals(ColorHsl other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(Hue, other.Hue) &&
+               quantizer.QuantizedEquals(Saturation, other.Saturation) &&
+               quantizer.QuantizedEquals(Lightness, other.Lightness);
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="ColorHsl"/> is equal to the current <see cref="ColorHsl"/> using quantized comparison.
+    /// </summary>
+    /// <param name="other">The <see cref="ColorHsl"/> to compare with the current <see cref="ColorHsl"/>.</param>
+    /// <returns>True if the specified <see cref="ColorHsl"/> is equal to this instance after quantization; otherwise, false.</returns>
+    public bool Equals(ColorHsl other)
+    {
+        return Equals(other, DecimalPrecision.DefaultDecimalPlaces);
+    }
+    
+    /// <summary>
+    /// Creates a stable 64-bit hash key for this color.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize component values before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(Hue, Saturation, Lightness);
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of this color hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize component values before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of this color hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize component values before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
 
     /// <summary>
     /// Returns a hash code for this <see cref="ColorHsl"/>.
@@ -351,11 +398,8 @@ public readonly struct ColorHsl : IEquatable<ColorHsl>
     /// <returns>A hash code for the current <see cref="ColorHsl"/>.</returns>
     public override int GetHashCode()
     {
-        HashCode hashCode = new();
-        hashCode.Add(Hue);
-        hashCode.Add(Saturation);
-        hashCode.Add(Lightness);
-        return hashCode.ToHashCode();
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
     }
 
     /// <summary>

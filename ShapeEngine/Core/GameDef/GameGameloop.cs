@@ -232,7 +232,7 @@ public partial class Game
             
             GameScreenInfo = gameTexture.GameScreenInfo;
             GameUiScreenInfo = gameTexture.GameUiScreenInfo;
-            UIScreenInfo = new ScreenInfo(Window.ScreenArea, mousePosUI, FixedFramerateInterpolationFactor);
+            UIScreenInfo = new ScreenInfo(Window.ScreenArea, mousePosUI, true, FixedFramerateInterpolationFactor);
             
             UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
             

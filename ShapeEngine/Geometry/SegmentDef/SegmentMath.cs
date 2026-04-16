@@ -66,28 +66,136 @@ public readonly partial struct Segment
         };
         return points;
     }
+    
+    /// <summary>
+    /// Writes the segment endpoints and their projected counterparts into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the original and projected points.</param>
+    /// <param name="v">The vector along which to project the segment.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Points are written in this order: <see cref="Start"/>, <see cref="End"/>, <c>Start + v</c>, <c>End + v</c>.
+    /// </remarks>
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(4);
+        
+        result.Add(Start);
+        result.Add(End);
+        result.Add(Start + v);
+        result.Add(End + v);
+        
+        return true;
+    }
 
     /// <summary>
     /// Returns the convex hull polygon formed by projecting the segment along a given vector.
     /// </summary>
     /// <param name="v">The vector along which to project the segment.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull, or null if the vector is zero.</returns>
     /// <remarks>
     /// The result is typically a quadrilateral, unless the vector is degenerate.
     /// </remarks>
-    public Polygon? ProjectShape(Vector2 v)
+    public Polygon? ProjectShape(Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+
+        Points buffer;
+
+        if (useBuffer)
         {
-            Start,
-            End,
-            Start + v,
-            End + v,
-        };
-        return Polygon.FindConvexHull(points);
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(Start);
+            pointsBuffer.Add(End);
+            pointsBuffer.Add(Start + v);
+            pointsBuffer.Add(End + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                Start,
+                End,
+                Start + v,
+                End + v,
+            };
+        }
+        
+        
+        var result = new Polygon(4);
+        buffer.FindConvexHull(result);
+        return result;
+    }
+    
+    /// <summary>
+    /// Projects the segment along the given vector and writes the convex hull of the combined point set into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that receives the convex hull of the original and projected segment endpoints.</param>
+    /// <param name="v">The vector along which to project the segment.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method forms a temporary four-point set consisting of the segment endpoints and those same endpoints translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
+    /// </remarks>
+    public bool ProjectShape(Polygon result, Vector2 v, bool useBuffer = false)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        Points buffer;
+
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(Start);
+            pointsBuffer.Add(End);
+            pointsBuffer.Add(Start + v);
+            pointsBuffer.Add(End + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                Start,
+                End,
+                Start + v,
+                End + v,
+            };
+        }
+        
+        buffer.FindConvexHull(result);
+        return true;
     }
 
+    /// <summary>
+    /// Scales the segment from a specific origin point along the segment.
+    /// </summary>
+    /// <param name="scaleFactor">The factor by which to scale the segment.</param>
+    /// <param name="scaleOrigin">The origin point as a fraction (0=Start, 1=End) to scale from.</param>
+    /// <returns>A new <see cref="Segment"/> scaled by the given factor relative to the origin.</returns>
+    public Segment ScaleSegment(float scaleFactor, float scaleOrigin)
+    {
+        var p = Start.Lerp(End, scaleOrigin);
+        var s = Start - p;
+        var e = End - p;
+
+        var newStart = p + s * scaleFactor;
+        var newEnd = p + e * scaleFactor;
+        return new Segment(newStart, newEnd);
+    }
     #endregion
 
     #region Transform

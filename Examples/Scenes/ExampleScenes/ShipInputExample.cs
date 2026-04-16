@@ -152,10 +152,13 @@ namespace Examples.Scenes.ExampleScenes
                 var hullColor = colorScheme.Hull;
                 var cockpitColor = colorScheme.Cockpit;
                 
-                CircleDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
-                CircleDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
+                var rightThrusterCircle = new Circle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6);
+                var leftThrusterCircle = new Circle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6);
+                var hullCircle = new Circle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f);
+                rightThrusterCircle.Draw(outlineColor, 0.2f);
+                leftThrusterCircle.Draw(outlineColor, 0.2f);
                 hull.Draw(hullColor);
-                CircleDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor, 12);
+                hullCircle.Draw(cockpitColor, 0.2f);
 
                 hull.DrawLines(4f, outlineColor);
             }

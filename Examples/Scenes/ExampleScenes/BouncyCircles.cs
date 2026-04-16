@@ -3,6 +3,7 @@ using System.Numerics;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
@@ -52,7 +53,7 @@ namespace Examples.Scenes.ExampleScenes
                 _ => Colors.Medium
             };
 
-            CircleDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
+            Transform.GetCircle().DrawFast(color);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)
@@ -89,13 +90,15 @@ namespace Examples.Scenes.ExampleScenes
     {
         Rect boundaryRect;
 
+        private Polygon hull = new();
+        
         private InputAction iaAdd;
         private InputAction iaToggleConvexHull;
         private readonly InputActionTree inputActionTree;
 
         private bool showConvexHull = false;
         private readonly List<GameObject> circles = new(65536);
-        private readonly List<Vector2> circlePoints = new(65536);
+        private readonly Points circlePoints = new(65536);
 
         public BouncyCircles()
         {
@@ -180,8 +183,13 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     circlePoints.Add(circ.Transform.Position);
                 }
-                var hull = Polygon.FindConvexHull(circlePoints);
-                hull?.DrawLines(4f, Colors.Special);
+
+                if (circlePoints.Count > 0)
+                {
+                    hull.Clear();
+                    circlePoints.FindConvexHull(hull);
+                    hull.DrawLines(4f, Colors.Special); 
+                }
             }
 
         }

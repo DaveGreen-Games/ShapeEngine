@@ -46,6 +46,8 @@ internal class LaserBeamParticle
         var color = paletteColor.ColorRgba;
         var s = ShapeMath.LerpFloat(size, size * 0.25f, lifetimeF);
         var c = color.Lerp(color.ChangeAlpha(150), lifetimeF);
-        CircleDrawing.DrawCircleFast(position, s, c);
+
+        var circle = new Circle(position, s);
+        circle.DrawFast(c);
     }
 }

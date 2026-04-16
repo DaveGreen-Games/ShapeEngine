@@ -150,8 +150,11 @@ namespace Examples.Scenes.ExampleScenes
 
             var c = Colors.Cold; // new ColorRgba(Color.CornflowerBlue);
             float f = camera.ZoomFactor;
-            CircleDrawing.DrawCircle(camera.BasePosition, 8f * f, c);
-            CircleDrawing.DrawCircleLines(camera.BasePosition, 64 * f, 2f * f, c);
+            var circle = new Circle(camera.BasePosition, 8f * f);
+            circle.Draw(c, 0.2f);
+            circle = circle.SetRadius(64 * f);
+            circle.DrawLines(2f * f, c, 0.65f);
+            
             Segment hor = new(camera.BasePosition - new Vector2(3000 * f, 0), camera.BasePosition + new Vector2(3000 * f, 0));
             hor.Draw(2f * f, c);
             Segment ver = new(camera.BasePosition - new Vector2(0, 3000 * f), camera.BasePosition + new Vector2(0, 3000 * f));

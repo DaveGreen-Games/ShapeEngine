@@ -103,6 +103,19 @@ public readonly struct LineDrawingInfo
     /// </summary>
     /// <param name="thickness">The thickness of the line.</param>
     /// <param name="color">The color of the line.</param>
+    /// <param name="capPoints">The number of cap points to use.</param>
+    public LineDrawingInfo(float thickness, ColorRgba color, int capPoints)
+    {
+        Thickness = MathF.Max(thickness, LineMinThickness);
+        Color = color;
+        CapType = LineCapType.None;
+        CapPoints = capPoints;
+    }
+    /// <summary>
+    /// Creates a new line drawing info.
+    /// </summary>
+    /// <param name="thickness">The thickness of the line.</param>
+    /// <param name="color">The color of the line.</param>
     /// <param name="capType">The line cap type.</param>
     /// <param name="capPoints">The amount of points for the cap.</param>
     public LineDrawingInfo(float thickness, ColorRgba color, LineCapType capType, int capPoints)
@@ -114,29 +127,50 @@ public readonly struct LineDrawingInfo
     }
 
     /// <summary>
+    /// Returns a new <see cref="LineDrawingInfo"/> with the thickness changed by the specified amount.
+    /// </summary>
+    /// <param name="amount">The amount to change the thickness by.</param>
+    /// <returns>A new <see cref="LineDrawingInfo"/> with the updated thickness.</returns>
+    public LineDrawingInfo ChangeThickness(float amount) => new(Thickness + amount, Color, CapType, CapPoints);
+
+    /// <summary>
+    /// Returns a new <see cref="LineDrawingInfo"/> with the color alpha set to the specified value.
+    /// </summary>
+    /// <param name="newAlpha">The new alpha value for the color.</param>
+    /// <returns>A new <see cref="LineDrawingInfo"/> with the updated color alpha.</returns>
+    public LineDrawingInfo SetColorAlpha(byte newAlpha) => new(Thickness, Color.SetAlpha(newAlpha), CapType, CapPoints);
+
+    /// <summary>
+    /// Returns a new <see cref="LineDrawingInfo"/> with the color alpha changed by the specified amount.
+    /// </summary>
+    /// <param name="amount">The amount to change the alpha by.</param>
+    /// <returns>A new <see cref="LineDrawingInfo"/> with the updated color alpha.</returns>
+    public LineDrawingInfo ChangeColorAlpha(byte amount) => new(Thickness, Color.ChangeAlpha(amount), CapType, CapPoints);
+    
+    /// <summary>
     /// Creates a new line drawing info with a new thickness.
     /// </summary>
     /// <param name="newThickness">The new thickness.</param>
     /// <returns>A new line drawing info with the new thickness.</returns>
-    public LineDrawingInfo ChangeThickness(float newThickness) => new(newThickness, Color, CapType, CapPoints);
+    public LineDrawingInfo SetThickness(float newThickness) => new(newThickness, Color, CapType, CapPoints);
     /// <summary>
     /// Creates a new line drawing info with a new color.
     /// </summary>
     /// <param name="newColor">The new color.</param>
     /// <returns>A new line drawing info with the new color.</returns>
-    public LineDrawingInfo ChangeColor(ColorRgba newColor) => new(Thickness, newColor, CapType, CapPoints);
+    public LineDrawingInfo SetColor(ColorRgba newColor) => new(Thickness, newColor, CapType, CapPoints);
     /// <summary>
     /// Creates a new line drawing info with a new line cap type.
     /// </summary>
     /// <param name="newCapType">The new line cap type.</param>
     /// <returns>A new line drawing info with the new line cap type.</returns>
-    public LineDrawingInfo ChangeCapType(LineCapType newCapType) => new(Thickness, Color, newCapType, CapPoints);
+    public LineDrawingInfo SetCapType(LineCapType newCapType) => new(Thickness, Color, newCapType, CapPoints);
     /// <summary>
     /// Creates a new line drawing info with a new amount of cap points.
     /// </summary>
     /// <param name="newCapPoints">The new amount of cap points.</param>
     /// <returns>A new line drawing info with the new amount of cap points.</returns>
-    public LineDrawingInfo ChangeCapPoints(int newCapPoints) => new(Thickness, Color, CapType, newCapPoints);
+    public LineDrawingInfo SetCapPoints(int newCapPoints) => new(Thickness, Color, CapType, newCapPoints);
 
     /// <summary>
     /// Linearly interpolates between two line drawing infos.

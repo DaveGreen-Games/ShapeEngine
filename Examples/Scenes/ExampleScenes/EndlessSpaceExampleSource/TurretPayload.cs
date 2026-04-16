@@ -96,7 +96,8 @@ internal class TurretPayload : IPayload
         {
             Turret.Draw();
             Raylib.DrawPoly(targetLocation, 6, info.Size / 2, 0f, Colors.Cold.ToRayColor());
-            CircleDrawing.DrawCircleLines(targetLocation, info.Size, 6f, Colors.PcCold.ColorRgba, 6);
+            var circle = new Circle(targetLocation, info.Size);
+            circle.DrawLines(6f, Colors.PcCold.ColorRgba, 0.65f);
             var barrelPos = targetLocation + Turret.AimDir * info.Size;
             barrelPos.Draw(info.Size / 6, Colors.Cold, 24);
         }
@@ -104,15 +105,18 @@ internal class TurretPayload : IPayload
         if (travelTimer > 0f)
         {
             var f = TravelF;
-            CircleDrawing.DrawCircle(targetLocation, 12f, Colors.PcCold.ColorRgba, 24);
-            CircleDrawing.DrawCircleLines(targetLocation, info.ImpactSize * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
+            
+            var circle = new Circle(targetLocation, 12f);
+            circle.Draw(Colors.PcCold.ColorRgba, 0.1f);
+            var impactCircle = new Circle(targetLocation, info.ImpactSize * (1f - f));
+            impactCircle.DrawLines(6f, Colors.PcMedium.ColorRgba, 0.75f);
             
             var lineEnd = ShapeVec.Lerp(startLocation, targetLocation, f);
             var w = lineEnd - EndlessSpaceCollision.DestroyerPosition;
             var dir = w.Normalize();
             var lineStart = lineEnd - dir * 800f;
             
-            SegmentDrawing.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
+            Segment.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
         }
         
         if (smokeTimer > 0f)
@@ -120,7 +124,8 @@ internal class TurretPayload : IPayload
             var f = 1f - (smokeTimer / info.SmokeDuration);
             var color = Colors.Warm.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
             var size = ShapeMath.LerpFloat(info.ImpactSize * 0.5f, info.ImpactSize * 3f, f);
-            CircleDrawing.DrawCircle(curPosition, size, color, 24);
+            var circle = new Circle(curPosition, size);
+            circle.Draw(color, 0.65f);
         }
         
     }

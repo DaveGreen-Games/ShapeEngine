@@ -12,28 +12,12 @@ public readonly partial struct Rect
     #region Transform
 
     /// <summary>
-    /// Scales the size of the rectangle by the specified horizontal and vertical amounts, keeping the center fixed.
-    /// </summary>
-    /// <param name="horizontalAmount">The amount to scale horizontally (positive to expand, negative to shrink).</param>
-    /// <param name="verticalAmount">The amount to scale vertically (positive to expand, negative to shrink).</param>
-    /// <returns>A new rectangle with the scaled size.</returns>
-    public Rect ScaleSize(float horizontalAmount, float verticalAmount)
-    {
-        return new
-        (
-            X - horizontalAmount,
-            Y - verticalAmount,
-            Width + horizontalAmount * 2f,
-            Height + verticalAmount * 2f
-        );
-    }
-
-    /// <summary>
     /// Scales the size of the rectangle by a uniform factor, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="scale">The uniform scale factor.</param>
     /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the scaled size.</returns>
+    /// <remarks> Use a negative scale value to mirror the rect.</remarks>
     public Rect ScaleSize(float scale, AnchorPoint alignment) => new(GetPoint(alignment), Size * scale, alignment);
 
     /// <summary>
@@ -42,6 +26,7 @@ public readonly partial struct Rect
     /// <param name="scale">The scale factor for width and height.</param>
     /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the scaled size.</returns>
+    /// <remarks> Use negative scale values to mirror the rect.</remarks>
     public Rect ScaleSize(Vector2 scale, AnchorPoint alignment) => new(GetPoint(alignment), Size * scale, alignment);
 
     /// <summary>
@@ -49,6 +34,7 @@ public readonly partial struct Rect
     /// </summary>
     /// <param name="newSize">The new size for the rectangle.</param>
     /// <returns>A new rectangle with the specified size.</returns>
+    /// <remarks>Use negative size values to mirror the rect.</remarks>
     public Rect SetSize(Size newSize) => new(TopLeft, newSize);
 
     /// <summary>
@@ -67,6 +53,23 @@ public readonly partial struct Rect
     /// <returns>A new rectangle with the specified size and alignment.</returns>
     public Rect SetSize(float newSize, AnchorPoint alignment) => new(GetPoint(alignment), new Size(newSize), alignment);
 
+    /// <summary>
+    /// Changes the size of the rectangle by the specified horizontal and vertical amounts, keeping it centered.
+    /// </summary>
+    /// <param name="horizontalAmount">The amount to add to the width.</param>
+    /// <param name="verticalAmount">The amount to add to the height.</param>
+    /// <returns>A new rectangle with the adjusted size.</returns>
+    public Rect ChangeSize(float horizontalAmount, float verticalAmount)
+    {
+        return new
+        (
+            X - horizontalAmount * 0.5f,
+            Y - verticalAmount * 0.5f,
+            Width + horizontalAmount,
+            Height + verticalAmount
+        );
+    }
+    
     /// <summary>
     /// Changes the size of the rectangle by a uniform amount, using the specified anchor point for alignment.
     /// </summary>
@@ -156,25 +159,135 @@ public readonly partial struct Rect
         };
         return points;
     }
+    
+    /// <summary>
+    /// Writes this rectangle's original corners and their projected counterparts into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the original and projected corner points.</param>
+    /// <param name="v">The vector used to offset the projected corner points.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Points are written in this order: A, B, C, D, A + <paramref name="v"/>, B + <paramref name="v"/>, C + <paramref name="v"/>, D + <paramref name="v"/>.
+    /// </remarks>
+    public bool GetProjectedShapePoints(Points result, Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+        
+        result.Clear();
+        result.EnsureCapacity(8);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(D);
+        result.Add(A + v);
+        result.Add(B + v);
+        result.Add(C + v);
+        result.Add(D + v);
+        
+        return true;
+    }
 
     /// <summary>
     /// Projects the shape of the rectangle in the direction of the given vector, returning a convex hull.
     /// </summary>
     /// <param name="v">The vector indicating the projection direction.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
     /// <returns>The projected convex hull of the rectangle's shape.</returns>
-    public Polygon? ProjectShape(Vector2 v)
+    public Polygon? ProjectShape(Vector2 v, bool useBuffer = false)
     {
         if (v.LengthSquared() <= 0f) return null;
 
-        var points = new Points
+        Points buffer;
+
+        if (useBuffer)
         {
-            A, B, C, D,
-            A + v,
-            B + v,
-            C + v,
-            D + v
-        };
-        return Polygon.FindConvexHull(points);
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(D);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            pointsBuffer.Add(D + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                D,
+                A + v,
+                B + v,
+                C + v,
+                D + v
+            };
+        }
+        
+        var result = new Polygon(8);
+        buffer.FindConvexHull(result);
+        return result;
+    }
+    
+    /// <summary>
+    /// Projects this rectangle along the given vector and writes the convex hull of the combined corner set into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination polygon that receives the convex hull of the original and projected rectangle corners.</param>
+    /// <param name="v">The vector used to offset the projected corner points.</param>
+    /// <param name="useBuffer"><c>true</c> to reuse the internal points buffer and avoid a temporary allocation; <c>false</c> to allocate a new temporary buffer.
+    /// Set this to <c>false</c> when calling from parallel or multi\-threaded code, since the internal buffer is shared and not thread\-safe.</param>
+    /// <returns><c>true</c> if <paramref name="v"/> is non-zero and <paramref name="result"/> was populated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method constructs a temporary set containing the four rectangle corners and those same corners translated by <paramref name="v"/>, then computes the convex hull into <paramref name="result"/>.
+    /// </remarks>
+    public bool ProjectShape(Polygon result, Vector2 v, bool useBuffer = false)
+    {
+        if (v.LengthSquared() <= 0f) return false;
+
+        Points buffer;
+
+        if (useBuffer)
+        {
+            pointsBuffer.Clear();
+            pointsBuffer.EnsureCapacity(4);
+            
+            pointsBuffer.Add(A);
+            pointsBuffer.Add(B);
+            pointsBuffer.Add(C);
+            pointsBuffer.Add(D);
+            pointsBuffer.Add(A + v);
+            pointsBuffer.Add(B + v);
+            pointsBuffer.Add(C + v);
+            pointsBuffer.Add(D + v);
+            
+            buffer = pointsBuffer;
+        }
+        else
+        {
+            buffer = new Points
+            {
+                A,
+                B,
+                C,
+                D,
+                A + v,
+                B + v,
+                C + v,
+                D + v
+            };
+        }
+
+        buffer.FindConvexHull(result);
+        
+        return true;
     }
 
     /// <summary>
@@ -331,18 +444,39 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Converts a point in absolute coordinates to a relative (0-1) position within the rectangle.
+    /// Converts a point in absolute coordinates to a relative position within the rectangle.
     /// </summary>
     /// <param name="p">The absolute point to convert.</param>
-    /// <returns>The relative (0-1) position within the rectangle.</returns>
-    public Vector2 PointToRelative(Vector2 p)
+    /// <param name="clamped">Whether to clamp the result to 0-1 range.</param>
+    /// <returns>The relative position within the rectangle.</returns>
+    public Vector2 PointToRelative(Vector2 p, bool clamped = true)
     {
         var dif = p - TopLeft;
-        var intensity = dif / Size;
-
-        float xFactor = intensity.X < 0f ? 0f : intensity.X > 1f ? 1f : intensity.X;
-        float yFactor = intensity.Y < 0f ? 0f : intensity.Y > 1f ? 1f : intensity.Y;
+    
+        float xFactor = Width == 0f ? 0f : dif.X / Width;
+        float yFactor = Height == 0f ? 0f : dif.Y / Height;
+    
+        if(clamped)
+        {
+            xFactor = xFactor < 0f ? 0f : xFactor > 1f ? 1f : xFactor;
+            yFactor = yFactor < 0f ? 0f : yFactor > 1f ? 1f : yFactor;
+        }
+        
         return new(xFactor, yFactor);
+    }
+
+    /// <summary>
+    /// Converts an absolute point to a centered relative position within the rectangle.
+    /// </summary>
+    /// <param name="p">The absolute point to convert.</param>
+    /// <returns>
+    /// A centered relative position where the rectangle maps from <c>\-1</c> to <c>1</c> on each axis,
+    /// with the result clamped to the rectangle bounds.
+    /// </returns>
+    public Vector2 PointToRelativeCentered(Vector2 p)
+    {
+       var relative = PointToRelative(p, true);
+       return relative * 2f - Vector2.One;
     }
 
     /// <summary>
@@ -352,9 +486,23 @@ public readonly partial struct Rect
     /// <returns>The absolute point in the rectangle.</returns>
     public Vector2 PointToAbsolute(Vector2 relativePoint)
     {
-        return relativePoint * Size;
+        return TopLeft + relativePoint * Size;
     }
 
+    /// <summary>
+    /// Converts a centered relative position to an absolute point within the rectangle.
+    /// </summary>
+    /// <param name="relativePointCentered">
+    /// A centered relative position where <c>\-1</c> maps to the minimum edge,
+    /// <c>0</c> maps to the center, and <c>1</c> maps to the maximum edge.
+    /// </param>
+    /// <returns>The absolute point in the rectangle.</returns>
+    public Vector2 PointToAbsoluteCentered(Vector2 relativePointCentered)
+    {
+        var relativePoint = (relativePointCentered + Vector2.One) * 0.5f;
+        return TopLeft + relativePoint * Size;
+    }
+    
     /// <summary>
     /// Returns a value between 0 and 1 for the x axis based on where the value is within the rectangle's width.
     /// </summary>
@@ -436,5 +584,14 @@ public readonly partial struct Rect
         return Clamp(new Rect(min, max));
     }
 
+    /// <summary>
+    /// Gets the length of the diagonal connecting corner A and corner C.
+    /// </summary>
+    public float GetDiagonalLengt() => (A - C).Length();
+
+    /// <summary>
+    /// Gets the squared length of the diagonal connecting corner A and corner C.
+    /// </summary>
+    public float GetDiagonalLengthSquare() => (A - C).LengthSquared();
     #endregion
 }

@@ -164,20 +164,7 @@ public static class ShapeVec
         if(IsNormalFacingOutward(normal, outwardDirection)) return normal;
         else return -normal;
     }
-    /// <summary>
-    /// Determines if three points are colinear (lie on a straight line).
-    /// </summary>
-    /// <param name="a">The first point.</param>
-    /// <param name="b">The second point (vertex).</param>
-    /// <param name="c">The third point.</param>
-    /// <returns>True if the points are colinear, otherwise false.</returns>
-    public static bool IsColinear(Vector2 a, Vector2 b, Vector2 c)
-    {
-        Vector2 prevCur = a - b;
-        Vector2 nextCur = c - b;
-
-        return prevCur.Cross(nextCur) == 0f;
-    }
+    
     /// <summary>
     /// Returns the area represented by the vector (X * Y).
     /// </summary>
@@ -300,6 +287,18 @@ public static class ShapeVec
         return new Vector2(sx * invArrayLen, sy * invArrayLen);
     }
     
+    /// <summary>
+    /// Converts an angle in radians to its positive equivalent in the range [0, 2π].
+    /// </summary>
+    /// <param name="angleRad">The angle in radians to convert.</param>
+    /// <returns>The equivalent positive angle in the range [0, 2π].</returns>
+    /// <remarks>Negative angles are wrapped to their positive equivalents by adding multiples of 2π.</remarks>
+    public static float ToPositiveAngleRad(float angleRad)
+    {
+        angleRad %= float.Tau; // float.Tau = 2 * π
+        if (angleRad < 0f) angleRad += float.Tau;
+        return angleRad;
+    }
 
     //Projection
     /// <summary>
@@ -418,6 +417,23 @@ public static class ShapeVec
     /// <param name="t">The interpolation factor (0 to 1).</param>
     /// <returns>The interpolated vector.</returns>
     public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); }
+
+    /// <summary>
+    /// Linearly interpolates between two vectors by a specific length rather than a factor.
+    /// </summary>
+    /// <param name="from">The starting vector.</param>
+    /// <param name="to">The target vector.</param>
+    /// <param name="length">The distance to move from the start vector towards the target vector.</param>
+    /// <returns>The interpolated vector.</returns>
+    public static Vector2 LerpByLength(this Vector2 from, Vector2 to, float length)
+    {
+        if (length <= 0f) return from;
+        var l = (to - from).Length();
+        if(l <= 0f) return from;
+        if (length >= l) return to;
+        return from + (to - from) * (length / l);
+
+    }
 
     /// <summary>
     /// Exponentially decays and linearly interpolates between two vectors.
@@ -627,7 +643,6 @@ public static class ShapeVec
     /// <param name="n">The normal of the surface.</param>
     /// <returns>The reflected vector.</returns>
     public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); }
-    
     /// <summary>
     /// Changes the length of the vector by the given amount.
     /// </summary>
@@ -697,6 +712,8 @@ public static class ShapeVec
     /// <param name="angleDeg">The angle in degrees.</param>
     /// <returns>The rotated vector.</returns>
     public static Vector2 RotateDeg(this Vector2 v, float angleDeg) { return Rotate(v, angleDeg * ShapeMath.DEGTORAD); }
+    
+    #region Angle Calculations
     /// <summary>
     /// Calculates the angle in degrees between two vectors.
     /// </summary>
@@ -722,7 +739,294 @@ public static class ShapeVec
     /// <param name="v1">The first vector.</param>
     /// <param name="v2">The second vector.</param>
     /// <returns>The angle in radians between the two vectors.</returns>
-    public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }
+    public static float AngleRad(this Vector2 v1, Vector2 v2)
+    {
+        return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X);
+    }
+    
+    /// <summary>
+    /// Calculates the unsigned angle in radians between two vectors.
+    /// This returns the acute or obtuse angle between the directions without sign,
+    /// i.e. the result is always in the range [0, π].
+    /// </summary>
+    /// <param name="v1">The first vector.</param>
+    /// <param name="v2">The second vector.</param>
+    /// <returns>The unsigned angle in radians between <paramref name="v1"/> and <paramref name="v2"/>.</returns>
+    public static float AngleRadUnsigned(this Vector2 v1, Vector2 v2)
+    {
+        float cross = v1.X * v2.Y - v1.Y * v2.X;
+        float dot = Vector2.Dot(v1, v2);
+        return  MathF.Atan2(MathF.Abs(cross), dot); // 0..π
+    }
+    /// <summary>
+    /// Calculates the unsigned angle in degrees between two vectors.
+    /// The result is always in the range [0, 180], representing the smallest angle between directions.
+    /// </summary>
+    /// <param name="v1">The first vector.</param>
+    /// <param name="v2">The second vector.</param>
+    /// <returns>The unsigned angle in degrees between <paramref name="v1"/> and <paramref name="v2"/>.</returns>
+    public static float AngleDegUnsigned(this Vector2 v1, Vector2 v2)
+    {
+        return AngleRadUnsigned(v1, v2) * ShapeMath.RADTODEG;
+    }
+    
+    /// <summary>
+    /// Normalizes an angle in degrees to the canonical range [-180, 180].
+    /// </summary>
+    /// <param name="angleDeg">Angle in degrees (any value).</param>
+    /// <returns>
+    /// Angle mapped into the range [-180, 180]. Note that an input of -180 degrees is mapped to 180 degrees.
+    /// </returns>
+    /// <remarks>
+    /// Uses modulus wrapping and adjustments to ensure a stable result for large or negative inputs.
+    /// </remarks>
+    public static float NormalizeAngleDeg(float angleDeg)
+    {
+        angleDeg %= 360f;
+        if (angleDeg <= -180f) angleDeg += 360f;
+        if (angleDeg >  180f) angleDeg -= 360f;
+        return angleDeg;
+    }
+    /// <summary>
+    /// Normalizes an angle in radians to the canonical range [-π, π].
+    /// </summary>
+    /// <param name="angleRad">Angle in radians (any value).</param>
+    /// <returns>
+    /// Angle mapped into the range [-π, π]. Note that an input of -π is mapped to π.
+    /// </returns>
+    /// <remarks>
+    /// Uses modulus with <c>float.Tau</c> and adjusts the result to keep it within the target interval.
+    /// </remarks>
+    public static float NormalizeAngleRad(float angleRad)
+    {
+        angleRad %= float.Tau;
+        if (angleRad <= -float.Pi) angleRad += float.Tau;
+        if (angleRad >  float.Pi) angleRad -= float.Tau;
+        return angleRad;
+    }
+    #endregion
+    
+    #region Collinear
+    /// <summary>
+    /// Determines whether a raw angle in degrees corresponds to a collinear orientation.
+    /// The input <paramref name="rawAngleDeg"/> is normalized into the canonical \[-180, 180\] range
+    /// using <see cref="NormalizeAngleDeg(float)"/> and then checked against the provided tolerance:
+    /// - near 0 degrees (same direction), or
+    /// - near 180 / -180 degrees (opposite direction).
+    /// </summary>
+    /// <param name="rawAngleDeg">Angle in degrees (any value).</param>
+    /// <param name="thresholdDeg">Tolerance in degrees to consider the angle collinear (default 1e-3f).</param>
+    /// <returns>True if the normalized angle is within <paramref name="thresholdDeg"/> of 0 or 180 degrees.</returns>
+    public static bool IsCollinearFromRawAngleDeg(float rawAngleDeg, float thresholdDeg = 1e-3f)
+    {
+        float norm = NormalizeAngleDeg(rawAngleDeg);
+        return MathF.Abs(norm) <= thresholdDeg || MathF.Abs(MathF.Abs(norm) - 180f) <= thresholdDeg;
+    }
+    /// <summary>
+    /// Determines whether a raw angle in radians corresponds to a collinear orientation.
+    /// The input <paramref name="rawAngleRad"/> is normalized into the canonical \[-π, π\] range
+    /// using <see cref="NormalizeAngleRad(float)"/> and then checked against the provided tolerance:
+    /// - near 0 radians (same direction), or
+    /// - near π / -π radians (opposite direction).
+    /// </summary>
+    /// <param name="rawAngleRad">Angle in radians (any value).</param>
+    /// <param name="thresholdRad">Tolerance in radians to consider the angle collinear (default 1e-3f).</param>
+    /// <returns>True if the normalized angle is within <paramref name="thresholdRad"/> of 0 or π radians.</returns>
+    public static bool IsCollinearFromRawAngleRad(float rawAngleRad, float thresholdRad = 1e-3f)
+    {
+        float norm = NormalizeAngleRad(rawAngleRad);
+        return MathF.Abs(norm) <= thresholdRad || MathF.Abs(MathF.Abs(norm) - 180f) <= thresholdRad;
+    }
+    
+    /// <summary>
+    /// Determines whether three points (a, b, c) are colinear within a given tolerance.
+    /// </summary>
+    /// <param name="a">The first point.</param>
+    /// <param name="b">The middle/vertex point.</param>
+    /// <param name="c">The third point.</param>
+    /// <param name="epsilon">
+    /// The tolerance used to consider the cross product effectively zero. Smaller values require closer alignment.
+    /// </param>
+    /// <param name="scaledEpsilon">
+    /// If true, the epsilon is scaled by the geometric mean of the squared segment lengths to account for numerical precision
+    /// when points are far apart or segment lengths vary greatly. If false, epsilon is used directly.
+    /// </param>
+    /// <returns>True if the points are colinear or if any segment has zero length (coincident points); otherwise false.</returns>
+    public static bool IsColinear(Vector2 a, Vector2 b, Vector2 c, float epsilon = 1e-6f, bool scaledEpsilon = true)
+    {
+        var prevCur = a - b;
+        var nextCur = c - b;
+
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = prevCur.LengthSquared();
+        if(prevLenSq <= 0f) return true;
+        float nextLenSq = nextCur.LengthSquared();
+        if(nextLenSq <= 0f) return true;
+        
+        float cross = prevCur.Cross(nextCur);
+
+        if (!scaledEpsilon) return MathF.Abs(cross) <= epsilon;
+        
+        float lenSqProduct = prevLenSq * nextLenSq;
+            
+        // Compare with a scaled epsilon to account for floating point error
+        return MathF.Abs(cross) <= epsilon * MathF.Sqrt(lenSqProduct);
+
+    }
+    /// <summary>
+    /// Determines whether two direction vectors are colinear within a given tolerance.
+    /// </summary>
+    /// <param name="dir1">The first direction vector.</param>
+    /// <param name="dir2">The second direction vector.</param>
+    /// <param name="epsilon">Tolerance used to consider the 2D cross product effectively zero. Smaller values require closer alignment.</param>
+    /// <param name="scaledEpsilon">
+    /// If true, the epsilon is scaled by the geometric mean of the squared lengths of the vectors to account for numerical precision
+    /// when magnitudes differ or are large; if false, epsilon is used directly.
+    /// </param>
+    /// <returns>
+    /// True if the vectors are colinear or if either vector has zero length (treated as coincident); otherwise false.
+    /// </returns>
+    /// <remarks>
+    /// Uses the 2D cross product and optional scaling to robustly handle floating point error for vectors of varying magnitude.
+    /// </remarks>
+    public static bool IsColinear(Vector2 dir1, Vector2 dir2, float epsilon = 1e-6f, bool scaledEpsilon = true)
+    {
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = dir1.LengthSquared();
+        if(prevLenSq <= 0f) return true;
+        float nextLenSq = dir2.LengthSquared();
+        if(nextLenSq <= 0f) return true;
+        
+        float cross = dir1.Cross(dir2);
+
+        if (!scaledEpsilon) return MathF.Abs(cross) <= epsilon;
+        
+        float lenSqProduct = prevLenSq * nextLenSq;
+            
+        // Compare with a scaled epsilon to account for floating point error
+        return MathF.Abs(cross) <= epsilon * MathF.Sqrt(lenSqProduct);
+
+    }
+    /// <summary>
+    /// Determines whether three points (a, b, c) are colinear within an angle threshold in degrees.
+    /// </summary>
+    /// <param name="a">The first point.</param>
+    /// <param name="b">The middle/vertex point.</param>
+    /// <param name="c">The third point.</param>
+    /// <param name="angleThresholdDeg">Angle threshold in degrees (e.g. 5f).</param>
+    /// <returns>True if the directions differ by less than or equal to the threshold or if any segment has zero length; otherwise false.</returns>
+    public static bool IsColinearAngle(Vector2 a, Vector2 b, Vector2 c, float angleThresholdDeg = 0f)
+    {
+        var prevCur = b - a;
+        var nextCur = c - b;
+
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = prevCur.LengthSquared();
+        if (prevLenSq <= 0f) return true;
+        float nextLenSq = nextCur.LengthSquared();
+        if (nextLenSq <= 0f) return true;
+
+        float angleRad = prevCur.AngleRadUnsigned(nextCur);
+        float angleDeg = MathF.Abs(angleRad) * ShapeMath.RADTODEG;
+        
+        return angleDeg <= angleThresholdDeg || angleDeg >= (180f - angleThresholdDeg);
+    }
+    /// <summary>
+    /// Determines whether two direction vectors are colinear within a specified angular threshold (in degrees).
+    /// </summary>
+    /// <param name="dir1">The first direction vector.</param>
+    /// <param name="dir2">The second direction vector.</param>
+    /// <param name="angleThresholdDeg">
+    /// Angle threshold in degrees. If the absolute angle between <paramref name="dir1"/> and <paramref name="dir2"/>
+    /// is less than or equal to this value the vectors are considered colinear.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if either vector has zero length (coincident) or if the absolute angle between the two vectors
+    /// is less than or equal to <paramref name="angleThresholdDeg"/>; otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    /// Uses <see cref="AngleRad(Vector2, Vector2)"/> to compute the angle in radians and converts to degrees
+    /// using <see cref="ShapeMath.RADTODEG"/>.
+    /// </remarks>
+    public static bool IsColinearAngle(Vector2 dir1, Vector2 dir2, float angleThresholdDeg = 0f)
+    {
+        // If either segment has zero length (coincident points) treat as colinear
+        float prevLenSq = dir1.LengthSquared();
+        if (prevLenSq <= 0f) return true;
+        float nextLenSq = dir2.LengthSquared();
+        if (nextLenSq <= 0f) return true;
+
+        float angleRad = dir1.AngleRadUnsigned(dir2);
+        float angleDeg = MathF.Abs(angleRad) * ShapeMath.RADTODEG;
+
+        return angleDeg <= angleThresholdDeg || angleDeg >= (180f - angleThresholdDeg);
+    }
+    #endregion
+    
+    #region Classify Corner
+    /// <summary>
+    /// Classifies the corner formed by two direction vectors.
+    /// </summary>
+    /// <param name="dirPrev">The previous (incoming) direction vector.</param>
+    /// <param name="dirNext">The next (outgoing) direction vector.</param>
+    /// <param name="epsilon">Small tolerance used to treat vectors as colinear (default 1e-6).</param>
+    /// <returns>
+    /// A tuple containing:
+    /// - <c>type</c>: an integer where 0 = colinear, 1 = ccw outwards, -1 = ccw inwards.
+    /// - <c>angle</c>: the absolute angle between the two directions in radians (range 0..π).
+    /// </returns>
+    /// <remarks>
+    /// The classification is determined using the 2D cross product and dot product:
+    /// - If |cross| ≤ epsilon the vectors are considered colinear.
+    /// - Otherwise the sign of cross determines inward/outward classification while the angle is computed with <c>Atan2(|cross|, dot)</c>.
+    /// Angle close to 0 indicates collinear in the same direction, angle close to π indicates collinear in opposite directions.
+    /// </remarks>
+    public static (int type, float angle) ClassifyCorner(this Vector2 dirPrev, Vector2 dirNext, float epsilon = 1e-6f)
+    {
+        float cross = dirPrev.X * dirNext.Y - dirPrev.Y * dirNext.X;
+        float dot = Vector2.Dot(dirPrev, dirNext);
+        float angle = MathF.Atan2(MathF.Abs(cross), dot); // 0..π
+
+        if (MathF.Abs(cross) <= epsilon) return (0, angle); /* collinear */
+
+        return cross < 0f ? 
+            (1, angle)/* ccw outwards*/ : 
+            (-1, angle); /*ccw inwards*/
+    }
+    
+    /// <summary>
+    /// Classifies a corner based on the direction vectors of the two segments that form it.
+    /// </summary>
+    /// <param name="dir1">Normalized direction vector of the incoming segment.</param>
+    /// <param name="dir2">Normalized direction vector of the outgoing segment.</param>
+    /// <returns>A tuple containing the corner type (1 for convex, -1 for concave, 0 for collinear) and the cross product value.</returns>
+    public static (int type, float cross) ClassifyCorner2(this Vector2 dir1, Vector2 dir2)
+    {
+        // The 2D cross product (dir1.X * dir2.Y - dir1.Y * dir2.X) tells us about the turn.
+        // A positive value means a left turn (convex in a CCW polygon).
+        // A negative value means a right turn (concave in a CCW polygon).
+        // A value near zero means the vectors are collinear.
+        float cross = dir1.X * dir2.Y - dir1.Y * dir2.X;
+    
+        // The dot product tells us if the vectors are pointing in the same or opposite directions.
+        // A value near 1 means they are parallel and in the same direction.
+        // A value near -1 means they are parallel and in opposite directions.
+        float dot = Vector2.Dot(dir1, dir2);
+    
+        // Check for collinearity first, using a small epsilon for floating-point inaccuracies.
+        // If the dot product is close to 1 or -1, the lines are parallel.
+        if (MathF.Abs(dot) > 0.9999f)
+        {
+            return (0, cross); // Collinear
+        }
+    
+        // If not collinear, the sign of the cross product determines the turn direction.
+        if (cross > 0) return (1, cross); // Convex corner (left turn)
+        return (-1, cross); // Concave corner (right turn)
+    }
+    #endregion
+    
+    
     /// <summary>
     /// Calculates the distance between two vectors.
     /// </summary>

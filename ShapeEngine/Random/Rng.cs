@@ -11,6 +11,8 @@ namespace ShapeEngine.Random;
 /// </summary>
 public class Rng
 {
+    #region Fields
+    
     /// <summary>
     /// Singleton instance of the <see cref="Rng"/> class.
     /// </summary>
@@ -25,6 +27,10 @@ public class Rng
     /// Gets the seed used for random number generation.
     /// </summary>
     public int Seed { get; private set; }
+    
+    #endregion
+
+    #region Constructors
     
     /// <summary>
     /// Initializes a new instance of the <see cref="Rng"/> class with a time-based seed.
@@ -53,7 +59,11 @@ public class Rng
         Rand = new System.Random(seed);
         Seed = seed;
     }
+    
+    #endregion
 
+    #region Seed
+    
     /// <summary>
     /// Sets the random number generator to use the specified seed.
     /// </summary>
@@ -64,6 +74,8 @@ public class Rng
         Seed = seed;
     }
 
+    #endregion
+    
     #region Weighted
     /// <summary>
     /// Picks a random item from the given weighted items.
@@ -90,6 +102,7 @@ public class Rng
 
         return default(T);
     }
+    
     /// <summary>
     /// Picks a random item from the given items and weights.
     /// </summary>
@@ -115,6 +128,7 @@ public class Rng
 
         return default(T);
     }
+    
     /// <summary>
     /// Picks a random string from the given string-weight pairs.
     /// </summary>
@@ -139,6 +153,85 @@ public class Rng
 
         return "";
     }
+    
+    /// <summary>
+    /// Picks a random item from the given weighted items.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">A read-only list of weighted items.</param>
+    /// <returns>A randomly selected item, or <c>default</c> if no item is selected.</returns>
+    public T? PickRandomItem<T>(IReadOnlyList<WeightedItem<T>> items)
+    {
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+
+        int ticket = RandI(0, totalWeight);
+
+        int curWeight = 0;
+        foreach (var item in items)
+        {
+            curWeight += item.weight;
+            if (ticket <= curWeight) return item.item;
+        }
+
+        return default(T);
+    }
+    
+    /// <summary>
+    /// Picks a random item from the given items and weights.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">A read-only list of tuples containing items and their weights.</param>
+    /// <returns>A randomly selected item, or <c>default</c> if no item is selected.</returns>
+    public T? PickRandomItem<T>(IReadOnlyList<(T item, int weight)> items)
+    {
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+
+        int ticket = RandI(0, totalWeight);
+
+        int curWeight = 0;
+        foreach (var item in items)
+        {
+            curWeight += item.weight;
+            if (ticket <= curWeight) return item.item;
+        }
+
+        return default(T);
+    }
+    
+    /// <summary>
+    /// Picks a random string from the given string-weight pairs.
+    /// </summary>
+    /// <param name="items">A read-only list of tuples containing string IDs and their weights.</param>
+    /// <returns>A randomly selected string, or empty string if none.</returns>
+    public string PickRandomItem(IReadOnlyList<(string id, int weight)> items)
+    {
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+
+        int ticket = RandI(0, totalWeight);
+
+        int curWeight = 0;
+        foreach (var item in items)
+        {
+            curWeight += item.weight;
+            if (ticket <= curWeight) return item.id;
+        }
+
+        return "";
+    }
+    
+    
     /// <summary>
     /// Picks multiple random items from the given weighted items.
     /// </summary>
@@ -149,6 +242,52 @@ public class Rng
     public List<T> PickRandomItems<T>(int amount, params WeightedItem<T>[] items)
     {
         List<T> chosen = new();
+        PickRandomItems<T>(chosen, amount, items);
+        return chosen;
+    }
+    
+    /// <summary>
+    /// Picks multiple random items from the given items and weights.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="amount">The number of items to pick.</param>
+    /// <param name="items">An array of tuples containing items and their weights.</param>
+    /// <returns>A list of randomly selected items.</returns>
+    public List<T> PickRandomItems<T>(int amount, params (T item, int weight)[] items)
+    {
+        List<T> chosen = new();
+        PickRandomItems(chosen, amount, items);
+        return chosen;
+    }
+   
+    /// <summary>
+    /// Picks multiple random strings from the given string-weight pairs.
+    /// </summary>
+    /// <param name="amount">The number of strings to pick.</param>
+    /// <param name="items">An array of tuples containing string IDs and their weights.</param>
+    /// <returns>A list of randomly selected strings.</returns>
+    public List<string> PickRandomItems(int amount, params (string id, int weight)[] items)
+    {
+        List<string> chosen = new();
+        PickRandomItems(chosen, amount, items);
+        return chosen;
+    }
+    
+    /// <summary>
+    /// Picks multiple random items from the given weighted items and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="result">The destination list that will be cleared and populated with the selected items.</param>
+    /// <param name="amount">The number of items to pick.</param>
+    /// <param name="items">An array of weighted items.</param>
+    /// <remarks>
+    /// This method samples with replacement. The same item may be selected multiple times.
+    /// </remarks>
+    public void PickRandomItems<T>(List<T> result, int amount, params WeightedItem<T>[] items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
         int totalWeight = 0;
         foreach (var item in items)
         {
@@ -165,30 +304,34 @@ public class Rng
                 curWeight += item.weight;
                 if (ticket <= curWeight) 
                 { 
-                    chosen.Add(item.item);
+                    result.Add(item.item);
                     break;
                 }
             }
         }
-        return chosen;
     }
+    
     /// <summary>
-    /// Picks multiple random items from the given items and weights.
+    /// Picks multiple random items from the given items and weights and writes them into <paramref name="result"/>.
     /// </summary>
     /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="result">The destination list that will be cleared and populated with the selected items.</param>
     /// <param name="amount">The number of items to pick.</param>
     /// <param name="items">An array of tuples containing items and their weights.</param>
-    /// <returns>A list of randomly selected items.</returns>
-    public List<T> PickRandomItems<T>(int amount, params (T item, int weight)[] items)
+    /// <remarks>
+    /// This method samples with replacement. The same item may be selected multiple times.
+    /// </remarks>
+    public void PickRandomItems<T>(List<T> result, int amount, params (T item, int weight)[] items)
     {
-        List<T> chosen = new();
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
         int totalWeight = 0;
         foreach (var item in items)
         {
             totalWeight += item.weight;
         }
-
-
+        
         for (int i = 0; i < amount; i++)
         {
             int ticket = RandI(0, totalWeight);
@@ -199,23 +342,27 @@ public class Rng
                 curWeight += item.weight;
                 if (ticket <= curWeight)
                 {
-                    chosen.Add(item.item);
+                    result.Add(item.item);
                     break;
                 }
             }
         }
-
-        return chosen;
     }
+    
     /// <summary>
-    /// Picks multiple random strings from the given string-weight pairs.
+    /// Picks multiple random strings from the given string-weight pairs and writes them into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the selected strings.</param>
     /// <param name="amount">The number of strings to pick.</param>
     /// <param name="items">An array of tuples containing string IDs and their weights.</param>
-    /// <returns>A list of randomly selected strings.</returns>
-    public List<string> PickRandomItems(int amount, params (string id, int weight)[] items)
+    /// <remarks>
+    /// This method samples with replacement. The same string may be selected multiple times.
+    /// </remarks>
+    public void  PickRandomItems(List<string> result, int amount, params (string id, int weight)[] items)
     {
-        List<string> chosen = new();
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
         int totalWeight = 0;
         foreach (var item in items)
         {
@@ -233,13 +380,124 @@ public class Rng
                 curWeight += item.weight;
                 if (ticket <= curWeight)
                 {
-                    chosen.Add(item.id);
+                    result.Add(item.id);
                     break;
                 }
             }
         }
+    }
+    
+    /// <summary>
+    /// Picks multiple random items from the given weighted items and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="result">The destination list that will be cleared and populated with the selected items.</param>
+    /// <param name="amount">The number of items to pick.</param>
+    /// <param name="items">A read-only list of weighted items.</param>
+    /// <remarks>
+    /// This method samples with replacement. The same item may be selected multiple times.
+    /// </remarks>
+    public void PickRandomItems<T>(List<T> result, int amount, IReadOnlyList<WeightedItem<T>> items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
 
-        return chosen;
+        for (int i = 0; i < amount; i++)
+        {
+            int ticket = RandI(0, totalWeight);
+
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight) 
+                { 
+                    result.Add(item.item);
+                    break;
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Picks multiple random items from the given items and weights and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="result">The destination list that will be cleared and populated with the selected items.</param>
+    /// <param name="amount">The number of items to pick.</param>
+    /// <param name="items">A read-only list of tuples containing items and their weights.</param>
+    /// <remarks>
+    /// This method samples with replacement. The same item may be selected multiple times.
+    /// </remarks>
+    public void PickRandomItems<T>(List<T> result, int amount, IReadOnlyList<(T item, int weight)> items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+        
+        for (int i = 0; i < amount; i++)
+        {
+            int ticket = RandI(0, totalWeight);
+
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight)
+                {
+                    result.Add(item.item);
+                    break;
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Picks multiple random strings from the given string-weight pairs and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination list that will be cleared and populated with the selected strings.</param>
+    /// <param name="amount">The number of strings to pick.</param>
+    /// <param name="items">A read-only list of tuples containing string IDs and their weights.</param>
+    /// <remarks>
+    /// This method samples with replacement. The same string may be selected multiple times.
+    /// </remarks>
+    public void  PickRandomItems(List<string> result, int amount, IReadOnlyList<(string id, int weight)> items)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        int totalWeight = 0;
+        foreach (var item in items)
+        {
+            totalWeight += item.weight;
+        }
+        
+        for (int i = 0; i < amount; i++)
+        {
+            int ticket = RandI(0, totalWeight);
+
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight)
+                {
+                    result.Add(item.id);
+                    break;
+                }
+            }
+        }
     }
     #endregion
 
@@ -316,15 +574,17 @@ public class Rng
     /// Returns a non-negative random integer.
     /// </summary>
     public int RandI() { return Rand.Next(); }
+    
     /// <summary>
-    /// Returns a random integer between 0 and max (or max and 0 if max is negative).
+    /// Returns a random integer between 0 and max (exclusive) when max is positive
+    /// or max (exclusive) and 0 if max is negative.
     /// </summary>
     /// <param name="max">The maximum value.</param>
     public int RandI(int max)
     {
         if (max < 0)
         {
-            return RandI(max, 0);
+            return RandI(max + 1, 1);
         }
         else if (max > 0)
         {
@@ -332,6 +592,7 @@ public class Rng
         }
         else return 0;
     }
+    
     /// <summary>
     /// Returns a random integer between min and max.
     /// </summary>
@@ -405,88 +666,102 @@ public class Rng
     /// Returns a color with a random red channel.
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
-    public ColorRgba RandColorRed(ColorRgba colorRgba) => colorRgba.SetRed((byte)RandI(0, 255));
+    public ColorRgba RandColorRed(ColorRgba colorRgba) => colorRgba.SetRed((byte)RandI(0, 256));
+   
     /// <summary>
-    /// Returns a color with a random red channel up to the specified max.
+    /// Returns a color with a random red channel up to the specified max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="max">The maximum red value.</param>
     public ColorRgba RandColorRed(ColorRgba colorRgba, int max) => colorRgba.SetRed((byte)RandI(0, max));
+    
     /// <summary>
-    /// Returns a color with a random red channel between min and max.
+    /// Returns a color with a random red channel between min (inclusive) and max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="min">The minimum red value.</param>
     /// <param name="max">The maximum red value.</param>
     public ColorRgba RandColorRed(ColorRgba colorRgba, int min, int max) => colorRgba.SetRed((byte)RandI(min, max));
+    
     /// <summary>
     /// Returns a color with a random green channel.
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
-    public ColorRgba RandColorGreen(ColorRgba colorRgba) => colorRgba.SetGreen((byte)RandI(0, 255));
+    public ColorRgba RandColorGreen(ColorRgba colorRgba) => colorRgba.SetGreen((byte)RandI(0, 256));
+    
     /// <summary>
-    /// Returns a color with a random green channel up to the specified max.
+    /// Returns a color with a random green channel up to the specified max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="max">The maximum green value.</param>
     public ColorRgba RandColorGreen(ColorRgba colorRgba, int max) => colorRgba.SetGreen((byte)RandI(0, max));
+    
     /// <summary>
-    /// Returns a color with a random green channel between min and max.
+    /// Returns a color with a random green channel between min (inclusive) and max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="min">The minimum green value.</param>
     /// <param name="max">The maximum green value.</param>
     public ColorRgba RandColorGreen(ColorRgba colorRgba, int min, int max) => colorRgba.SetGreen((byte)RandI(min, max));
+    
     /// <summary>
     /// Returns a color with a random blue channel.
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
-    public ColorRgba RandColorBlue(ColorRgba colorRgba) => colorRgba.SetBlue((byte)RandI(0, 255));
+    public ColorRgba RandColorBlue(ColorRgba colorRgba) => colorRgba.SetBlue((byte)RandI(0, 256));
+    
     /// <summary>
-    /// Returns a color with a random blue channel up to the specified max.
+    /// Returns a color with a random blue channel up to the specified max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="max">The maximum blue value.</param>
     public ColorRgba RandColorBlue(ColorRgba colorRgba, int max) => colorRgba.SetBlue((byte)RandI(0, max));
+    
     /// <summary>
-    /// Returns a color with a random blue channel between min and max.
+    /// Returns a color with a random blue channel between min (inclusive) and max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="min">The minimum blue value.</param>
     /// <param name="max">The maximum blue value.</param>
     public ColorRgba RandColorBlue(ColorRgba colorRgba, int min, int max) => colorRgba.SetBlue((byte)RandI(min, max));
+    
     /// <summary>
     /// Returns a color with a random alpha channel.
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
-    public ColorRgba RandColorAlpha(ColorRgba colorRgba)  => colorRgba.SetAlpha((byte)RandI(0, 255));
+    public ColorRgba RandColorAlpha(ColorRgba colorRgba)  => colorRgba.SetAlpha((byte)RandI(0, 256));
+    
     /// <summary>
-    /// Returns a color with a random alpha channel up to the specified max.
+    /// Returns a color with a random alpha channel up to the specified max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="max">The maximum alpha value.</param>
     public ColorRgba RandColorAlpha(ColorRgba colorRgba, int max) => colorRgba.SetAlpha((byte)RandI(0, max));
+    
     /// <summary>
-    /// Returns a color with a random alpha channel between min and max.
+    /// Returns a color with a random alpha channel between min (inclusive) and max (exclusive).
     /// </summary>
     /// <param name="colorRgba">The base color.</param>
     /// <param name="min">The minimum alpha value.</param>
     /// <param name="max">The maximum alpha value.</param>
     public ColorRgba RandColorAlpha(ColorRgba colorRgba, int min, int max) => colorRgba.SetAlpha((byte)RandI(min, max));
+    
     /// <summary>
     /// Returns a random color with all channels between 0 and 255.
     /// </summary>
-    public ColorRgba RandColor() => RandColor(0, 255);
+    public ColorRgba RandColor() => RandColor(0, 256);
+    
     /// <summary>
     /// Returns a random color with all channels between 0 and 255 and the specified alpha.
     /// </summary>
     /// <param name="alpha">The alpha value.</param>
-    public ColorRgba RandColor(int alpha) => RandColor(0, 255, alpha); 
+    public ColorRgba RandColor(int alpha) => RandColor(0, 256, alpha); 
+    
     /// <summary>
     /// Returns a random color with all channels between min and max, and optionally a specified alpha.
     /// </summary>
-    /// <param name="min">The minimum value for each channel.</param>
-    /// <param name="max">The maximum value for each channel.</param>
+    /// <param name="min">The minimum value for each channel (inclusive).</param>
+    /// <param name="max">The maximum value for each channel (exclusive).</param>
     /// <param name="alpha">The alpha value, or -1 for random alpha.</param>
     public ColorRgba RandColor(int min, int max, int alpha = -1)
     {
@@ -589,6 +864,14 @@ public class Rng
         return new(origin + pos, size, alignment);
     }
 
+    /// <summary>
+    /// Returns a random rectangle contained within the specified <paramref name="area"/>, using a random size in the provided range and the specified alignment.
+    /// </summary>
+    /// <param name="area">The area within which the rectangle position is generated.</param>
+    /// <param name="minSize">The minimum random size value for both width and height.</param>
+    /// <param name="maxSize">The maximum random size value for both width and height.</param>
+    /// <param name="alignment">The anchor point used when constructing the rectangle.</param>
+    /// <returns>A random rectangle positioned within <paramref name="area"/>.</returns>
     public Rect RandRect(Rect area, float minSize, float maxSize, AnchorPoint alignment)
     {
         var size = RandSize(minSize, maxSize);
@@ -616,6 +899,7 @@ public class Rng
         if (pop) list.RemoveAt(index);
         return t;
     }
+    
     /// <summary>
     /// Returns a list of random elements from the source list, optionally removing them.
     /// </summary>
@@ -626,19 +910,11 @@ public class Rng
     /// <returns>A list of randomly selected elements.</returns>
     public List<T> RandCollection<T>(List<T> source, int amount, bool pop = false)
     {
-        if (source.Count <= 0 || amount <= 0) return [];
-        if (pop) amount = Math.Min(amount, source.Count);
         var list = new List<T>();
-        for (var i = 0; i < amount; i++)
-        {
-            int index = RandI(0, source.Count);
-            var element = source[index];
-            list.Add(element);
-            if (pop) source.RemoveAt(index);
-        }
+        RandCollection(source, list, amount, pop);
         return list;
-
     }
+    
     /// <summary>
     /// Returns a random element from the array.
     /// </summary>
@@ -650,5 +926,43 @@ public class Rng
         if (array.Length <= 0) return default;
         return array[RandI(0, array.Length)];
     }
+    
+    
+    /// <summary>
+    /// Picks random elements from <paramref name="source"/> and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the elements.</typeparam>
+    /// <param name="source">The source list to pick from.</param>
+    /// <param name="result">The destination list that will receive the selected elements.</param>
+    /// <param name="amount">The number of elements to pick.</param>
+    /// <param name="pop"><c>true</c> to remove selected elements from <paramref name="source"/> as they are chosen; otherwise, <c>false</c>.</param>
+    /// <returns>The number of elements written to <paramref name="result"/>.</returns>
+    /// <remarks>
+    /// If <paramref name="source"/> is empty or <paramref name="amount"/> is less than or equal to zero,
+    /// the method returns 0 without modifying <paramref name="result"/>.
+    /// When <paramref name="pop"/> is <c>false</c>, sampling is performed with replacement.
+    /// When <paramref name="pop"/> is <c>true</c>, the requested amount is clamped to the source count
+    /// and sampling is performed without replacement.
+    /// </remarks>
+    public int RandCollection<T>(List<T> source, List<T> result, int amount, bool pop = false)
+    {
+        if (source.Count <= 0 || amount <= 0) return 0;
+        
+        if (pop) amount = Math.Min(amount, source.Count);
+        
+        result.Clear();
+        result.EnsureCapacity(amount);
+        
+        for (var i = 0; i < amount; i++)
+        {
+            int index = RandI(0, source.Count);
+            var element = source[index];
+            result.Add(element);
+            if (pop) source.RemoveAt(index);
+        }
+        
+        return result.Count;
+    }
+    
     #endregion
 }

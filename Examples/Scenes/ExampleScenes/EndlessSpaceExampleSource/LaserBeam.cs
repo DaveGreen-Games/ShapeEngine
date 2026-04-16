@@ -196,13 +196,12 @@ internal class LaserBeam
         var f = isFiring ? 1f : isCharging ?  chargeTimer / chargeDuration : 0f;
         var color =  paletteColor.ColorRgba;
         var w = width.Lerp(f) * laserBeamWidthVariationFactor;
-        var c = color.SetAlpha(200).Lerp(color, f);
+        var c = color;
         Ray.Point.Draw(w, c);
         
         if (!isFiring || !hitPoint.Valid)
         {
             Ray.Draw(15000, w, c);
-            
         }
         else
         {

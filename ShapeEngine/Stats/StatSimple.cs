@@ -10,30 +10,43 @@ namespace ShapeEngine.Stats;
 /// var baseValue = 10f;
 /// var stat = new StatSimple(id, baseValue);
 /// var flatValue = 4f;
-/// var bonusValue = 1f; (+100%)
+/// var bonusValue = 1f; // +100%
 /// stat.AddBuff(new BuffValue(bonusValue, flatValue));
 /// float current = stat.CurValue; // 28 -> (10 + flatValue) * (1 + bonusValue)
 /// </code>
 /// </example>
 /// <remarks>
-/// Add or remove buff values to modify the total buff. <see cref="CurValue"/> always reflects the base value with all buffs applied.
+/// Add or remove buff values to modify the accumulated modifier.
+/// <see cref="CurValue"/> always reflects the base value with all applied buff values.
 /// </remarks>
 public class StatSimple
 {
+    #region Public Properties
+    
     /// <summary>
     /// The unique identifier for this stat.
     /// </summary>
     public uint Id { get; private set; }
+  
     /// <summary>
-    /// The base value of the stat before buffs are applied.
+    /// The base value of the stat before any buff values are applied.
     /// </summary>
     public float BaseValue { get; set; }
+    
     /// <summary>
-    /// The current value of the stat after all buffs are applied.
+    /// The current value of the stat after all accumulated buff values are applied.
     /// </summary>
     public float CurValue => total.ApplyTo(BaseValue);
     
+    #endregion
+    
+    #region Private Properties
+    
     private BuffValue total = new();
+    
+    #endregion
+    
+    #region Constructors
     
     /// <summary>
     /// Initializes a new instance of the <see cref="StatSimple"/> class.
@@ -45,7 +58,11 @@ public class StatSimple
         Id = id;
         BaseValue = baseValue;
     }
+    
+    #endregion
 
+    #region Public Methods
+    
     /// <summary>
     /// Adds a buff value to this stat.
     /// </summary>
@@ -68,5 +85,7 @@ public class StatSimple
     /// Resets the stat to its base value, removing all applied buffs.
     /// </summary>
     public void Reset() => total = new();
+    
+    #endregion
 
 }

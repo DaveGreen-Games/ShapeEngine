@@ -7,7 +7,6 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
@@ -32,14 +31,24 @@ public class StripedShapeDrawingExample : ExampleScene
             this.title = title;
         }
 
-        protected override bool GetPressedState()
+        protected override bool GetButtonPressedState()
         {
-            return ShapeKeyboardButton.SPACE.GetInputState().Down;
+            return ShapeKeyboardButton.SPACE.GetInputState().Pressed;
         }
 
-        protected override bool GetMousePressedState()
+        protected override bool GetMouseButtonPressedState()
         {
-            return ShapeMouseButton.LEFT.GetInputState().Down;
+            return ShapeMouseButton.LEFT.GetInputState().Pressed;
+        }
+        
+        protected override bool GetButtonReleasedState()
+        {
+            return ShapeKeyboardButton.SPACE.GetInputState().Released;
+        }
+
+        protected override bool GetMouseButtonReleasedState()
+        {
+            return ShapeMouseButton.LEFT.GetInputState().Released;
         }
 
         protected override bool GetDecreaseValuePressed()
@@ -193,8 +202,8 @@ public class StripedShapeDrawingExample : ExampleScene
         outsideTriangle = Triangle.Generate(center, size / 2, size);
         outsideRect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
         outsideQuad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
-        var generatedPoly = Polygon.Generate(center, 16, size / 4, size);
-        outsidePoly = generatedPoly ?? [];
+        outsidePoly = new();
+        Polygon.Generate(center, 16, size / 4, size, outsidePoly);
         
         size = 100;
         radius = size / 2;
@@ -202,8 +211,8 @@ public class StripedShapeDrawingExample : ExampleScene
         insideTriangle = Triangle.Generate(center, size / 2, size);
         insideRect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
         insideQuad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
-        generatedPoly = Polygon.Generate(center, 16, size / 4, size);
-        insidePoly = generatedPoly ?? [];
+        insidePoly = new();
+        Polygon.Generate(center, 16, size / 4, size, insidePoly);
         curInsidePolygonSize = size;
 
         insideShapeRotDegSlider = new("Inside Rotation", 0, 0f, 360, true)
@@ -241,8 +250,8 @@ public class StripedShapeDrawingExample : ExampleScene
         curRotationDeg = rotationDegSlider.CurValue;
     
         float t = lineThicknessSlider.CurValue;
-        lineInfoStriped = lineInfoStriped.ChangeThickness(t);
-        lineInfoOutline = lineInfoOutline.ChangeThickness(t * 1.25f);
+        lineInfoStriped = lineInfoStriped.SetThickness(t);
+        lineInfoOutline = lineInfoOutline.SetThickness(t * 1.25f);
         
         curInsideShapeRotDeg = insideShapeRotDegSlider.CurValue;
         curInsideShapeSize = insideShapeSizeSlider.CurValue;
@@ -284,8 +293,7 @@ public class StripedShapeDrawingExample : ExampleScene
         }
         else if (outsideShapeIndex == 4)
         {
-            var shape = Polygon.Generate(center, 16, size / 4, size);
-            if (shape != null) outsidePoly = shape;
+            Polygon.Generate(center, 16, size / 4, size, outsidePoly);
         }
     }
     private void RegenerateInsideShape()
@@ -299,8 +307,7 @@ public class StripedShapeDrawingExample : ExampleScene
         }
         else if (insideShapeIndex == 4)
         {
-            var shape = Polygon.Generate(center, 16, size / 2, size);
-            if(shape != null) insidePoly = shape;
+            Polygon.Generate(center, 16, size / 2, size, insidePoly);
         }
     }
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
@@ -426,8 +433,8 @@ public class StripedShapeDrawingExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        lineInfoStriped = lineInfoStriped.ChangeColor(stripedColor.ColorRgba);
-        lineInfoOutline = lineInfoOutline.ChangeColor(outlineColor.ColorRgba);
+        lineInfoStriped = lineInfoStriped.SetColor(stripedColor.ColorRgba);
+        lineInfoOutline = lineInfoOutline.SetColor(outlineColor.ColorRgba);
         var lineInfoOutlineMasked = new LineDrawingInfo(lineInfoOutline.Thickness / 3, outlineColor.ColorRgba.ChangeBrightness(-0.5f), LineCapType.CappedExtended, 4);
         const bool reverseMask = false;
         const bool doubleMask = false; //if true draws the outsideShape outline different inside and outside the insideShape

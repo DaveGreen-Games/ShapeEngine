@@ -88,15 +88,22 @@ public class GameloopExamples : Game
     private List<string> fontNames = new();
     private MainScene? mainScene = null;
 
-    private readonly Vector2 crtCurvature = new(6, 4);
+    private readonly Vector2 crtCurvature = new Vector2(6, 4);
     private readonly uint crtShaderID = ShapeID.NextID;
+    private readonly uint sobelShaderID = ShapeID.NextID;
     private readonly uint pixelationShaderID = ShapeID.NextID;
     private readonly uint bloomShaderID = ShapeID.NextID;
-    private readonly uint overdrawID = ShapeID.NextID;
+    private readonly uint tintID = ShapeID.NextID;
+    private readonly uint grayscaleID = ShapeID.NextID;
     private readonly uint darknessID = ShapeID.NextID;
-    private readonly uint chromaticAberrationID = ShapeID.NextID;
+    private readonly uint radialAtmosphereID = ShapeID.NextID;
+    private readonly uint depthID = ShapeID.NextID;
+    private readonly uint rippleID = ShapeID.NextID;
+    private float rippleTimer = 0f;
+    private readonly uint explosionShockwaveID = ShapeID.NextID;
     private readonly uint blurID = ShapeID.NextID;
     private readonly uint alphaCircleID = ShapeID.NextID;
+    private readonly uint chromaticAberrationID = ShapeID.NextID;
     private uint currentShaderID;
 
     public RectNode UIRects;
@@ -159,6 +166,8 @@ public class GameloopExamples : Game
     
     private List<ScreenTexture> gameTextures = new(5);
     private int curGameTextureIndex = 0;
+    
+    public ShapeShader? ExplosionShockwaveShader => ScreenShaders?.Get(explosionShockwaveID);
     
     public new static GameloopExamples Instance  => examplesInstance?? throw new NullReferenceException("Instance is not initialized! You need to create a GameloopExamples instance before accessing this property!");
     private static GameloopExamples? examplesInstance;
@@ -318,12 +327,14 @@ public class GameloopExamples : Game
         
         if (ScreenShaders != null)
         {
-            var shapeShaders = new List<ShapeShader>(7);
+            var shapeShaders = new List<ShapeShader>();
 
+            var orderCount = 1;
+            
             // var crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/CRTShader.frag",  out var crt))
             {
-                ShapeShader crtShader = new(crt, crtShaderID, true, 1);
+                ShapeShader crtShader = new(crt, crtShaderID, true, orderCount++);
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
                 var bgColor = BackgroundColorRgba;
@@ -333,10 +344,26 @@ public class GameloopExamples : Game
                 shapeShaders.Add(crtShader);
             }
             
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/SobelOutline.frag", out var sobel))
+            {
+                ShapeShader sobelShader = new(sobel, sobelShaderID, false, orderCount++);
+                
+                ShapeShader.SetValueFloat(sobelShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(sobelShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                
+                ShapeShader.SetValueColor(sobelShader.Shader, "outlineColor", ColorRgba.Black);
+                ShapeShader.SetValueFloat(sobelShader.Shader, "outlineThickness", 1f);// in pixels 1.0
+                ShapeShader.SetValueFloat(sobelShader.Shader, "edgeThreshold", 0.25f);// higher = fewer edges 0.25
+                ShapeShader.SetValueFloat(sobelShader.Shader, "edgeSoftness", 0.10f);// smooth threshold band 0.10
+                ShapeShader.SetValueFloat(sobelShader.Shader, "outlineStrength", 1.0f); // 0..1 blend amount 1.0
+                
+                shapeShaders.Add(sobelShader);
+            }
+            
             // var pixel = ContentLoader.LoadFragmentShader("Resources/Shaders/PixelationShader.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/PixelationShader.frag", out var pixel))
             {
-                ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, 2);
+                ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, orderCount++);
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
                 shapeShaders.Add(pixelationShader);
@@ -345,39 +372,101 @@ public class GameloopExamples : Game
             // var bloom = ContentLoader.LoadFragmentShader("Resources/Shaders/BloomShader.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/BloomShader.frag", out var bloom))
             {
-                ShapeShader bloomShader = new(bloom, bloomShaderID, false, 3);
+                ShapeShader bloomShader = new(bloom, bloomShaderID, false, orderCount++);
                 ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
+                ShapeShader.SetValueFloat(bloomShader.Shader, "threshold", 0.75f);
+                ShapeShader.SetValueFloat(bloomShader.Shader, "softThreshold", 0.15f);
+                ShapeShader.SetValueFloat(bloomShader.Shader, "blurSpread", 5f);//1.5
+                ShapeShader.SetValueFloat(bloomShader.Shader, "bloomIntensity", 3.0f);//1.0
                 shapeShaders.Add(bloomShader);
             }
 
-            // var overdraw = ContentLoader.LoadFragmentShader("Resources/Shaders/OverdrawShader.frag");
-            if (contentManager.TryLoadFragmentShader("Resources/Shaders/OverdrawShader.frag", out var overdraw))
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/TintShader.frag", out var tint))
             {
-                ShapeShader overdrawShader = new(overdraw, overdrawID, false, 4);
-                shapeShaders.Add(overdrawShader);
+                ShapeShader tintShader = new(tint, tintID, false, orderCount++);
+                ShapeShader.SetValueColor(tintShader.Shader, "tintColor", ColorRgba.White);
+                ShapeShader.SetValueFloat(tintShader.Shader, "blend", 0.5f);
+                shapeShaders.Add(tintShader);
+            }
+
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/GrayscaleShader.frag", out var grayscale))
+            {
+                ShapeShader grayscaleShader = new(grayscale, grayscaleID, false, orderCount++);
+                shapeShaders.Add(grayscaleShader);
             }
             
-            // var darkness = ContentLoader.LoadFragmentShader("Resources/Shaders/Darkness.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/Darkness.frag", out var darkness))
             {
-                ShapeShader darknessShader = new(darkness, darknessID, false, 5);
+                ShapeShader darknessShader = new(darkness, darknessID, false, orderCount++);
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(darknessShader.Shader, "origin", new Vector2(0.5f, 0.5f));
+                ShapeShader.SetValueFloat(darknessShader.Shader, "maxDis", 0.5f);
+                ShapeShader.SetValueColor(darknessShader.Shader, "color", ColorRgba.Black);
                 shapeShaders.Add(darknessShader);
+            }
+
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/RadialAtmosphere.frag", out var radialAtmosphere))
+            {
+                ShapeShader radialAtmosphereShader = new(radialAtmosphere, radialAtmosphereID, false, orderCount++);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(radialAtmosphereShader.Shader, "origin", new Vector2(0.5f, 0.5f));
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "minDis", 0.25f);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "maxDis", 0.75f);
+                ShapeShader.SetValueColor(radialAtmosphereShader.Shader, "fogColor", ColorRgba.Black.SetAlpha(250));
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "fogStrength", 0.8f);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "darknessStrength", 0.3f);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "desaturationStrength", 0.5f);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "blurStrength", 3f);
+                shapeShaders.Add(radialAtmosphereShader);
+            }
+
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/Depth.frag", out var depth))
+            {
+                ShapeShader depthShader = new(depth, depthID, false, orderCount++);
+                ShapeShader.SetValueFloat(depthShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(depthShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(depthShader.Shader, "origin", new Vector2(0.5f, 0.5f));
+                ShapeShader.SetValueFloat(depthShader.Shader, "minDis", 0.2f);
+                ShapeShader.SetValueFloat(depthShader.Shader, "maxDis", 0.6f);
+                ShapeShader.SetValueFloat(depthShader.Shader, "desaturationStrength", 0.35f);
+                ShapeShader.SetValueFloat(depthShader.Shader, "blurStrength", 8.0f);
+                shapeShaders.Add(depthShader);
+            }
+
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/RippleShader.frag", out var ripple))
+            {
+                ShapeShader rippleShader = new(ripple, rippleID, false, orderCount++);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", new Vector2(0.5f, 0.5f));
+                ShapeShader.SetValueFloat(rippleShader.Shader, "magnitude", 0.03f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "frequency", 24.0f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "animation", 0.0f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "radius", 1.0f);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "falloff", 2.0f);
+                shapeShaders.Add(rippleShader);
             }
             
             // var blur = ContentLoader.LoadFragmentShader("Resources/Shaders/BlurShader.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/BlurShader.frag", out var blur))
             {
-                ShapeShader blurShader = new(blur, blurID, false, 6);
+                ShapeShader blurShader = new(blur, blurID, false, orderCount++);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueFloat(blurShader.Shader, "blurStrength", 12.0f);
                 shapeShaders.Add(blurShader);
             }
 
+            
             // var alphaCircle = ContentLoader.LoadFragmentShader("Resources/Shaders/AlphaCircle.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/AlphaCircle.frag", out var alphaCircle))
             {
-                ShapeShader alphaCircleShader = new(alphaCircle, alphaCircleID, false, 7);
-                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader alphaCircleShader = new(alphaCircle, alphaCircleID, false, orderCount++);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0.5f, 0.5f));
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "minDis", 0.25f);
                 ShapeShader.SetValueFloat(alphaCircleShader.Shader, "maxDis", 1f);
                 shapeShaders.Add(alphaCircleShader);
@@ -386,8 +475,40 @@ public class GameloopExamples : Game
             // var chromaticAberration = ContentLoader.LoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag");
             if (contentManager.TryLoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag", out var chromaticAberration))
             {
-                ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, 7);
-                ScreenShaders.Add(chromaticAberrationShader);
+                ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, orderCount++);
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", new Vector2(0.5f, 0.5f));
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "amount", new Vector2(2f, 2f));
+                shapeShaders.Add(chromaticAberrationShader);
+            }
+            
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/ExplosionShockwaveShader.frag", out var explosionShockwave))
+            {
+                ShapeShader explosionShockwaveShader = new(explosionShockwave, explosionShockwaveID, false, orderCount);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "globalStrength", 1.0f);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "maxCombinedOffset", 0.08f);
+
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave0", 0f, 0f, 0f, 0.04f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave1", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave2", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave3", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave4", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave5", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave6", 0f, 0f, 0f, 0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwave7", 0f, 0f, 0f, 0f);
+
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams0", 1.0f, 0.08f, 1.5f, 1.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams1", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams2", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams3", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams4", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams5", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams6", 1.0f, 0.08f, 1.5f, 0.0f);
+                ShapeShader.SetValueVector4(explosionShockwaveShader.Shader, "shockwaveParams7", 1.0f, 0.08f, 1.5f, 0.0f);
+                shapeShaders.Add(explosionShockwaveShader);
             }
             
             currentShaderID = crtShaderID;
@@ -485,6 +606,13 @@ public class GameloopExamples : Game
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", w);
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", h);
             }
+            
+            var sobelShader = ScreenShaders.Get(sobelShaderID);
+            if (sobelShader != null)
+            {
+                ShapeShader.SetValueFloat(sobelShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(sobelShader.Shader, "renderHeight", h);
+            }
 
             var pixelationShader = ScreenShaders.Get(pixelationShaderID);
             if (pixelationShader != null)
@@ -498,6 +626,55 @@ public class GameloopExamples : Game
             {
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", w);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", h);
+            }
+
+            var darknessShader = ScreenShaders.Get(darknessID);
+            if (darknessShader != null)
+            {
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(darknessShader.Shader, "renderHeight", h);
+            }
+
+            var radialAtmosphereShader = ScreenShaders.Get(radialAtmosphereID);
+            if (radialAtmosphereShader != null)
+            {
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "renderHeight", h);
+            }
+
+            var depthShader = ScreenShaders.Get(depthID);
+            if (depthShader != null)
+            {
+                ShapeShader.SetValueFloat(depthShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(depthShader.Shader, "renderHeight", h);
+            }
+
+            var rippleShader = ScreenShaders.Get(rippleID);
+            if (rippleShader != null)
+            {
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "renderHeight", h);
+            }
+
+            var explosionShockwaveShader = ScreenShaders.Get(explosionShockwaveID);
+            if (explosionShockwaveShader != null)
+            {
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(explosionShockwaveShader.Shader, "renderHeight", h);
+            }
+
+            var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
+            if (alphaCircleShader != null)
+            {
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "renderHeight", h);
+            }
+
+            var chromaticAberrationShader = ScreenShaders.Get(chromaticAberrationID);
+            if (chromaticAberrationShader != null)
+            {
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderWidth", w);
+                ShapeShader.SetValueFloat(chromaticAberrationShader.Shader, "renderHeight", h);
             }
         
             var bloomShader = ScreenShaders.Get(bloomShaderID);
@@ -531,9 +708,10 @@ public class GameloopExamples : Game
         var circleCenter = tip + dir * size * 2;
         var left = circleCenter + new Vector2(-1, 0) * size;
         var top = circleCenter + new Vector2(0, -1) * size;
-        SegmentDrawing.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
-        SegmentDrawing.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
-        CircleDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
+        Segment.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
+        Segment.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
+        var circle = new Circle(circleCenter, size);
+        circle.DrawSectorLines(180, 270, 0f, 1f, colorRgba, 0.65f);
     }
 
     protected override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
@@ -543,6 +721,8 @@ public class GameloopExamples : Game
         
         if (ScreenShaders != null)
         {
+            var mp = game.RelativeMousePosition;
+            
             var pixelationShader = ScreenShaders.Get(pixelationShaderID);
             if (pixelationShader != null && pixelationShader.Enabled)
             {
@@ -556,19 +736,64 @@ public class GameloopExamples : Game
             var darknessShader = ScreenShaders.Get(darknessID);
             if (darknessShader != null && darknessShader.Enabled)
             {
-                ShapeShader.SetValueVector2(darknessShader.Shader, "origin", game.RelativeMousePosition);
+                ShapeShader.SetValueVector2(darknessShader.Shader, "origin", mp);
             }
             
-            var overdrawShader = ScreenShaders.Get(overdrawID);
-            if (overdrawShader != null && overdrawShader.Enabled)
+            var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
+            if (alphaCircleShader != null && alphaCircleShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", mp);
+            }
+            
+            var chromaticAberrationShader = ScreenShaders.Get(chromaticAberrationID);
+            if (chromaticAberrationShader != null && chromaticAberrationShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "origin", mp);
+                ShapeShader.SetValueVector2(chromaticAberrationShader.Shader, "amount", new Vector2(5, 5));
+            }
+            
+            var tintShader = ScreenShaders.Get(tintID);
+            if (tintShader != null && tintShader.Enabled)
             {
                 if (Rng.Instance.Chance(0.025f))
                 {
-                    ShapeShader.SetValueColor(overdrawShader.Shader, "overdrawColor", Rng.Instance.RandColor(127, 255, 255));
-                    ShapeShader.SetValueFloat(overdrawShader.Shader, "blend", Rng.Instance.RandF(0.4f, 0.6f));
+                    ShapeShader.SetValueColor(tintShader.Shader, "tintColor", Rng.Instance.RandColor(127, 255, 255));
+                    ShapeShader.SetValueFloat(tintShader.Shader, "blend", Rng.Instance.RandF(0.4f, 0.6f));
                 }
             
             }
+            var blurStrength = 15f;
+            
+            var radialAtmosphereShader = ScreenShaders.Get(radialAtmosphereID);
+            if (radialAtmosphereShader != null && radialAtmosphereShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(radialAtmosphereShader.Shader, "origin", mp);
+                ShapeShader.SetValueFloat(radialAtmosphereShader.Shader, "blurStrength", blurStrength);
+            }
+
+            var depthShader = ScreenShaders.Get(depthID);
+            if (depthShader != null && depthShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(depthShader.Shader, "origin", mp);
+                ShapeShader.SetValueFloat(depthShader.Shader, "blurStrength", blurStrength);
+            }
+
+            rippleTimer += time.Delta * 2f;
+            var animationFactor = ShapeMath.WrapF(rippleTimer, 0f, 1f);
+
+            var rippleShader = ScreenShaders.Get(rippleID);
+            if (rippleShader != null && rippleShader.Enabled)
+            {
+                ShapeShader.SetValueVector2(rippleShader.Shader, "origin", mp);
+                ShapeShader.SetValueFloat(rippleShader.Shader, "animation", animationFactor);
+            }
+            
+            var blurShader = ScreenShaders.Get(blurID);
+            if (blurShader != null)
+            {
+                ShapeShader.SetValueFloat(blurShader.Shader, "blurStrength", blurStrength);
+            }
+
         }
         
         UIRects.UpdateRect(ui.Area);
@@ -623,8 +848,6 @@ public class GameloopExamples : Game
         }
         
         if (Paused) return;
-
-        
         
         var paletteState = Instance.InputActionCyclePalette.Consume(out _);
         if (paletteState is { Consumed: false, Pressed: true })
@@ -646,12 +869,14 @@ public class GameloopExamples : Game
             if (cycleShaders is { Consumed: false, Pressed: true })
             {
                 var currentShader = ScreenShaders.Get(currentShaderID);
-                if (currentShader != null) currentShader.Enabled = false;
-            
+                if (currentShader != null)
+                {
+                    currentShader.Enabled = false;
+                }
+                
                 var shadersIds = ScreenShaders.GetAllIDs();
-                var nextShaderIDIndex = shadersIds.IndexOf(currentShaderID);
-                nextShaderIDIndex += 1;
-                if (nextShaderIDIndex >= shadersIds.Count) {nextShaderIDIndex = 0;}
+                var nextShaderIDIndex = shadersIds.IndexOf(currentShaderID) + 1;
+                if (nextShaderIDIndex >= shadersIds.Count - 1) {nextShaderIDIndex = 0;} //skip shockwave shader in cycling
 
                 var nextId = shadersIds[nextShaderIDIndex];
                 var nextShader = ScreenShaders.Get(nextId);
@@ -660,12 +885,35 @@ public class GameloopExamples : Game
                     currentShaderID = nextId;
                     nextShader.Enabled = true;
                 }
-            
+                    
+                // Console.WriteLine($"Active Shaders:");
+                // foreach (var shader in ScreenShaders.GetActiveShaders())
+                // {
+                //     Console.WriteLine($"- {shader.Order}: {GetShaderName(shader.Order)}");
+                // }
             }
         }
         paletteInfoBox.Update(time.Delta);
     }
 
+    private string GetShaderName(int order)
+    {
+        if (order == 1) return "Crt";
+        else if (order == 2) return "Sobel";
+        else if (order == 3) return "Pixel";
+        else if (order == 4) return "Bloom";
+        else if (order == 5) return "Tint";
+        else if (order == 6) return "Grayscale";
+        else if (order == 7) return "Darkness";
+        else if (order == 8) return "RadialAtmosphere";
+        else if (order == 9) return "Depth";
+        else if (order == 10) return "Ripple";
+        else if (order == 11) return "ExplosionShockwave";
+        else if (order == 12) return "Blur";
+        else if (order == 13) return "AlphaCircle";
+        else if (order == 14) return "ChromaticAberration";
+        else return "Unknown";
+    }
     
 
     protected override void DrawUI(ScreenInfo ui)

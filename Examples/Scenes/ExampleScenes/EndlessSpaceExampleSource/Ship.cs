@@ -49,6 +49,9 @@ internal class Ship : CollisionObject, ICameraFollowTarget
     public float HealthF => (float)Health / (float)MaxHp;
     public const int MaxHp = 3;
     private LaserBeam laserBeam;
+
+    private static Polygon cutShapeBuffer = new();
+    
     public CollisionHandler? collisionHandler;
     
     public Ship(Vector2 pos, float shipSize)
@@ -102,8 +105,10 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         if(info.Count <= 0 || info.Other is not AsteroidObstacle a) return;
         if(!info.Validate(out IntersectionPoint combined)) return;
 
-        var cs = GetCutShape();
-        if(cs != null) a.Cut(cs);
+        if (GetCutShape(cutShapeBuffer) && cutShapeBuffer.Count >= 3)
+        {
+            a.Cut(cutShapeBuffer);
+        }
             
         if (collisionStunTimer <= 0f)
         {
@@ -125,9 +130,9 @@ internal class Ship : CollisionObject, ICameraFollowTarget
     }
     
     
-    public Polygon? GetCutShape()
+    public bool GetCutShape(Polygon cutShape)
     {
-        return Polygon.Generate(Transform.Position, 12, shipSize * 1.5f, shipSize * 3);
+        return Polygon.Generate(Transform.Position, 12, shipSize * 1.5f, shipSize * 3, cutShape);
     }
 
     private Triangle CreateHull()

@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
 using Examples.Scenes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.StripedDrawingDef;
+using ShapeEngine.StaticLib;
 using ShapeEngine.UI;
 using ShapeEngine.Text;
 
@@ -19,6 +18,9 @@ namespace Examples.UIElements
 
         private float pressDelayTimer = 0f;
         private const float PressDelay = 0.1f;
+
+        private float mouseInsideAnimationTimer = 0f;
+        private const float mouseInsideAnimationDuration = 3f;
         
         public ExampleSelectionButton()
         {
@@ -39,20 +41,44 @@ namespace Examples.UIElements
             Visible = Active;
         }
         
-        protected override bool GetMousePressedState()
+        protected override bool GetMouseButtonPressedState()
         {
-            if (!MouseInside) return false;
+            // if (!MouseInside) return false;
             if (Scene == null) return false;
-            var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
-            return acceptState is { Consumed: false, Released: true };
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
+            // return acceptState is { Consumed: false, Pressed: true };
+            return GameloopExamples.Instance.InputActionUIAcceptMouse.State.Pressed;
         }
 
-        protected override bool GetPressedState()
+        protected override bool GetButtonPressedState()
         {
             if (!Selected) return false;
             if (Scene == null) return false;
-            var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
-            return acceptState is { Consumed: false, Released: true };
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
+            // return acceptState is { Consumed: false, Pressed: true };
+            return GameloopExamples.Instance.InputActionUIAccept.State.Pressed;
+        }
+        
+        protected override bool GetMouseButtonReleasedState()
+        {
+            // if (!MouseInside) return false;
+            if (Scene == null) return false;
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
+            // return acceptState is { Consumed: false, Released: true };
+            return GameloopExamples.Instance.InputActionUIAcceptMouse.State.Released;
+        }
+
+        protected override bool GetButtonReleasedState()
+        {
+            if (!Selected) return false;
+            if (Scene == null) return false;
+            //Always consumed for some reason...
+            // var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
+            // return acceptState is { Consumed: false, Released: true };
+            return GameloopExamples.Instance.InputActionUIAccept.State.Released;
         }
 
         public override Direction GetNavigationDirection()
@@ -100,7 +126,7 @@ namespace Examples.UIElements
         protected override void PressedWasChanged(bool value)
         {
             if (Scene == null) return;
-            if (value)
+            if (!value)
             {
                 // Console.WriteLine($"Button Pressed - Scene {Scene.Title}");
                 // GAMELOOP.GoToScene(Scene);
@@ -110,6 +136,7 @@ namespace Examples.UIElements
                 }
                 else
                 {
+                    mouseInsideAnimationTimer = 0f;
                     GameloopExamples.Instance.GoToScene(Scene);
                 }
                 
@@ -129,9 +156,15 @@ namespace Examples.UIElements
                 pressDelayTimer -= dt;
                 if (pressDelayTimer <= 0f)
                 {
-                    if (Scene != null) GameloopExamples.Instance.GoToScene(Scene);
                     pressDelayTimer = 0f;
+                    mouseInsideAnimationTimer = 0f;
+                    if (Scene != null) GameloopExamples.Instance.GoToScene(Scene);
                 }
+            }
+
+            if (MouseInside)
+            {
+                mouseInsideAnimationTimer += dt;
             }
         }
 
@@ -141,17 +174,21 @@ namespace Examples.UIElements
             
             var r = Rect;
             var text = Scene.Title;
-
+            
             if (MouseInside)
             {
                 var amount = Rect.Size.Min() * 0.25f;
                 var outside = Rect.ChangeSize(amount, new AnchorPoint(0.5f, 0.5f));
                 // outside.DrawLines(2f, Colors.Medium);
                 
-                var lineThickness = outside.Size.Min() * 0.02f;
-                var spacing = lineThickness * 12f;
-                var info = new LineDrawingInfo(lineThickness, Colors.Dark, LineCapType.Capped, 6);
-                outside.DrawStriped(spacing, 35f, info);
+                var animationFactor = mouseInsideAnimationTimer / mouseInsideAnimationDuration;
+                var lineThickness = outside.Size.Min() * 0.04f;
+                // var spacing = lineThickness * ShapeMath.LerpFloat(4f, 5f, ShapeTween.PingPong(animationFactor));
+                // var info = new LineDrawingInfo(lineThickness, Colors.Dark, LineCapType.Capped, 6);
+                // outside.DrawStriped(spacing, 35f, info);
+                var cornerLength = outside.Size.Min() * ShapeMath.LerpFloat(0.15f, 0.35f, ShapeTween.PingPong(animationFactor));
+                outside.DrawCorners(lineThickness, Colors.Highlight, cornerLength);
+                // outside.LeftSegment.Draw(lineThickness, Colors.Highlight);
             }
             
             if (Selected)

@@ -5,7 +5,6 @@ using ShapeEngine.Geometry.PolygonDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 
-
 /// <summary>
 /// Handles collision detection, resolution, and spatial queries for registered <see cref="CollisionObject"/> instances.
 /// </summary>

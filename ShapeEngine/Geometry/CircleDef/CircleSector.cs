@@ -43,9 +43,9 @@ public class CircleSector
         set => Transform = Transform.SetPosition(value);
     }
 
-      /// <summary>
-      /// Gets or sets the radius of the sector in world units by changing <see cref="Transform"/>.BaseSize.
-      /// </summary>
+    /// <summary>
+    /// Gets or sets the radius of the sector in world units by changing <see cref="Transform"/>.BaseSize.
+    /// </summary>
     public float Radius
     {
         get => Transform.ScaledSize.Radius;

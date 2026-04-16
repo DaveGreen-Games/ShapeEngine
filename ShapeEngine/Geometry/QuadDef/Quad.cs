@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
@@ -18,6 +19,12 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// </summary>
 public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+
+    #endregion
+    
     #region Members
     /// <summary>
     /// Gets the first vertex of the quad <c>(A)</c>. Should be in counter-clockwise order.
@@ -40,13 +47,30 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     #region Getters
 
     /// <summary>
+    /// Gets the top-left vertex of the quad (alias for <c>A</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 TopLeft => A;
+    /// <summary>
+    /// Gets the top-right vertex of the quad (alias for <c>D</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 TopRight => D;
+    /// <summary>
+    /// Gets the bottom-right vertex of the quad (alias for <c>C</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 BottomRight => C;
+    /// <summary>
+    /// Gets the bottom-left vertex of the quad (alias for <c>B</c>).
+    /// Points are expected in counter-clockwise order.
+    /// </summary>
+    public Vector2 BottomLeft => B;
+
+    /// <summary>
     /// Gets the center point of the quad.
     /// </summary>
-    public Vector2 Center => GetPoint(0.5f);
-    /// <summary>
-    /// Gets the angle in radians of the BC edge.
-    /// </summary>
-    public float AngleRad => BC.AngleRad();
+    public Vector2 Center => (A + C) * 0.5f;
     /// <summary>
     /// Gets the vector from A to B.
     /// </summary>
@@ -63,6 +87,23 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// Gets the vector from D to A.
     /// </summary>
     public Vector2 DA => A - D;
+    
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>A</c> to <c>B</c>.
+    /// </summary>
+    public Vector2 ABCenter => (A + B) * 0.5f;
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>B</c> to <c>C</c>.
+    /// </summary>
+    public Vector2 BCCenter => (B + C) * 0.5f;
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>C</c> to <c>D</c>.
+    /// </summary>
+    public Vector2 CDCenter => (C + D) * 0.5f;
+    /// <summary>
+    /// Gets the midpoint of the edge from <c>D</c> to <c>A</c>.
+    /// </summary>
+    public Vector2 DACenter => (D + A) * 0.5f;
 
     /// <summary>
     /// Gets the segment from A to B.
@@ -150,6 +191,20 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// <remarks>Rotates the rectangle around the specified pivot to form the quad.</remarks>
     public Quad(Rect rect, float rotRad, AnchorPoint pivot)
     {
+        var sin = MathF.Sin(rotRad);
+        var cos = MathF.Cos(rotRad);
+
+        var right = new Vector2(cos * rect.Width, sin * rect.Width);
+        var down = new Vector2(-sin * rect.Height, cos * rect.Height);
+        var topLeft = -right * pivot.X - down * pivot.Y;
+
+        A = topLeft;
+        B = topLeft + down;
+        C = topLeft + right + down;
+        D = topLeft + right;
+        
+        /*
+        //OLD
         var pivotPoint = rect.GetPoint(pivot);
         var topLeft = rect.TopLeft;
         var bottomRight = rect.BottomRight;
@@ -158,6 +213,41 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
         B = (new Vector2(topLeft.X, bottomRight.Y) - pivotPoint).Rotate(rotRad);
         C = (bottomRight - pivotPoint).Rotate(rotRad);
         D = (new Vector2(bottomRight.X, topLeft.Y) - pivotPoint).Rotate(rotRad);
+        */
+        
+    }
+    /// <summary>
+    /// Initializes a new <see cref="Quad"/> from a <see cref="Rect"/>, applying a rotation around the specified pivot.
+    /// The rectangle's corner positions are translated so the pivot is the rotation origin, rotated by <paramref name="rotRad"/>,
+    /// and the resulting corner positions are used as the quad vertices.
+    /// </summary>
+    /// <param name="rect">The rectangle to convert to a quad.</param>
+    /// <param name="rotRad">Rotation angle in radians to apply around <paramref name="pivot"/>.</param>
+    /// <param name="pivot">The point used as the rotation origin.</param>
+    public Quad(Rect rect, float rotRad, Vector2 pivot)
+    {
+        var sin = MathF.Sin(rotRad);
+        var cos = MathF.Cos(rotRad);
+
+        var right = new Vector2(cos * rect.Width, sin * rect.Width);
+        var down = new Vector2(-sin * rect.Height, cos * rect.Height);
+        var topLeft = (rect.TopLeft - pivot).Rotate(rotRad);
+
+        A = topLeft;
+        B = topLeft + down;
+        C = topLeft + right + down;
+        D = topLeft + right;
+        
+        /*
+        //OLD
+        var topLeft = rect.TopLeft;
+        var bottomRight = rect.BottomRight;
+
+        A = (topLeft - pivot).Rotate(rotRad);
+        B = (new Vector2(topLeft.X, bottomRight.Y) - pivot).Rotate(rotRad);
+        C = (bottomRight - pivot).Rotate(rotRad);
+        D = (new Vector2(bottomRight.X, topLeft.Y) - pivot).Rotate(rotRad);
+        */
     }
     /// <summary>
     /// Initializes a new <see cref="Quad"/> from a position, size, rotation, and alignment.
@@ -169,6 +259,20 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// <remarks>Creates a quad with the specified alignment and rotation.</remarks>
     public Quad(Vector2 pos, Size size, float rotRad, AnchorPoint alignment)
     {
+        var sin = MathF.Sin(rotRad);
+        var cos = MathF.Cos(rotRad);
+
+        var right = new Vector2(cos * size.Width, sin * size.Width);
+        var down = new Vector2(-sin * size.Height, cos * size.Height);
+        var topLeft = pos - right * alignment.X - down * alignment.Y;
+
+        A = topLeft;
+        B = topLeft + down;
+        C = topLeft + right + down;
+        D = topLeft + right;
+        
+        /*
+        //Old
         var offset = size * alignment.ToVector2();
         var topLeft = pos - offset;
         
@@ -180,7 +284,7 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
         A = pos + (a - pos).Rotate(rotRad);
         B = pos + (b - pos).Rotate(rotRad);
         C = pos + (c - pos).Rotate(rotRad);
-        D = pos + (d - pos).Rotate(rotRad);
+        D = pos + (d - pos).Rotate(rotRad);*/
         
     }
     #endregion
@@ -394,70 +498,6 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     
     #region Operators
     /// <summary>
-    /// Adds two <see cref="Quad"/> instances component-wise.
-    /// </summary>
-    /// <param name="left">The first quad.</param>
-    /// <param name="right">The second quad.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the sum of the corresponding vertices.</returns>
-    public static Quad operator +(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A + right.A,
-            left.B + right.B,
-            left.C + right.C,
-            left.D + right.D
-        );
-    }
-    /// <summary>
-    /// Subtracts one <see cref="Quad"/> from another component-wise.
-    /// </summary>
-    /// <param name="left">The first quad.</param>
-    /// <param name="right">The quad to subtract.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the difference of the corresponding vertices.</returns>
-    public static Quad operator -(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A - right.A,
-            left.B - right.B,
-            left.C - right.C,
-            left.D - right.D
-        );
-    }
-    /// <summary>
-    /// Multiplies two <see cref="Quad"/> instances component-wise.
-    /// </summary>
-    /// <param name="left">The first quad.</param>
-    /// <param name="right">The second quad.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the product of the corresponding vertices.</returns>
-    public static Quad operator *(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A * right.A,
-            left.B * right.B,
-            left.C * right.C,
-            left.D * right.D
-        );
-    }
-    /// <summary>
-    /// Divides one <see cref="Quad"/> by another component-wise.
-    /// </summary>
-    /// <param name="left">The numerator quad.</param>
-    /// <param name="right">The denominator quad.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex being the quotient of the corresponding vertices.</returns>
-    public static Quad operator /(Quad left, Quad right)
-    {
-        return new
-        (
-            left.A / right.A,
-            left.B / right.B,
-            left.C / right.C,
-            left.D / right.D
-        );
-    }
-    /// <summary>
     /// Adds a <see cref="Vector2"/> to each vertex of the <see cref="Quad"/>.
     /// </summary>
     /// <param name="left">The quad.</param>
@@ -521,40 +561,96 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
             left.D / right
         );
     }
+    
     /// <summary>
-    /// Multiplies each vertex of the <see cref="Quad"/> by a scalar.
+    /// Increases the size of the <see cref="Quad"/> uniformly by the specified amount.
     /// </summary>
-    /// <param name="left">The quad.</param>
-    /// <param name="right">The scalar value.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex multiplied by the scalar.</returns>
+    /// <param name="left">The quad to resize.</param>
+    /// <param name="right">The amount to add to the quad's size.</param>
+    /// <returns>A new <see cref="Quad"/> with the modified size.</returns>
+    public static Quad operator +(Quad left, float right)
+    {
+        return left.ChangeSize(right);
+    }
+    /// <summary>
+    /// Decreases the size of the <see cref="Quad"/> uniformly by the specified amount.
+    /// </summary>
+    /// <param name="left">The quad to resize.</param>
+    /// <param name="right">The amount to subtract from the quad's size.</param>
+    /// <returns>A new <see cref="Quad"/> with the modified size.</returns>
+    public static Quad operator -(Quad left, float right)
+    {
+        return left.ChangeSize(-right);
+    }
+    /// <summary>
+    /// Scales the size of the <see cref="Quad"/> uniformly by the specified factor.
+    /// </summary>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The scale factor.</param>
+    /// <returns>A new <see cref="Quad"/> with the scaled size.</returns>
     public static Quad operator *(Quad left, float right)
     {
-        return new
-        (
-            left.A * right,
-            left.B * right,
-            left.C * right,
-            left.D * right
-        );
+        return left.ScaleSize(right);
     }
     /// <summary>
-    /// Divides each vertex of the <see cref="Quad"/> by a scalar.
+    /// Scales the size of the <see cref="Quad"/> uniformly by the inverse of the specified factor.
     /// </summary>
-    /// <param name="left">The quad.</param>
-    /// <param name="right">The scalar value.</param>
-    /// <returns>A new <see cref="Quad"/> with each vertex divided by the scalar.
-    /// Returns an empty Quad if right is 0.</returns>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The divisor.</param>
+    /// <returns>
+    /// A new <see cref="Quad"/> with the scaled size, or a quad scaled to zero if
+    /// <paramref name="right"/> is <c>0</c>.
+    /// </returns>
     public static Quad operator /(Quad left, float right)
     {
-        if (right == 0) return new();
-        return new
-        (
-            left.A / right,
-            left.B / right,
-            left.C / right,
-            left.D / right
-        );
+        if (right == 0)
+        {
+            return left.ScaleSize(0f);
+        }
+        return left.ScaleSize(1f / right);
     }
+    
+    /// <summary>
+    /// Adds a <see cref="Size"/> to the quad, increasing its size accordingly.
+    /// </summary>
+    /// <param name="left">The quad to modify.</param>
+    /// <param name="right">The size to add.</param>
+    /// <returns>A new <see cref="Quad"/> with the increased size.</returns>
+    public static Quad operator +(Quad left, Size right)
+    {
+        return left.ChangeSize(right);
+    }
+    /// <summary>
+    /// Subtracts a <see cref="Size"/> from the quad, decreasing its size accordingly.
+    /// </summary>
+    /// <param name="left">The quad to modify.</param>
+    /// <param name="right">The size to subtract.</param>
+    /// <returns>A new <see cref="Quad"/> with the decreased size.</returns>
+    public static Quad operator -(Quad left, Size right)
+    {
+        return left.ChangeSize(-right);
+    }
+    /// <summary>
+    /// Scales the quad´s size by <see cref="Size"/> as factor. (component-wise multiplication).
+    /// </summary>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The size to scale by.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the given size.</returns>
+    public static Quad operator *(Quad left, Size right)
+    {
+        return left.ScaleSize(right);
+    }
+    /// <summary>
+    /// Divides the quad's size by <see cref="Size"/> as a factor (component-wise division).
+    /// </summary>
+    /// <param name="left">The quad to scale.</param>
+    /// <param name="right">The size to divide by.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the inverse of the given size.</returns>
+    public static Quad operator /(Quad left, Size right)
+    {
+        return left.ScaleSize(right.Inverse());
+    }
+    
     /// <summary>
     /// Determines whether two <see cref="Quad"/> instances are equal.
     /// </summary>
@@ -577,7 +673,51 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// </summary>
     /// <param name="other">The quad to compare to this instance.</param>
     /// <returns><c>true</c> if the quads are equal; otherwise, <c>false</c>.</returns>
-    public bool Equals(Quad other) => A.Equals(other.A) && B.Equals(other.B) && C.Equals(other.C) && D.Equals(other.D);
+    public bool Equals(Quad other) => Equals(other, DecimalPrecision.DefaultDecimalPlaces);
+
+    /// <summary>
+    /// Determines whether this instance and another specified <see cref="Quad"/> object have the same value using quantized comparison.
+    /// </summary>
+    /// <param name="other">The quad to compare to this instance.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before comparison.</param>
+    /// <returns><c>true</c> if the quads are equal after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(Quad other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(A, other.A) &&
+               quantizer.QuantizedEquals(B, other.B) &&
+               quantizer.QuantizedEquals(C, other.C) &&
+               quantizer.QuantizedEquals(D, other.D);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for this quad.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(A, B, C, D);
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of this quad hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of this quad hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
 
     /// <summary>
     /// Determines whether this instance and a specified object, which must also be a <see cref="Quad"/>, have the same value.
@@ -589,12 +729,18 @@ public readonly partial struct Quad : IEquatable<Quad>, IShapeTypeProvider, IClo
     /// <summary>
     /// Returns the hash code for this <see cref="Quad"/>.
     /// </summary>
-    /// <returns>A 32-bit signed integer hash code.</returns>
-    public override int GetHashCode() => HashCode.Combine(A, B, C, D);
+    /// <returns>A 32-bit hash code derived from the stable 64-bit quad hash key.</returns>
+    public override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
 
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Quad;
 
     public ShapeType GetShapeType() => ShapeType.Quad;
+
+
 
     #endregion
 

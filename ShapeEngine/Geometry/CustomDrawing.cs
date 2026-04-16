@@ -47,14 +47,15 @@ public static class CustomDrawing
     /// <remarks>
     /// Each intersection point is visualized as a small circle, and its normal is drawn as a line.
     /// </remarks>
-    public static void Draw(this IntersectionPoints colPoints, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba)
+    public static void Draw(this IntersectionPoints colPoints, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba, float pointSmoothness = 0.5f)
     {
         if ( colPoints.Count <= 0) return;
         
         foreach (var i in colPoints)
         {
-            CircleDrawing.DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
-            SegmentDrawing.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
+            var circle = new Circle(i.Point, lineThickness * 2f);
+            circle.Draw(intersectColorRgba, pointSmoothness);
+            Segment.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
         }
     }
     #endregion
@@ -204,7 +205,7 @@ public static class CustomDrawing
         {
             var tailLength = l - headLength;
             tailEnd = tailPoint + dir * tailLength;
-            SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+            Segment.DrawSegment(tailPoint, tailEnd, info);
         }
 
         var pl = dir.GetPerpendicularLeft();
@@ -212,8 +213,9 @@ public static class CustomDrawing
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) Triangle.DrawTriangle(headPoint, b, c, headFillColor);
+        var triangle = new Triangle(headPoint, b, c);
+        triangle.DrawLines(info);
     }
 
     /// <summary>
@@ -239,15 +241,16 @@ public static class CustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        Segment.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) Triangle.DrawTriangle(headPoint, b, c, headFillColor);
+        var triangle = new Triangle(headPoint, b, c);
+        triangle.DrawLines(info);
     }
 
     /// <summary>
@@ -274,7 +277,7 @@ public static class CustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        Segment.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
@@ -282,8 +285,9 @@ public static class CustomDrawing
         var headWidth = l * headWidthFactor;
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) Triangle.DrawTriangle(headPoint, b, c, headFillColor);
+        var triangle = new Triangle(headPoint, b, c);
+        triangle.DrawLines(info);
     }
     #endregion
 }

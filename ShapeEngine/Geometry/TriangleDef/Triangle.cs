@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
@@ -22,6 +23,13 @@ namespace ShapeEngine.Geometry.TriangleDef;
 /// </remarks>
 public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvider, IClosedShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+    private static Triangulation triangulationBuffer = new();
+    private static Triangulation triangulationBuffer2 = new();
+    #endregion
+    
     #region Members
     /// <summary>
     /// The first vertex of the triangle (point A).
@@ -127,6 +135,12 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         }
     }
     #endregion
+
+    #region Helper
+
+    private static Points triangulationPointList = new();
+
+    #endregion
     
     #region Shapes
 
@@ -185,6 +199,13 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     public Points ToPoints() => new() {A, B, C};
     
     /// <summary>
+    /// Converts the triangle to a polyline representation.
+    /// </summary>
+    /// <returns>A polyline containing the three vertices of the triangle.</returns>
+    /// <remarks>The resulting polyline represents the triangle's perimeter as a series of connected line segments.</remarks>
+    public Polyline ToPolyline() => new() { A, B, C };
+    
+    /// <summary>
     /// Converts the triangle to a polygon representation.
     /// </summary>
     /// <returns>A polygon containing the three vertices of the triangle.</returns>
@@ -195,20 +216,49 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// Converts this triangle to a polygon by adding its vertices to the provided <paramref name="result"/> polygon.
     /// </summary>
     /// <param name="result">A reference to a <see cref="Polygon"/> that will be cleared and filled with the triangle's vertices.</param>
-    public void ToPolygon(ref Polygon result)
+    public void ToPolygon(Polygon result)
     {
-        if(result.Count > 0) result.Clear();
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+    }
+
+    /// <summary>
+    /// Converts this triangle to a <see cref="Points"/> collection by writing its three vertices into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the triangle vertices.</param>
+    /// <remarks>
+    /// Points are written in vertex order: <see cref="A"/>, <see cref="B"/>, <see cref="C"/>.
+    /// </remarks>
+    public void ToPoints(Points result)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        
         result.Add(A);
         result.Add(B);
         result.Add(C);
     }
     
     /// <summary>
-    /// Converts the triangle to a polyline representation.
+    /// Converts this triangle to a <see cref="Polyline"/> by writing its three vertices into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A polyline containing the three vertices of the triangle.</returns>
-    /// <remarks>The resulting polyline represents the triangle's perimeter as a series of connected line segments.</remarks>
-    public Polyline ToPolyline() => new() { A, B, C };
+    /// <param name="result">The destination polyline that will be cleared and populated with the triangle vertices.</param>
+    /// <remarks>
+    /// Points are written in vertex order: <see cref="A"/>, <see cref="B"/>, <see cref="C"/>. The first point is not repeated at the end.
+    /// </remarks>
+    public void ToPolyline(Polyline result)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+    }
     
     /// <summary>
     /// Gets all three edges of the triangle as a collection of line segments.
@@ -217,6 +267,22 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// <remarks>The segments are ordered as: A-B, B-C, C-A, maintaining the counter-clockwise orientation.</remarks>
     public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
     
+    /// <summary>
+    /// Gets all three edges of the triangle and writes them into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the triangle edges.</param>
+    /// <remarks>
+    /// Segments are written in this order: A-B, B-C, C-A.
+    /// </remarks>
+    public void GetEdges(Segments result)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        result.Add(SegmentAToB);
+        result.Add(SegmentBToC);
+        result.Add(SegmentCToA);
+    }
+
     /// <summary>
     /// Constructs an adjacent triangle sharing an edge with this triangle, using the specified point as the third vertex.
     /// </summary>
@@ -236,76 +302,132 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         var closest = GetClosestSegment(p, out float _);
         return new Triangle(p, closest.segment);
     }
-
+    
     /// <summary>
-    /// Triangulates this triangle using its centroid as an interior point.
+    /// Triangulates this triangle using its centroid as the interior vertex and writes the result into <paramref name="result"/>.
     /// </summary>
-    /// <returns>A triangulation containing three sub-triangles formed by connecting the centroid to each vertex.</returns>
-    /// <remarks>This creates a simple triangulation by connecting the triangle's centroid to each of its vertices.</remarks>
-    public Triangulation Triangulate() => this.Triangulate(GetCentroid());
-
-    /// <summary>
-    /// Triangulates this triangle by adding random interior points and performing Delaunay triangulation.
-    /// </summary>
-    /// <param name="pointCount">The number of random interior points to add before triangulation.</param>
-    /// <returns>A Delaunay triangulation of the triangle with the specified number of interior points.</returns>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated sub-triangles.</param>
     /// <remarks>
-    /// If pointCount is negative, returns a triangulation containing only this triangle.
-    /// Random points are generated using barycentric coordinates to ensure they lie within the triangle.
+    /// This creates three triangles by connecting the centroid to each edge of the triangle.
     /// </remarks>
-    public Triangulation Triangulate(int pointCount)
+    public void Triangulate(Triangulation result)
     {
-        if (pointCount < 0) return new() { new(A, B, C) };
+        var p = GetCentroid();
+        result.Clear();
+        
+        result.Add(new(A, B, p));
+        result.Add(new(B, C, p));
+        result.Add(new(C, A, p));
+    }
 
-        Points points = new() { A, B, C };
-
+    /// <summary>
+    /// Triangulates this triangle by adding random interior points and performing point-cloud triangulation into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
+    /// <param name="pointCount">The number of random interior points to add before triangulation.</param>
+    /// <remarks>
+    /// If <paramref name="pointCount"/> is negative, <paramref name="result"/> receives only this triangle.
+    /// Otherwise, the triangle vertices and the generated interior points are passed to <c>TriangulatePointCloud</c>.
+    /// Random points are generated using barycentric coordinates so they lie inside the triangle.
+    /// </remarks>
+    public void Triangulate(Triangulation result, int pointCount)
+    {
+        result.Clear();
+        if (pointCount < 0)
+        {
+            result.Add(new(A, B, C));
+            return;
+        }
+        triangulationPointList.Clear();
+        triangulationPointList.Add(A);
+        triangulationPointList.Add(B);
+        triangulationPointList.Add(C);
+        
         for (int i = 0; i < pointCount; i++)
         {
             float f1 = Rng.Instance.RandF();
             float f2 = Rng.Instance.RandF();
             Vector2 randPoint = GetPoint(f1, f2);
-            points.Add(randPoint);
+            triangulationPointList.Add(randPoint);
         }
 
-        return Polygon.TriangulateDelaunay(points);
+        triangulationPointList.TriangulatePointCloud(result);
     }
     
+    
     /// <summary>
-    /// Triangulates this triangle to achieve a target minimum area per sub-triangle.
+    /// Recursively subdivides this triangle into smaller triangles until each resulting triangle has an area less than or equal to <paramref name="minArea"/>.
     /// </summary>
-    /// <param name="minArea">The minimum area that each resulting triangle should have.</param>
-    /// <returns>A triangulation where each sub-triangle has approximately the specified minimum area.</returns>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated triangles.</param>
+    /// <param name="minArea">The maximum allowed area for each resulting triangle. Must be greater than 0.</param>
+    /// <returns><see langword="true"/> if triangulation succeeds; otherwise, <see langword="false"/> when <paramref name="minArea"/> is less than or equal to 0.</returns>
     /// <remarks>
-    /// If minArea is less than or equal to zero, returns a triangulation containing only this triangle.
-    /// The method calculates the number of points needed based on the ratio of triangle area to minimum area.
+    /// Larger triangles are split using random interior points until all generated triangles satisfy the area threshold.
+    /// Only triangles with positive area are included in the output.
     /// </remarks>
-    public Triangulation Triangulate(float minArea)
+    public bool Triangulate(Triangulation result, float minArea)
     {
-        if (minArea <= 0) return new() { new(A,B,C) };
+        if (minArea <= 0) return false;
+        
+        result.Clear();
+        if(GetArea() <= minArea)
+        {
+            result.Add(this);
+            return true;
+        }
 
-        float triArea = GetArea();
-        float pieceCount = triArea / minArea;
-        int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
-        return Triangulate(points);
+        triangulationBuffer.Clear();
+        //only adds valid triangles to result (area > 0)
+        Triangulate(triangulationBuffer2, GetRandomPointInside());
+        foreach (var tri in triangulationBuffer2)
+        {
+            var area = tri.GetArea();
+            if(area <= minArea) result.Add(tri);
+            else triangulationBuffer.Add(tri);
+        }
+
+        while (triangulationBuffer.Count > 0)
+        {
+            var lastIndex = triangulationBuffer.Count - 1;
+            var t = triangulationBuffer[lastIndex];
+            triangulationBuffer.RemoveAt(lastIndex);
+            
+            var randomP = t.GetRandomPointInside();
+            //only adds valid triangles to result (area > 0)
+            t.Triangulate(triangulationBuffer2, randomP);
+            foreach (var tri in triangulationBuffer2)
+            {
+                var area = tri.GetArea();
+                if(area <= minArea) result.Add(tri);
+                else triangulationBuffer.Add(tri);
+            }
+        }
+
+        return true;
     }
     
     /// <summary>
-    /// Triangulates this triangle using the specified point as an interior vertex.
+    /// Triangulates this triangle using the specified point as an interior vertex and writes the result into <paramref name="result"/>.
     /// </summary>
+    /// <param name="result">The destination triangulation that will be cleared and populated with the generated sub-triangles.</param>
     /// <param name="p">The interior point to use for triangulation.</param>
-    /// <returns>A triangulation containing three sub-triangles formed by connecting the point to each edge.</returns>
     /// <remarks>
     /// The resulting triangulation contains three triangles: A-B-P, B-C-P, and C-A-P.
     /// This method does not verify that the point is actually inside the triangle.
+    /// Only valid triangles (area > 0) are added to result.
     /// </remarks>
-    public Triangulation Triangulate(Vector2 p)
+    public void Triangulate(Triangulation result, Vector2 p)
     {
-        return new()
-        {
-            new(A, B, p),
-            new(B, C, p),
-            new(C, A, p)
-        };
+        result.Clear();
+        
+        Triangle t = new (A, B, p);
+        if(t.GetArea() > 0) result.Add(t);
+        
+        t = new (B, C, p);
+        if(t.GetArea() > 0) result.Add(t);
+        
+        t = new (C, A, p);
+        if(t.GetArea() > 0) result.Add(t);
     }
     
     /// <summary>
@@ -381,6 +503,24 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     }
     
     /// <summary>
+    /// Writes a specified number of random points inside this triangle into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated points.</param>
+    /// <param name="amount">The number of random interior points to generate.</param>
+    /// <remarks>
+    /// Each point is generated independently using <see cref="GetRandomPointInside()"/>.
+    /// </remarks>
+    public void GetRandomPointsInside(Points result, int amount)
+    {
+        result.Clear();
+        result.EnsureCapacity(amount);
+        for (int i = 0; i < amount; i++)
+        {
+            result.Add(GetRandomPointInside());
+        }
+    }
+    
+    /// <summary>
     /// Selects one of the triangle's vertices at random.
     /// </summary>
     /// <returns>One of the three vertices (A, B, or C) selected randomly with equal probability.</returns>
@@ -396,22 +536,48 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// Selects one of the triangle's edges at random.
     /// </summary>
     /// <returns>One of the three edges selected randomly with equal probability.</returns>
-    public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
-    
+    public Segment GetRandomEdge()
+    {
+        return GetEdges().GetRandomSegment();
+    }
+
     /// <summary>
     /// Generates a random point on the triangle's perimeter.
     /// </summary>
     /// <returns>A point positioned randomly on one of the triangle's edges.</returns>
     /// <remarks>The point can be anywhere along any of the three edges with uniform probability distribution.</remarks>
-    public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    
+    public Vector2 GetRandomPointOnEdge()
+    {
+        return GetRandomEdge().GetRandomPoint();
+    }
+
     /// <summary>
     /// Generates multiple random points on the triangle's perimeter.
     /// </summary>
     /// <param name="amount">The number of random points to generate on the edges.</param>
-    /// <returns>A collection of points positioned randomly along the triangle's perimeter.</returns>
-    public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+    /// <returns>A collection of points positioned randomly along the triangle's perimeter with uniform probability distribution.</returns>
+    public Points GetRandomPointsOnEdge(int amount)
+    {
+        var edges = GetEdges();
+        var points = new Points();
+        edges.GetRandomPoints(amount, points);
+        return points;
+    }
 
+    /// <summary>
+    /// Writes a specified number of random points on the triangle perimeter into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that receives the generated edge points.</param>
+    /// <param name="amount">The number of random perimeter points to generate.</param>
+    /// <remarks>
+    /// Edge selection and sampling are delegated to <see cref="Segments.GetRandomPoints(int, Points)"/> using the triangle's three edges.
+    /// </remarks>
+    public void GetRandomPointsOnEdge(Points result, int amount)
+    {
+        var edges = GetEdges();
+        edges.GetRandomPoints(amount, result);
+    }
+    
     /// <summary>
     /// Gets a specific edge of the triangle by index.
     /// </summary>
@@ -424,7 +590,8 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     public Segment GetSegment(int index)
     {
         if (index < 0) return new Segment();
-        var i = index % 3;
+        // var i = index % 3;
+        var i = ShapeMath.WrapIndex(3, index);
         if(i == 0) return SegmentAToB;
         if(i == 1) return SegmentBToC;
         return SegmentCToA;
@@ -461,6 +628,218 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     public bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
 
     /// <summary>
+    /// Determines whether this triangle shares an exactly matching edge with another triangle.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle equals any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison is performed using <c>Segment.Equals</c>, so edge direction must also match.
+    /// Use <see cref="SharesEdgeSimilar(Triangle)"/> to treat reversed edge direction as the same edge.
+    /// </remarks>
+    public bool SharesEdge(Triangle t)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if(edge.Equals(otherEdge1) || edge.Equals(otherEdge2) || edge.Equals(otherEdge3)) return true;
+        
+        edge = SegmentBToC;
+        if(edge.Equals(otherEdge1) || edge.Equals(otherEdge2) || edge.Equals(otherEdge3)) return true;
+        
+        edge = SegmentCToA;
+        if(edge.Equals(otherEdge1) || edge.Equals(otherEdge2) || edge.Equals(otherEdge3)) return true;
+
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether this triangle shares an edge with another triangle.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle matches any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison is performed using <c>Segment.IsSimilar</c>, so reversed edge direction is treated as the same edge.
+    /// </remarks>
+    public bool SharesEdgeSimilar(Triangle t)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if(edge.IsSimilar(otherEdge1) || edge.IsSimilar(otherEdge2) || edge.IsSimilar(otherEdge3)) return true;
+        
+        edge = SegmentBToC;
+        if(edge.IsSimilar(otherEdge1) || edge.IsSimilar(otherEdge2) || edge.IsSimilar(otherEdge3)) return true;
+        
+        edge = SegmentCToA;
+        if(edge.IsSimilar(otherEdge1) || edge.IsSimilar(otherEdge2) || edge.IsSimilar(otherEdge3)) return true;
+
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether this triangle shares an exactly matching edge with another triangle and returns the shared segment.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <param name="sharedSegment">
+    /// When this method returns <see langword="true"/>, contains the shared edge from <paramref name="t"/>.
+    /// Otherwise, contains an empty <see cref="Segment"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle equals any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison uses <c>Segment.Equals</c>, so edge direction must also match.
+    /// Use <see cref="SharesEdgeSimilar(Triangle, out Segment)"/> to treat reversed edge direction as the same edge.
+    /// </remarks>
+    public bool SharesEdge(Triangle t, out Segment sharedSegment)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if (edge.Equals(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.Equals(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.Equals(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentBToC;
+        if (edge.Equals(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.Equals(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.Equals(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentCToA;
+        if (edge.Equals(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.Equals(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.Equals(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+
+        sharedSegment = new();
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether this triangle shares an edge with another triangle and returns the shared segment.
+    /// </summary>
+    /// <param name="t">The other triangle to compare against.</param>
+    /// <param name="sharedSegment">
+    /// When this method returns <see langword="true"/>, contains the shared edge from <paramref name="t"/>.
+    /// Otherwise, contains an empty <see cref="Segment"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if any edge of this triangle matches any edge of <paramref name="t"/>;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Edge comparison uses <c>Segment.IsSimilar</c>, so reversed edge direction is treated as the same edge.
+    /// </remarks>
+    public bool SharesEdgeSimilar(Triangle t, out Segment sharedSegment)
+    {
+        var otherEdge1 = t.SegmentAToB;
+        var otherEdge2 = t.SegmentBToC;
+        var otherEdge3 = t.SegmentCToA;
+
+        var edge = SegmentAToB;
+        if (edge.IsSimilar(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentBToC;
+        if (edge.IsSimilar(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+        
+        edge = SegmentCToA;
+        if (edge.IsSimilar(otherEdge1))
+        {
+            sharedSegment = otherEdge1;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge2))
+        {
+            sharedSegment = otherEdge2;
+            return true;
+        }
+        if(edge.IsSimilar(otherEdge3))      
+        {
+            sharedSegment = otherEdge3;
+            return true;
+        }
+
+        sharedSegment = new();
+        return false;
+    }
+    
+    /// <summary>
     /// Determines whether this triangle is similar to another triangle within floating-point precision.
     /// </summary>
     /// <param name="other">The other triangle to compare with.</param>
@@ -496,20 +875,72 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     /// <remarks>This method requires exact vertex order matching, unlike IsSimilar which checks all permutations.</remarks>
     public bool Equals(Triangle other)
     {
-        return A.IsSimilar(other.A) && B.IsSimilar(other.B) && C.IsSimilar(other.C);
+        return Equals(other, DecimalPrecision.DefaultDecimalPlaces);
     }
+
+    /// <summary>
+    /// Determines whether this triangle is equal to another triangle using quantized vertex comparison.
+    /// </summary>
+    /// <param name="other">The other triangle to compare with.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize vertex coordinates before comparison.</param>
+    /// <returns>True if both triangles have identical vertices in the same order after quantization; otherwise, false.</returns>
+    public bool Equals(Triangle other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(A, other.A) &&
+               quantizer.QuantizedEquals(B, other.B) &&
+               quantizer.QuantizedEquals(C, other.C);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for this triangle by hashing its vertices in A-B-C order.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize vertex coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(A, B, C);
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of this triangle hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize vertex coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of this triangle hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize vertex coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
     
     /// <summary>
     /// Returns the hash code for this triangle.
     /// </summary>
-    /// <returns>A hash code based on all three vertices of the triangle.</returns>
+    /// <returns>A 32-bit hash code derived from the stable 64-bit triangle hash key.</returns>
     public override readonly int GetHashCode()
     {
-        return HashCode.Combine(A, B, C);
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
     }
 
+    /// <summary>
+    /// Gets the closed-shape type represented by this instance.
+    /// </summary>
+    /// <returns><see cref="ClosedShapeType.Triangle"/>.</returns>
     public ClosedShapeType GetClosedShapeType() => ClosedShapeType.Triangle;
 
+    /// <summary>
+    /// Gets the general shape type represented by this instance.
+    /// </summary>
+    /// <returns><see cref="ShapeType.Triangle"/>.</returns>
     public ShapeType GetShapeType() => ShapeType.Triangle;
 
     /// <summary>
@@ -545,6 +976,10 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
         if (obj is Triangle t) return Equals(t);
         return false;
     }
+    #endregion
+
+    #region Private Equality & Hash Helpers
+
     #endregion
     
     #region Operators
@@ -837,6 +1272,24 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     }
     
     /// <summary>
+    /// Writes one interpolated point per triangle edge into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that will be cleared and populated with the interpolated edge points.</param>
+    /// <param name="t">The interpolation factor applied along each edge.</param>
+    /// <remarks>
+    /// Points are written for edges A-B, B-C, and C-A in that order.
+    /// </remarks>
+    public void GetInterpolatedEdgePoints(Points result, float t)
+    {
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(A.Lerp(B, t));
+        result.Add(B.Lerp(C, t));
+        result.Add(C.Lerp(A, t));
+    }
+    
+    /// <summary>
     /// Gets interpolated points by performing multiple steps of edge interpolation, creating a fractal-like effect.
     /// </summary>
     /// <param name="t">The interpolation factor (0.0 to 1.0) to apply at each step.</param>
@@ -850,6 +1303,28 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
     public Points GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
+
+        var result = new Points(3);
+        GetInterpolatedEdgePoints(result, t, steps);
+        return result;
+    }
+    
+    /// <summary>
+    /// Performs repeated edge interpolation and writes the final three points into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="result">The destination collection that receives the final interpolated points.</param>
+    /// <param name="t">The interpolation factor applied at each step.</param>
+    /// <param name="steps">The number of interpolation iterations to perform. Values less than or equal to one fall back to a single interpolation pass.</param>
+    /// <remarks>
+    /// Each iteration interpolates between the points produced by the previous iteration while preserving the triangle edge order.
+    /// </remarks>
+    public void GetInterpolatedEdgePoints(Points result, float t, int steps)
+    {
+        if (steps <= 1)
+        {
+            GetInterpolatedEdgePoints(result, t);
+            return;
+        }
         
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
@@ -869,8 +1344,12 @@ public readonly partial struct Triangle : IEquatable<Triangle>, IShapeTypeProvid
             remainingSteps--;
         }
         
-        return new Points(3){a1, b1, c1};
+        result.Clear();
+        result.EnsureCapacity(3);
+        
+        result.Add(a1);
+        result.Add(b1);
+        result.Add(c1);
     }
-    
     #endregion
 }

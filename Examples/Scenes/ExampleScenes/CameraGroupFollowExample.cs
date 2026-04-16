@@ -214,10 +214,13 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = Selected ? outlineColorActive : outlineColorInactive;
                 var hullColor = Selected ? hullColorActive : hullColorInactive;
                 var cockpitColor = Selected ? cockpitColorActive : cockpitColorInactive;
-                CircleDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
-                CircleDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
+                var rightThrusterCircle = new Circle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6);
+                var leftThrusterCircle = new Circle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6);
+                rightThrusterCircle.Draw(outlineColor.ColorRgba, 0.25f);
+                leftThrusterCircle.Draw(outlineColor.ColorRgba, 0.25f);
                 hull.Draw(hullColor.ColorRgba);
-                CircleDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
+                var circle = new Circle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f);
+                circle.Draw(cockpitColor.ColorRgba, 0.25f);
 
                 hull.DrawLines(4f, outlineColor.ColorRgba);
 

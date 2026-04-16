@@ -61,7 +61,8 @@ internal class ExplosivePayload : IPayload
         var f = 1f - (SmokeTimer / Info.SmokeDuration);
         var color = Colors.Warm.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
         var size = ShapeMath.LerpFloat(Info.Radius * 0.5f, Info.Radius * 3f, f);
-        CircleDrawing.DrawCircle(CurPosition, size, color, 24);
+        var circle = new Circle(CurPosition, size);
+        circle.Draw(color, 0.6f);
     }
     
     public bool IsFinished() => finished;
@@ -97,21 +98,17 @@ internal class ExplosivePayload : IPayload
         if (travelTimer > 0f)
         {
             var f = TravelF;
-            CircleDrawing.DrawCircle(TargetLocation, 12f, Colors.PcCold.ColorRgba, 24);
-            CircleDrawing.DrawCircleLines(TargetLocation, Info.Radius * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
-            
-            // var f = TravelF;
-            // ShapeDrawing.DrawCircleLines(targetLocation, Size, 6f, Colors.Dark, 6);
-            // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-            // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-            // ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.Special, 24);
+            var circle = new Circle(TargetLocation, 12f);
+            circle.Draw(Colors.PcCold.ColorRgba, 0.2f);
+            circle = circle.SetRadius(Info.Radius * (1f - f));
+            circle.DrawLines(6f, Colors.PcMedium.ColorRgba, 0.6f);
             
             var lineEnd = ShapeVec.Lerp(StartLocation, TargetLocation, f);
             var w = lineEnd - EndlessSpaceCollision.DestroyerPosition;
             var dir = w.Normalize();
             var lineStart = lineEnd - dir * 800f;
             
-            SegmentDrawing.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
+            Segment.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
         }
         
         if (SmokeTimer > 0f)

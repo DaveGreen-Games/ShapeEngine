@@ -236,7 +236,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
-            c.DrawLines(4f, Colors.Warm);
+            c.DrawLines(4f, Colors.Warm, 1f);
         }
 
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
@@ -329,8 +329,9 @@ namespace Examples.Scenes.ExampleScenes
         private Rect boundingBox;
         public Rock(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(Size, 0f), 1f))
         {
-            var shape = Polygon.GenerateRelative(6, 0.5f, 1f);
-            var col = new PolygonCollider(new(), shape ?? [])
+            Polygon shape = new();
+            Polygon.GenerateRelative(6, 0.5f, 1f, shape);
+            var col = new PolygonCollider(new(), shape)
             {
                 ComputeCollision = true,
                 ComputeIntersections = true,
@@ -800,7 +801,7 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
-            textFont.DrawTextWrapNone($"{CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f)); //TODO: colliders are not properly removed from the collision handler 
+            textFont.DrawTextWrapNone($"{CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f));
         }
 
         private void DrawInputText(Rect rect)
@@ -859,7 +860,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                CircleDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
+                var circle = new Circle(startPoint, 15f);
+                circle.Draw(Colors.Highlight);
                 Segment s = new(startPoint, mousePos);
                 s.Draw(4, Colors.Highlight);
 

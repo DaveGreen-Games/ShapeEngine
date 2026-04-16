@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolylineDef;
@@ -15,6 +16,12 @@ namespace ShapeEngine.Geometry.SegmentDef;
 /// </summary>
 public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
 {
+    #region Helper
+
+    private static Points pointsBuffer = new();
+
+    #endregion
+    
     #region Members
     /// <summary>
     /// The start point of the segment.
@@ -402,15 +409,59 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
     /// <returns></returns>
     public bool Equals(Segment other)
     {
-        return Start.IsSimilar(other.Start) && End.IsSimilar(other.End);
+        return Equals(other, DecimalPrecision.DefaultDecimalPlaces);
     }
+
+    /// <summary>
+    /// Checks the equality of 2 directed segments using quantized comparison.
+    /// </summary>
+    /// <param name="other">The segment to compare with this segment.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before comparison.</param>
+    /// <returns>True if the start and end points match in order after quantization; otherwise, false.</returns>
+    public bool Equals(Segment other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(Start, other.Start) &&
+               quantizer.QuantizedEquals(End, other.End);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for this segment.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(Start, End);
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of this segment hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of this segment hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+
     /// <summary>
     /// Returns the hash code for this segment.
     /// </summary>
-    /// <returns>A 32-bit signed integer hash code.</returns>
+    /// <returns>A 32-bit hash code derived from the stable 64-bit segment hash key.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine(Start, End);
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
     }
 
     public ShapeType GetShapeType() => ShapeType.Segment;
@@ -446,6 +497,8 @@ public readonly partial struct Segment : IEquatable<Segment>, IShapeTypeProvider
         if (obj is Segment s) return Equals(s);
         return false;
     }
+
+
     #endregion
 
     #region Lightning
