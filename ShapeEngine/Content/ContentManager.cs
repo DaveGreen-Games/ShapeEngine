@@ -118,6 +118,7 @@ public sealed class ContentManager
         Game.Instance.Logger.LogWarning($"Content pack with root '{root}' is already loaded.");
         return false;
     }
+ 
     /// <summary>
     /// Removes a content pack from the manager by its root path.
     /// </summary>
@@ -135,6 +136,7 @@ public sealed class ContentManager
         Game.Instance.Logger.LogWarning($"No content pack with root '{root}' found.");
         return false;
     }
+ 
     /// <summary>
     /// Removes a content pack from the manager by its instance.
     /// </summary>
@@ -153,6 +155,7 @@ public sealed class ContentManager
         Game.Instance.Logger.LogWarning("Content pack not found.");
         return false;
     }
+
     /// <summary>
     /// Removes all content packs from the manager.
     /// </summary>
@@ -162,6 +165,7 @@ public sealed class ContentManager
         if (clear) UnloadAllContentPacks();
         contentPacks.Clear();
     }
+
     /// <summary>
     /// Gets a list of all content packs managed by this ContentManager.
     /// </summary>
@@ -169,6 +173,7 @@ public sealed class ContentManager
     {
         return contentPacks.Values.ToList();
     }
+
     /// <summary>
     /// Gets a list of all loaded content packs managed by this ContentManager.
     /// Only content packs with <c>IsLoaded</c> set to true are included.
@@ -177,6 +182,7 @@ public sealed class ContentManager
     {
         return contentPacks.Values.Where(x => x.IsLoaded).ToList();
     }
+ 
     /// <summary>
     /// Checks if a content pack with the specified root path exists in the manager.
     /// </summary>
@@ -256,6 +262,7 @@ public sealed class ContentManager
         texture = loadedTexture;
         return true;
     }
+ 
     /// <summary>
     /// Attempts to load a fragment shader from the specified file path.
     /// Checks the cache, content packs, and file system in order.
@@ -309,6 +316,7 @@ public sealed class ContentManager
         shader = loadedShader;
         return true;
     }
+  
     /// <summary>
     /// Attempts to load a vertex shader from the specified file path.
     /// Checks the cache, content packs, and file system in order.
@@ -361,6 +369,7 @@ public sealed class ContentManager
         shader = loadedShader;
         return true;
     }
+  
     /// <summary>
     /// Attempts to load an image from the specified file path.
     /// Checks the cache, content packs, and file system in order.
@@ -414,6 +423,7 @@ public sealed class ContentManager
         image = loadedImage;
         return true;
     }
+ 
     /// <summary>
     /// Attempts to load a font from the specified file path with the given font size.
     /// Checks the cache, content packs, and file system in order.
@@ -421,8 +431,9 @@ public sealed class ContentManager
     /// <param name="filePath">The file path to the font to load.</param>
     /// <param name="font">The loaded <see cref="Font"/> if successful; otherwise, default.</param>
     /// <param name="fontSize">The size of the font to load. Defaults to 100.</param>
+    /// <param name="textureFilter">The texture filter to use for the loaded font texture.</param>
     /// <returns>True if the font was loaded successfully; otherwise, false.</returns>
-    public bool TryLoadFont(string filePath, out Font font, int fontSize = 100)
+    public bool TryLoadFont(string filePath, out Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
         font = default;
 
@@ -440,7 +451,7 @@ public sealed class ContentManager
 
         if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
         {
-            if (pack.TryLoadFont(packFilePath, out var packFont, fontSize))
+            if (pack.TryLoadFont(packFilePath, out var packFont, fontSize, textureFilter))
             {
                 Game.Instance.Logger.LogInfo($"Font '{relativePath}' loaded from content pack {pack.SourceFilePath} with font size: {fontSize}.");
                 font = packFont;
@@ -453,7 +464,7 @@ public sealed class ContentManager
         // 2. Try root pack if available
         if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
         {
-            if (rootPack.TryLoadFont(relativePath, out var packFont, fontSize))
+            if (rootPack.TryLoadFont(relativePath, out var packFont, fontSize, textureFilter))
             {
                 Game.Instance.Logger.LogInfo($"Font '{relativePath}' loaded from root content pack  {rootPack.SourceFilePath} with font size: {fontSize}.");
                 font = packFont;
@@ -465,7 +476,7 @@ public sealed class ContentManager
 
         // 3. Try loading from disk
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
-        if (!ContentLoader.TryLoadFont(contentPath, out var loadedFont, fontSize))
+        if (!ContentLoader.TryLoadFont(contentPath, out var loadedFont, fontSize, textureFilter))
         {
             return false;
         }

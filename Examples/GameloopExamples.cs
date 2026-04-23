@@ -269,52 +269,52 @@ public class GameloopExamples : Game
         contentManager = new ContentManager("Resources");
         contentManager.AddContentPack(contentPackAll, "Resources");
         
-        if(contentManager.TryLoadFont("Resources/Fonts/Gruppo-Regular.ttf", out var gruppoRegularFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Gruppo-Regular.ttf", out var gruppoRegularFont, 250))
         {
             fonts.Add(FontIDs.GruppoRegular, gruppoRegularFont);
             fontNames.Add("Gruppo Regular");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/IndieFlower-Regular.ttf", out var indieFlowerRegularFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/IndieFlower-Regular.ttf", out var indieFlowerRegularFont, 250))
         {
             fonts.Add(FontIDs.IndieFlowerRegular, indieFlowerRegularFont);
             fontNames.Add("Indie Flower Regular");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/Orbit-Regular.ttf", out var orbitRegularFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Orbit-Regular.ttf", out var orbitRegularFont, 250))
         {
             fonts.Add(FontIDs.OrbitRegular, orbitRegularFont);
             fontNames.Add("Orbit Regular");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/Orbitron-Bold.ttf", out var orbitronBoldFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Orbitron-Bold.ttf", out var orbitronBoldFont, 250))
         {
             fonts.Add(FontIDs.OrbitronBold, orbitronBoldFont);
             fontNames.Add("Orbitron Bold");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/Orbitron-Regular.ttf", out var orbitronRegularFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Orbitron-Regular.ttf", out var orbitronRegularFont, 250))
         {
             fonts.Add(FontIDs.OrbitronRegular, orbitronRegularFont);
             fontNames.Add("Orbitron Regular");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-LightItalic.ttf", out var promptLightItalicFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-LightItalic.ttf", out var promptLightItalicFont, 250))
         {
             fonts.Add(FontIDs.PromptLightItalic, promptLightItalicFont);
             fontNames.Add("Prompt Light Italic");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-Regular.ttf", out var promptRegularFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-Regular.ttf", out var promptRegularFont, 250))
         {
             fonts.Add(FontIDs.PromptRegular, promptRegularFont);
             fontNames.Add("Prompt Regular");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-Thin.ttf", out var promptThinFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-Thin.ttf", out var promptThinFont, 250))
         {
             fonts.Add(FontIDs.PromptThin, promptThinFont);
             fontNames.Add("Prompt Thin");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/Teko-Medium.ttf", out var tekoMediumFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/Teko-Medium.ttf", out var tekoMediumFont, 250))
         {
             fonts.Add(FontIDs.TekoMedium, tekoMediumFont);
             fontNames.Add("Teko Medium");
         }
-        if(contentManager.TryLoadFont("Resources/Fonts/JetBrainsMono.ttf", out var jetBrainsFont, 100))
+        if(contentManager.TryLoadFont("Resources/Fonts/JetBrainsMono.ttf", out var jetBrainsFont, 250))
         {
             fonts.Add(FontIDs.JetBrains, jetBrainsFont);
             fontNames.Add("Jet Brains Mono");

@@ -1264,10 +1264,14 @@ public static class ContentLoader
     /// <param name="extension">The file extension (e.g. ".ttf").</param>
     /// <param name="data">The raw font data as a byte array.</param>
     /// <param name="fontSize">The size of the font to load. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to use for the loaded font texture.</param>
     /// <returns>The loaded Font object.</returns>
-    public static Font LoadFontFromMemory(string extension, byte[] data, int fontSize = 100)
+    public static Font LoadFontFromMemory(string extension, byte[] data, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
-        TryLoadFontFromMemory(extension, data, out var font, fontSize);
+        if (TryLoadFontFromMemory(extension, data, out var font, fontSize))
+        {
+            Raylib.SetTextureFilter(font.Texture, textureFilter);
+        }
         return font;
     }
 

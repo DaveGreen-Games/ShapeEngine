@@ -1680,11 +1680,12 @@ public sealed class ContentPack
     /// <param name="filePath">The relative path of the font file within the content pack.</param>
     /// <param name="font">The loaded <see cref="Font"/> instance if successful; otherwise, a default value.</param>
     /// <param name="fontSize">The desired font size. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to use for the loaded font texture.</param>
     /// <remarks>
     /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
     /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
     /// </remarks>
-    public bool TryLoadFont(string filePath, out Font font, int fontSize = 100)
+    public bool TryLoadFont(string filePath, out Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
         if (!IsLoaded)
         {
@@ -1702,7 +1703,7 @@ public sealed class ContentPack
         }
         
         string extension = Path.GetExtension(filePath);
-        font = ContentLoader.LoadFontFromMemory(extension, data, fontSize);
+        font = ContentLoader.LoadFontFromMemory(extension, data, fontSize, textureFilter);
         return true;
     }
     /// <summary>
