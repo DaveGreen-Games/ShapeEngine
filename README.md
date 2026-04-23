@@ -1,4 +1,5 @@
-![ShapeEngine 4 0 Release Banner reddit (1920 x 384 px)](https://github.com/user-attachments/assets/00bdcbb9-3f24-43a8-b665-9befdc16d593)
+<img width="1920" height="384" alt="ShapeEngine-5 0Release-RedditBanner(1920x384)" src="https://github.com/user-attachments/assets/f0381991-9c19-43cf-8a6c-f5e1c6835532" />
+
 
 My custom-made engine based on the great [Raylib Framework](https://www.raylib.com/examples.html). The Main focus is being performant and only using draw functions instead of textures.
 
@@ -10,8 +11,10 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 > You are free to use Shape Engine or any part of Shape Engine for your own projects, but keep in mind that Shape Engine was designed to help me with my specific game dev needs. Nevertheless I am looking forward to creations that Shape Engine made possible :)
 
-
-[Release Trailer](https://youtu.be/fmx9zICSe3Q)
+[Release Trailer 5.0](https://youtu.be/fh-uaLW-GTc)
+[Release Trailer 3.0](https://youtu.be/Ag8rDXmvHwk)
+[Release Trailer 2.0](https://youtu.be/Jbae8znfTTs)
+[Release Trailer 1.0](https://youtu.be/fmx9zICSe3Q)
 
 ## Showcase
 ![Helldivers](media/helldivers.gif)
@@ -135,6 +138,7 @@ The Main Branch contains the current development stage. You can follow the devel
 > In general my goal is to provide the most relevant system a game dev needs without adding a solution for every possible problem.
 
 - [Polygon Fracturing](https://youtu.be/RaKz4q_zYrg)
+- Polygon Clipping & Boolean Operations
 - [Delaunay Triangulation](https://youtu.be/eJqZB-e6m54)
 - [Text & Font System](https://youtu.be/D3xLx7f1YqQ)
 - [Word Emphasis System](https://youtu.be/wEz60lx8ef4)
