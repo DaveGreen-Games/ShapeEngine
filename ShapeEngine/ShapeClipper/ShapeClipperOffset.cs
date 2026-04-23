@@ -96,9 +96,9 @@ public class ShapeClipperOffset
 
         if (offset == 0f)
         {
-            var path = new Path64();
-            ShapeClipperConversion2D.ToPath64(polygonCCW, path);
-            result.Add(path);
+            // var path = new Path64();
+            // ShapeClipperConversion2D.ToPath64(polygonCCW, path);
+            // result.Add(path);
             return;
         }
 
@@ -128,6 +128,7 @@ public class ShapeClipperOffset
 
         if (offset == 0f)
         {
+            // ShapeClipperConversion2D.ToPaths64(polygonWithHoles, result);
             return;
         }
 
