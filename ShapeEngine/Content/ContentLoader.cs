@@ -295,6 +295,7 @@ public static class ContentLoader
         TryLoadFont(filePath, out var font, fontSize, textureFilter);
         return font;
     }
+ 
     /// <summary>
     /// Loads a fragment shader from a file.
     /// </summary>
@@ -318,6 +319,7 @@ public static class ContentLoader
         TryLoadFragmentShader(filePath, out var shader);
         return shader;
     }
+    
     /// <summary>
     /// Loads a vertex shader from a file.
     /// </summary>
@@ -341,6 +343,7 @@ public static class ContentLoader
         TryLoadVertexShader(filePath, out var shader);
         return shader;
     }
+    
     /// <summary>
     /// Loads a texture from a file.
     /// </summary>
@@ -364,6 +367,7 @@ public static class ContentLoader
         TryLoadTexture(filePath, out var texture);
         return texture;
     }
+    
     /// <summary>
     /// Loads an image from a file.
     /// </summary>
@@ -387,6 +391,7 @@ public static class ContentLoader
         TryLoadImage(filePath, out var image);
         return image;
     }
+    
     /// <summary>
     /// Loads a wave sound from a file.
     /// </summary>
@@ -410,6 +415,7 @@ public static class ContentLoader
         TryLoadWave(filePath, out var wave);
         return wave;
     }
+    
     /// <summary>
     /// Loads a sound from a file.
     /// </summary>
@@ -433,6 +439,7 @@ public static class ContentLoader
         TryLoadSound(filePath, out var sound);
         return sound;
     }
+    
     /// <summary>
     /// Loads a music stream from a file.
     /// </summary>
@@ -456,6 +463,7 @@ public static class ContentLoader
         TryLoadMusic(filePath, out var music);
         return music;
     }
+    
     /// <summary>
     /// Loads a text file as a string.
     /// This should not be used for game save data,
@@ -532,6 +540,7 @@ public static class ContentLoader
             return false;
         }
     }
+
     /// <summary>
     /// Attempts to load a fragment shader from the specified file path.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -574,6 +583,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load a vertex shader from the specified file path.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -616,6 +626,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load a texture from the specified file path.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -658,6 +669,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load an image from the specified file path.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -700,6 +712,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load a wave sound from the specified file path.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -742,6 +755,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load a sound from the specified file path.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -784,6 +798,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load a music stream from the specified file path.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -826,6 +841,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load a text file as a string.
     /// Automatically resolves resource paths for macOS application bundles.
@@ -923,6 +939,7 @@ public static class ContentLoader
             return false;
         }
     }
+  
     /// <summary>
     /// Attempts to load an image from raw content data in memory.
     /// </summary>
@@ -975,12 +992,13 @@ public static class ContentLoader
     /// <param name="data">The raw font data as a byte array.</param>
     /// <param name="font">The loaded Font object if successful; otherwise, a default Font.</param>
     /// <param name="fontSize">The size of the font to load. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to apply to the font texture. Default is Trilinear.</param>
     /// <returns>True if the font was loaded successfully; otherwise, false.</returns>
     /// <remarks>
     /// Valid extensions for <see cref="ContentType.Font"/> can be managed via <see cref="AddValidFileExtension"/>,
     /// <see cref="RemoveValidFileExtension"/>,and <see cref="SetValidFileExtensions"/>.
     /// </remarks>
-    public static bool TryLoadFontFromMemory(string extension, byte[] data, out Font font, int fontSize = 100)
+    public static bool TryLoadFontFromMemory(string extension, byte[] data, out Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
         if (data.Length <= 0)
         {
@@ -1004,6 +1022,7 @@ public static class ContentLoader
         try
         {
             font = Raylib.LoadFontFromMemory(extension, data, fontSize, [], GLYPH_COUNT);
+            Raylib.SetTextureFilter(font.Texture, textureFilter);
             return true;
         }
         catch (Exception ex)
@@ -1058,6 +1077,7 @@ public static class ContentLoader
             return false;
         }
     }
+  
     /// <summary>
     /// Attempts to load a sound from raw content data in memory.
     /// </summary>
@@ -1102,6 +1122,7 @@ public static class ContentLoader
             return false;
         }
     }
+    
     /// <summary>
     /// Attempts to load a music stream from raw content data in memory.
     /// </summary>
@@ -1203,6 +1224,7 @@ public static class ContentLoader
             return false;
         }
     }
+  
     /// <summary>
     /// Attempts to load a text string from raw content data in memory.
     /// </summary>
@@ -1268,10 +1290,7 @@ public static class ContentLoader
     /// <returns>The loaded Font object.</returns>
     public static Font LoadFontFromMemory(string extension, byte[] data, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
-        if (TryLoadFontFromMemory(extension, data, out var font, fontSize))
-        {
-            Raylib.SetTextureFilter(font.Texture, textureFilter);
-        }
+        TryLoadFontFromMemory(extension, data, out var font, fontSize, textureFilter);
         return font;
     }
 
@@ -1366,7 +1385,7 @@ public static class ContentLoader
 
         foreach (string path in fontPaths)
         {
-            if (!TryLoadFont(path, out var font)) continue;
+            if (!TryLoadFont(path, out var font, fontSize, textureFilter)) continue;
             string relativePath = Path.GetRelativePath(directoryPath, path);
             fontDict[relativePath] = font;
         }

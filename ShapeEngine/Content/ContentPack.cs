@@ -1500,15 +1500,19 @@ public sealed class ContentPack
     /// </summary>
     /// <param name="filePath">The relative path of the font file within the content pack.</param>
     /// <param name="fontSize">The desired font size. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to apply to the font texture. Default is Trilinear.</param>
     /// <returns>The loaded <see cref="Font"/> instance.</returns>
     /// <remarks>
     /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
     /// otherwise it will fail and return a default value.
     /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
     /// </remarks>
-    public Font LoadFont(string filePath, int fontSize = 100)
+    public Font LoadFont(string filePath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
-        TryLoadFont(filePath, out var font, fontSize);
+        if (TryLoadFont(filePath, out var font, fontSize))
+        {
+            Raylib.SetTextureFilter(font.Texture, textureFilter);
+        }
         return font;
     }
 
@@ -1642,6 +1646,7 @@ public sealed class ContentPack
         texture = ContentLoader.LoadTextureFromMemory(extension, data);
         return true;
     }
+    
     /// <summary>
     /// Attempts to load an <see cref="Image"/> from the content pack using the specified file path.
     /// Returns true if the image is successfully loaded; otherwise, false.
@@ -1673,6 +1678,7 @@ public sealed class ContentPack
         image = ContentLoader.LoadImageFromMemory(extension, data);
         return true;
     }
+    
     /// <summary>
     /// Attempts to load a <see cref="Font"/> from the content pack using the specified file path and font size.
     /// Returns true if the font is successfully loaded; otherwise, false.
@@ -1703,9 +1709,9 @@ public sealed class ContentPack
         }
         
         string extension = Path.GetExtension(filePath);
-        font = ContentLoader.LoadFontFromMemory(extension, data, fontSize, textureFilter);
-        return true;
+        return ContentLoader.TryLoadFontFromMemory(extension, data, out font, fontSize, textureFilter);
     }
+    
     /// <summary>
     /// Attempts to load a <see cref="Wave"/> from the content pack using the specified file path.
     /// Returns true if the wave is successfully loaded; otherwise, false.
@@ -1737,6 +1743,7 @@ public sealed class ContentPack
         wave =  ContentLoader.LoadWaveFromMemory(extension, data);
         return true;
     }
+  
     /// <summary>
     /// Attempts to load a <see cref="Sound"/> from the content pack using the specified file path.
     /// Returns true if the sound is successfully loaded; otherwise, false.
@@ -1801,6 +1808,7 @@ public sealed class ContentPack
         music = ContentLoader.LoadMusicFromMemory(extension, data);
         return true;
     }
+ 
     /// <summary>
     /// Attempts to load a fragment <see cref="Shader"/> from the content pack using the specified file path.
     /// Returns true if the shader is successfully loaded; otherwise, false.
@@ -1938,6 +1946,7 @@ public sealed class ContentPack
         success = true;
         return result;
     }
+ 
     /// <summary>
     /// Loads all <see cref="Image"/> assets from the content pack.
     /// Returns a dictionary mapping file paths to loaded images.
@@ -1979,6 +1988,7 @@ public sealed class ContentPack
             success = true;
             return result;
         }
+    
     /// <summary>
     /// Loads all <see cref="Font"/> assets from the content pack.
     /// Returns a dictionary mapping file paths to loaded fonts.
@@ -1986,12 +1996,13 @@ public sealed class ContentPack
     /// </summary>
     /// <param name="success">True if fonts were loaded; otherwise, false.</param>
     /// <param name="fontSize">The desired font size. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to apply to the font texture. Default is Trilinear.</param>
     /// <returns>Dictionary of file paths and their corresponding <see cref="Font"/> instances.</returns>
     /// <remarks>
     /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
     /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
     /// </remarks>
-    public Dictionary<string, Font> LoadAllFonts(out bool success, int fontSize = 100)
+    public Dictionary<string, Font> LoadAllFonts(out bool success, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
         success = false;
         var result = new Dictionary<string, Font>();
@@ -2006,7 +2017,7 @@ public sealed class ContentPack
         {
             string ext = Path.GetExtension(file);
             if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Font)) continue;
-            if (TryLoadFont(file, out var font, fontSize))
+            if (TryLoadFont(file, out var font, fontSize, textureFilter))
             {
                 result[file] = font;
             }
@@ -2021,6 +2032,7 @@ public sealed class ContentPack
         success = true;
         return result;
     }
+    
     /// <summary>
     /// Loads all <see cref="Wave"/> assets from the content pack.
     /// Returns a dictionary mapping file paths to loaded waves.
@@ -2062,6 +2074,7 @@ public sealed class ContentPack
         success = true;
         return result;
     }
+    
     /// <summary>
     /// Loads all <see cref="Sound"/> assets from the content pack.
     /// Returns a dictionary mapping file paths to loaded sounds.
@@ -2103,6 +2116,7 @@ public sealed class ContentPack
         success = true;
         return result;
     }
+    
     /// <summary>
     /// Loads all <see cref="Music"/> assets from the content pack.
     /// Returns a dictionary mapping file paths to loaded music instances.
@@ -2144,6 +2158,7 @@ public sealed class ContentPack
         success = true;
         return result;
     }
+    
     /// <summary>
     /// Loads all fragment <see cref="Shader"/> assets from the content pack.
     /// Returns a dictionary mapping file paths to loaded fragment shaders.
@@ -2185,6 +2200,7 @@ public sealed class ContentPack
         success = true;
         return result;
     }
+    
     /// <summary>
     /// Loads all vertex <see cref="Shader"/> assets from the content pack.
     /// Returns a dictionary mapping file paths to loaded vertex shaders.
@@ -2226,6 +2242,7 @@ public sealed class ContentPack
         success = true;
         return result;
     }
+    
     /// <summary>
     /// Loads all text files from the content pack.
     /// Returns a dictionary mapping file paths to their loaded text content.
