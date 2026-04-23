@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>4.0.5</Version>
+	<Version>5.0.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,70 +18,111 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>4.0.5</AssemblyVersion>
-	<FileVersion>4.0.5</FileVersion>
+	<AssemblyVersion>5.0.0</AssemblyVersion>
+	<FileVersion>5.0.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
-  	<Copyright>Copyright (c) David Grueneis 2025</Copyright>
+  	<Copyright>Copyright (c) David Grueneis 2026</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
-		#4.0.5 Release
-		- XML summaries added to most classes, structs, functions, members, and events.
-		- Some big files are still missing summaries like most shape classes (Rect, Ray, Polygon, etc.)
-
-		#4.0.4 Release
-		- Docs are now available (they are not complete and still a work in progress)
-		- Link: https://davegreen-games.github.io/ShapeEngineDocs/
-		
-		#4.0.3 Release
-		- Automated Nuget Package Upload Workflow tested
-		
-		#4.0.2 Release
-		- ShapePhysics CalculateDragFactor functions is now public.
-		- ShapeVec added ClampLength(v, max) ClampLength(v, min, max) functions.
-		- ShapeMath added IsSignEqual() (int and float) functions.
-		
-		#4.0.1 Release
-		- Added missing XML documentation file to the nuget package.
-		
-		#4.0.0 Release
-		
-		This release took 4 months to complete. 
-		Originally, I just wanted to add the new Ray and Line shapes for drawing and collision detection, but it ended up being much more. 
-		I took a look at physics, added some new functions, and cleaned up the PhysicsObject class. DrawCheckered was renamed to DrawStriped, and I added a lot of new variations as well. 
-		There were many small changes, bug fixes, and improvements all over ShapeEngine. There are still things I wanted to add, but I decided to release 4.0 right now.
-		
-		Changelog:
-		- Line and Ray shapes added. Both are defined by a Point and a Direction.
-		- The Line is infinitely long in both directions from the point, and a Ray is infinitely long in one direction from the point.
-		- Intersect / Overlap / ClosestPoint functions added to Line and Ray.
-		- Intersect / Overlap / ClosestPoint functions overhauled and cleaned up for all remaining shapes (Segments, Points, Triangulation and Collider as well) to make everything consistent.
-		- Line and Ray added to Cast/Query Space functions in CollisionHandler.
-		- ShapesExample improved. Automated Testing and Projection added.
-		- ShapesExample renamed to ShapeIntersectionExample
-		- ShapeProjectionExample removed.
-		- DrawCheckered renamed to DrawStriped
-		- DrawStriped implemented for all closed shapes (Circle, Triangle, Rect, Quad, Polygon)
-		- DrawStriped code improved with new line intersection functions
-		- DrawStriped function with an outside and an inside shape. The striped lines will fill the outside shape and not the inside shape.
-		- DrawShapeOutline example added
-		- DrawShapeStriped example added
-		- Physics! Example added
-		- CurveDataExample added
-		- Curve generic class implemented. Allows adding key-value pairs. Each key is time between 0 - 1. Allow sampling for a value at a certain time point. The value will be an interpolation between the values at the key before and after the time point.
-		- CurveFloat, CurveInt, CurveVector2, CurveColor are implemented
-		- ContainsShape functions overhauled for all closed shapes (Circle, Triangle, Rect, Quad, Polygon)
-		- Polygon ContainsShape functions now properly check if the shape is contained. Previously, it would only check if all points are contained within the polygon, but would not check if the edges intersect the polygon.
-		- Circle and Polygon have special ContainsShape code that uses intersection tests as well (other shapes just check if all points from the other shape are inside)
-		- Raylib Cs bindings updated to 7.0.1
-		- Clipper2 updated to 1.5.3
-		- Static functions from PhysicsObject moved to the new static ShapePhysics class
-		- Friction, Drag, Elastic Collision, Attraction, and Repulsion functions added to the ShapePhysics class
-		- DrawArrow functions added to the ShapeDrawing class
-		- ShapeDrawing was split into multiple files for each shape type: ShapePointDrawing, ShapeSegmentDrawing, ShapeLineDrawing, ShapeRayDrawing, ShapeTriangleDrawing, ShapeCircleDrawing, ShapeRectDrawing, ShapeQuadDrawing, ShapePolygonDrawing, ShapePolylineDrawing, ShapeDrawing, ShapeCustomDrawing, ShapeRingDrawing, ShapeGappedDrawing, ShapeStripedDrawing, ShapeUIDrawing
-		- ShapeEngine.Lib namespace was renamed to ShapeEngine.StaticLib
-		- Deferred Drawing System added to the Game class
-		
+	#Summary
+	The 5.0 release is focused on refactoring and cleanup of existing systems while also introducing a selection of targeted new features to make the engine cleaner, faster, and easier to extend.
+	First of all, the input system was overhauled: there is a new InputActionSettings struct, a redesigned gesture system, and improved gamepad handling. The most notable fix is that gamepads now work on macOS again.
+	Next, the collision system was decoupled from the spatial-partitioning system to allow custom broadphase implementations. The pathfinding system received several improvements and an optional parallelization mode, allowing path requests to be handled concurrently rather than sequentially. The collision system also gained partial parallelization, allowing parts of the collision-detection algorithm to run in parallel.
+	A new resource-packer project was added to bundle resources into text or binary packs, and the ShapeEngine content system was updated to support these packs. Alongside this, I cleaned up and modernized the legacy content system and added simple JSON and XML serializer classes to replace the old, JSON-only serializer. I also included example scenes for JSON and XML serialization; these scenes can load custom JSON and XML files to alter scene behavior at runtime.
+	Many drawing APIs were modernized, renamed, and decluttered. Drawing functions are now all grouped within each shape. New MaskedDrawing* functions were implemented, and StripedDrawing* was overhauled and modernized. Several GitHub workflows were added to simplify repository and engine maintenance.
+	
+	#Changelog
+	##Input System
+	- [BREAKING] Input system improvements.
+	- [NEW] InputGesture system added  (LongPress, DoubleTap, etc.).
+	- [NEW] InputDeviceSettings struct added for easier setup of the input system.
+	- [NEW] InputActionSettings struct added for easier setup of input actions.
+	- [NEW] Automated system for applying the current gamepad mappings added (gamepads now works on macOS).
+	- [UPDATE] Gamepad management improved.
+	
+	##Collision System
+	- [BREAKING] Collision system improved.
+	- [BREAKING] Collision system separated from spatial partitioning algorithm to allow use of custom algorithms.
+	- [NEW] Optional parallelization features for better performance added (allows to run certain parts of the collision detection algorithm concurrently).
+	- [NEW] MotionType and BroadphaseType enums added to the collision system.
+	
+	##Pathfinding
+	- [BREAKING] Pathfinding system improved.
+	- [NEW] Optional parallelization features for PathRequest handling added.
+	
+	##Savegame
+	- [BREAKING] Savegame system improved.
+	- [NEW] Savegame folder is now automatically created based on ApplicationName and SaveDirectory.
+	- [NEW] Automated savegame backup system added (automatically creates a backup folder in the savegame directory and it can create and apply backups).
+	
+	##Docs
+	- [NEW] XML summaries added to every class, member, and function that is public.
+	
+	##Drawing
+	- [BREAKING] Overhaul of all outline drawing functions of all closed shapes and polyline to allow using transparent colors without overlapping artifacts.
+	- [NEW] MaskedDrawing* functions added (Allows to only draw a shape or shape outline within a certain area or outside of a certain area).
+	- [NEW] StripedDrawing* overloads added.
+	- [UPDATE] Striped drawing functions improved.
+	- [UPDATE] Striped drawing functions moved into shape structs/classes.
+	
+	##Workflows
+	- [NEW] Workflow added to automatically update the gamepad mappings file once a month (SDL GameController DB is used as source).
+	- [NEW] Workflow added to automatically keep ShapeEngines dependencies up to date (raylib and Clipper2).
+	- [NEW] Workflow added to automatically attach Example project builds to new releases.
+	- [NEW] Workflow added to upload ShapeEngine nuget packages to nuget.org (manually triggered only).
+	
+	##Core
+	- [NEW] ApplicationName property added (used for setting up the savegame folder).
+	- [NEW] ShapeEngine now handles capping of FrameRate to the set FrameRateLimit.
+	- [NEW] AdaptiveFpsLimiter class added.
+	- [NEW] MacOS app bundling and packaging support for Examples added.
+	- [NEW] New VsyncMode enum added. (Disabled, Half, Normal, Double, Quadruple)
+	- [UPDATE] VSync now works better and no longer disrupts fullscreen (If VSyncMode is enabled the FrameRateLimit is automatically set to the refresh rate of the current monitor based on the VsyncMode).
+	- [NEW] New AdaptiveFpsLimiter classed implemented. Automatically adjust fps limit to find highest frame rate that can be sustained without dips. Works with all VsyncModes and with uncapped frame rate limit (frame rate limit &lt;= 0).
+	- [NEW] Idle detection implemented. Engine now detects if no input was received for a certain amount of time and idle mode will be triggered. (GameSettings parameter added to customize behavior)
+	- [NEW] Idle frame rate limit system implemented. When idle mode is triggered and GameSettings.IdleFrameRateLimit is set, the engine will be limited to this frame rate until the idle mode ends.
+	- [NEW] Unfocused frame rate limit system implemented. When the window looses focus and WindowSettings.UnfocusedFrameRateLimit is set, the engine will be limited to this frame rate until the window gains focus again.
+	- [NEW] Added new FixedDelta property to the GameTime class to properly distinguish between fixed and open delta values.
+	- [BREAKING] Added a new FramerateSettings struct. Framerate specific settings from GameSettings and WindowSettings were moved to FramerateSettings.
+	- [NEW] Dynamic substepping properties added to FramerateSettings. Dynamic substepping splits up large frame deltas into multiple smaller update cycles. It works similar to fixed update but it only comes into play with extreme frame rate drop to keep the update delta consistent. 
+	- [NEW] MaxDelta property added to FramerateSettings. The MaxDelta value is used to cap the maximum allowed frame delta each frame.
+	- [BREAKING] Reworked the entire fixed update system.
+	- [NEW] Added HandleInput() method to the game loop hierarchy (Game, Scene, CustomEvent)
+	- [BREAKING] Clipper2 wrapper system completely overhauled and improved (cleaner api, less memory allocations, moved to Path64 from PathD for better accuracy, and much more)
+	- [UPDATE] .net 8.0 updated to .net 10.0
+	
+	##Shapes
+	- [NEW] Polygon GetIncircle() function added
+	- [NEW] Polygon Round()/RoundCopy() functions added
+	- [NEW] Polygon ToAbsolute() function added
+	- [NEW] Polygon GetPreviousVertex()/GetNextVertex() and GetPreviousIndex()/GetNextIndex() functions added.
+	- [NEW] Polygon GenerateOutlineTriangulation function added
+	- [NEW] Polygon Triangulate() overload added with ref parameter (reduce allocations)
+	- [NEW] Various new  geometric functions added to certain Shapes.
+	
+	##Misc
+	- [BREAKING] Pool System overhauled and drastically simplified.
+	- [NEW] PerlinNoise class added (thanks to Fixin).
+	- [NEW] ResourcePacker project added - Allows packing/ unpacking of resources to text or binary files. 
+	- [NEW] DebugLogger class added (allows to print information to console and/or to a log file).
+	- [UPDATE] A lot of misc fixes, improvements, and clean up.
+	- [UPDATE] Better polygon bounding circle algorithm implemented.
+	- [UPDATE] Clipper2 library updated to v2.0
+	- [NEW] PerformanceMeasureWatch class added.
+	- [NEW] MacOS app bundling added
+	
+	##Example Scenes
+	- [NEW] New Savegame Example Scene added.
+	- [NEW] New XML / JSON serialization systems added.
+	- [NEW] New XML / JSON Example Scenes added.
+	- [FIX] EndlessSpaceExampleScene no longer updates the CollisionHandler twice each frame and properly makes use of FixedUpdate() when FixedPhysicsFramerate is enabled.
+	- [NEW] New shaders added
+	- [UPDATE] Existing shaders improved / fixed.
+	- [NEW] New Shockwave Shader is used in EndlessSpaceCollision example scene now.
+	- [NEW] Resources are now packed and copied to output directory on build.
+	
+	And many more miscellaneous  changes, additions and fixes that would be too much to put them all here!
 	</PackageReleaseNotes>
   	<PackageId>DaveGreen.ShapeEngine</PackageId>
   	<LangVersion>latestmajor</LangVersion>
