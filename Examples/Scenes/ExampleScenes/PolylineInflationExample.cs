@@ -17,10 +17,11 @@ namespace Examples.Scenes.ExampleScenes
     public class PolylineInflationExample : ExampleScene
     {
         private const float MaxOffset = 1000;
-        Polyline polyline = new();
-        int dragIndex = -1;
-        float offsetDelta = 0f;
-        float lerpOffsetDelta = 0f;
+        private Polyline polyline = new();
+        private TriMesh triangulationResult = new();
+        private int dragIndex = -1;
+        private float offsetDelta = 0f;
+        private float lerpOffsetDelta = 0f;
         private Font font;
 
         private InputAction createPoint;
@@ -131,6 +132,28 @@ namespace Examples.Scenes.ExampleScenes
             var createState = createPoint.State;
             var deleteState = deletePoint.State;
             
+            Polygons? inflationResult = null;
+            if (lerpOffsetDelta > 10f && polyline.Count > 1)
+            {
+                inflationResult = new();
+                polyline.InflatePolyline(inflationResult, lerpOffsetDelta, 2f, false, ShapeClipperEndType.Square, false);
+
+                triangulationResult.Clear();
+                
+                ShapeClipperTriangulation2D.CreatePolygonTriangulation(inflationResult, false, triangulationResult);
+                triangulationResult.Draw(Colors.Special.ChangeBrightness(-0.3f));
+                
+                ShapeClipperTriangulation2D.CreatePolygonOutlineTriangulation(inflationResult, relativeSize, 4f, false, false, triangulationResult);
+                triangulationResult.Draw(Colors.Special);
+                
+                // foreach (var polygon in inflationResult)
+                // {
+                //     polygon.Draw(Colors.Special.ChangeBrightness(-0.3f));
+                //     polygon.DrawLines(relativeSize, Colors.Special);
+                // }
+            }
+            
+            
             for (int i = 0; i < polyline.Count; i++)
             {
                 var p = polyline[i];
@@ -199,6 +222,9 @@ namespace Examples.Scenes.ExampleScenes
 
             if (dragIndex > -1) polyline[dragIndex] = mousePos;
 
+            
+
+            
             var segments = polyline.GetEdges();
             for (int i = 0; i < segments.Count; i++)
             {
@@ -230,18 +256,7 @@ namespace Examples.Scenes.ExampleScenes
                 circle.Draw(Colors.Warm);
             }
 
-            Polygons? inflationResult = null;
-            if (lerpOffsetDelta > 10f && polyline.Count > 1)
-            {
-                inflationResult = new();
-                polyline.InflatePolyline(inflationResult, lerpOffsetDelta, 2f, false, ShapeClipperEndType.Round);
-                // inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
-                foreach (var polygon in inflationResult)
-                {
-                    polygon.DrawLines(relativeSize, Colors.Special);
-                }
-            }
-
+            
 
             if (collisionSegmentValid)
             {

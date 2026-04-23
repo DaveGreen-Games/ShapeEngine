@@ -252,11 +252,12 @@ public static class ShapeClipper2D
     /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
     /// <param name="beveled">Whether non-miter joins should use beveled corners.</param>
     /// <param name="endType">The end-cap style to use for the open polyline.</param>
-    public static void InflatePolyline(this IReadOnlyList<Vector2> polyline, Polygons result,  float delta, float miterLimit, bool beveled, ShapeClipperEndType endType = ShapeClipperEndType.Butt)
+    /// <param name="removeHoles">Whether to remove all polygons that are considered holes (wind clockwise) from the result.</param>
+    public static void InflatePolyline(this IReadOnlyList<Vector2> polyline, Polygons result,  float delta, float miterLimit, bool beveled, ShapeClipperEndType endType = ShapeClipperEndType.Butt, bool removeHoles = true)
     {
         if (delta < 0f) delta *= -1f;
         OffsetEngine.OffsetPolyline(polyline, delta, miterLimit, beveled, endType, paths64Buffer);
-        paths64Buffer.ToPolygons(result, true);
+        paths64Buffer.ToPolygons(result, removeHoles);
     }
   
     /// <summary>
@@ -267,10 +268,11 @@ public static class ShapeClipper2D
     /// <param name="delta">The offset distance in world units.</param>
     /// <param name="miterLimit">The maximum miter length factor used for joins.</param>
     /// <param name="beveled">Whether non-miter joins should use beveled corners.</param>
-    public static void InflatePolygon(this IReadOnlyList<Vector2> polygon, Polygons result, float delta, float miterLimit, bool beveled)
+    /// <param name="removeHoles">Whether to remove all polygons that are considered holes (wind clockwise) from the result.</param>
+    public static void InflatePolygon(this IReadOnlyList<Vector2> polygon, Polygons result, float delta, float miterLimit, bool beveled, bool removeHoles = true)
     {
         OffsetEngine.OffsetPolygon(polygon, delta, miterLimit, beveled, paths64Buffer);
-        paths64Buffer.ToPolygons(result, true);
+        paths64Buffer.ToPolygons(result, removeHoles);
     }
     
     #endregion

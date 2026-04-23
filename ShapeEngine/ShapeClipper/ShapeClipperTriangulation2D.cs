@@ -227,6 +227,54 @@ public static class ShapeClipperTriangulation2D
     }
     
     /// <summary>
+    /// Triangulates the stroked outline of a polygon-with-holes input into a <see cref="TriMesh"/>.
+    /// </summary>
+    /// <param name="polygonWithHoles">The outer polygon followed by any hole polygons, expressed as <see cref="Vector2"/> vertex lists.</param>
+    /// <param name="thickness">The outline thickness in world units.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="result">The destination mesh that receives the generated geometry.</param>
+    /// <remarks>
+    /// The outline is created by offsetting the polygon set outward and inward, subtracting the inner result from the outer result,
+    /// and triangulating the remaining ring paths.
+    /// </remarks>
+    public static void CreatePolygonOutlineTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, float thickness, float miterLimit, bool beveled, bool useDelaunay, TriMesh result)
+    {
+        if (result == null) throw new ArgumentNullException(nameof(result));
+        result.Clear();
+
+        if (polygonWithHoles.Count <= 0 || thickness <= 0f) return;
+
+        ShapeClipper2D.OffsetEngine.OffsetPolygon(polygonWithHoles, +thickness, miterLimit, beveled, tmpOuter);
+        ShapeClipper2D.OffsetEngine.OffsetPolygon(polygonWithHoles, -thickness, miterLimit, beveled, tmpInner);
+        if (tmpOuter.Count == 0) return;
+        
+        tmpRing.Clear();
+        ShapeClipper2D.ClipEngine.Execute(tmpOuter, tmpInner, ShapeClipperClipType.Difference, tmpRing);
+        
+        if (tmpRing.Count == 0) return;
+    
+        result.TriangulatePaths64ToMesh(tmpRing, useDelaunay);
+    }
+    
+    /// <summary>
+    /// Triangulates the stroked outline of a polygon-with-holes input into a <see cref="Triangulation"/>.
+    /// </summary>
+    /// <param name="polygonWithHoles">The outer polygon followed by any hole polygons, expressed as <see cref="Vector2"/> vertex lists.</param>
+    /// <param name="thickness">The outline thickness in world units.</param>
+    /// <param name="miterLimit">The maximum miter length factor used for sharp joins.</param>
+    /// <param name="beveled">Whether joins that exceed the miter limit should use beveled corners.</param>
+    /// <param name="useDelaunay">Whether Delaunay refinement should be applied during triangulation.</param>
+    /// <param name="result">The destination triangulation that receives the generated triangles.</param>
+    public static void CreatePolygonOutlineTriangulation(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, float thickness, float miterLimit, bool beveled, bool useDelaunay, Triangulation result)
+    {
+        triMeshBuffer.Clear();
+        CreatePolygonOutlineTriangulation(polygonWithHoles, thickness, miterLimit, beveled, useDelaunay, triMeshBuffer);
+        triMeshBuffer.ToTriangulation(result);
+    }
+    
+    /// <summary>
     /// Triangulates the stroked outline of a polygon into a <see cref="TriMesh"/>.
     /// </summary>
     /// <param name="polygonCCW">The polygon vertices, expected in counterclockwise order.</param>
