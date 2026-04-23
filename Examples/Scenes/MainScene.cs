@@ -83,7 +83,7 @@ namespace Examples.Scenes
             navigator = new ControlNodeNavigator();
             navigator.AddNode(buttonContainer);
             
-            titleFont = new(GameloopExamples.Instance.FontDefault, 10f, Colors.Text);
+            titleFont = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrainsLarge), 10f, Colors.Text);
             var action = GameloopExamples.Instance.InputActionUICancel;
             quitLabel = new(action, "Quit", GameloopExamples.Instance.FontDefault, Colors.PcWarm);
             

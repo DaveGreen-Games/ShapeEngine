@@ -19,6 +19,7 @@ public class ShapeClipperOffset
     /// </summary>
     public DecimalPrecision Scale;
     private readonly Path64 bufferPath64 = new(256);
+    private readonly Paths64PooledBuffer paths64ConversionBuffer = new(8);
     
     /// <summary>
     /// Gets or sets the miter limit used by the underlying offset engine.
@@ -95,15 +96,48 @@ public class ShapeClipperOffset
 
         if (offset == 0f)
         {
-            var path = new Path64();
-            ShapeClipperConversion2D.ToPath64(polygonCCW, path);
-            result.Add(path);
+            // var path = new Path64();
+            // ShapeClipperConversion2D.ToPath64(polygonCCW, path);
+            // result.Add(path);
             return;
         }
 
         OffsetPolygonToPaths64(polygonCCW, offset, miterLimit, beveled, result);
     }
 
+    /// <summary>
+    /// Offsets a polygon with holes and writes the resulting paths into <paramref name="result"/>.
+    /// </summary>
+    /// <param name="polygonWithHoles">
+    /// A collection of polygon contours to offset, where the first contour is typically the outer boundary and subsequent contours represent holes.
+    /// </param>
+    /// <param name="offset">The offset distance in world units. Positive values expand the polygon and negative values shrink it.</param>
+    /// <param name="miterLimit">The miter limit to use when selecting join behavior for sharp corners.</param>
+    /// <param name="beveled">Whether non-miter joins should use beveled corners instead of square corners.</param>
+    /// <param name="result">The destination collection that will be cleared and populated with the generated offset paths.</param>
+    /// <remarks>
+    /// If <paramref name="polygonWithHoles"/> is empty, or <paramref name="offset"/> is zero, no output is produced.
+    /// Each contour is converted to Clipper's integer coordinate space before the offset is applied.
+    /// </remarks>
+    public void OffsetPolygon(IReadOnlyList<IReadOnlyList<Vector2>> polygonWithHoles, float offset, float miterLimit, bool beveled, Paths64 result)
+    {
+        if (result == null) throw new ArgumentNullException(nameof(result));
+        result.Clear();
+
+        if (polygonWithHoles.Count <= 0) return;
+
+        if (offset == 0f)
+        {
+            // ShapeClipperConversion2D.ToPaths64(polygonWithHoles, result);
+            return;
+        }
+
+        paths64ConversionBuffer.PrepareBuffer(polygonWithHoles.Count);
+        ShapeClipperConversion2D.ToPaths64(polygonWithHoles, paths64ConversionBuffer.Buffer);
+        
+        OffsetPaths64(paths64ConversionBuffer.Buffer, offset, miterLimit, beveled, result);
+    }
+    
     /// <summary>
     /// Offsets an open polyline and writes the resulting stroked outline paths into <paramref name="result"/>.
     /// </summary>
@@ -152,7 +186,7 @@ public class ShapeClipperOffset
 
         OffsetPaths64(paths, offset, miterLimit, beveled, result);
     }
-
+    
     /// <summary>
     /// Offsets a collection of open Clipper paths and writes the resulting stroked outlines into <paramref name="result"/>.
     /// </summary>

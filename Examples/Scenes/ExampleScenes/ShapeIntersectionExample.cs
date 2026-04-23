@@ -1633,9 +1633,21 @@ public class ShapeIntersectionExample : ExampleScene
                     staticSeg.Draw(LineThickness, Colors.Light);
                 }
 
-                if (closestPointResult.OtherSegmentIndex >= 0 && movingShape.GetSegment(closestPointResult.OtherSegmentIndex, out var movingSeg))
+                var otherIndex = closestPointResult.OtherSegmentIndex;
+                if (otherIndex >= 0)
                 {
-                    movingSeg.Draw(LineThickness, Colors.Light);
+                    if (projectionActive && projection != null)
+                    {
+                        if (projection.Count > otherIndex)
+                        {
+                            var closestSegment = projection.GetSegment(otherIndex);
+                            closestSegment.Draw(LineThickness, Colors.Light);
+                        }
+                    }
+                    else if (movingShape.GetSegment(otherIndex, out var movingSeg))
+                    {
+                        movingSeg.Draw(LineThickness, Colors.Light);
+                    }
                 }
                 
                 var segment = new Segment(closestPointResult.Self.Point, closestPointResult.Other.Point);
