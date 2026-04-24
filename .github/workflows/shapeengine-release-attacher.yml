@@ -10,8 +10,9 @@ permissions:
 jobs:
   build:
     env:
-      dotnet-version: "8.0"
+      dotnet-version: "10.0.x"
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -37,34 +38,73 @@ jobs:
         run: dotnet restore
 
       - name: Publish Examples
-        run: dotnet publish --sc -r ${{ matrix.runtime }} ./Examples/Examples.csproj -c Release
+        run: >
+          dotnet publish ./Examples/Examples.csproj
+          -c Release
+          -r ${{ matrix.runtime }}
+          --self-contained true
+          -o ./publish/Examples/${{ matrix.runtime }}
+
+      - name: Verify Examples publish output
+        shell: bash
+        run: |
+          test -d ./publish/Examples/${{ matrix.runtime }}
+          find ./publish/Examples/${{ matrix.runtime }} -type f | head
 
       - name: Publish ResourcePacker
-        run: dotnet publish --sc -r ${{ matrix.runtime }} ./ResourcePacker/ResourcePacker.csproj -c Release
+        run: >
+          dotnet publish ./ResourcePacker/ResourcePacker.csproj
+          -c Release
+          -r ${{ matrix.runtime }}
+          --self-contained true
+          -o ./publish/ResourcePacker/${{ matrix.runtime }}
+
+      - name: Verify ResourcePacker publish output
+        shell: bash
+        run: |
+          test -d ./publish/ResourcePacker/${{ matrix.runtime }}
+          find ./publish/ResourcePacker/${{ matrix.runtime }} -type f | head
 
       - name: Upload Examples Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
           name: ${{ matrix.runtime }}-Examples
-          path: ./Examples/bin/Release/net8.0/${{ matrix.runtime }}/publish
+          path: ./publish/Examples/${{ matrix.runtime }}
 
       - name: Upload ResourcePacker Artifact
         uses: actions/upload-artifact@v4.5.0
         with:
           name: ${{ matrix.runtime }}-ResourcePacker
-          path: ./ResourcePacker/bin/Release/net8.0/${{ matrix.runtime }}/publish
+          path: ./publish/ResourcePacker/${{ matrix.runtime }}
 
   attach:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
+      - name: Download Examples artifacts
+        uses: actions/download-artifact@v4.3.0
         with:
+          pattern: "*-Examples"
+          merge-multiple: false
           path: ./artifacts
 
-      - name: List artifacts
-        run: ls -R ./artifacts
+      - name: Download ResourcePacker artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          pattern: "*-ResourcePacker"
+          merge-multiple: false
+          path: ./artifacts
+
+      - name: Verify downloaded artifacts
+        shell: bash
+        run: |
+          if [ ! -d "./artifacts" ] || [ -z "$(find ./artifacts -type f 2>/dev/null)" ]; then
+            echo "No artifacts were downloaded."
+            echo "Expected build artifacts from the matrix jobs, but none were found."
+            exit 1
+          fi
+
+          ls -R ./artifacts
 
       - name: Upload artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
