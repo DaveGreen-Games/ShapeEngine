@@ -54,7 +54,8 @@ jobs:
         shell: bash
         run: |
           test -d ./publish/Examples/${{ matrix.runtime }}
-          find ./publish/Examples/${{ matrix.runtime }} -type f | head
+          test -n "$(find ./publish/Examples/${{ matrix.runtime }} -type f -print -quit)"
+          find ./publish/Examples/${{ matrix.runtime }} -type f | sed -n '1,10p'
 
       - name: Publish ResourcePacker
         run: >
@@ -68,7 +69,8 @@ jobs:
         shell: bash
         run: |
           test -d ./publish/ResourcePacker/${{ matrix.runtime }}
-          find ./publish/ResourcePacker/${{ matrix.runtime }} -type f | head
+          test -n "$(find ./publish/ResourcePacker/${{ matrix.runtime }} -type f -print -quit)"
+          find ./publish/ResourcePacker/${{ matrix.runtime }} -type f | sed -n '1,10p'
 
       - name: Upload Examples Artifact
         uses: actions/upload-artifact@v4.5.0
@@ -103,4 +105,21 @@ jobs:
       - name: Verify downloaded artifacts
         shell: bash
         run: |
-          if [ ! -d "./artifacts" ] || [ -z "$(find ./artifacts -type f 2>/dev/null)"](#)
+          if [ ! -d "./artifacts" ] || [ -z "$(find ./artifacts -type f 2>/dev/null)" ]; then
+            echo "No artifacts were downloaded."
+            echo "Expected build artifacts from the matrix jobs, but none were found."
+            exit 1
+          fi
+
+          ls -R ./artifacts
+
+      - name: Upload artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.event.release.tag_name }}
+          files: ./artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up artifacts
+        run: rm -rf ./artifacts
