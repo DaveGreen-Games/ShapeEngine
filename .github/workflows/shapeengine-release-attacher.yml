@@ -3,6 +3,11 @@ name: Build/Attach Examples & ResourcePacker Artifacts to ShapeEngine Releases
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attach artifacts to"
+        required: true
 
 permissions:
   contents: write
@@ -98,20 +103,4 @@ jobs:
       - name: Verify downloaded artifacts
         shell: bash
         run: |
-          if [ ! -d "./artifacts" ] || [ -z "$(find ./artifacts -type f 2>/dev/null)" ]; then
-            echo "No artifacts were downloaded."
-            echo "Expected build artifacts from the matrix jobs, but none were found."
-            exit 1
-          fi
-
-          ls -R ./artifacts
-
-      - name: Upload artifacts to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ./artifacts/**/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Clean up artifacts
-        run: rm -rf ./artifacts
+          if [ ! -d "./artifacts" ] || [ -z "$(find ./artifacts -type f 2>/dev/null)"](#)
