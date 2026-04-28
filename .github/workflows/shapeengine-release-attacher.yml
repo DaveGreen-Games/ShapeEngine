@@ -72,52 +72,66 @@ jobs:
           test -n "$(find ./publish/ResourcePacker/${{ matrix.runtime }} -type f -print -quit)"
           find ./publish/ResourcePacker/${{ matrix.runtime }} -type f | sed -n '1,10p'
 
-      - name: Upload Examples Artifact
-        uses: actions/upload-artifact@v4.5.0
-        with:
-          name: ${{ matrix.runtime }}-Examples
-          path: ./publish/Examples/${{ matrix.runtime }}
+      - name: Create zip archives (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path ./artifacts | Out-Null
+          Compress-Archive -Path "./publish/Examples/${{ matrix.runtime }}/*" -DestinationPath "./artifacts/Examples-${{ matrix.runtime }}.zip" -Force
+          Compress-Archive -Path "./publish/ResourcePacker/${{ matrix.runtime }}/*" -DestinationPath "./artifacts/ResourcePacker-${{ matrix.runtime }}.zip" -Force
 
-      - name: Upload ResourcePacker Artifact
+      - name: Create zip archives (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p ./artifacts
+          cd ./publish/Examples/${{ matrix.runtime }}
+          zip -r "$GITHUB_WORKSPACE/artifacts/Examples-${{ matrix.runtime }}.zip" .
+          cd "$GITHUB_WORKSPACE"
+          cd ./publish/ResourcePacker/${{ matrix.runtime }}
+          zip -r "$GITHUB_WORKSPACE/artifacts/ResourcePacker-${{ matrix.runtime }}.zip" .
+          cd "$GITHUB_WORKSPACE"
+
+      - name: Verify zip archives
+        shell: bash
+        run: |
+          test -f ./artifacts/Examples-${{ matrix.runtime }}.zip
+          test -f ./artifacts/ResourcePacker-${{ matrix.runtime }}.zip
+          ls -lh ./artifacts
+
+      - name: Upload zipped artifacts
         uses: actions/upload-artifact@v4.5.0
         with:
-          name: ${{ matrix.runtime }}-ResourcePacker
-          path: ./publish/ResourcePacker/${{ matrix.runtime }}
+          name: ${{ matrix.runtime }}-zips
+          path: ./artifacts/*.zip
 
   attach:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download Examples artifacts
+      - name: Download zipped artifacts
         uses: actions/download-artifact@v4.3.0
         with:
-          pattern: "*-Examples"
-          merge-multiple: false
+          pattern: "*-zips"
+          merge-multiple: true
           path: ./artifacts
 
-      - name: Download ResourcePacker artifacts
-        uses: actions/download-artifact@v4.3.0
-        with:
-          pattern: "*-ResourcePacker"
-          merge-multiple: false
-          path: ./artifacts
-
-      - name: Verify downloaded artifacts
+      - name: Verify downloaded zip artifacts
         shell: bash
         run: |
-          if [ ! -d "./artifacts" ] || [ -z "$(find ./artifacts -type f 2>/dev/null)" ]; then
-            echo "No artifacts were downloaded."
-            echo "Expected build artifacts from the matrix jobs, but none were found."
+          if [ ! -d "./artifacts" ] || [ -z "$(find ./artifacts -maxdepth 1 -type f -name '*.zip' 2>/dev/null)" ]; then
+            echo "No zip artifacts were downloaded."
+            echo "Expected zip files from the matrix jobs, but none were found."
             exit 1
           fi
 
-          ls -R ./artifacts
+          ls -lh ./artifacts
 
-      - name: Upload artifacts to GitHub Release
+      - name: Upload zip files to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.event.release.tag_name }}
-          files: ./artifacts/**/*
+          files: ./artifacts/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
