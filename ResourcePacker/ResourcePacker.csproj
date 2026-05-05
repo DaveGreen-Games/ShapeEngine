@@ -28,4 +28,8 @@
         <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="ShapeEngine-ResourcePacker-NugetIcon(128px).png" Pack="true" Visible="false" PackagePath="ShapeEngine-ResourcePacker-NugetIcon(128px).png" />
+    </ItemGroup>
+
 </Project>
