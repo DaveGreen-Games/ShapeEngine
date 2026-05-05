@@ -39,7 +39,7 @@ class Program
                           "  - Number of packed files.\n" +
                           " - unpack text files into directories.\n");
         Console.WriteLine("Use 'help' for usage instructions.");
-        Console.WriteLine("Open a terminal at the folder containing ResourcePacker.exe and run commands starting with './ResourcePacker'.");
+        Console.WriteLine("Run commands either from the built executable or through the .NET tool command 'shapeengine-resourcepacker'.");
         Console.WriteLine("Remarks:\n" +
                           " - ResourcePacker does not modify or delete any source files or directories.\n" +
                           " - Using .txt extension for the sourceFilePath in unpack or the outputFilePath in pack uses the text based packing system. Any other extensions will use the binary packing system.\n" +
@@ -69,7 +69,7 @@ class Program
                         }
                         else
                         {
-                            var helpIndex = Array.IndexOf(args, "help");
+                            var helpIndex = Array.FindIndex(args, IsHelpArgument);
                             if (helpIndex >= 0)
                             {
                                 PrintHelp();
@@ -687,19 +687,28 @@ class Program
     {
         Console.WriteLine(
             "Commands:\n" +
-            "  ./ResourcePacker --help\n" +
-            "  ./ResourcePacker pack <sourceDirectoryPath> <outputFilePath>\n" +
-            "  ./ResourcePacker unpack <sourceFilePath> <outputDirectoryPath>\n" +
+            "  shapeengine-resourcepacker --help\n" +
+            "  shapeengine-resourcepacker help\n" +
+            "  shapeengine-resourcepacker pack <sourceDirectoryPath> <outputFilePath>\n" +
+            "  shapeengine-resourcepacker unpack <sourceFilePath> <outputDirectoryPath>\n" +
             "Flags:\n" +
             "  --exceptions <.ext1> <.ext2> ... : Optional flag to specify file extensions to exclude when packing/unpacking directories.\n" +
             "  --debug : Optional flag to enable debug mode for detailed logging during operations.\n" +
             "  --parallel : Optional flag to enable parallel packing/unpacking possible increasing speed at the cost of increase memory usage.\n" +
             "Examples:\n" +
-            "  ./ResourcePacker pack ./backgroundMusic ./packedMusic.res\n" +
-            "  ./ResourcePacker pack ./assets ./packedResources.txt\n" +
-            "  ./ResourcePacker pack ./assets ./build/release/packedAssets.res --exceptions .txt .png .wav --debug\n"
+            "  shapeengine-resourcepacker pack ./backgroundMusic ./packedMusic.res\n" +
+            "  shapeengine-resourcepacker pack ./assets ./packedResources.txt\n" +
+            "  shapeengine-resourcepacker pack ./assets ./build/release/packedAssets.res --exceptions .txt .png .wav --debug\n"
         );
     }
+
+    private static bool IsHelpArgument(string arg)
+    {
+        return arg.Equals("help", StringComparison.OrdinalIgnoreCase)
+               || arg.Equals("--help", StringComparison.OrdinalIgnoreCase)
+               || arg.Equals("-h", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool ProcessArguments(string[] args)
     {
         if (args.Length <= 0)
@@ -710,7 +719,7 @@ class Program
         
         if (args.Length == 1)
         {
-            if(args[0].Equals("help", StringComparison.OrdinalIgnoreCase))
+            if (IsHelpArgument(args[0]))
             {
                 PrintHelp();
             }

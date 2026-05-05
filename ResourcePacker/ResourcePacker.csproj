@@ -5,6 +5,25 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <IsPackable>true</IsPackable>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>shapeengine-resourcepacker</ToolCommandName>
+        <PackageId>DaveGreen.ShapeEngine.ResourcePacker</PackageId>
+        <Title>ShapeEngine ResourcePacker</Title>
+        <Version>1.0.0</Version>
+        <Authors>David Grueneis</Authors>
+        <Description>CLI tool for packing and unpacking ShapeEngine resource directories as binary or text resource bundles.</Description>
+        <PackageTags>shapeengine;resource-packer;dotnet-tool;assets;cli</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/DaveGreen-Games/ShapeEngine</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
 </Project>
