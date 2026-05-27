@@ -1311,7 +1311,21 @@ public sealed class GameWindow
         cursorState = curCursorState;
     }
 
+    //TODO: Docs
+    private Dimensions ClampWindowSize(Dimensions size)
+    {
+        var maxSize = Monitor.CurMonitor().Dimensions;
+        
+        int w = size.Width;
+        if (w < WindowMinSize.Width) w = WindowMinSize.Width;
+        else if (w > maxSize.Width) w = maxSize.Width;
+        
+        int h = size.Height;
+        if (h < WindowMinSize.Height) h = WindowMinSize.Height;
+        else if (h > maxSize.Height) h = maxSize.Height;
 
+        return new(w, h);
+    }
     #endregion
 
     #region Monitor
