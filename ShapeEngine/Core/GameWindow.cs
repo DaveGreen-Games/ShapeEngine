@@ -1333,6 +1333,8 @@ public sealed class GameWindow
     /// <param name="monitor">The monitor info to switch to.</param>
     private void ChangeMonitor(MonitorInfo monitor)
     {
+        bool activateBorderless = false;
+        
         if (DisplayState == WindowDisplayState.Fullscreen)
         {
             Raylib.SetWindowMonitor(monitor.Index);
@@ -1340,7 +1342,13 @@ public sealed class GameWindow
             Raylib.SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
             Raylib.SetWindowState(ConfigFlags.FullscreenMode);
         }
-
+        else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
+        {
+            RestoreWindow();
+            activateBorderless = true;
+        }
+            
+        
         var windowDimensions = windowSize;
         if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
         {
@@ -1365,6 +1373,11 @@ public sealed class GameWindow
 
         ResetMousePosition();
         OnMonitorChanged?.Invoke(monitor);
+
+        if (activateBorderless)
+        {
+            ActivateBorderlessFullscreen();
+        }
     }
 
     private void UpdateWindowAfterMonitorChange(MonitorInfo monitor)
