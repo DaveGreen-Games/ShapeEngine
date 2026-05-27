@@ -619,7 +619,7 @@ public sealed class GameWindow
         var newMonitor = Monitor.HasMonitorChanged();
         if (newMonitor.Available)
         {
-            ChangeMonitor(newMonitor);
+            UpdateWindowAfterMonitorChange(newMonitor);
         }
         CheckForWindowChanges();
         
@@ -1366,6 +1366,19 @@ public sealed class GameWindow
         ResetMousePosition();
         OnMonitorChanged?.Invoke(monitor);
     }
+
+    private void UpdateWindowAfterMonitorChange(MonitorInfo monitor)
+    {
+        var windowDimensions = windowSize;
+        if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
+        {
+            windowDimensions = monitor.Dimensions / 2;
+        }
+        
+        windowSize = windowDimensions;
+        prevDisplayStateWindowDimensions = windowDimensions;
+    }
+    
     #endregion
 
     #region Mouse
