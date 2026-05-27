@@ -616,19 +616,16 @@ public sealed class GameWindow
     /// <param name="dt">The delta time since the last update.</param>
     internal void Update(float dt)
     {
-        // LerpOpacitiy(dt);
-
         var newMonitor = Monitor.HasMonitorChanged();
         if (newMonitor.Available)
         {
             ChangeMonitor(newMonitor);
         }
         CheckForWindowChanges();
-
+        
         ScreenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
 
         CheckForWindowConfigFlagChanges();
-        // CheckForWindowFlagChanges();
         CheckForCursorChanges();
 
         CalculateMonitorConversionFactors();
@@ -643,8 +640,6 @@ public sealed class GameWindow
     internal void MoveMouse(Vector2 mousePos)
     {
         mousePos = Vector2.Clamp(mousePos, new Vector2(0, 0), CurScreenSize.ToVector2());
-        // lastControlledMousePosition = mousePos;
-        // mouseControlled = true;
 
         var mx = (int)MathF.Round(mousePos.X);
         var my = (int)MathF.Round(mousePos.Y);
@@ -793,11 +788,11 @@ public sealed class GameWindow
 
         DisplayState = WindowDisplayState.BorderlessFullscreen;
 
-        var mDim = Monitor.CurMonitor().Dimensions;
-        var dpi = Raylib.GetWindowScaleDPI();
-        Raylib.SetWindowSize(mDim.Width * (int)dpi.X, mDim.Height * (int)dpi.Y);
+        // var mDim = Monitor.CurMonitor().Dimensions;
+        // var dpi = Raylib.GetWindowScaleDPI();
+        // Raylib.SetWindowSize(mDim.Width * (int)dpi.X, mDim.Height * (int)dpi.Y);
         Raylib.SetWindowState(ConfigFlags.FullscreenMode);
-
+        
         ResetMousePosition();
         return true;
     }
@@ -1228,6 +1223,7 @@ public sealed class GameWindow
     {
         var prev = CurScreenSize;
         CalculateCurScreenSize();
+        
         if (prev != CurScreenSize)
         {
             if (DisplayState == WindowDisplayState.Normal) windowSize = CurScreenSize;
@@ -1358,13 +1354,8 @@ public sealed class GameWindow
         int x = winPosX + (int)monitor.Position.X;
         int y = winPosY + (int)monitor.Position.Y;
 
-        // PrevFullscreenDisplayState = new(windowDimensions, new(x, y), WindowDisplayState.Normal);
-        // PrevMinimizedDisplayState = new(windowDimensions, new(x, y), WindowDisplayState.Normal);
         prevDisplayStateWindowDimensions = windowDimensions;
         prevDisplayStateWindowPosition = new(x, y);
-        // prevDisplayStateChangeWindowSize = windowDimensions;
-        // prevDisplayStateChangeDisplayState = WindowDisplayState.Normal;
-        // prevDisplayStateChangeWindowPosition =new(x, y);
 
         if (DisplayState != WindowDisplayState.Fullscreen)
         {
@@ -1451,7 +1442,7 @@ public sealed class GameWindow
     /// </summary>
     public void ResetMousePosition()
     {
-        var center = WindowPosition / 2 + WindowSize.ToVector2() / 2; // CurScreenSize.ToVector2() / 2;
+        var center = WindowPosition / 2 + WindowSize.ToVector2() / 2;
         Raylib.SetMousePosition((int)center.X, (int)center.Y);
     }
 
