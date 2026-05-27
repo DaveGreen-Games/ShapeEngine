@@ -494,7 +494,6 @@ public sealed class GameWindow
 
     #region Private Members
 
-    private Vector2 osxWindowScaleDpi;
     private int fpsLimit;
     private VsyncMode vsync;
     private int targetFps;
@@ -590,10 +589,7 @@ public sealed class GameWindow
         MouseEnabled = windowSettings.MouseEnabled;
 
         cursorState = GetCurCursorState();
-
-        if (GameDef.Game.IsOSX()) osxWindowScaleDpi = Raylib.GetWindowScaleDPI();
-        else osxWindowScaleDpi = new Vector2(1, 1);
-
+        
         CalculateMonitorConversionFactors();
 
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
@@ -1052,8 +1048,9 @@ public sealed class GameWindow
         {
              if (IsWindowBorderlessFullscreen() || IsWindowFullscreen())
              {
-                 mw = (int)(mw / osxWindowScaleDpi.X);
-                 mh = (int)(mh / osxWindowScaleDpi.Y);
+                 var dpiScale = Raylib.GetWindowScaleDPI();
+                 mw = (int)(mw / dpiScale.X);
+                 mh = (int)(mh / dpiScale.Y);
              }
         }
 
