@@ -681,6 +681,21 @@ public sealed class GameWindow
         DisplayState = WindowDisplayState.Normal;
 
         ResetMousePosition();
+
+        //This is a fix for windows that are moved between monitors after restoring the window from a fullscreen mode
+        var currentMonitorIndex = Monitor.GetCurIndex();
+        foreach (var monitorInfo in Monitor.GetAllMonitorInfo())
+        {
+            if(monitorInfo.Index == currentMonitorIndex) continue;
+            Raylib.SetWindowMonitor(monitorInfo.Index);
+        }
+        Raylib.SetWindowMonitor(currentMonitorIndex);
+        
+        Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+        Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+        //Fix end
+        
+        
         return false;
     }
     /// <summary>
