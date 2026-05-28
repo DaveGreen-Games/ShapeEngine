@@ -761,6 +761,9 @@ public sealed class GameWindow
         
         Raylib.SetWindowState(ConfigFlags.FullscreenMode);
         
+        //Another random workaround to fix broken behaviour ...
+        Raylib.SetWindowSize(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+        
         ResetMousePosition();
         
         return true;
