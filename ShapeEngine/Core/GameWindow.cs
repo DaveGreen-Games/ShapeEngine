@@ -528,8 +528,7 @@ public sealed class GameWindow
         if(windowSettings.HighDPI) Raylib.SetConfigFlags(ConfigFlags.HighDpiWindow);
         if(windowSettings.FramebufferTransparent) Raylib.SetConfigFlags(ConfigFlags.TransparentWindow);
         
-        //0,0 for width and height result in unexpected behaviour, therefore I set it to a safe 16,9 value until everything is setup
-        Raylib.InitWindow(16, 9, windowSettings.Title); //Q: sets autoiconify to false until my changes are in raylib cs?
+        Raylib.InitWindow(windowSettings.WindowSize.Width, windowSettings.WindowSize.Height, windowSettings.Title);
         Raylib.SetWindowOpacity(0f);
 
         Monitor = new MonitorDevice();
