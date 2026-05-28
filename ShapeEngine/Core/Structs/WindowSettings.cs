@@ -73,6 +73,7 @@ public struct WindowSettings
     /// <summary>
     /// Should fullscreen be automatically left when window loses focus and should the window be restored to
     /// fullscreen when window gains focus again.
+    /// This does only affect fullscreen mode and does not affect borderless fullscreen mode!
     /// </summary>
     public bool FullscreenAutoRestoring;
     

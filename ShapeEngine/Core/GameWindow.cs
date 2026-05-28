@@ -488,6 +488,7 @@ public sealed class GameWindow
 
     /// <summary>
     /// Gets or sets whether the window should automatically restore from fullscreen when focus is lost.
+    /// This only affects fullscreen mode and does not affect borderless fullscreen!
     /// </summary>
     public bool FullscreenAutoRestoring { get; set; }
     #endregion
@@ -509,10 +510,10 @@ public sealed class GameWindow
     private Dimensions prevDisplayStateWindowDimensions = new(128, 128);
     private Vector2 prevDisplayStateWindowPosition = new(128, 128);
     
-    private bool focusLossWasFullscreen;
-    private bool focusLossWasBorderlessFullscreen;
-    private bool focusLossWasTopmost;
-    private bool focusLossAutoRestoringFullscreenWindowModeChange = false;
+    private bool fullscreenAutoRestoringActive;
+    private bool fullscreenAutoRestoringWindowWasTopmost;
+    // private bool focusLossWasBorderlessFullscreen;
+    // private bool focusLossAutoRestoringFullscreenWindowModeChange = false;
     #endregion
 
     #region Internal Methods
@@ -768,6 +769,11 @@ public sealed class GameWindow
     /// Activates borderless fullscreen mode.
     /// </summary>
     /// <returns>True if borderless fullscreen was activated; otherwise, false.</returns>
+    /// <remarks>
+    /// <see cref="FullscreenAutoRestoring"/> does not affect borderless fullscreen!
+    /// Prefer <see cref="ToggleFullscreen"/> or <see cref="ActivateFullscreen"/> over borderless fullscreen.
+    /// Since raylib 6.0 there is not much difference between Fullscreen and Borderless Fullscreen anymore.
+    /// </remarks>
     public bool ActivateBorderlessFullscreen()
     {
         if (DisplayState == WindowDisplayState.BorderlessFullscreen) return false;
@@ -884,6 +890,11 @@ public sealed class GameWindow
     /// <summary>
     /// Toggles borderless fullscreen mode.
     /// </summary>
+    /// <remarks>
+    /// <see cref="FullscreenAutoRestoring"/> does not affect borderless fullscreen!
+    /// Prefer <see cref="ToggleFullscreen"/> or <see cref="ActivateFullscreen"/> over borderless fullscreen.
+    /// Since raylib 6.0 there is not much difference between Fullscreen and Borderless Fullscreen anymore.
+    /// </remarks>
     public void ToggleBorderlessFullscreen()
     {
         if (DisplayState == WindowDisplayState.BorderlessFullscreen)
@@ -1164,48 +1175,24 @@ public sealed class GameWindow
             {
                 if (!cur.Focused)
                 {
-                    if (DisplayState == WindowDisplayState.BorderlessFullscreen)//FIX: Only borderless fullscreen makes problems
+                    if(DisplayState == WindowDisplayState.Fullscreen)
                     {
-                        focusLossWasBorderlessFullscreen = true;
-                        focusLossWasFullscreen = false;
-                        focusLossAutoRestoringFullscreenWindowModeChange = true;
+                        fullscreenAutoRestoringActive = true;
+                        // focusLossWasBorderlessFullscreen = false;
+                        // focusLossAutoRestoringFullscreenWindowModeChange = false;
                         RestoreWindow();
                         
-                        focusLossWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
-                        Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
-                    }
-                    else if(DisplayState == WindowDisplayState.Fullscreen)
-                    {
-                        focusLossWasFullscreen = true;
-                        focusLossWasBorderlessFullscreen = false;
-                        focusLossAutoRestoringFullscreenWindowModeChange = false;
-                        RestoreWindow();
-                        
-                        focusLossWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+                        fullscreenAutoRestoringWindowWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
                         Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
                     }
                 }
                 else
                 {
-                    if (focusLossWasFullscreen)
+                    if (fullscreenAutoRestoringActive)
                     {
-                        if(focusLossWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+                        if(fullscreenAutoRestoringWindowWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
                         ActivateFullscreen();
-                        focusLossWasFullscreen = false;
-                    }   
-                    else if (focusLossWasBorderlessFullscreen)
-                    {
-                        if (focusLossAutoRestoringFullscreenWindowModeChange)
-                        {
-                            focusLossAutoRestoringFullscreenWindowModeChange = false;
-                        }
-                        else
-                        {
-                            if(focusLossWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
-                            ActivateBorderlessFullscreen();
-                            focusLossWasBorderlessFullscreen = false;
-                        }
-                        
+                        fullscreenAutoRestoringActive = false;
                     }
                 }   
             }
