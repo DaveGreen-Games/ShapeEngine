@@ -797,11 +797,11 @@ public partial class Game
     /// <param name="gameInfo">Information about the game screen area.</param>
     /// <param name="gameUiInfo">Information about the game UI screen area.</param>
     /// <param name="uiInfo">Information about the general UI screen area.</param>
-
     protected virtual void UpdateCursor(float dt, ScreenInfo gameInfo, ScreenInfo gameUiInfo, ScreenInfo uiInfo)
     {
         
     }
+    
     /// <summary>
     /// Draws the cursor in the game world space.
     /// </summary>
@@ -814,6 +814,7 @@ public partial class Game
     {
         
     }
+    
     /// <summary>
     /// Draws the cursor on the game UI. This method is called during the UI rendering phase when the mouse is on the screen.
     /// </summary>
@@ -822,11 +823,11 @@ public partial class Game
     /// This is a virtual method intended to be overridden by derived classes to implement custom cursor rendering.
     /// The base implementation does not draw anything.
     /// </remarks>
-
     protected virtual void DrawCursorGameUi(ScreenInfo gameUiInfo)
     {
         
     }
+    
     /// <summary>
     /// Draws cursor UI elements on the screen.
     /// </summary>
@@ -835,7 +836,6 @@ public partial class Game
     /// This is a virtual method that can be overridden by derived classes to implement custom cursor drawing.
     /// It's called during the rendering process when the mouse is detected on the screen.
     /// </remarks>
-
     protected virtual void DrawCursorUi(ScreenInfo uiInfo)
     {
         

@@ -7,6 +7,8 @@ public static class Program
 {
     public static void Main(string[] args)
     {
+        
+        //TODO: Check all modes if they work still!
         var gameSettings = GameSettings.StretchMode("Shape Engine Examples");
         
         var windowSettings = new WindowSettings

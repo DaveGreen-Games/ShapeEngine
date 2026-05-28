@@ -1171,6 +1171,7 @@ public sealed class GameWindow
         {
             OnWindowFocusChanged?.Invoke(cur.Focused);
             
+            //TODO: Add boolean for minimiznig window when borderless fullscreen is active?
             if (FullscreenAutoRestoring)
             {
                 if (!cur.Focused)
