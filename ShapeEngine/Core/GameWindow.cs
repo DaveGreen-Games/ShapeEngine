@@ -760,6 +760,7 @@ public sealed class GameWindow
         
         Raylib.SetWindowState(ConfigFlags.FullscreenMode);
         
+        //ISSUE: This creates a problem when leaving fullscreen on an affected external monitor!
         //Another random workaround to fix broken behaviour ...
         Raylib.SetWindowSize(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
         
