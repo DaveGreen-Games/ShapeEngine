@@ -1362,6 +1362,7 @@ public sealed class GameWindow
         }
         return false;
     }
+    
     /// <summary>
     /// Switches to the next available monitor.
     /// </summary>
@@ -1373,6 +1374,7 @@ public sealed class GameWindow
             ChangeMonitor(nextMonitor);
         }
     }
+   
     /// <summary>
     /// Changes the window to use the specified monitor info.
     /// </summary>
@@ -1383,6 +1385,8 @@ public sealed class GameWindow
         
         if (DisplayState == WindowDisplayState.Fullscreen)
         {
+            //TODO: Restore window and activate fullscreen at the end of the function like borderless fullscreen, otherwise workaround is not working
+            Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
             Raylib.SetWindowMonitor(monitor.Index);
             Raylib.SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
             Raylib.SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
