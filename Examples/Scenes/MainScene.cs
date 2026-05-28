@@ -126,7 +126,7 @@ namespace Examples.Scenes
             { 
                 GameloopExamples.Instance.Window.ToggleMinimizeWindow();
             }
-            var fullscreenState = GameloopExamples.Instance.InputActionFullscreen.Consume(out _);
+            var fullscreenState = GameloopExamples.Instance.InputActionBorderlessFullscreen.Consume(out _);
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
                 GameloopExamples.Instance.Window.ToggleBorderlessFullscreen();
@@ -295,7 +295,7 @@ namespace Examples.Scenes
             var curInputDevice = Input.CurrentInputDeviceType;
             if (curInputDevice == InputDeviceType.Mouse) curInputDevice = InputDeviceType.Keyboard;
 
-            string fullscreenInputTypeName = GameloopExamples.Instance.InputActionFullscreen.GetInputTypeDescription(curInputDevice, true, 1, false);
+            string fullscreenInputTypeName = GameloopExamples.Instance.InputActionBorderlessFullscreen.GetInputTypeDescription(curInputDevice, true, 1, false);
             var fullscreenInfo = $"Fullscreen {fullscreenInputTypeName}";
 
             string cycleShaderInputTypeDescription = GameloopExamples.Instance.InputActionCycleShaders.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false);
