@@ -508,10 +508,11 @@ public sealed class GameWindow
 
     private Dimensions prevDisplayStateWindowDimensions = new(128, 128);
     private Vector2 prevDisplayStateWindowPosition = new(128, 128);
-
-    private Size prevFullscreenResolution = new(-1, -1);
-    private bool wasFullscreen;
-
+    
+    private bool focusLossWasFullscreen;
+    private bool focusLossWasBorderlessFullscreen;
+    private bool focusLossWasTopmost;
+    private bool focusLossAutoRestoringFullscreenWindowModeChange = false;
     #endregion
 
     #region Internal Methods
@@ -624,12 +625,12 @@ public sealed class GameWindow
         CheckForWindowChanges();
         
         ScreenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
-
+        
         CheckForWindowConfigFlagChanges();
         CheckForCursorChanges();
-
+        
         CalculateMonitorConversionFactors();
-
+        
         if (MouseVisible == Raylib.IsCursorHidden()) MouseVisible = !Raylib.IsCursorHidden();
 
     }
@@ -662,6 +663,8 @@ public sealed class GameWindow
     /// <returns>True if the window was restored; otherwise, false.</returns>
     public bool RestoreWindow()
     {
+        bool applyFix =  DisplayState == WindowDisplayState.BorderlessFullscreen || DisplayState == WindowDisplayState.Fullscreen;
+        
         if (DisplayState == WindowDisplayState.Minimized)
         {
             Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
@@ -670,31 +673,27 @@ public sealed class GameWindow
         {
             Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
         }
-        else if (DisplayState == WindowDisplayState.Fullscreen || DisplayState == WindowDisplayState.BorderlessFullscreen)
+        else if (DisplayState == WindowDisplayState.Fullscreen)
         {
             Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
         }
+        else if(DisplayState == WindowDisplayState.BorderlessFullscreen)
+        {
+            Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
+        }
 
-        Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-        Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+        // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+        // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
 
         DisplayState = WindowDisplayState.Normal;
 
         ResetMousePosition();
 
-        //This is a fix for windows that are moved between monitors after restoring the window from a fullscreen mode
-        var currentMonitorIndex = Monitor.GetCurIndex();
-        foreach (var monitorInfo in Monitor.GetAllMonitorInfo())
+        // This is a fix for windows that are moved between monitors after restoring the window from a fullscreen mode
+        if (applyFix)
         {
-            if(monitorInfo.Index == currentMonitorIndex) continue;
-            Raylib.SetWindowMonitor(monitorInfo.Index);
+            ApplyFullscreenFix();
         }
-        Raylib.SetWindowMonitor(currentMonitorIndex);
-        
-        Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-        Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
-        //Fix end
-        
         
         return false;
     }
@@ -726,12 +725,10 @@ public sealed class GameWindow
     }
 
     /// <summary>
-    /// Activates fullscreen mode with the specified resolution.
+    /// Activates fullscreen mode.
     /// </summary>
-    /// <param name="width">The width for fullscreen.</param>
-    /// <param name="height">The height for fullscreen.</param>
     /// <returns>True if fullscreen was activated; otherwise, false.</returns>
-    public bool ActivateFullscreen(int width, int height)
+    public bool ActivateFullscreen()
     {
         if (DisplayState == WindowDisplayState.Fullscreen) return false;
 
@@ -744,9 +741,9 @@ public sealed class GameWindow
         {
             if (DisplayState == WindowDisplayState.BorderlessFullscreen)
             {
-                Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-                Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-                Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+                Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
+                // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+                // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
             }
             else if (DisplayState == WindowDisplayState.Maximized)
             {
@@ -760,13 +757,11 @@ public sealed class GameWindow
         }
 
         DisplayState = WindowDisplayState.Fullscreen;
-
-        prevFullscreenResolution = new(width, height);
-
-        Raylib.SetWindowSize(width, height);
+        
         Raylib.SetWindowState(ConfigFlags.FullscreenMode);
-        // CalculateCurScreenSize();
+        
         ResetMousePosition();
+        
         return true;
     }
     /// <summary>
@@ -786,10 +781,10 @@ public sealed class GameWindow
         {
             if (DisplayState == WindowDisplayState.Fullscreen)
             {
-                prevFullscreenResolution = new(-1, -1);
                 Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-                Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-                Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+                ApplyFullscreenFix();
+                // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+                // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
             }
             else if (DisplayState == WindowDisplayState.Maximized)
             {
@@ -803,10 +798,7 @@ public sealed class GameWindow
 
         DisplayState = WindowDisplayState.BorderlessFullscreen;
 
-        // var mDim = Monitor.CurMonitor().Dimensions;
-        // var dpi = Raylib.GetWindowScaleDPI();
-        // Raylib.SetWindowSize(mDim.Width * (int)dpi.X, mDim.Height * (int)dpi.Y);
-        Raylib.SetWindowState(ConfigFlags.FullscreenMode);
+        Raylib.SetWindowState(ConfigFlags.BorderlessWindowMode);
         
         ResetMousePosition();
         return true;
@@ -821,16 +813,23 @@ public sealed class GameWindow
 
         if (DisplayState == WindowDisplayState.Normal)
         {
-            prevDisplayStateWindowDimensions = CurScreenSize;
-            prevDisplayStateWindowPosition = Raylib.GetWindowPosition();
+            // prevDisplayStateWindowDimensions = CurScreenSize;
+            // prevDisplayStateWindowPosition = Raylib.GetWindowPosition();
         }
 
-        if (DisplayState == WindowDisplayState.Fullscreen || DisplayState == WindowDisplayState.BorderlessFullscreen)
+        if (DisplayState == WindowDisplayState.Fullscreen)
         {
-            prevFullscreenResolution = new(-1, -1);
             Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-            Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-            Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+            ApplyFullscreenFix();
+            // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+            // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+        }
+        else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
+        {
+            Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
+            ApplyFullscreenFix();
+            // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+            // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
         }
         else if (DisplayState == WindowDisplayState.Maximized)
         {
@@ -852,17 +851,24 @@ public sealed class GameWindow
 
         if (DisplayState == WindowDisplayState.Normal)
         {
-            prevDisplayStateWindowDimensions = CurScreenSize;
-            prevDisplayStateWindowPosition = Raylib.GetWindowPosition();
+            // prevDisplayStateWindowDimensions = CurScreenSize;
+            // prevDisplayStateWindowPosition = Raylib.GetWindowPosition();
         }
 
-        if (DisplayState == WindowDisplayState.Fullscreen || DisplayState == WindowDisplayState.BorderlessFullscreen)
+        if (DisplayState == WindowDisplayState.Fullscreen)
         {
-            prevFullscreenResolution = new(-1, -1);
             Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-            Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-            Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+            ApplyFullscreenFix();
+            // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+            // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
 
+        }
+        else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
+        {
+            Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
+            ApplyFullscreenFix();
+            // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+            // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
         }
         else if (DisplayState == WindowDisplayState.Minimized)
         {
@@ -887,6 +893,20 @@ public sealed class GameWindow
         else
         {
             ActivateBorderlessFullscreen();
+        }
+    }
+    /// <summary>
+    /// Toggles fullscreen mode.
+    /// </summary>
+    public void ToggleFullscreen()
+    {
+        if (DisplayState == WindowDisplayState.Fullscreen)
+        {
+            RestoreWindow();
+        }
+        else
+        {
+            ActivateFullscreen();
         }
     }
     /// <summary>
@@ -1081,8 +1101,6 @@ public sealed class GameWindow
         var monitor = Monitor.CurMonitor();
         WindowSize = monitor.Dimensions / 2;
         WindowPosition = Raylib.GetWindowPosition();
-        // PrevFullscreenDisplayState = new(WindowSize, WindowPosition, DisplayState);
-        // PrevMinimizedDisplayState = new(WindowSize, WindowPosition, DisplayState);
         prevDisplayStateWindowDimensions = WindowSize;
         prevDisplayStateWindowPosition = WindowPosition;
         CalculateCurScreenSize();
@@ -1092,43 +1110,31 @@ public sealed class GameWindow
     /// </summary>
     private void CalculateCurScreenSize()
     {
-        if(DisplayState == WindowDisplayState.Fullscreen)
-        {
-            // int w = Raylib.GetScreenWidth();
-            // int h = Raylib.GetScreenHeight();
-            // CurScreenSize = new(w, h);
-
-            int w = Raylib.GetRenderWidth();
-            int h = Raylib.GetRenderHeight();
-            CurScreenSize = new(w, h);
-        }
-        else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
-        {
-            int monitor = Raylib.GetCurrentMonitor();
-            int mw = Raylib.GetMonitorWidth(monitor);
-            int mh = Raylib.GetMonitorHeight(monitor);
-            CurScreenSize = new(mw , mh);
-
-
-            // int w = Raylib.GetRenderWidth();
-            // int h = Raylib.GetRenderHeight();
-            // CurScreenSize = new(w, h);
-
-            // var scaleFactor = Game.IsOSX() ? Raylib.GetWindowScaleDPI() : new Vector2(1f, 1f);
-            // // var scaleX = (int)scaleFactor.X;
-            // // var scaleY = (int)scaleFactor.Y;
-            // CurScreenSize = new(mw / scaleFactor.X , mh / scaleFactor.Y );
-        }
-        else
-        {
-            // var scaleFactor = Raylib.GetWindowScaleDPI();
-            // int scaleX = (int)scaleFactor.X;
-            // int scaleY = (int)scaleFactor.Y;
-
-            int w = Raylib.GetScreenWidth();
-            int h = Raylib.GetScreenHeight();
-            CurScreenSize = new(w, h);
-        }
+        //TODO: Is this enough now for all states?
+        int w = Raylib.GetScreenWidth();
+        int h = Raylib.GetScreenHeight();
+        CurScreenSize = new(w, h);
+        
+        // if(DisplayState == WindowDisplayState.Fullscreen)
+        // {
+        //     int w = Raylib.GetRenderWidth();
+        //     int h = Raylib.GetRenderHeight();
+        //     CurScreenSize = new(w, h);
+        // }
+        // else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
+        // {
+        //     int monitor = Raylib.GetCurrentMonitor();
+        //     int mw = Raylib.GetMonitorWidth(monitor);
+        //     int mh = Raylib.GetMonitorHeight(monitor);
+        //     CurScreenSize = new(mw , mh);
+        //     
+        // }
+        // else
+        // {
+        //     int w = Raylib.GetScreenWidth();
+        //     int h = Raylib.GetScreenHeight();
+        //     CurScreenSize = new(w, h);
+        // }
     }
     /// <summary>
     /// Checks for changes in window configuration flags and raises events.
@@ -1153,32 +1159,55 @@ public sealed class GameWindow
         if (cur.HasFocusedChanged(windowConfigFlags))
         {
             OnWindowFocusChanged?.Invoke(cur.Focused);
+            
             if (FullscreenAutoRestoring)
             {
                 if (!cur.Focused)
                 {
-                    if (DisplayState == WindowDisplayState.BorderlessFullscreen || DisplayState == WindowDisplayState.Fullscreen)
+                    if (DisplayState == WindowDisplayState.BorderlessFullscreen)//FIX: Only borderless fullscreen makes problems
                     {
-                        wasFullscreen = true;
-                        if (DisplayState == WindowDisplayState.BorderlessFullscreen) prevFullscreenResolution = new(-1, -1);
+                        focusLossWasBorderlessFullscreen = true;
+                        focusLossWasFullscreen = false;
+                        focusLossAutoRestoringFullscreenWindowModeChange = true;
                         RestoreWindow();
+                        
+                        focusLossWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+                        Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
+                    }
+                    else if(DisplayState == WindowDisplayState.Fullscreen)
+                    {
+                        focusLossWasFullscreen = true;
+                        focusLossWasBorderlessFullscreen = false;
+                        focusLossAutoRestoringFullscreenWindowModeChange = false;
+                        RestoreWindow();
+                        
+                        focusLossWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+                        Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
                     }
                 }
                 else
                 {
-                    if (wasFullscreen)
+                    if (focusLossWasFullscreen)
                     {
-                        if (prevFullscreenResolution.Positive)
+                        if(focusLossWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+                        ActivateFullscreen();
+                        focusLossWasFullscreen = false;
+                    }   
+                    else if (focusLossWasBorderlessFullscreen)
+                    {
+                        if (focusLossAutoRestoringFullscreenWindowModeChange)
                         {
-                            ActivateFullscreen((int)prevFullscreenResolution.Width, (int)prevFullscreenResolution.Height);
+                            focusLossAutoRestoringFullscreenWindowModeChange = false;
                         }
                         else
                         {
+                            if(focusLossWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
                             ActivateBorderlessFullscreen();
+                            focusLossWasBorderlessFullscreen = false;
                         }
-                        wasFullscreen = false;
-                    }   
-                }
+                        
+                    }
+                }   
             }
 
         }
@@ -1421,6 +1450,21 @@ public sealed class GameWindow
         prevDisplayStateWindowDimensions = windowDimensions;
     }
     
+    private void ApplyFullscreenFix()
+    {
+        if(Monitor.MonitorCount() <= 1) return;
+        
+        var currentMonitorIndex = Monitor.GetCurIndex();
+        foreach (var monitorInfo in Monitor.GetAllMonitorInfo())
+        {
+            if(monitorInfo.Index == currentMonitorIndex) continue;
+            Raylib.SetWindowMonitor(monitorInfo.Index);
+        }
+        Raylib.SetWindowMonitor(currentMonitorIndex);
+
+        Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+        Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+    }
     #endregion
 
     #region Mouse
