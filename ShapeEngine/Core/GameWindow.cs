@@ -1,5 +1,6 @@
 using System.Numerics;
 using Raylib_cs;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Screen;
@@ -682,9 +683,6 @@ public sealed class GameWindow
             Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
         }
 
-        // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-        // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
-
         DisplayState = WindowDisplayState.Normal;
 
         ResetMousePosition();
@@ -1124,27 +1122,6 @@ public sealed class GameWindow
         int w = Raylib.GetScreenWidth();
         int h = Raylib.GetScreenHeight();
         CurScreenSize = new(w, h);
-        
-        // if(DisplayState == WindowDisplayState.Fullscreen)
-        // {
-        //     int w = Raylib.GetRenderWidth();
-        //     int h = Raylib.GetRenderHeight();
-        //     CurScreenSize = new(w, h);
-        // }
-        // else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
-        // {
-        //     int monitor = Raylib.GetCurrentMonitor();
-        //     int mw = Raylib.GetMonitorWidth(monitor);
-        //     int mh = Raylib.GetMonitorHeight(monitor);
-        //     CurScreenSize = new(mw , mh);
-        //     
-        // }
-        // else
-        // {
-        //     int w = Raylib.GetScreenWidth();
-        //     int h = Raylib.GetScreenHeight();
-        //     CurScreenSize = new(w, h);
-        // }
     }
     /// <summary>
     /// Checks for changes in window configuration flags and raises events.
@@ -1329,22 +1306,7 @@ public sealed class GameWindow
 
         cursorState = curCursorState;
     }
-
-    //TODO: Docs
-    private Dimensions ClampWindowSize(Dimensions size)
-    {
-        var maxSize = Monitor.CurMonitor().Dimensions;
-        
-        int w = size.Width;
-        if (w < WindowMinSize.Width) w = WindowMinSize.Width;
-        else if (w > maxSize.Width) w = maxSize.Width;
-        
-        int h = size.Height;
-        if (h < WindowMinSize.Height) h = WindowMinSize.Height;
-        else if (h > maxSize.Height) h = maxSize.Height;
-
-        return new(w, h);
-    }
+    
     #endregion
 
     #region Monitor
@@ -1385,13 +1347,9 @@ public sealed class GameWindow
     {
         bool activateBorderless = false;
         bool activateFullscreen = false;
+        
         if (DisplayState == WindowDisplayState.Fullscreen)
         {
-            // Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-            // Raylib.SetWindowMonitor(monitor.Index);
-            // Raylib.SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
-            // Raylib.SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
-            // Raylib.SetWindowState(ConfigFlags.FullscreenMode);
             RestoreWindow();
             activateFullscreen = true;
         }
@@ -1400,8 +1358,7 @@ public sealed class GameWindow
             RestoreWindow();
             activateBorderless = true;
         }
-            
-        
+
         var windowDimensions = windowSize;
         if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
         {
@@ -1410,20 +1367,39 @@ public sealed class GameWindow
 
         windowSize = windowDimensions;
 
-        int winPosX = monitor.Width / 2 - windowDimensions.Width / 2;
-        int winPosY = monitor.Height / 2 - windowDimensions.Height / 2;
-        int x = winPosX + (int)monitor.Position.X;
-        int y = winPosY + (int)monitor.Position.Y;
-
-        prevDisplayStateWindowDimensions = windowDimensions;
-        prevDisplayStateWindowPosition = new(x, y);
-
-        if (DisplayState != WindowDisplayState.Fullscreen)
+        if (Game.IsOSX())
         {
+            Raylib.SetWindowMonitor(monitor.Index);
+            
+            int winPosX = monitor.Width / 2 - windowDimensions.Width / 2;
+            int winPosY = monitor.Height / 2 - windowDimensions.Height / 2;
+            int x = winPosX + (int)monitor.Position.X;
+            int y = winPosY + (int)monitor.Position.Y;
+            
+            prevDisplayStateWindowDimensions = windowDimensions;
+            prevDisplayStateWindowPosition = new(x, y);
+            
+            CurScreenSize = new(windowDimensions.Width, windowDimensions.Height);
+            
             Raylib.SetWindowPosition(x, y);
             Raylib.SetWindowSize(windowDimensions.Width, windowDimensions.Height);
         }
+        else
+        {
+            Raylib.SetWindowMonitor(monitor.Index);
+            
+            //Q: I do not know if all of the following is needed?!
+            var pos = Raylib.GetWindowPosition();
+            var w = Raylib.GetScreenWidth();
+            var h = Raylib.GetScreenHeight();
 
+            windowDimensions = new(w, h);
+            windowSize = new(w, h);
+            CurScreenSize = new(w, h);//TODO: Test
+            prevDisplayStateWindowDimensions = windowDimensions;
+            prevDisplayStateWindowPosition = pos;
+        }
+        
         ResetMousePosition();
         OnMonitorChanged?.Invoke(monitor);
 
