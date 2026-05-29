@@ -161,7 +161,7 @@ public sealed class ScreenTexture
     private float nearestFixedFactor = 1f;
     private bool textureReloadRequired;
     private CustomScreenTextureHandler? customScreenTextureHandler;
-    private float macOSHighDpiScaleFactor = 1f;
+    // private float macOSHighDpiScaleFactor = 1f;
     #endregion
     
     #endregion
@@ -367,7 +367,7 @@ public sealed class ScreenTexture
         if (Initialized) return;
         Initialized = true;
         
-        SetMacOsScalingFactor();
+        // SetMacOsScalingFactor();
         
         if(camera != null) Camera = camera;
         
@@ -378,6 +378,7 @@ public sealed class ScreenTexture
         Camera?.SetSize(new Dimensions(Width, Height));
 
         Vector2 scaledMousePostionGame;
+        var macOSHighDpiScaleFactor = 1f;
         var scaledMousePositionUi = mousePosition * macOSHighDpiScaleFactor;
         if (Mode == ScreenTextureMode.Pixelation)
         {
@@ -446,8 +447,7 @@ public sealed class ScreenTexture
     /// <param name="paused">Whether the update is paused.</param>
     public void Update(float dt, Dimensions screenSize, Vector2 mousePosition, bool paused)
     {
-        SetMacOsScalingFactor();
-        
+        // SetMacOsScalingFactor();
         if (screenDimensions != screenSize || textureReloadRequired)
         {
             textureReloadRequired = false;
@@ -463,6 +463,7 @@ public sealed class ScreenTexture
         }
 
         Vector2 scaledMousePostionGame;
+        var macOSHighDpiScaleFactor = 1f;
         var scaledMousePositionUi = mousePosition * macOSHighDpiScaleFactor;
         if (Mode == ScreenTextureMode.Pixelation)
         {
@@ -728,19 +729,20 @@ public sealed class ScreenTexture
     #endregion
     
     #region Private Functions
-    private void SetMacOsScalingFactor()
-    {
-        if (Game.IsOSX()) //for fixing blurry screen texture on high dpi moitors on macOS
-        {
-            bool noScaleFactor = Mode == ScreenTextureMode.Fixed || Mode == ScreenTextureMode.Custom || Mode == ScreenTextureMode.NearestFixed;
-           
-            if (noScaleFactor || Raylib.GetWindowScaleDPI().X < 2 || GameWindow.Instance.IsWindowFullscreen())
-            {
-                macOSHighDpiScaleFactor = 1f;
-            }
-            else macOSHighDpiScaleFactor = 2f;
-        }
-    }
+    // private void SetMacOsScalingFactor()
+    // {
+    //     if (Game.IsOSX()) //for fixing blurry screen texture on high dpi moitors on macOS
+    //     {
+    //         bool noScaleFactor = Mode == ScreenTextureMode.Fixed || Mode == ScreenTextureMode.Custom || Mode == ScreenTextureMode.NearestFixed;
+    //        
+    //         if (noScaleFactor || Raylib.GetWindowScaleDPI().X < 2 || GameWindow.Instance.IsWindowFullscreen())
+    //         {
+    //             macOSHighDpiScaleFactor = 1f;
+    //         }
+    //         else macOSHighDpiScaleFactor = 2f;
+    //
+    //     }
+    // }
     private float GetNearestFixedFactor()
     {
         var xF = screenDimensions.Width / (float)FixedDimensions.Width;
@@ -822,8 +824,8 @@ public sealed class ScreenTexture
             return;
         }
         
-        if(macOSHighDpiScaleFactor > 1) screenSize *= macOSHighDpiScaleFactor;
-        
+        // if(macOSHighDpiScaleFactor > 1) screenSize *= macOSHighDpiScaleFactor;
+        var macOSHighDpiScaleFactor = 1f;
         int w = screenSize.Width;
         int h = screenSize.Height;
         
