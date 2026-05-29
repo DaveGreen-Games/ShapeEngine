@@ -760,10 +760,6 @@ public sealed class GameWindow
         
         Raylib.SetWindowState(ConfigFlags.FullscreenMode);
         
-        //ISSUE: This creates a problem when leaving fullscreen on an affected external monitor!
-        //Another random workaround to fix broken behaviour ...
-        Raylib.SetWindowSize(Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
-        
         ResetMousePosition();
         
         return true;
@@ -1261,7 +1257,10 @@ public sealed class GameWindow
         
         if (prev != CurScreenSize)
         {
-            if (DisplayState == WindowDisplayState.Normal) windowSize = CurScreenSize;
+            if (DisplayState == WindowDisplayState.Normal)
+            {
+                windowSize = CurScreenSize;
+            }
             var conversion = new DimensionConversionFactors(prev, CurScreenSize);
             OnWindowSizeChanged?.Invoke(conversion);
         }
