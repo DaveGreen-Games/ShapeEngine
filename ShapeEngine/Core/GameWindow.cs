@@ -692,7 +692,7 @@ public sealed class GameWindow
         // This is a fix for windows that are moved between monitors after restoring the window from a fullscreen mode
         if (applyFix)
         {
-            ApplyFullscreenFix();
+            ApplyMacOSFullscreenFix();
         }
         
         return false;
@@ -787,7 +787,7 @@ public sealed class GameWindow
             if (DisplayState == WindowDisplayState.Fullscreen)
             {
                 Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-                ApplyFullscreenFix();
+                ApplyMacOSFullscreenFix();
                 // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
                 // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
             }
@@ -825,14 +825,14 @@ public sealed class GameWindow
         if (DisplayState == WindowDisplayState.Fullscreen)
         {
             Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-            ApplyFullscreenFix();
+            ApplyMacOSFullscreenFix();
             // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
             // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
         }
         else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
         {
             Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
-            ApplyFullscreenFix();
+            ApplyMacOSFullscreenFix();
             // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
             // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
         }
@@ -863,7 +863,7 @@ public sealed class GameWindow
         if (DisplayState == WindowDisplayState.Fullscreen)
         {
             Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-            ApplyFullscreenFix();
+            ApplyMacOSFullscreenFix();
             // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
             // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
 
@@ -871,7 +871,7 @@ public sealed class GameWindow
         else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
         {
             Raylib.ClearWindowState(ConfigFlags.BorderlessWindowMode);
-            ApplyFullscreenFix();
+            ApplyMacOSFullscreenFix();
             // Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
             // Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
         }
@@ -1449,8 +1449,13 @@ public sealed class GameWindow
         prevDisplayStateWindowDimensions = windowDimensions;
     }
     
-    private void ApplyFullscreenFix()
+    private void ApplyMacOSFullscreenFix()
     {
+        //when entering any fullscreen mode on macOS,
+        //exiting fullscreen and then dragging the window to another monitor will increase the window size to the monitors size
+        //this fixes the issue
+        
+        if (!Game.IsOSX()) return;
         if(Monitor.MonitorCount() <= 1) return;
         
         var currentMonitorIndex = Monitor.GetCurIndex();
