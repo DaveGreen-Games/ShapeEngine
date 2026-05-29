@@ -1384,15 +1384,16 @@ public sealed class GameWindow
     private void ChangeMonitor(MonitorInfo monitor)
     {
         bool activateBorderless = false;
-        
+        bool activateFullscreen = false;
         if (DisplayState == WindowDisplayState.Fullscreen)
         {
-            //TODO: Restore window and activate fullscreen at the end of the function like borderless fullscreen, otherwise workaround is not working
-            Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-            Raylib.SetWindowMonitor(monitor.Index);
-            Raylib.SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
-            Raylib.SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
-            Raylib.SetWindowState(ConfigFlags.FullscreenMode);
+            // Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
+            // Raylib.SetWindowMonitor(monitor.Index);
+            // Raylib.SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
+            // Raylib.SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
+            // Raylib.SetWindowState(ConfigFlags.FullscreenMode);
+            RestoreWindow();
+            activateFullscreen = true;
         }
         else if (DisplayState == WindowDisplayState.BorderlessFullscreen)
         {
@@ -1429,6 +1430,10 @@ public sealed class GameWindow
         if (activateBorderless)
         {
             ActivateBorderlessFullscreen();
+        }
+        else if (activateFullscreen)
+        {
+            ActivateFullscreen();
         }
     }
 
