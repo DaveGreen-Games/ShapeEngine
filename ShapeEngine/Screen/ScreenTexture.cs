@@ -8,6 +8,9 @@ using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Screen;
 
+//ISSUE: When High dpi flag is enabled, game texture looks blurry on 4k monitor on windows (has not before)
+// - test on windows pc with high dpi enabled & disabled and main vs this branch!
+
 /// <summary>
 /// Manages a renderable screen texture with support for multiple modes (stretch, anchor, pixelation, fixed, nearest fixed, custom),
 /// camera integration, shader application, and events for drawing and resizing. Handles mouse position scaling, texture reloading,
