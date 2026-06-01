@@ -7,6 +7,8 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
 
+//Issue: Maximizing window on macOS and then going fullscreen or borderless fullscreen does not work correctly.
+
 /// <summary>
 /// Manages the main application window, including its state, size, position, monitor, framerate, and mouse/cursor behavior.
 /// Provides events for window and mouse state changes.
@@ -1125,7 +1127,6 @@ public sealed class GameWindow
     /// </summary>
     private void CalculateCurScreenSize()
     {
-        //TODO: Is this enough now for all states?
         int w = Raylib.GetScreenWidth();
         int h = Raylib.GetScreenHeight();
         CurScreenSize = new(w, h);
@@ -1452,14 +1453,16 @@ public sealed class GameWindow
         {
             Raylib.SetWindowMonitor(monitor.Index);
             
-            //Q: I do not know if all of the following is needed?!
+            //I am setting all of this here to be sure.
+            //Currently it does work, fixes some problems and does not create new problems (that I am aware of), 
+            //so I am leaving it for now.
             var pos = Raylib.GetWindowPosition();
             var w = Raylib.GetScreenWidth();
             var h = Raylib.GetScreenHeight();
 
             windowDimensions = new(w, h);
             windowSize = new(w, h);
-            CurScreenSize = new(w, h);//TODO: Test
+            CurScreenSize = new(w, h);
             prevDisplayStateWindowDimensions = windowDimensions;
             prevDisplayStateWindowPosition = pos;
         }
