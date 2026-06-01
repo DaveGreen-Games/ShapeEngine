@@ -492,6 +492,8 @@ public sealed class GameWindow
     /// This only affects fullscreen mode and does not affect borderless fullscreen!
     /// </summary>
     public bool FullscreenAutoRestoring { get; set; }
+    
+    // public bool BorderlessFullscreenAutoRestoring { get; set; }
     #endregion
 
     #region Private Members
@@ -513,8 +515,11 @@ public sealed class GameWindow
     
     private bool fullscreenAutoRestoringActive;
     private bool fullscreenAutoRestoringWindowWasTopmost;
-    // private bool focusLossWasBorderlessFullscreen;
-    // private bool focusLossAutoRestoringFullscreenWindowModeChange = false;
+    
+    // private bool borderlessFullscreenAutoRestoringActive;
+    // private bool borderlessFullscreenAutoRestoringWindowWasTopmost;
+    // private bool borderlessFullscreenAutoRestoringActiveCooldown;
+    
     #endregion
 
     #region Internal Methods
@@ -542,6 +547,7 @@ public sealed class GameWindow
         if (windowSettings.Topmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
 
         FullscreenAutoRestoring = windowSettings.FullscreenAutoRestoring;
+        // BorderlessFullscreenAutoRestoring = true;
         
         //Setup frame rate variables and vsync directly bypassing getters and setters to avoid logic errors on startup.
         vsync = windowSettings.Vsync;
@@ -692,7 +698,7 @@ public sealed class GameWindow
         {
             ApplyMacOSFullscreenFix();
         }
-        
+
         return false;
     }
     /// <summary>
@@ -1113,6 +1119,7 @@ public sealed class GameWindow
         prevDisplayStateWindowPosition = WindowPosition;
         CalculateCurScreenSize();
     }
+    
     /// <summary>
     /// Calculates the current screen size based on the window state.
     /// </summary>
@@ -1123,6 +1130,7 @@ public sealed class GameWindow
         int h = Raylib.GetScreenHeight();
         CurScreenSize = new(w, h);
     }
+    
     /// <summary>
     /// Checks for changes in window configuration flags and raises events.
     /// </summary>
@@ -1147,33 +1155,8 @@ public sealed class GameWindow
         {
             OnWindowFocusChanged?.Invoke(cur.Focused);
             
-            //TODO: Add boolean for minimiznig window when borderless fullscreen is active?
-            if (FullscreenAutoRestoring)
-            {
-                if (!cur.Focused)
-                {
-                    if(DisplayState == WindowDisplayState.Fullscreen)
-                    {
-                        fullscreenAutoRestoringActive = true;
-                        // focusLossWasBorderlessFullscreen = false;
-                        // focusLossAutoRestoringFullscreenWindowModeChange = false;
-                        RestoreWindow();
-                        
-                        fullscreenAutoRestoringWindowWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
-                        Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
-                    }
-                }
-                else
-                {
-                    if (fullscreenAutoRestoringActive)
-                    {
-                        if(fullscreenAutoRestoringWindowWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
-                        ActivateFullscreen();
-                        fullscreenAutoRestoringActive = false;
-                    }
-                }   
-            }
-
+            HandleFullscreenAutoRestoring(cur.Focused);
+            // HandleFullscreenBorderlessAutoRestoring(cur.Focused);
         }
         if (cur.HasAlwaysRunChanged(windowConfigFlags))
         {
@@ -1224,6 +1207,7 @@ public sealed class GameWindow
 
         windowConfigFlags = cur;
     }
+    
     /// <summary>
     /// Checks for changes in window size and position and raises events.
     /// </summary>
@@ -1249,6 +1233,7 @@ public sealed class GameWindow
             OnWindowPositionChanged?.Invoke(WindowPosition, curWindowPosition);
         }
     }
+  
     /// <summary>
     /// Checks for changes in cursor state and raises events.
     /// </summary>
@@ -1307,6 +1292,85 @@ public sealed class GameWindow
         cursorState = curCursorState;
     }
     
+    private void UpdateWindowAfterMonitorChange(MonitorInfo monitor)
+    {
+        var windowDimensions = windowSize;
+        if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
+        {
+            windowDimensions = monitor.Dimensions / 2;
+        }
+        
+        windowSize = windowDimensions;
+        prevDisplayStateWindowDimensions = windowDimensions;
+    }
+
+    private void HandleFullscreenAutoRestoring(bool focused)
+    {
+        if (!FullscreenAutoRestoring) return;
+
+        if (fullscreenAutoRestoringActive)
+        {
+            if (focused)
+            {
+                if(fullscreenAutoRestoringWindowWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+                ActivateFullscreen();
+                fullscreenAutoRestoringActive = false;
+            }
+        }
+        else if (DisplayState == WindowDisplayState.Fullscreen && !focused)
+        {
+            fullscreenAutoRestoringActive = true;
+            RestoreWindow();
+                        
+            fullscreenAutoRestoringWindowWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+            Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
+        }
+    }
+
+    // private void HandleFullscreenBorderlessAutoRestoring(bool focused)
+    // {
+    //     if (!BorderlessFullscreenAutoRestoring) return;
+    //
+    //     if (borderlessFullscreenAutoRestoringActive)
+    //     {
+    //         if (focused)
+    //         {
+    //             if(borderlessFullscreenAutoRestoringWindowWasTopmost) Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+    //             ActivateBorderlessFullscreen();
+    //             borderlessFullscreenAutoRestoringActive = false;
+    //             borderlessFullscreenAutoRestoringActiveCooldown = false;
+    //         }
+    //     }
+    //     else if (DisplayState == WindowDisplayState.BorderlessFullscreen && !focused)
+    //     {
+    //         borderlessFullscreenAutoRestoringActive = true;
+    //         RestoreWindow();
+    //                     
+    //         borderlessFullscreenAutoRestoringWindowWasTopmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+    //         Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
+    //     }
+    // }
+    
+    private void ApplyMacOSFullscreenFix()
+    {
+        //when entering any fullscreen mode on macOS,
+        //exiting fullscreen and then dragging the window to another monitor will increase the window size to the monitors size
+        //this fixes the issue
+        
+        if (!Game.IsOSX()) return;
+        if(Monitor.MonitorCount() <= 1) return;
+        
+        var currentMonitorIndex = Monitor.GetCurIndex();
+        foreach (var monitorInfo in Monitor.GetAllMonitorInfo())
+        {
+            if(monitorInfo.Index == currentMonitorIndex) continue;
+            Raylib.SetWindowMonitor(monitorInfo.Index);
+        }
+        Raylib.SetWindowMonitor(currentMonitorIndex);
+
+        Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
+        Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
+    }
     #endregion
 
     #region Monitor
@@ -1413,38 +1477,7 @@ public sealed class GameWindow
         }
     }
 
-    private void UpdateWindowAfterMonitorChange(MonitorInfo monitor)
-    {
-        var windowDimensions = windowSize;
-        if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
-        {
-            windowDimensions = monitor.Dimensions / 2;
-        }
-        
-        windowSize = windowDimensions;
-        prevDisplayStateWindowDimensions = windowDimensions;
-    }
-    
-    private void ApplyMacOSFullscreenFix()
-    {
-        //when entering any fullscreen mode on macOS,
-        //exiting fullscreen and then dragging the window to another monitor will increase the window size to the monitors size
-        //this fixes the issue
-        
-        if (!Game.IsOSX()) return;
-        if(Monitor.MonitorCount() <= 1) return;
-        
-        var currentMonitorIndex = Monitor.GetCurIndex();
-        foreach (var monitorInfo in Monitor.GetAllMonitorInfo())
-        {
-            if(monitorInfo.Index == currentMonitorIndex) continue;
-            Raylib.SetWindowMonitor(monitorInfo.Index);
-        }
-        Raylib.SetWindowMonitor(currentMonitorIndex);
 
-        Raylib.SetWindowSize(prevDisplayStateWindowDimensions.Width, prevDisplayStateWindowDimensions.Height);
-        Raylib.SetWindowPosition((int)prevDisplayStateWindowPosition.X, (int)prevDisplayStateWindowPosition.Y);
-    }
     #endregion
 
     #region Mouse
