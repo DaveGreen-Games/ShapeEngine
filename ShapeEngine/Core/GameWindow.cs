@@ -7,8 +7,6 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
 
-//Issue: Maximizing window on macOS and then going fullscreen or borderless fullscreen does not work correctly.
-
 /// <summary>
 /// Manages the main application window, including its state, size, position, monitor, framerate, and mouse/cursor behavior.
 /// Provides events for window and mouse state changes.
