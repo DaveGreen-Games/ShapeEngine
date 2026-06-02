@@ -8,9 +8,6 @@ using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Screen;
 
-//ISSUE: When High dpi flag is enabled, game texture looks blurry on 4k monitor on windows (has not before)
-// - test on windows pc with high dpi enabled & disabled and main vs this branch!
-
 /// <summary>
 /// Manages a renderable screen texture with support for multiple modes (stretch, anchor, pixelation, fixed, nearest fixed, custom),
 /// camera integration, shader application, and events for drawing and resizing. Handles mouse position scaling, texture reloading,
@@ -68,7 +65,7 @@ public sealed class ScreenTexture
         get => customClearBackgroundFunction;
         set
         {
-            if (Mode == ScreenTextureMode.Custom) return;
+            if (Mode != ScreenTextureMode.Custom) return;
             customClearBackgroundFunction = value;
         } 
     }
@@ -198,7 +195,8 @@ public sealed class ScreenTexture
     /// Create a screen texture in anchor mode.
     /// </summary>
     /// <param name="anchorStretch"> The factors for the size of the resulting screen texture. 0.5/0.5 would result
-    /// in a screen texture with half the width and half the height of the screen.</param>
+    /// in a screen texture with half the width and half the height of the screen.
+    /// Value Range: Bigger than 0, 0 and smaller or equal to 1, 1.</param>
     /// <param name="anchorPosition"> The factors for the position of the screen texture on the screen.
     /// 0/0 is the topleft corner, 1/1 is the bottom right corner.</param>
     /// <param name="shaderSupportType"></param>
@@ -213,7 +211,7 @@ public sealed class ScreenTexture
             Shaders = new();
         }
 
-        if (anchorStretch.X <= 0f || anchorStretch.Y <= 0f || anchorStretch.X >= 1f || anchorStretch.Y >= 1f ||
+        if (anchorStretch.X <= 0f || anchorStretch.Y <= 0f || anchorStretch.X > 1f || anchorStretch.Y > 1f ||
             anchorPosition.X < 0f || anchorPosition.Y < 0f || anchorPosition.X > 1f || anchorPosition.Y > 1f)
         {
             Mode = ScreenTextureMode.Stretch;
@@ -358,6 +356,7 @@ public sealed class ScreenTexture
     #endregion
 
     #region Public Functions
+    
     /// <summary>
     /// Initializes the screen texture with the given screen size, mouse position, and optional camera.
     /// Calculates scaled mouse positions and sets up camera and texture rectangles.
@@ -550,8 +549,6 @@ public sealed class ScreenTexture
                 Raylib.BeginMode2D(Camera.Camera);
                 OnDrawGame?.Invoke(GameScreenInfo, this);
                 Raylib.EndMode2D();
-                
-                // OnDrawGameUI?.Invoke(ScreenInfo);
             }
             else
             {
@@ -566,8 +563,6 @@ public sealed class ScreenTexture
             Raylib.BeginTextureMode(renderTexture);
             OnDrawUI?.Invoke(GameUiScreenInfo, this);
             Raylib.EndTextureMode();
-            
-            //DrawToScreen();
         }
         else
         {
@@ -587,14 +582,12 @@ public sealed class ScreenTexture
             }
             else OnDrawGame?.Invoke(GameScreenInfo, this);
             
-            // OnDrawGameUI?.Invoke(ScreenInfo);
             OnDrawUI?.Invoke(GameUiScreenInfo, this);
             
             Raylib.EndTextureMode();
-            //DrawToScreen();
-            
         }
     }
+ 
     /// <summary>
     /// Draws the texture to the screen. Should only be called by the game class.
     /// </summary>
@@ -602,6 +595,7 @@ public sealed class ScreenTexture
     {
         DrawTextureToScreen(renderTexture.Texture);
     }
+  
     /// <summary>
     /// Unloads the render texture and associated resources.
     /// </summary>
@@ -612,6 +606,7 @@ public sealed class ScreenTexture
         Raylib.UnloadRenderTexture(renderTexture);
         if(ShaderSupport != ShaderSupportType.None) Raylib.UnloadRenderTexture(shaderBuffer);
     }
+ 
     /// <summary>
     /// Gets the destination rectangle for drawing the texture to the screen, based on the current mode and screen size.
     /// </summary>
@@ -652,6 +647,7 @@ public sealed class ScreenTexture
 
         return destRec;
     }
+
     /// <summary>
     /// Gets the rectangle representing the texture area.
     /// </summary>
@@ -679,14 +675,14 @@ public sealed class ScreenTexture
     /// Requires a reload of the texture!
     /// Reloads happens next frame!
     /// </summary>
-    /// <param name="newAnchorStretch">Value Range: Bigger than 0, 0 and smaller than 1, 1. </param>
+    /// <param name="newAnchorStretch">Value Range: Bigger than 0, 0 and smaller or equal to 1, 1.</param>
     /// <returns></returns>
     public bool ChangeAnchorStretch(Vector2 newAnchorStretch)
     {
         if(Mode != ScreenTextureMode.Anchor) return false;
         
         if (newAnchorStretch.X <= 0f || newAnchorStretch.Y <= 0f || 
-            newAnchorStretch.X >= 1f || newAnchorStretch.Y >= 1f ) return false;
+            newAnchorStretch.X > 1f || newAnchorStretch.Y > 1f ) return false;
 
         textureReloadRequired = true;
         AnchorStretch = newAnchorStretch;
@@ -703,7 +699,7 @@ public sealed class ScreenTexture
     public bool ChangePixelationFactor(float newPixelationFactor)
     {
         if(Mode != ScreenTextureMode.Pixelation) return false;
-        if(newPixelationFactor <= 0f || newPixelationFactor >= 1f ) return false;
+        if(newPixelationFactor <= 0f || newPixelationFactor > 1f ) return false;
         
         textureReloadRequired = true;
         PixelationFactor = newPixelationFactor;
@@ -752,6 +748,7 @@ public sealed class ScreenTexture
         var yF = screenDimensions.Height / (float)FixedDimensions.Height;
         return (xF + yF) / 2f;
     }
+   
     private void ApplyShaders()
     {
         if (ShaderSupport == ShaderSupportType.None) return;
@@ -790,12 +787,13 @@ public sealed class ScreenTexture
         renderTexture = source;
         shaderBuffer = target;
     }
+ 
     private void ApplyShaderTexture(Texture2D texture)
     {
         var destRec = new Rectangle
         {
-            X = 0, //Width * 0.5f,
-            Y = 0, //Height * 0.5f,
+            X = 0,
+            Y = 0,
             Width = Width,
             Height = Height
         };
@@ -809,6 +807,7 @@ public sealed class ScreenTexture
         
         Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0f, new ColorRgba(System.Drawing.Color.White).ToRayColor());
     }
+    
     private void UpdateTexture(Dimensions screenSize)
     {
         if (Mode == ScreenTextureMode.Fixed) return;
@@ -853,6 +852,7 @@ public sealed class ScreenTexture
         }
         ReloadTexture(w, h);
     }
+   
     private void ReloadTexture(int w, int h)
     {
         if (!Loaded) Loaded = true;
@@ -881,6 +881,7 @@ public sealed class ScreenTexture
         
         OnTextureResized?.Invoke(w, h);
     }
+    
     private void DrawTextureToScreen(Texture2D texture)
     {
         if (Mode == ScreenTextureMode.Custom)
