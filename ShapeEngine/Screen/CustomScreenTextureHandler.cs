@@ -63,9 +63,12 @@ public abstract class CustomScreenTextureHandler
     /// <summary>
     /// Return the new dimensions for the custom screen texture. Return invalid dimensions to keep the screen texture the same.
     /// </summary>
-    /// <param name="newScreenDimensions"></param>
+    /// <param name="newScreenDimensions"> The new dimensions of the screen. Multiply with <see cref="dpiScaleFactorX"/> & <see cref="dpiScaleFactorY"/> to get the new texture dimensions.</param>
+    /// <param name="dpiScaleFactorX">The current dpi scale factor for the x dimension. When high dpi flag is disabled, this is always 1.</param>
+    /// <param name="dpiScaleFactorY">The current dpi scale factor for the y dimension. When high dpi flag is disabled, this is always 1.</param>
     /// <returns></returns>
-    public virtual Dimensions OnScreenDimensionsChanged(Dimensions newScreenDimensions) => Dimensions.GetInvalidDimension();
+    public virtual Dimensions OnScreenDimensionsChanged(Dimensions newScreenDimensions, float dpiScaleFactorX = 1f, float dpiScaleFactorY = 1f) => Dimensions.GetInvalidDimension();
+    
     /// <summary>
     /// Returns the background color and a flag indicating whether the background should be cleared before rendering the screen texture.
     /// </summary>
