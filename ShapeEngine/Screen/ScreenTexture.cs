@@ -161,7 +161,6 @@ public sealed class ScreenTexture
     private float nearestFixedFactor = 1f;
     private bool textureReloadRequired;
     private CustomScreenTextureHandler? customScreenTextureHandler;
-    // private float macOSHighDpiScaleFactor = 1f;
     #endregion
     
     #endregion
@@ -368,77 +367,16 @@ public sealed class ScreenTexture
     {
         if (Initialized) return;
         Initialized = true;
-        
-        // SetMacOsScalingFactor();
-        
-        if(camera != null) Camera = camera;
-        
+    
+        if (camera != null) Camera = camera;
+    
         screenDimensions = screenSize;
         UpdateTexture(screenSize);
-        
-        textureRect = GetTextureRect();
-        Camera?.SetSize(new Dimensions(Width, Height));
+    
+        // Use common update logic
+        UpdateTextureAndScreenInfo(mousePosition, paused: false);
 
-        Vector2 scaledMousePostionGame;
-        var macOSHighDpiScaleFactor = 1f;
-        var scaledMousePositionUi = mousePosition * macOSHighDpiScaleFactor;
-        if (Mode == ScreenTextureMode.Pixelation)
-        {
-            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor / macOSHighDpiScaleFactor;
-            scaledMousePositionUi = mousePosition * PixelationFactor * f * macOSHighDpiScaleFactor;
-        }
-        else if (Mode == ScreenTextureMode.NearestFixed)
-        {
-            scaledMousePositionUi = mousePosition / nearestFixedFactor;
-        }
-        else if (Mode == ScreenTextureMode.Anchor)
-        {
-            var w = screenDimensions.Width * AnchorStretch.X;
-            var h = screenDimensions.Height * AnchorStretch.Y;
-
-            var size = new Vector2(w, h);
-            var topLeft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
-            scaledMousePositionUi = mousePosition * macOSHighDpiScaleFactor - topLeft * macOSHighDpiScaleFactor;
-        }
-        else if (Mode == ScreenTextureMode.Fixed)
-        {
-            float virtualRatioW = (float)screenSize.Width/ Width;
-            float virtualRatioH = (float)screenSize.Height/ Height;
-            if (virtualRatioW < virtualRatioH)
-            {
-                var h = Height * virtualRatioW;
-                var topLeft = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
-                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioW;
-            }
-            else
-            {
-                var w = Width * virtualRatioH;
-                var topLeft = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
-                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioH;
-            }
-        }
-        else if (Mode == ScreenTextureMode.Custom)
-        {
-            if (customScreenTextureHandler != null)
-            {
-                var textureDimensions = new Dimensions(Width, Height);
-                scaledMousePositionUi = customScreenTextureHandler.GetScaledMousePosition(mousePosition, screenDimensions, textureDimensions);
-                textureRect = customScreenTextureHandler.GetTextureRect(screenDimensions, textureDimensions);
-            }
-        }
-        if (Camera != null)
-        {
-            scaledMousePostionGame = Camera.ScreenToWorld(scaledMousePositionUi);
-        }
-        else
-        {
-            scaledMousePostionGame = scaledMousePositionUi;
-        }
-        
-        GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame, false);
-        GameUiScreenInfo = new(textureRect, scaledMousePositionUi, true);
     }
-
     
     /// <summary>
     /// Updates the screen texture state, including camera and mouse position, and reloads the texture if needed.
@@ -449,80 +387,22 @@ public sealed class ScreenTexture
     /// <param name="paused">Whether the update is paused.</param>
     public void Update(float dt, Dimensions screenSize, Vector2 mousePosition, bool paused)
     {
-        // SetMacOsScalingFactor();
+        // Handle texture reload if needed
         if (screenDimensions != screenSize || textureReloadRequired)
         {
             textureReloadRequired = false;
             screenDimensions = screenSize;
             UpdateTexture(screenSize);
         }
-        
-        textureRect = GetTextureRect();
-        if (Camera != null)
+    
+        // Update camera if not paused
+        if (Camera != null && !paused)
         {
-            Camera.SetSize(new Dimensions(Width, Height));
-            if(!paused) Camera.Update(dt);
+            Camera.Update(dt);
         }
-
-        Vector2 scaledMousePostionGame;
-        var macOSHighDpiScaleFactor = 1f;
-        var scaledMousePositionUi = mousePosition * macOSHighDpiScaleFactor;
-        if (Mode == ScreenTextureMode.Pixelation)
-        {
-            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor / macOSHighDpiScaleFactor;
-            scaledMousePositionUi = mousePosition * PixelationFactor * f * macOSHighDpiScaleFactor;
-        }
-        else if (Mode == ScreenTextureMode.NearestFixed)
-        {
-            // scaledMousePositionUi = (mousePosition  * macOSHighDpiScaleFactor) / nearestFixedFactor;
-            scaledMousePositionUi = mousePosition / nearestFixedFactor;
-        }
-        else if (Mode == ScreenTextureMode.Anchor)
-        {
-            var w = screenDimensions.Width * AnchorStretch.X;
-            var h = screenDimensions.Height * AnchorStretch.Y;
-
-            var size = new Vector2(w, h);
-            var topleft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
-            scaledMousePositionUi = mousePosition * macOSHighDpiScaleFactor - topleft * macOSHighDpiScaleFactor;
-        }
-        else if (Mode == ScreenTextureMode.Fixed)
-        {
-            float virtualRatioW = (float)screenSize.Width/ Width;
-            float virtualRatioH = (float)screenSize.Height/ Height;
-            if (virtualRatioW < virtualRatioH)
-            {
-                var h = Height * virtualRatioW;
-                var topLeft = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
-                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioW;
-            }
-            else
-            {
-                var w = Width * virtualRatioH;
-                var topLeft = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
-                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioH;
-            }
-        }
-        else if (Mode == ScreenTextureMode.Custom)
-        {
-            if (customScreenTextureHandler != null)
-            {
-                var textureDimensions = new Dimensions(Width, Height);
-                scaledMousePositionUi = customScreenTextureHandler.GetScaledMousePosition(mousePosition, screenDimensions, textureDimensions);
-                textureRect = customScreenTextureHandler.GetTextureRect(screenDimensions, textureDimensions);
-            }
-        }
-        if (Camera != null)
-        {
-            scaledMousePostionGame = Camera.ScreenToWorld(scaledMousePositionUi);
-        }
-        else
-        {
-            scaledMousePostionGame = scaledMousePositionUi;
-        }
-        
-        GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame, false);
-        GameUiScreenInfo = new(textureRect, scaledMousePositionUi, true);
+    
+        // Use common update logic
+        UpdateTextureAndScreenInfo(mousePosition, paused);
     }
     
     /// <summary>
@@ -728,24 +608,32 @@ public sealed class ScreenTexture
     #endregion
     
     #region Private Functions
-    // private void SetMacOsScalingFactor()
-    // {
-    //     if (Game.IsOSX()) //for fixing blurry screen texture on high dpi moitors on macOS
-    //     {
-    //         bool noScaleFactor = Mode == ScreenTextureMode.Fixed || Mode == ScreenTextureMode.Custom || Mode == ScreenTextureMode.NearestFixed;
-    //        
-    //         if (noScaleFactor || Raylib.GetWindowScaleDPI().X < 2 || GameWindow.Instance.IsWindowFullscreen())
-    //         {
-    //             macOSHighDpiScaleFactor = 1f;
-    //         }
-    //         else macOSHighDpiScaleFactor = 2f;
-    //
-    //     }
-    // }
+    private void UpdateTextureAndScreenInfo(Vector2 mousePosition, bool paused)
+    {
+        textureRect = GetTextureRect();
+    
+        if (Camera != null)
+        {
+            Camera.SetSize(new Dimensions(Width, Height));
+        }
+
+        var scaledMousePositionUi = CalculateScaledMousePosition(mousePosition);
+        var scaledMousePositionGame = Camera != null 
+            ? Camera.ScreenToWorld(scaledMousePositionUi) 
+            : scaledMousePositionUi;
+    
+        GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePositionGame, false);
+        GameUiScreenInfo = new(textureRect, scaledMousePositionUi, true);
+    }
+    
     private float GetNearestFixedFactor()
     {
-        var xF = screenDimensions.Width / (float)FixedDimensions.Width;
-        var yF = screenDimensions.Height / (float)FixedDimensions.Height;
+        var dpiScaleFactor = Raylib.GetWindowScaleDPI();
+        var scaledWidth = screenDimensions.Width * dpiScaleFactor.X;
+        var scaledHeight = screenDimensions.Height * dpiScaleFactor.Y;
+    
+        var xF = scaledWidth / FixedDimensions.Width;
+        var yF = scaledHeight / FixedDimensions.Height;
         return (xF + yF) / 2f;
     }
    
@@ -812,11 +700,19 @@ public sealed class ScreenTexture
     {
         if (Mode == ScreenTextureMode.Fixed) return;
         
+        var dpiScaleFactor = Raylib.GetWindowScaleDPI();
+        var textureSize = new Dimensions(screenSize.Width * dpiScaleFactor.X, screenSize.Height * dpiScaleFactor.Y);
+
+        // var logger = Game.Instance.Logger;
+        // var rw = Raylib.GetRenderWidth();
+        // var rh = Raylib.GetRenderHeight();
+        // logger.LogInfo($"Updating ScreenTexture. Mode: {Mode}, ScreenSize: {screenSize}, TextureSize: {textureSize}, Render Size: {rw}x{rh}, DPI Scale: {dpiScaleFactor}");
+        
         if (Mode == ScreenTextureMode.Custom)
         {
             if (customScreenTextureHandler != null)
             {
-                var newTextureDimensions = customScreenTextureHandler.OnScreenDimensionsChanged(screenSize);
+                var newTextureDimensions = customScreenTextureHandler.OnScreenDimensionsChanged(screenSize, dpiScaleFactor.X, dpiScaleFactor.Y);
                 if (newTextureDimensions.IsValid() && (newTextureDimensions.Width != Width || newTextureDimensions.Height != Height))
                 {
                     ReloadTexture(newTextureDimensions.Width, newTextureDimensions.Height);
@@ -826,24 +722,25 @@ public sealed class ScreenTexture
             return;
         }
         
-        // if(macOSHighDpiScaleFactor > 1) screenSize *= macOSHighDpiScaleFactor;
-        var macOSHighDpiScaleFactor = 1f;
-        int w = screenSize.Width;
-        int h = screenSize.Height;
+        int w = textureSize.Width;
+        int h = textureSize.Height;
         
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            //screen to monitor factor is also wrong on macOS so we divide by it here 
-            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor / macOSHighDpiScaleFactor;
+            //TODO: Monitor dimensions on macOS are affected by dpi scale
+            // - on windows the raw monitor dimensions are used (unaffected by dpi scale)
+            // - I either have to adjust monitor dimension on windows when high dpi is enabled or I have to use the dpi scale here to decrease the pixelation factor
+            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor * PixelationFactor * 0.5f;
             
-            w = (int)(w * PixelationFactor * f);
-            h = (int)(h * PixelationFactor * f);
+            //uses screen size instead of texture size so dpi scaling does not affect pixelation effect
+            w = (int)(screenSize.Width * f);
+            h = (int)(screenSize.Height * f);
         }
         else if (Mode == ScreenTextureMode.NearestFixed)
         {
             nearestFixedFactor = GetNearestFixedFactor();
             w = (int)(w / nearestFixedFactor);
-            h = (int)(w / screenSize.RatioW);
+            h = (int)(w / textureSize.RatioW);
         }
         else if (Mode == ScreenTextureMode.Anchor)
         {
@@ -913,6 +810,86 @@ public sealed class ScreenTexture
         GameScreenInfo = GameScreenInfo.SetFixedFramerateInterpolationFactor(interpolationFactor);
         GameUiScreenInfo = GameUiScreenInfo.SetFixedFramerateInterpolationFactor(interpolationFactor);
     }
+    #endregion
+    
+    #region Mouse Scaling Calculations
+    
+    private Vector2 CalculateScaledMousePosition(Vector2 mousePosition)
+    {
+        var dpiScaleFactor = Raylib.GetWindowScaleDPI();
+        
+        return Mode switch
+        {
+            ScreenTextureMode.Stretch => mousePosition * dpiScaleFactor,
+            
+            ScreenTextureMode.Pixelation => CalculatePixelationMousePosition(mousePosition, dpiScaleFactor),
+            
+            ScreenTextureMode.NearestFixed => CalculateNearestFixedMousePosition(mousePosition, dpiScaleFactor),
+            
+            ScreenTextureMode.Anchor => CalculateAnchorMousePosition(mousePosition),
+            
+            ScreenTextureMode.Fixed => CalculateFixedMousePosition(mousePosition),
+            
+            ScreenTextureMode.Custom => CalculateCustomMousePosition(mousePosition),
+            
+            _ => mousePosition * dpiScaleFactor
+        };
+    }
+
+    private Vector2 CalculatePixelationMousePosition(Vector2 mousePosition, Vector2 dpiScaleFactor)
+    {
+        var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor * PixelationFactor;
+        return mousePosition * f;
+    }
+
+    private Vector2 CalculateAnchorMousePosition(Vector2 mousePosition)
+    {
+        var screenRect = new Rect(0, 0, screenDimensions.Width, screenDimensions.Height);
+        var anchorPoint = new AnchorPoint(AnchorPosition);
+        var topLeft = screenRect.GetPoint(anchorPoint);
+        var gameRect = new Rect(topLeft, screenDimensions.ToSize() * AnchorStretch, anchorPoint);
+
+        var relativeMousePos = mousePosition - gameRect.TopLeft;
+        var textureSize = new Vector2(Width, Height);
+        return relativeMousePos * (textureSize / gameRect.Size);
+    }
+
+    private Vector2 CalculateNearestFixedMousePosition(Vector2 mousePosition, Vector2 dpiScaleFactor)
+    {
+        // Apply DPI scaling first, then divide by the factor
+        return (mousePosition * dpiScaleFactor) / nearestFixedFactor;
+    }
+    
+    private Vector2 CalculateFixedMousePosition(Vector2 mousePosition)
+    {
+        float virtualRatioW = (float)screenDimensions.Width / Width;
+        float virtualRatioH = (float)screenDimensions.Height / Height;
+        
+        if (virtualRatioW < virtualRatioH)
+        {
+            var h = Height * virtualRatioW;
+            var topLeft = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
+            return (mousePosition - topLeft) / virtualRatioW;
+        }
+        else
+        {
+            var w = Width * virtualRatioH;
+            var topLeft = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
+            return (mousePosition - topLeft) / virtualRatioH;
+        }
+    }
+
+    private Vector2 CalculateCustomMousePosition(Vector2 mousePosition)
+    {
+        if (customScreenTextureHandler != null)
+        {
+            var textureDimensions = new Dimensions(Width, Height);
+            textureRect = customScreenTextureHandler.GetTextureRect(screenDimensions, textureDimensions);
+            return customScreenTextureHandler.GetScaledMousePosition(mousePosition, screenDimensions, textureDimensions);
+        }
+        return mousePosition;
+    }
+    
     #endregion
     
 }
