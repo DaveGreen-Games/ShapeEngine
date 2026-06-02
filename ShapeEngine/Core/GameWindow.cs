@@ -1090,19 +1090,12 @@ public sealed class GameWindow
     /// </summary>
     private void CalculateMonitorConversionFactors()
     {
+        //TODO: I should use Monitor here instead of raylib
+        // - then the Monitor class can take care of applying dpi scale to monitor dimensions
         int monitor = Raylib.GetCurrentMonitor();
         int mw = Raylib.GetMonitorWidth(monitor);
         int mh = Raylib.GetMonitorHeight(monitor);
-        if (GameDef.Game.IsOSX())
-        {
-             if (IsWindowBorderlessFullscreen() || IsWindowFullscreen())
-             {
-                 var dpiScale = Raylib.GetWindowScaleDPI();
-                 mw = (int)(mw / dpiScale.X);
-                 mh = (int)(mh / dpiScale.Y);
-             }
-        }
-
+        
         var mDim = new Dimensions(mw, mh);
         ScreenToMonitor = new DimensionConversionFactors(CurScreenSize, mDim);
         MonitorToScreen = new DimensionConversionFactors(mDim, CurScreenSize);
