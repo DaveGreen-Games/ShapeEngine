@@ -494,6 +494,8 @@ public sealed class GameWindow
     public bool FullscreenAutoRestoring { get; set; }
     
     // public bool BorderlessFullscreenAutoRestoring { get; set; }
+
+    public readonly bool HighDpi;
     #endregion
 
     #region Private Members
@@ -533,6 +535,8 @@ public sealed class GameWindow
         if(windowSettings.Msaa4x) Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
         if(windowSettings.HighDPI) Raylib.SetConfigFlags(ConfigFlags.HighDpiWindow);
         if(windowSettings.FramebufferTransparent) Raylib.SetConfigFlags(ConfigFlags.TransparentWindow);
+        
+        HighDpi = windowSettings.HighDPI;
         
         Raylib.InitWindow(windowSettings.WindowSize.Width, windowSettings.WindowSize.Height, windowSettings.Title);
         Raylib.SetWindowOpacity(0f);
