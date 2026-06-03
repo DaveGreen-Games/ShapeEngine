@@ -651,8 +651,6 @@ public sealed class GameWindow
         CheckForCursorChanges();
         
         CalculateMonitorConversionFactors();
-        
-        if (MouseVisible == Raylib.IsCursorHidden()) MouseVisible = !Raylib.IsCursorHidden();
 
     }
     /// <summary>
@@ -1272,7 +1270,7 @@ public sealed class GameWindow
                     mouseEnabled = true;
                 }
 
-                if (!mouseEnabled)
+                if (!mouseVisible)
                 {
                     Raylib.ShowCursor();
                     mouseVisible = true;
@@ -1286,8 +1284,6 @@ public sealed class GameWindow
                 OnMouseEnteredScreen?.Invoke();
                 if (wasMouseVisible != null) MouseVisible = (bool)wasMouseVisible;
                 if (wasMouseEnabled != null) MouseEnabled = (bool)wasMouseEnabled;
-                // if (wasMouseVisible != null && wasMouseVisible == false) MouseVisible = false;
-                // if (wasMouseEnabled != null && wasMouseEnabled == false) MouseEnabled = false;
 
                 wasMouseVisible = null;
                 wasMouseEnabled = null;
@@ -1296,11 +1292,11 @@ public sealed class GameWindow
 
         if (MouseOnScreen)
         {
-            if (curCursorState.Visible && !cursorState.Visible) OnMouseVisibilityChanged?.Invoke(false);
-            else if (!curCursorState.Visible && cursorState.Visible) OnMouseVisibilityChanged?.Invoke(true);
+            if (curCursorState.Visible && !cursorState.Visible) OnMouseVisibilityChanged?.Invoke(true);
+            else if (!curCursorState.Visible && cursorState.Visible) OnMouseVisibilityChanged?.Invoke(false);
 
-            if (curCursorState.Enabled && !cursorState.Enabled) OnMouseEnabledChanged?.Invoke(false);
-            else if (!curCursorState.Enabled && cursorState.Enabled) OnMouseEnabledChanged?.Invoke(true);
+            if (curCursorState.Enabled && !cursorState.Enabled) OnMouseEnabledChanged?.Invoke(true);
+            else if (!curCursorState.Enabled && cursorState.Enabled) OnMouseEnabledChanged?.Invoke(false);
         }
 
         cursorState = curCursorState;
@@ -1570,7 +1566,7 @@ public sealed class GameWindow
     /// </summary>
     public void ResetMousePosition()
     {
-        var center = WindowPosition / 2 + WindowSize.ToVector2() / 2;
+        var center = WindowPosition + WindowSize.ToVector2() / 2;
         Raylib.SetMousePosition((int)center.X, (int)center.Y);
     }
 

@@ -378,7 +378,8 @@ public partial class Game
 
         ResolveDrawUI(UIScreenInfo);
 
-        if (Window.MouseOnScreen) DrawCursorUi(UIScreenInfo);
+        // if (Window.MouseOnScreen) DrawCursorUi(UIScreenInfo);
+        DrawCursorUi(UIScreenInfo);
 
         Raylib.EndDrawing();
     }
@@ -394,13 +395,15 @@ public partial class Game
     private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo, ScreenTexture texture)
     {
         ResolveDrawGame(gameScreenInfo);
-        if (Window.MouseOnScreen) DrawCursorGame(gameScreenInfo);
+        // if (Window.MouseOnScreen) DrawCursorGame(gameScreenInfo);
+        DrawCursorGame(gameScreenInfo);
     }
 
     private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo, ScreenTexture texture)
     {
         ResolveDrawGameUI(gameUiScreenInfo);
-        if (Window.MouseOnScreen) DrawCursorGameUi(gameUiScreenInfo);
+        // if (Window.MouseOnScreen) DrawCursorGameUi(gameUiScreenInfo);
+        DrawCursorGameUi(gameUiScreenInfo);
     }
 
     private void GameTextureOnTextureResized(int w, int h)
