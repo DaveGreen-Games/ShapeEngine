@@ -727,10 +727,7 @@ public sealed class ScreenTexture
         
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            //TODO: Monitor dimensions on macOS are affected by dpi scale
-            // - on windows the raw monitor dimensions are used (unaffected by dpi scale)
-            // - I either have to adjust monitor dimension on windows when high dpi is enabled or I have to use the dpi scale here to decrease the pixelation factor
-            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor * PixelationFactor * 0.5f;
+            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor * PixelationFactor;
             
             //uses screen size instead of texture size so dpi scaling does not affect pixelation effect
             w = (int)(screenSize.Width * f);

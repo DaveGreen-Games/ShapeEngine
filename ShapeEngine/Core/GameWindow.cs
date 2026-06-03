@@ -265,22 +265,27 @@ public sealed class GameWindow
     /// Gets the conversion factors from screen to monitor coordinates.
     /// </summary>
     public DimensionConversionFactors ScreenToMonitor { get; private set; }
+  
     /// <summary>
     /// Gets the conversion factors from monitor to screen coordinates.
     /// </summary>
     public DimensionConversionFactors MonitorToScreen { get; private set; }
+  
     /// <summary>
     /// Gets the monitor device associated with the window.
     /// </summary>
     public MonitorDevice Monitor { get; private set; }
+    
     /// <summary>
     /// Gets the current screen size of the window.
     /// </summary>
     public Dimensions CurScreenSize { get; private set; }
+    
     /// <summary>
     /// Gets the minimum allowed window size.
     /// </summary>
     public Dimensions WindowMinSize { get; private set; }
+    
     /// <summary>
     /// Gets or sets the window size.
     /// </summary>
@@ -289,7 +294,7 @@ public sealed class GameWindow
         get => windowSize;
         set
         {
-            var maxSize = Monitor.CurMonitor().Dimensions;
+            var maxSize = GetCurrentMonitorDimensions(); // Monitor.CurMonitor().Dimensions;
             int w = value.Width;
             if (w < WindowMinSize.Width) w = WindowMinSize.Width;
             else if (w > maxSize.Width) w = maxSize.Width;
@@ -310,6 +315,7 @@ public sealed class GameWindow
             //CheckForWindowChanges();
         }
     }
+    
     /// <summary>
     /// Gets the current window position on the screen.
     /// </summary>
@@ -319,6 +325,7 @@ public sealed class GameWindow
     /// Gets the current display state of the window.
     /// </summary>
     public WindowDisplayState DisplayState { get; private set; }
+    
     /// <summary>
     /// Gets the current window border style.
     /// </summary>
@@ -341,6 +348,7 @@ public sealed class GameWindow
     /// A value of 0 indicates that no explicit minimum frame rate constraint is enforced.
     /// </summary>
     public int MinFrameRate { get; private set; }
+  
     /// <summary>
     /// Gets the maximum frame rate the window should not exceed when applying frame rate limiting.
     /// A value of 0 indicates that no explicit maximum frame rate constraint is enforced.
@@ -405,6 +413,7 @@ public sealed class GameWindow
     {
         return UnfocusedFrameRateLimit > 0 && !windowConfigFlags.Focused;
     }
+  
     /// <summary>
     /// Target frames-per-second to apply when the window is unfocused (in FPS).
     /// A value of 0 disables the unfocused frame rate limit (no restriction).
@@ -415,7 +424,6 @@ public sealed class GameWindow
     /// </remarks>
     public int UnfocusedFrameRateLimit;
     
-
     /// <summary>
     /// Gets or sets the current vertical sync mode for the window.
     /// Changing this property updates the effective <see cref="TargetFps"/> according to the selected <see cref="VsyncMode"/>.
@@ -481,7 +489,9 @@ public sealed class GameWindow
             mouseOnScreen = value;
         }
     }
+  
     private bool mouseOnScreen;
+    
     /// <summary>
     /// Gets the area of the screen as a rectangle.
     /// </summary>
@@ -729,7 +739,7 @@ public sealed class GameWindow
     public void ResetWindow()
     {
         RestoreWindow();
-        WindowSize = Monitor.CurMonitor().Dimensions / 2;
+        WindowSize = GetCurrentMonitorDimensions() / 2; // Monitor.CurMonitor().Dimensions / 2;
     }
 
     /// <summary>
@@ -1059,7 +1069,7 @@ public sealed class GameWindow
     /// <returns>A value between 0 and 1 representing the visible area.</returns>
     public float GetScreenPercentage()
     {
-        var screenSize = Monitor.CurMonitor().Dimensions.ToSize();
+        var screenSize = GetCurrentMonitorDimensions().ToSize();//  Monitor.CurMonitor().Dimensions.ToSize();
         var screenRect = new Rect(new(0f), screenSize, new(0f));
 
         var wSize = CurScreenSize.ToSize();
@@ -1090,15 +1100,23 @@ public sealed class GameWindow
     /// </summary>
     private void CalculateMonitorConversionFactors()
     {
-        //TODO: I should use Monitor here instead of raylib
-        // - then the Monitor class can take care of applying dpi scale to monitor dimensions
-        int monitor = Raylib.GetCurrentMonitor();
-        int mw = Raylib.GetMonitorWidth(monitor);
-        int mh = Raylib.GetMonitorHeight(monitor);
-        
-        var mDim = new Dimensions(mw, mh);
+        var mDim = GetCurrentMonitorDimensions();
         ScreenToMonitor = new DimensionConversionFactors(CurScreenSize, mDim);
         MonitorToScreen = new DimensionConversionFactors(mDim, CurScreenSize);
+    }
+
+    private Dimensions GetCurrentMonitorDimensions()
+    {
+        var mDim = Monitor.CurMonitor().Dimensions;
+        if (Game.IsWindows())
+        {
+            var dpiScale = Raylib.GetWindowScaleDPI();
+            mDim = new Dimensions(
+                (int)(mDim.Width / dpiScale.X),
+                (int)(mDim.Height / dpiScale.Y)
+            );
+        }
+        return mDim;
     }
     #endregion
 
