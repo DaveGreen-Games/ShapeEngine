@@ -3,6 +3,8 @@ using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Core.Structs;
 
+//TODO: Check all functions if the use placement for calculating index, coordinates, rect, etc.!
+
 /// <summary>
 /// Represents a 2D grid structure with customizable orientation, placement, and cell access utilities.
 /// </summary>
@@ -249,6 +251,7 @@ public readonly struct Grid : IEquatable<Grid>
     /// <returns>The coordinates of the cell.</returns>
     public Coordinates GetCellCoordinate(Vector2 pos, Rect bounds)
     {
+        //ISSUE: Does not use placement -> leads to wrong coordinates
         var cellSize = GetCellSize(bounds);
         int xi = Math.Clamp((int)Math.Floor((pos.X - bounds.X) / cellSize.Width), 0, Cols - 1);
         int yi = Math.Clamp((int)Math.Floor((pos.Y - bounds.Y) / cellSize.Height), 0, Rows - 1);
@@ -263,6 +266,7 @@ public readonly struct Grid : IEquatable<Grid>
     /// <returns>The coordinates of the cell.</returns>
     public Coordinates GetCellCoordinateUnclamped(Vector2 pos, Rect bounds)
     {
+        //ISSUE: Does not use placement -> leads to wrong coordinates
         var cellSize = GetCellSize(bounds);
         int xi = (int)Math.Floor((pos.X - bounds.X) / cellSize.Width);
         int yi = (int)Math.Floor((pos.Y - bounds.Y) / cellSize.Height);
