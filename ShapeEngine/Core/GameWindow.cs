@@ -1579,18 +1579,29 @@ public sealed class GameWindow
         {
             Raylib.SetWindowMonitor(monitor.Index);
             
-            //I am setting all of this here to be sure.
-            //Currently it does work, fixes some problems and does not create new problems (that I am aware of), 
-            //so I am leaving it for now.
-            var pos = Raylib.GetWindowPosition();
             var w = Raylib.GetScreenWidth();
             var h = Raylib.GetScreenHeight();
-
-            windowDimensions = new(w, h);
-            windowSize = new(w, h);
-            CurScreenSize = new(w, h);
+            
+            var dpiScale = Raylib.GetWindowScaleDPI();
+            
+            //NOTE -> if this turns out to be wrong and dpi scale should not be applied here,
+            //windowDimensions in center position calculation still need to be scaled by dpi scale! (see below)
+            windowDimensions = new(w * dpiScale.X, h * dpiScale.Y);
+            
+            //NOTE -> window dimensions need to be scaled by dpi scale to properly center the window
+            int winPosX = monitor.Width / 2 - windowDimensions.Width / 2;
+            int winPosY = monitor.Height / 2 - windowDimensions.Height / 2;
+            int x = winPosX + (int)monitor.Position.X;
+            int y = winPosY + (int)monitor.Position.Y;
+            
+            // Apply the centered position and size
+            Raylib.SetWindowPosition(x, y);
+            
+            // Update internal state
             prevDisplayStateWindowDimensions = windowDimensions;
-            prevDisplayStateWindowPosition = pos;
+            prevDisplayStateWindowPosition = new(x, y);
+            CurScreenSize = windowDimensions;
+            windowSize = windowDimensions;
         }
         
         ResetMousePosition();
@@ -1605,8 +1616,7 @@ public sealed class GameWindow
             ActivateFullscreen();
         }
     }
-
-
+    
     #endregion
 
     #region Mouse
@@ -1717,7 +1727,7 @@ public sealed class GameWindow
     
     /// <summary>
     /// Applies mouse enabled state to Raylib.
-    /// Note: Raylib doesn't provide a way to query cursor enabled state, so we track it ourselves.
+    /// Note -> Raylib doesn't provide a way to query cursor enabled state, so we track it ourselves.
     /// </summary>
     /// <param name="enabled">Whether the cursor should be enabled.</param>
     private void ApplyMouseEnabledToRaylib(bool enabled)
