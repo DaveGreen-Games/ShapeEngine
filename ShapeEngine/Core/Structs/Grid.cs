@@ -11,22 +11,31 @@ namespace ShapeEngine.Core.Structs;
 /// </remarks>
 public readonly struct Grid : IEquatable<Grid>
 {
+    #region Members
+    
     /// <summary>
     /// The number of rows in the grid.
     /// </summary>
     public readonly int Rows;
+   
     /// <summary>
     /// The number of columns in the grid.
     /// </summary>
     public readonly int Cols;
+    
     /// <summary>
     /// The direction in which the grid is placed.
     /// </summary>
     public readonly Direction Placement;
+    
     /// <summary>
     /// Indicates if the grid is oriented top-to-bottom first.
     /// </summary>
     public readonly bool IsTopToBottomFirst;
+    
+    #endregion
+
+    #region Get Direction
     
     /// <summary>
     /// Get the direction for what is considered the next item.
@@ -44,6 +53,7 @@ public readonly struct Grid : IEquatable<Grid>
 
         return Placement;
     }
+    
     /// <summary>
     /// Get the direction for what is considered the previous item.
     /// Standard Vertical Grid with 1 column that is top to bottom first would return new Direction(0, -1)
@@ -61,31 +71,43 @@ public readonly struct Grid : IEquatable<Grid>
         return new(-Placement.Horizontal, -Placement.Vertical);//reversed for previous
     }
     
+    #endregion
+    
+    #region Getters
+    
     /// <summary>
     /// Indicates if the grid is oriented left-to-right first.
     /// </summary>
     public bool IsLeftToRightFirst => !IsTopToBottomFirst;
+ 
     /// <summary>
     /// Gets whether the grid is valid (both rows and columns are positive).
     /// </summary>
     public bool IsValid => Rows > 0 && Cols > 0;
+    
     /// <summary>
     /// Gets whether the grid is horizontal (one row with positive columns).
     /// </summary>
     public bool IsHorizontal => Cols > 0 && Rows == 1;
+    
     /// <summary>
     /// Gets whether the grid is vertical (one column with positive rows).
     /// </summary>
     public bool IsVertical => Rows > 0 && Cols == 1;
+    
     /// <summary>
     /// Gets whether the grid is a true grid (positive rows and columns).
     /// </summary>
     public bool IsGrid => Cols > 1 && Rows > 1;
+    
     /// <summary>
     /// Gets the total number of cells in the grid, or -1 if invalid.
     /// </summary>
     public int Count => Rows < 0 || Cols < 0 ? -1 : Rows * Cols;
     
+    #endregion
+    
+    #region Constructors
     
     /// <summary>
     /// Initializes an empty grid (0x0).
@@ -97,6 +119,7 @@ public readonly struct Grid : IEquatable<Grid>
         this.Placement = Direction.Empty;
         this.IsTopToBottomFirst = false;
     }
+
     /// <summary>
     /// Initializes a grid with the specified number of columns and rows.
     /// </summary>
@@ -113,6 +136,7 @@ public readonly struct Grid : IEquatable<Grid>
         );
         this.IsTopToBottomFirst = false;
     }
+    
     /// <summary>
     /// Initializes a grid with the specified number of columns and rows,
     /// with optional reversal of horizontal and vertical orientations.
@@ -132,6 +156,7 @@ public readonly struct Grid : IEquatable<Grid>
             );
         this.IsTopToBottomFirst = false;
     }
+    
     /// <summary>
     /// Initializes a grid with the specified number of columns and rows,
     /// with optional reversal of horizontal and vertical orientations,
@@ -154,7 +179,10 @@ public readonly struct Grid : IEquatable<Grid>
         this.IsTopToBottomFirst = isTopToBottomFirst;
     }
 
-
+    #endregion
+    
+    #region Static Methods
+    
     /// <summary>
     /// Creates a standard vertical grid with the specified number of rows and reversal option.
     /// </summary>
@@ -162,6 +190,7 @@ public readonly struct Grid : IEquatable<Grid>
     /// <param name="reversed">Whether to reverse the vertical orientation.</param>
     /// <returns>A vertical <see cref="Grid"/>.</returns>
     public static Grid GetVerticalGrid(int rows, bool reversed) => new(1, rows, false, reversed, false);
+  
     /// <summary>
     /// Creates a standard horizontal grid with the specified number of columns and reversal option.
     /// </summary>
@@ -170,7 +199,9 @@ public readonly struct Grid : IEquatable<Grid>
     /// <returns>A horizontal <see cref="Grid"/>.</returns>
     public static Grid GetHorizontalGrid(int cols, bool reversed) => new(cols, 1, reversed, false, false);
     
+    #endregion
     
+    #region Public Methods
     
     /// <summary>
     /// Determines if the given index is within the bounds of the grid.
@@ -178,6 +209,7 @@ public readonly struct Grid : IEquatable<Grid>
     /// <param name="index">The index to check.</param>
     /// <returns>True if the index is within bounds, otherwise false.</returns>
     public bool IsIndexInBounds(int index) => index >= 0 && index <= Count;
+  
     /// <summary>
     /// Calculates the size of each cell in the grid based on the given bounds.
     /// </summary>
@@ -195,6 +227,7 @@ public readonly struct Grid : IEquatable<Grid>
     {
         return CoordinatesToIndex(GetCellCoordinate(pos, bounds));
     }
+  
     /// <summary>
     /// Gets the index of the cell at the given position within the specified bounds, unclamped.
     /// </summary>
@@ -207,6 +240,7 @@ public readonly struct Grid : IEquatable<Grid>
         if (!AreCoordinatesInside(result)) return -1;
         return CoordinatesToIndex(result);
     }
+    
     /// <summary>
     /// Gets the grid coordinates of the cell at the given position within the specified bounds.
     /// </summary>
@@ -220,6 +254,7 @@ public readonly struct Grid : IEquatable<Grid>
         int yi = Math.Clamp((int)Math.Floor((pos.Y - bounds.Y) / cellSize.Height), 0, Rows - 1);
         return new(xi, yi);
     }
+   
     /// <summary>
     /// Gets the grid coordinates of the cell at the given position within the specified bounds, unclamped.
     /// </summary>
@@ -233,6 +268,7 @@ public readonly struct Grid : IEquatable<Grid>
         int yi = (int)Math.Floor((pos.Y - bounds.Y) / cellSize.Height);
         return new(xi, yi);
     }
+    
     /// <summary>
     /// Clamps the given coordinates to be within the bounds of the grid.
     /// </summary>
@@ -268,11 +304,13 @@ public readonly struct Grid : IEquatable<Grid>
     /// <returns>The rectangle representing the cell's bounds.</returns>
     public Rect GetRect(Rect bounds, Coordinates coordinates)
     {
+        //ISSUE: Does not use coordinates to calculate rect correctly!
         var cellSize = GetCellSize(bounds);
         var alignment = Placement.Invert().ToAlignement();
         var pos = bounds.GetPoint(alignment);
         return new(pos, cellSize, alignment);
     }
+
     /// <summary>
     /// Determines if the given coordinates are inside the bounds of the grid.
     /// </summary>
@@ -411,6 +449,8 @@ public readonly struct Grid : IEquatable<Grid>
         return result.Count - count;
     }
 
+    #endregion
+    
     #region Operators
     /// <summary>
     /// Determines whether this grid is equal to another grid.
