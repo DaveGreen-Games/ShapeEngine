@@ -7,6 +7,11 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
 
+//ISSUE: Pixelation mode is not working correctly on windows high dpi monitor with high dpi enabled in exclusive fullscreen mode.
+// - so exclusive fullscreen looks different than borderless fullscreen on a 4k monitor on windows for instance
+// - borderless fullscreen, exclusive fullscreen on a 1080p and borderless fullscreen on a 4k monitor in windows look the same but exclusive fullscreen on 4k monitor looks different
+
+
 /// <summary>
 /// Manages the main application window, including its state, size, position, monitor, framerate, and mouse/cursor behavior.
 /// Provides events for window and mouse state changes.
