@@ -1148,8 +1148,13 @@ public sealed class GameWindow
     /// <returns>A value between 0 and 1 representing the visible area.</returns>
     public float GetScreenPercentage()
     {
-        var screenSize = GetCurrentMonitorDimensions().ToSize();//  Monitor.CurMonitor().Dimensions.ToSize();
-        var screenRect = new Rect(new(0f), screenSize, new(0f));
+        // Get current monitor info to get both dimensions AND position
+        var monitor = Monitor.CurMonitor();
+        // var screenSize = monitor.Dimensions.ToSize();
+        var screenSize = GetCurrentMonitorDimensions().ToSize();
+        
+        // FIXED: Use monitor's actual position, not (0,0), to work on non-primary monitors
+        var screenRect = new Rect(monitor.Position, screenSize, new(0f));
 
         var wSize = CurScreenSize.ToSize();
         var windowPos = Raylib.GetWindowPosition();
