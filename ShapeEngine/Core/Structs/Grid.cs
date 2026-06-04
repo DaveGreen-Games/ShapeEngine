@@ -304,11 +304,13 @@ public readonly struct Grid : IEquatable<Grid>
     /// <returns>The rectangle representing the cell's bounds.</returns>
     public Rect GetRect(Rect bounds, Coordinates coordinates)
     {
-        //ISSUE: Does not use coordinates to calculate rect correctly!
-        var cellSize = GetCellSize(bounds);
+        if (!IsValid || !Placement.IsValid) return new();
+        
         var alignment = Placement.Invert().ToAlignement();
-        var pos = bounds.GetPoint(alignment);
-        return new(pos, cellSize, alignment);
+        var boundsPos = bounds.GetPoint(alignment);
+        var cellSize = GetCellSize(bounds);
+        var rectPos = boundsPos + cellSize * coordinates.ToVector2() * Placement.ToVector2();
+        return new Rect(rectPos, cellSize, alignment);
     }
 
     /// <summary>
@@ -421,9 +423,9 @@ public readonly struct Grid : IEquatable<Grid>
 
         if (IsLeftToRightFirst)
         {
-            for (var row = 0; row <= Rows; row++)
+            for (var row = 0; row < Rows; row++)
             {
-                for (var col = 0; col <= Cols; col++)
+                for (var col = 0; col < Cols; col++)
                 {
                     var coordinates = new Coordinates(col, row);
                     result.Add(GetRect(bounds, coordinates));
@@ -434,9 +436,9 @@ public readonly struct Grid : IEquatable<Grid>
         else
         {
             
-            for (var col = 0; col <= Cols; col++)
+            for (var col = 0; col < Cols; col++)
             {
-                for (var row = 0; row <= Rows; row++)
+                for (var row = 0; row < Rows; row++)
                 {
                     var coordinates = new Coordinates(col, row);
                     result.Add(GetRect(bounds, coordinates));
