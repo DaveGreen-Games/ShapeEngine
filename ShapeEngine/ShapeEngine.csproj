@@ -139,7 +139,7 @@
 
   <ItemGroup>
     <PackageReference Include="Clipper2" Version="2.0.0" />
-    <PackageReference Include="Raylib-cs" Version="7.0.2" />
+    <PackageReference Include="Raylib-cs" Version="8.0.0" />
   </ItemGroup>
 
 	<ItemGroup>

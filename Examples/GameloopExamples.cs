@@ -139,6 +139,7 @@ public class GameloopExamples : Game
     public InputAction InputActionUIPrevPage {get; private set;}
 
     //gameloop controlled
+    public InputAction InputActionBorderlessFullscreen {get; private set;}
     public InputAction InputActionFullscreen {get; private set;}
     public InputAction InputActionMaximize {get; private set;}
     public InputAction InputActionMinimize {get; private set;}
@@ -802,10 +803,16 @@ public class GameloopExamples : Game
         inputActionTree.CurrentGamepad = Input.GamepadManager.LastUsedGamepad;
         inputActionTree.Update(time.Delta);
         
+        var borderlessFullscreenState = InputActionBorderlessFullscreen.Consume(out _);
+        if (borderlessFullscreenState is { Consumed: false, Pressed: true })
+        {
+            Instance.Window.ToggleBorderlessFullscreen();
+        }
+        
         var fullscreenState = InputActionFullscreen.Consume(out _);
         if (fullscreenState is { Consumed: false, Pressed: true })
         {
-            Instance.Window.ToggleBorderlessFullscreen();
+            Instance.Window.ToggleFullscreen();
         }
 
         var maximizeState = InputActionMaximize.Consume(out _);
@@ -997,10 +1004,14 @@ public class GameloopExamples : Game
         var cancelGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
         InputActionUICancel= new(InputSystem.AllAccessTag, defaultSettings, cancelKB, cancelGB);
         
-      
-        var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
-        var fullscreenGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-        InputActionFullscreen = new(GameloopAccessTag, defaultSettings,fullscreenKB, fullscreenGB);
+        ModifierKeySet modifierKeyLeftControlReveresed = new ModifierKeySet(ModifierKeyOperator.And, new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_CONTROL, true));
+        ModifierKeySet modifierKeyLeftControl = new ModifierKeySet(ModifierKeyOperator.And, new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_CONTROL, false));
+        var borderlessFullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F, modifierKeyLeftControlReveresed);
+        var borderlessFullscreenGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
+        InputActionBorderlessFullscreen = new(GameloopAccessTag, defaultSettings, borderlessFullscreenKB, borderlessFullscreenGB);
+
+        var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F, modifierKeyLeftControl);
+        InputActionFullscreen = new(GameloopAccessTag, defaultSettings, fullscreenKB);
         
         var maximizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.M);
         // var maximizeGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_THUMB);
@@ -1095,6 +1106,7 @@ public class GameloopExamples : Game
         inputActionTree.Add(InputActionUINextTab);
         inputActionTree.Add(InputActionUIPrevPage);
         inputActionTree.Add(InputActionUINextPage);
+        inputActionTree.Add(InputActionBorderlessFullscreen);
         inputActionTree.Add(InputActionFullscreen);
         inputActionTree.Add(InputActionMaximize);
         inputActionTree.Add(InputActionMinimize);

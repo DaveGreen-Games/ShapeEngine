@@ -7,6 +7,8 @@ public static class Program
 {
     public static void Main(string[] args)
     {
+        
+        //TODO: Check all modes if they work still!
         var gameSettings = GameSettings.StretchMode("Shape Engine Examples");
         
         var windowSettings = new WindowSettings
@@ -23,7 +25,7 @@ public static class Program
             MouseEnabled = true,
             MouseVisible = false,
             Msaa4x = true,
-            HighDPI = false,
+            HighDPI = true,
             FramebufferTransparent = false
         };
 
