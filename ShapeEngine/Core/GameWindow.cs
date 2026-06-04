@@ -7,11 +7,6 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
 
-//ISSUE: Pixelation mode is not working correctly on windows high dpi monitor with high dpi enabled in exclusive fullscreen mode.
-// - so exclusive fullscreen looks different than borderless fullscreen on a 4k monitor on windows for instance
-// - borderless fullscreen, exclusive fullscreen on a 1080p and borderless fullscreen on a 4k monitor in windows look the same but exclusive fullscreen on 4k monitor looks different
-
-
 /// <summary>
 /// Manages the main application window, including its state, size, position, monitor, framerate, and mouse/cursor behavior.
 /// Provides events for window and mouse state changes.
@@ -591,8 +586,8 @@ public sealed class GameWindow
     // When mouse is on screen: desired state is immediately applied to actual state
     // When mouse leaves screen: actual state is forced visible/enabled (OS requirement)
     // When mouse returns: actual state is restored to desired state
-    private CursorState cursorState = new();
-    private CursorState previousCursorState = new();
+    private CursorState cursorState;
+    private CursorState previousCursorState;
     
     private WindowConfigFlags windowConfigFlags;
     private bool wasMaximized;
@@ -1197,6 +1192,8 @@ public sealed class GameWindow
     private Dimensions GetCurrentMonitorDimensions()
     {
         var mDim = Monitor.CurMonitor().Dimensions;
+        
+        //NOTE -> needed for correct Conversion factor calculations on windows.
         if (Game.IsWindows())
         {
             var dpiScale = Raylib.GetWindowScaleDPI();

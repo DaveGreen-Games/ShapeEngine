@@ -727,11 +727,11 @@ public sealed class ScreenTexture
         
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor * PixelationFactor;
-            
-            //uses screen size instead of texture size so dpi scaling does not affect pixelation effect
-            w = (int)(screenSize.Width * f);
-            h = (int)(screenSize.Height * f);
+            // Calculate pixelation using DPI-adjusted texture size to ensure consistent behavior
+            // across all display modes (borderless, exclusive fullscreen, windowed)
+            // This ensures the same pixelation factor produces the same visual result regardless of DPI scaling
+            w = (int)(textureSize.Width * PixelationFactor);
+            h = (int)(textureSize.Height * PixelationFactor);
         }
         else if (Mode == ScreenTextureMode.NearestFixed)
         {
@@ -835,8 +835,9 @@ public sealed class ScreenTexture
 
     private Vector2 CalculatePixelationMousePosition(Vector2 mousePosition, Vector2 dpiScaleFactor)
     {
-        var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor * PixelationFactor;
-        return mousePosition * f;
+        // Use DPI-adjusted scaling to match the texture size calculation
+        // This ensures mouse coordinates are correct in all display modes
+        return mousePosition * dpiScaleFactor * PixelationFactor;
     }
 
     private Vector2 CalculateAnchorMousePosition(Vector2 mousePosition)
