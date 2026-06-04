@@ -141,12 +141,34 @@ public sealed class GameWindow
 
     /// <summary>
     /// Represents the state of the mouse cursor (visibility, enabled, on screen).
+    /// This is the single source of truth for all cursor state.
     /// </summary>
     private readonly struct CursorState
     {
+        /// <summary>
+        /// Whether the cursor is currently visible in Raylib.
+        /// </summary>
         public readonly bool Visible;
+        
+        /// <summary>
+        /// Whether the cursor is currently enabled in Raylib.
+        /// </summary>
         public readonly bool Enabled;
+        
+        /// <summary>
+        /// Whether the cursor is currently on screen.
+        /// </summary>
         public readonly bool OnScreen;
+        
+        /// <summary>
+        /// What the user wants the cursor visibility to be (may differ from Visible when off-screen).
+        /// </summary>
+        public readonly bool DesiredVisible;
+        
+        /// <summary>
+        /// What the user wants the cursor enabled state to be (may differ from Enabled when off-screen).
+        /// </summary>
+        public readonly bool DesiredEnabled;
 
         /// <summary>
         /// Initializes a new instance of <see cref="CursorState"/> with all states set to true.
@@ -156,16 +178,60 @@ public sealed class GameWindow
             Visible = true;
             Enabled = true;
             OnScreen = true;
+            DesiredVisible = true;
+            DesiredEnabled = true;
         }
 
         /// <summary>
         /// Initializes a new instance of <see cref="CursorState"/> with specified states.
         /// </summary>
-        public CursorState(bool visible, bool enabled, bool onScreen)
+        public CursorState(bool visible, bool enabled, bool onScreen, bool desiredVisible, bool desiredEnabled)
         {
             Visible = visible;
             Enabled = enabled;
             OnScreen = onScreen;
+            DesiredVisible = desiredVisible;
+            DesiredEnabled = desiredEnabled;
+        }
+        
+        /// <summary>
+        /// Creates a new CursorState with updated desired visibility.
+        /// </summary>
+        public CursorState WithDesiredVisible(bool desiredVisible)
+        {
+            return new CursorState(Visible, Enabled, OnScreen, desiredVisible, DesiredEnabled);
+        }
+        
+        /// <summary>
+        /// Creates a new CursorState with updated desired enabled state.
+        /// </summary>
+        public CursorState WithDesiredEnabled(bool desiredEnabled)
+        {
+            return new CursorState(Visible, Enabled, OnScreen, DesiredVisible, desiredEnabled);
+        }
+        
+        /// <summary>
+        /// Creates a new CursorState with updated actual visibility.
+        /// </summary>
+        public CursorState WithVisible(bool visible)
+        {
+            return new CursorState(visible, Enabled, OnScreen, DesiredVisible, DesiredEnabled);
+        }
+        
+        /// <summary>
+        /// Creates a new CursorState with updated actual enabled state.
+        /// </summary>
+        public CursorState WithEnabled(bool enabled)
+        {
+            return new CursorState(Visible, enabled, OnScreen, DesiredVisible, DesiredEnabled);
+        }
+        
+        /// <summary>
+        /// Creates a new CursorState with updated on-screen state.
+        /// </summary>
+        public CursorState WithOnScreen(bool onScreen)
+        {
+            return new CursorState(Visible, Enabled, onScreen, DesiredVisible, DesiredEnabled);
         }
     }
     #endregion
@@ -515,10 +581,14 @@ public sealed class GameWindow
     private int targetFps;
     private Dimensions windowSize = new();
 
-    private bool? wasMouseEnabled;
-    private bool? wasMouseVisible;
-
-    private CursorState cursorState;
+    // CursorState is the single source of truth for all cursor/mouse state.
+    // This struct contains both desired state (what user wants) and actual state (what's applied to Raylib).
+    // When mouse is on screen: desired state is immediately applied to actual state
+    // When mouse leaves screen: actual state is forced visible/enabled (OS requirement)
+    // When mouse returns: actual state is restored to desired state
+    private CursorState cursorState = new();
+    private CursorState previousCursorState = new();
+    
     private WindowConfigFlags windowConfigFlags;
     private bool wasMaximized;
 
@@ -605,13 +675,24 @@ public sealed class GameWindow
             SetMonitor(windowSettings.Monitor);
         }
 
-        var screenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
-        MouseOnScreen = Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(Raylib.GetMousePosition()) );
+        // Only use Raylib.IsCursorOnScreen() - avoid ScreenArea check to prevent false positives on Windows
+        // screenArea.ContainsPoint(Raylib.GetMousePosition()) -> old safeguard for macOS
+        bool initialMouseOnScreen = Raylib.IsWindowFocused() && Raylib.IsCursorOnScreen();
+        MouseOnScreen = initialMouseOnScreen;
 
-        MouseVisible = windowSettings.MouseVisible;
-        MouseEnabled = windowSettings.MouseEnabled;
-
-        cursorState = GetCurCursorState();
+        // Initialize cursor state - CursorState is the single source of truth
+        cursorState = new CursorState(
+            visible: windowSettings.MouseVisible,
+            enabled: windowSettings.MouseEnabled,
+            onScreen: initialMouseOnScreen,
+            desiredVisible: windowSettings.MouseVisible,
+            desiredEnabled: windowSettings.MouseEnabled
+        );
+        previousCursorState = cursorState;
+        
+        // Apply initial cursor state to Raylib
+        ApplyMouseVisibilityToRaylib(cursorState.DesiredVisible);
+        ApplyMouseEnabledToRaylib(cursorState.DesiredEnabled);
         
         CalculateMonitorConversionFactors();
 
@@ -1251,55 +1332,81 @@ public sealed class GameWindow
     /// </summary>
     private void CheckForCursorChanges()
     {
-
-        MouseOnScreen = Raylib.IsCursorOnScreen() || (Raylib.IsWindowFocused() && ScreenArea.ContainsPoint(MousePosition));
-
-        var curCursorState = GetCurCursorState();
-
-        if (!MouseOnScreen || Raylib.IsWindowState(ConfigFlags.MinimizedWindow))//fullscreen to minimize fix for enabling/showing os cursor
+        // Determine current window state
+        bool isWindowFocused = Raylib.IsWindowFocused();
+        bool wasMinimized = Raylib.IsWindowState(ConfigFlags.MinimizedWindow);
+        
+        // Determine current mouse on screen state
+        // Mouse is only "on screen" if cursor is within window bounds AND window is focused
+        // Use ONLY Raylib.IsCursorOnScreen() - don't fallback to ScreenArea check because
+        // MousePosition can get clamped at window edges on Windows, causing false positives
+        bool currentMouseOnScreen = isWindowFocused && Raylib.IsCursorOnScreen();
+        
+        // Update MouseOnScreen property and cursor state
+        MouseOnScreen = currentMouseOnScreen;
+        cursorState = cursorState.WithOnScreen(currentMouseOnScreen);
+        
+        // Handle mouse leaving/entering screen transitions
+        if (!currentMouseOnScreen || wasMinimized || !isWindowFocused)
         {
-            if (cursorState.OnScreen)//prev state
+            // Mouse is off screen, window is minimized, or window is not focused
+            if (previousCursorState.OnScreen) // Was on screen previously
             {
+                // Fire event and force cursor to be visible/enabled for OS compatibility
                 OnMouseLeftScreen?.Invoke();
-                if (wasMouseVisible == null) wasMouseVisible = cursorState.Visible;
-                if (wasMouseEnabled == null) wasMouseEnabled = cursorState.Enabled;
-
-                if (!mouseEnabled)
-                {
-                    Raylib.EnableCursor();
-                    mouseEnabled = true;
-                }
-
-                if (!mouseVisible)
-                {
-                    Raylib.ShowCursor();
-                    mouseVisible = true;
-                }
+                ForceShowAndEnableCursor();
+            }
+            // When window is not focused, always ensure cursor is visible/enabled for OS control
+            else if (!isWindowFocused && (cursorState.Visible != true || cursorState.Enabled != true))
+            {
+                ForceShowAndEnableCursor();
             }
         }
         else
         {
-            if (!cursorState.OnScreen) //prev state
+            // Mouse is on screen, window is focused and not minimized
+            if (!previousCursorState.OnScreen) // Was off screen previously
             {
+                // Fire event and restore desired cursor state
                 OnMouseEnteredScreen?.Invoke();
-                if (wasMouseVisible != null) MouseVisible = (bool)wasMouseVisible;
-                if (wasMouseEnabled != null) MouseEnabled = (bool)wasMouseEnabled;
-
-                wasMouseVisible = null;
-                wasMouseEnabled = null;
+                RestoreDesiredCursorState();
+            }
+            else
+            {
+                // Mouse stayed on screen - validate and apply any pending state changes
+                ValidateAndSyncCursorState();
+                
+                // Ensure desired state is applied (handles case where user changed properties while on screen)
+                if (cursorState.Enabled != cursorState.DesiredEnabled)
+                {
+                    ApplyMouseEnabledToRaylib(cursorState.DesiredEnabled);
+                }
+                
+                if (cursorState.Visible != cursorState.DesiredVisible)
+                {
+                    ApplyMouseVisibilityToRaylib(cursorState.DesiredVisible);
+                }
             }
         }
-
-        if (MouseOnScreen)
+        
+        // Fire events for state changes (only when mouse is on screen and window is focused)
+        if (currentMouseOnScreen && !wasMinimized && isWindowFocused)
         {
-            if (curCursorState.Visible && !cursorState.Visible) OnMouseVisibilityChanged?.Invoke(true);
-            else if (!curCursorState.Visible && cursorState.Visible) OnMouseVisibilityChanged?.Invoke(false);
-
-            if (curCursorState.Enabled && !cursorState.Enabled) OnMouseEnabledChanged?.Invoke(true);
-            else if (!curCursorState.Enabled && cursorState.Enabled) OnMouseEnabledChanged?.Invoke(false);
+            // Check for visibility changes
+            if (cursorState.Visible != previousCursorState.Visible)
+            {
+                OnMouseVisibilityChanged?.Invoke(cursorState.Visible);
+            }
+            
+            // Check for enabled state changes
+            if (cursorState.Enabled != previousCursorState.Enabled)
+            {
+                OnMouseEnabledChanged?.Invoke(cursorState.Enabled);
+            }
         }
-
-        cursorState = curCursorState;
+        
+        // Update cached cursor state for next frame
+        previousCursorState = cursorState;
     }
     
     private void UpdateWindowAfterMonitorChange(MonitorInfo monitor)
@@ -1521,62 +1628,145 @@ public sealed class GameWindow
     /// </summary>
     public bool MouseEnabled
     {
-        get => mouseEnabled;
+        get => cursorState.DesiredEnabled;
         set
         {
-
-            if (!MouseOnScreen)
+            if (value == cursorState.DesiredEnabled) return;
+            cursorState = cursorState.WithDesiredEnabled(value);
+            
+            // Apply immediately if mouse is on screen, otherwise will apply when mouse returns
+            if (cursorState.OnScreen)
             {
-                wasMouseEnabled = value;
-                return;
+                ApplyMouseEnabledToRaylib(value);
             }
-
-            if (value == mouseEnabled) return;
-            mouseEnabled = value;
-            if(mouseEnabled)Raylib.EnableCursor();
-            else Raylib.DisableCursor();
         }
     }
-    private bool mouseEnabled = true;
-    private bool mouseVisible = true;
     
     /// <summary>
     /// Gets or sets whether the mouse cursor is visible.
     /// </summary>
     public bool MouseVisible
     {
-        get => mouseVisible;
+        get => cursorState.DesiredVisible;
         set
         {
-            if (!MouseOnScreen)
+            if (value == cursorState.DesiredVisible) return;
+            cursorState = cursorState.WithDesiredVisible(value);
+            
+            // Apply immediately if mouse is on screen, otherwise will apply when mouse returns
+            if (cursorState.OnScreen)
             {
-                wasMouseVisible = value;
-                return;
+                ApplyMouseVisibilityToRaylib(value);
             }
-
-            if (value == mouseVisible) return;
-            mouseVisible = value;
-            if(value) Raylib.ShowCursor();
-            else Raylib.HideCursor();
         }
     }
 
     /// <summary>
     /// Resets the mouse position to the center of the window.
     /// </summary>
+    /// <remarks>
+    /// On Windows, setting mouse position when cursor is disabled or window is not focused
+    /// can cause the OS cursor to get stuck. This method includes guards to prevent that.
+    /// </remarks>
     public void ResetMousePosition()
     {
-        var center = WindowPosition + WindowSize.ToVector2() / 2;
+        // Don't reset position if window is not focused - this can cause cursor to get stuck on Windows
+        if (!Raylib.IsWindowFocused()) return;
+        
+        // Don't reset position if cursor is currently disabled - this can cause cursor to lock on Windows
+        // Check both our internal state and Raylib state for safety
+        if (!cursorState.Enabled || Raylib.IsCursorHidden()) return;
+        
+        var center = WindowPosition / 2 + WindowSize.ToVector2() / 2;
         Raylib.SetMousePosition((int)center.X, (int)center.Y);
     }
 
     /// <summary>
-    /// Gets the current cursor state.
+    /// Applies mouse visibility state to Raylib only if it differs from current Raylib state.
     /// </summary>
-    /// <returns>The current <see cref="CursorState"/>.</returns>
-    private CursorState GetCurCursorState()
+    /// <param name="visible">Whether the cursor should be visible.</param>
+    private void ApplyMouseVisibilityToRaylib(bool visible)
     {
-        return new(MouseVisible, MouseEnabled, MouseOnScreen);
+        bool raylibCursorHidden = Raylib.IsCursorHidden();
+        if (visible && raylibCursorHidden)
+        {
+            Raylib.ShowCursor();
+            cursorState = cursorState.WithVisible(true);
+        }
+        else if (!visible && !raylibCursorHidden)
+        {
+            Raylib.HideCursor();
+            cursorState = cursorState.WithVisible(false);
+        }
+        else
+        {
+            // Already in correct state - just sync our state
+            cursorState = cursorState.WithVisible(visible);
+        }
     }
+    
+    /// <summary>
+    /// Applies mouse enabled state to Raylib.
+    /// Note: Raylib doesn't provide a way to query cursor enabled state, so we track it ourselves.
+    /// </summary>
+    /// <param name="enabled">Whether the cursor should be enabled.</param>
+    private void ApplyMouseEnabledToRaylib(bool enabled)
+    {
+        if (enabled && !cursorState.Enabled)
+        {
+            Raylib.EnableCursor();
+            cursorState = cursorState.WithEnabled(true);
+        }
+        else if (!enabled && cursorState.Enabled)
+        {
+            Raylib.DisableCursor();
+            cursorState = cursorState.WithEnabled(false);
+        }
+    }
+    
+    /// <summary>
+    /// Forces cursor to be visible and enabled (used when mouse leaves screen or window loses focus).
+    /// </summary>
+    private void ForceShowAndEnableCursor()
+    {
+        if (!cursorState.Enabled)
+        {
+            Raylib.EnableCursor();
+            cursorState = cursorState.WithEnabled(true);
+        }
+        
+        if (!cursorState.Visible)
+        {
+            Raylib.ShowCursor();
+            cursorState = cursorState.WithVisible(true);
+        }
+    }
+    
+    /// <summary>
+    /// Restores cursor to desired state (used when mouse returns to screen).
+    /// </summary>
+    private void RestoreDesiredCursorState()
+    {
+        ApplyMouseEnabledToRaylib(cursorState.DesiredEnabled);
+        ApplyMouseVisibilityToRaylib(cursorState.DesiredVisible);
+    }
+    
+    /// <summary>
+    /// Validates and synchronizes cursor state with Raylib.
+    /// Ensures our internal state matches Raylib's actual state.
+    /// </summary>
+    private void ValidateAndSyncCursorState()
+    {
+        // Sync visibility with Raylib's actual state
+        bool raylibCursorHidden = Raylib.IsCursorHidden();
+        bool raylibVisible = !raylibCursorHidden;
+        
+        if (cursorState.Visible != raylibVisible)
+        {
+            // State desync detected - Raylib state is authoritative
+            cursorState = cursorState.WithVisible(raylibVisible);
+        }
+    }
+
     #endregion
 }
