@@ -10,6 +10,8 @@ namespace ShapeEngine.Core.Structs;
 /// </remarks>
 public readonly struct Coordinates : IEquatable<Coordinates>
 {
+    #region Members 
+    
     /// <summary>
     /// The column / horizontal component of the coordinate.
     /// Read-only field representing the X (column) value.
@@ -22,6 +24,10 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     /// </summary>
     public readonly int Y;
 
+    #endregion
+    
+    #region Getters
+    
     /// <summary>
     /// The origin coordinate (0,0).
     /// </summary>
@@ -71,6 +77,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     /// The column index of the coordinate.
     /// </summary>
     public int Col => X;
+    
     /// <summary>
     /// Gets whether the coordinate is valid (both row and column are non-negative).
     /// </summary>
@@ -89,6 +96,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
             return x * y;
         }
     }
+    
     /// <summary>
     /// Gets the sum of the absolute values of row and column.
     /// </summary>
@@ -103,6 +111,10 @@ public readonly struct Coordinates : IEquatable<Coordinates>
         }
     }
 
+    #endregion
+    
+    #region Constructors
+    
     /// <summary>
     /// Initializes a coordinate with (0, 0)
     /// </summary>
@@ -111,6 +123,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
         X = 0;
         Y = 0;
     }
+   
     /// <summary>
     /// Initializes a coordinate with the specified column and row.
     /// </summary>
@@ -122,11 +135,16 @@ public readonly struct Coordinates : IEquatable<Coordinates>
         Y = y;
     }
 
+    #endregion
+    
+    #region Public Methods
+    
     /// <summary>
     /// Converts this coordinate to a <see cref="Vector2"/>.
     /// </summary>
     /// <returns>A <see cref="Vector2"/> with (X/Col, Y/Row).</returns>
     public Vector2 ToVector2() => new(X, Y);
+  
     /// <summary>
     /// Calculates the 1D index in a row-major order for this coordinate, given the number of columns.
     /// </summary>
@@ -136,6 +154,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     {
         return X + Y * cols;
     }
+    
     /// <summary>
     /// Calculates the 1D index in a column-major order for this coordinate, given the number of rows.
     /// </summary>
@@ -145,8 +164,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     {
         return Y + X * rows;
     }
-
-
+    
     /// <summary>
     /// Returns a coordinate composed of the component-wise minimum between this and <paramref name="other"/>.
     /// </summary>
@@ -158,6 +176,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     {
         return new Coordinates(Math.Min(X, other.X), Math.Min(Y, other.Y));
     }
+  
     /// <summary>
     /// Returns a coordinate composed of the component-wise maximum between this and <paramref name="other"/>.
     /// </summary>
@@ -169,6 +188,10 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     {
         return new Coordinates(Math.Max(X, other.X), Math.Max(Y, other.Y));
     }
+    
+    #endregion
+    
+    #region Static Methods
     
     /// <summary>
     /// Converts a 2D point to grid coordinates based on the grid's origin, spacing, and dimensions.
@@ -197,6 +220,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     /// <param name="rows">The number of rows in the grid.</param>
     /// <returns>The corresponding <see cref="Coordinates"/> on the grid.</returns>
     public static Coordinates PointToCoordinates(Vector2 point, Vector2 origin, Vector2 spacing, int cols, int rows) => PointToCoordinates(point.X, point.Y, origin, spacing, cols, rows);
+   
     /// <summary>
     /// Converts a 2D point to grid coordinates based on the cell size.
     /// </summary>
@@ -210,6 +234,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
         var cy = (int)Math.Floor(y / cellSize.Width);
         return new Coordinates(cx, cy);
     }
+ 
     /// <summary>
     /// Converts a 2D point to grid coordinates based on the cell size.
     /// </summary>
@@ -218,27 +243,80 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     /// <returns>The corresponding <see cref="Coordinates"/> on the grid.</returns>
     public static Coordinates PointToCoordinates(Vector2 point, Size cellSize) => PointToCoordinates(point.X, point.Y, cellSize);
     
-    #region Operators
+    #endregion
+    
+    #region Equality & HashCode
+    
     /// <summary>
-    /// Determines whether this coordinate is equal to another coordinate.
+    /// Determines whether the specified <see cref="Coordinates"/> struct is equal to the current <see cref="Coordinates"/> struct.
     /// </summary>
-    /// <param name="other">The coordinate to compare with.</param>
-    /// <returns>True if the coordinates are equal; otherwise, false.</returns>
-    public bool Equals(Coordinates other) => Y == other.Y && X == other.X;
+    /// <param name="other">The coordinates to compare with the current coordinates.</param>
+    /// <returns><c>true</c> if the specified coordinates are equal to the current coordinates; otherwise, <c>false</c>.</returns>
+    public bool Equals(Coordinates other) => Equals(other, DecimalPrecision.DefaultDecimalPlaces);
 
     /// <summary>
-    /// Determines whether this coordinate is equal to another object.
+    /// Determines whether the specified <see cref="Coordinates"/> struct is equal to the current <see cref="Coordinates"/> struct using quantized comparison.
     /// </summary>
-    /// <param name="obj">The object to compare with.</param>
-    /// <returns>True if the object is a <see cref="Coordinates"/> and is equal; otherwise, false.</returns>
+    /// <param name="other">The coordinates to compare with the current coordinates.</param>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before comparison.</param>
+    /// <returns><c>true</c> if the specified coordinates are equal to the current coordinates after quantization; otherwise, <c>false</c>.</returns>
+    public bool Equals(Coordinates other, int decimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        DecimalQuantizer quantizer = new(decimalPlaces);
+        return quantizer.QuantizedEquals(X, other.X) &&
+               quantizer.QuantizedEquals(Y, other.Y);
+    }
+
+    /// <summary>
+    /// Creates a stable 64-bit hash key for these coordinates.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 64-bit hash key suitable for cache keys and change detection.</returns>
+    public ulong GetHashKey(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces)
+    {
+        if (decimalPlaces < 0) decimalPlaces = DecimalPrecision.DefaultDecimalPlaces;
+
+        Fnv1aHashQuantizer hashQuantizer = new(decimalPlaces);
+        return hashQuantizer.GetHash(X, Y);
+    }
+
+    /// <summary>
+    /// Creates a fixed-width hexadecimal string representation of these coordinates hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A 16-character uppercase hexadecimal hash key string.</returns>
+    public string GetHashKeyHex(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKey(decimalPlaces).ToString("X16");
+
+    /// <summary>
+    /// Creates a string representation of the coordinates hash key.
+    /// </summary>
+    /// <param name="decimalPlaces">The number of decimal places used to quantize coordinates before hashing.</param>
+    /// <returns>A stable hexadecimal hash key string.</returns>
+    public string GetHashKeyString(int decimalPlaces = DecimalPrecision.DefaultDecimalPlaces) => GetHashKeyHex(decimalPlaces);
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="Coordinates"/> struct.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current coordinates.</param>
+    /// <returns><c>true</c> if the specified object is a <see cref="Coordinates"/> struct and is equal to the current coordinates; otherwise, <c>false</c>.</returns>
     public override bool Equals(object? obj) => obj is Coordinates other && Equals(other);
 
     /// <summary>
-    /// Returns a hash code for this coordinate.
+    /// Returns a hash code for the current <see cref="Coordinates"/> struct.
     /// </summary>
-    /// <returns>A hash code for the current coordinate.</returns>
-    public override int GetHashCode() => HashCode.Combine(Y, X);
-        
+    /// <returns>A 32-bit hash code derived from the stable 64-bit coordinates hash key.</returns>
+    public override int GetHashCode()
+    {
+        ulong hashKey = GetHashKey();
+        return unchecked((int)(hashKey ^ (hashKey >> 32)));
+    }
+
+    #endregion
+    
+    #region Operators
+    
     /// <summary>
     /// Determines whether two coordinates are equal.
     /// </summary>
@@ -279,6 +357,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y + right.Y
             );
     }
+  
     /// <summary>
     /// Subtracts one coordinate from another.
     /// </summary>
@@ -294,6 +373,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y - right.Y
             );
     }
+    
     /// <summary>
     /// Multiplies two coordinates component-wise.
     /// </summary>
@@ -309,6 +389,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y * right.Y
             );
     }
+    
     /// <summary>
     /// Divides one coordinate by another component-wise.
     /// </summary>
@@ -325,6 +406,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 right.Y == 0 ? left.Y : left.Y / right.Y
             );
     }
+    
     /// <summary>
     /// Adds a direction to a coordinate.
     /// </summary>
@@ -340,6 +422,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y + right.Vertical
             );
     }
+    
     /// <summary>
     /// Subtracts a direction from a coordinate.
     /// </summary>
@@ -355,6 +438,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y - right.Vertical
             );
     }
+    
     /// <summary>
     /// Multiplies a coordinate by a direction component-wise.
     /// </summary>
@@ -370,6 +454,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y * right.Vertical
             );
     }
+    
     /// <summary>
     /// Divides a coordinate by a direction component-wise.
     /// </summary>
@@ -385,6 +470,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 right.Vertical == 0 ? left.Y : left.Y / right.Vertical
             );
     }
+    
     /// <summary>
     /// Adds an integer to both components of a coordinate.
     /// </summary>
@@ -400,6 +486,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y + right
             );
     }
+    
     /// <summary>
     /// Subtracts an integer from both components of a coordinate.
     /// </summary>
@@ -415,6 +502,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y - right
             );
     }
+    
     /// <summary>
     /// Multiplies both components of a coordinate by an integer.
     /// </summary>
@@ -430,6 +518,7 @@ public readonly struct Coordinates : IEquatable<Coordinates>
                 left.Y * right
             );
     }
+    
     /// <summary>
     /// Divides both components of a coordinate by an integer.
     /// </summary>

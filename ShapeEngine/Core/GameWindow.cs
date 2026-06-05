@@ -242,14 +242,17 @@ public sealed class GameWindow
     /// Occurs when the mouse leaves the window screen area.
     /// </summary>
     public event Action? OnMouseLeftScreen;
+ 
     /// <summary>
     /// Occurs when the mouse enters the window screen area.
     /// </summary>
     public event Action? OnMouseEnteredScreen;
+    
     /// <summary>
     /// Occurs when the mouse visibility changes.
     /// </summary>
     public event Action<bool>? OnMouseVisibilityChanged;
+    
     /// <summary>
     /// Occurs when the mouse enabled state changes.
     /// </summary>
@@ -259,10 +262,12 @@ public sealed class GameWindow
     /// Occurs when the window size changes.
     /// </summary>
     public event Action<DimensionConversionFactors>? OnWindowSizeChanged;
+    
     /// <summary>
     /// Occurs when the window position changes.
     /// </summary>
     public event Action<Vector2, Vector2>? OnWindowPositionChanged;
+    
     /// <summary>
     /// Occurs when the monitor changes.
     /// </summary>
@@ -272,22 +277,27 @@ public sealed class GameWindow
     /// Occurs when the window focus changes.
     /// </summary>
     public event Action<bool>? OnWindowFocusChanged;
+    
     /// <summary>
     /// Occurs when the window fullscreen state changes.
     /// </summary>
     public event Action<bool>? OnWindowFullscreenChanged;
+    
     /// <summary>
     /// Occurs when the window maximize state changes.
     /// </summary>
     public event Action<bool>? OnWindowMaximizeChanged;
+    
     /// <summary>
     /// Occurs when the window minimized state changes.
     /// </summary>
     public event Action<bool>? OnWindowMinimizedChanged;
+    
     /// <summary>
     /// Occurs when the window hidden state changes.
     /// </summary>
     public event Action<bool>? OnWindowHiddenChanged;
+    
     /// <summary>
     /// Occurs when the window topmost state changes.
     /// </summary>
@@ -297,18 +307,22 @@ public sealed class GameWindow
     /// Occurs when the window undecorated state changes.
     /// </summary>
     public event Action<bool>? OnWindowUndecoratedChanged;
+    
     /// <summary>
     /// Occurs when the window resizable state changes.
     /// </summary>
     public event Action<bool>? OnWindowResizableChanged;
+    
     /// <summary>
     /// Occurs when the window always-run state changes.
     /// </summary>
     public event Action<bool>? OnWindowAlwaysRunChanged;
+    
     /// <summary>
     /// Occurs when the window mouse pass-through state changes.
     /// </summary>
     public event Action<bool>? OnWindowMousePassThroughChanged;
+    
     /// <summary>
     /// Occurs when the window VSync state changes.
     /// </summary>
@@ -571,6 +585,9 @@ public sealed class GameWindow
     
     // public bool BorderlessFullscreenAutoRestoring { get; set; }
 
+    /// <summary>
+    /// Whether the window should use high DPI mode, which allows for better rendering quality on high DPI displays.
+    /// </summary>
     public readonly bool HighDpi;
     #endregion
 
@@ -735,6 +752,7 @@ public sealed class GameWindow
         CalculateMonitorConversionFactors();
 
     }
+  
     /// <summary>
     /// Moves the mouse cursor to the specified position within the window.
     /// </summary>
@@ -747,6 +765,7 @@ public sealed class GameWindow
         var my = (int)MathF.Round(mousePos.Y);
         Raylib.SetMousePosition(mx, my);
     }
+    
     /// <summary>
     /// Closes the window. (Not implemented)
     /// </summary>
@@ -795,6 +814,7 @@ public sealed class GameWindow
 
         return false;
     }
+ 
     /// <summary>
     /// Centers the window on the current monitor.
     /// </summary>
@@ -808,11 +828,13 @@ public sealed class GameWindow
         Raylib.SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
         ResetMousePosition();
     }
+    
     /// <summary>
     /// Resizes the window to the specified dimensions.
     /// </summary>
     /// <param name="newDimensions">The new dimensions for the window.</param>
     public void ResizeWindow(Dimensions newDimensions) => WindowSize = newDimensions;
+    
     /// <summary>
     /// Resets the window to its default size and position.
     /// </summary>
@@ -862,6 +884,7 @@ public sealed class GameWindow
         
         return true;
     }
+    
     /// <summary>
     /// Activates borderless fullscreen mode.
     /// </summary>
@@ -906,6 +929,7 @@ public sealed class GameWindow
         ResetMousePosition();
         return true;
     }
+    
     /// <summary>
     /// Minimizes the window.
     /// </summary>
@@ -944,6 +968,7 @@ public sealed class GameWindow
 
         return true;
     }
+    
     /// <summary>
     /// Maximizes the window.
     /// </summary>
@@ -984,6 +1009,7 @@ public sealed class GameWindow
         ResetMousePosition();
         return true;
     }
+    
     /// <summary>
     /// Toggles borderless fullscreen mode.
     /// </summary>
@@ -1003,6 +1029,7 @@ public sealed class GameWindow
             ActivateBorderlessFullscreen();
         }
     }
+    
     /// <summary>
     /// Toggles fullscreen mode.
     /// </summary>
@@ -1017,6 +1044,7 @@ public sealed class GameWindow
             ActivateFullscreen();
         }
     }
+    
     /// <summary>
     /// Toggles maximized state of the window.
     /// </summary>
@@ -1031,6 +1059,7 @@ public sealed class GameWindow
             MaximizeWindow();
         }
     }
+    
     /// <summary>
     /// Toggles minimized state of the window.
     /// </summary>
@@ -1065,6 +1094,7 @@ public sealed class GameWindow
         WindowBorder = WindowBorder.Fixed;
         return true;
     }
+    
     /// <summary>
     /// Sets the window border to resizable.
     /// </summary>
@@ -1082,6 +1112,7 @@ public sealed class GameWindow
         WindowBorder = WindowBorder.Resizabled;
         return true;
     }
+    
     /// <summary>
     /// Sets the window border to undecorated (no border).
     /// </summary>
@@ -1117,18 +1148,22 @@ public sealed class GameWindow
     /// Returns whether the window is in borderless fullscreen mode.
     /// </summary>
     public bool IsWindowBorderlessFullscreen() => DisplayState == WindowDisplayState.BorderlessFullscreen;
+    
     /// <summary>
     /// Returns whether the window is in fullscreen mode.
     /// </summary>
     public bool IsWindowFullscreen() => DisplayState == WindowDisplayState.Fullscreen;
+    
     /// <summary>
     /// Returns whether the window is maximized.
     /// </summary>
     public bool IsWindowMaximized() => DisplayState == WindowDisplayState.Maximized;
+    
     /// <summary>
     /// Returns whether the window is minimized.
     /// </summary>
     public bool IsWindowMinimized() => DisplayState == WindowDisplayState.Minimized;
+    
     /// <summary>
     /// Returns whether the window is in normal state.
     /// </summary>
@@ -1138,6 +1173,7 @@ public sealed class GameWindow
     /// Gets whether the window is currently focused.
     /// </summary>
     public bool IsWindowFocused => Raylib.IsWindowFocused();
+    
     /// <summary>
     /// Gets whether the window is currently topmost.
     /// </summary>
@@ -1163,6 +1199,7 @@ public sealed class GameWindow
         float p = CalculateScreenPercentage(screenRect, windowRect);
         return p;
     }
+    
     /// <summary>
     /// Reports how much of the window area is shown on the screen. 0 means window is not on the screen, 1 means whole window is on screen.
     /// </summary>
@@ -1637,10 +1674,12 @@ public sealed class GameWindow
     /// Gets the mouse movement delta since the last frame.
     /// </summary>
     public Vector2 MouseDelta => Raylib.GetMouseDelta();
+   
     /// <summary>
     /// Gets the X coordinate of the mouse position.
     /// </summary>
     public float MouseX => MousePosition.X;
+    
     /// <summary>
     /// Gets the Y coordinate of the mouse position.
     /// </summary>
