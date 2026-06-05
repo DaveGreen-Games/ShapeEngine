@@ -102,7 +102,7 @@ namespace Examples.Scenes.ExampleScenes
             offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
 
 
-            if (Input.Keyboard.IsDown(ShapeKeyboardButton.H))
+            if (Input.Keyboard.IsDown(ShapeKeyboardButton.T))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetStart(mousePosGame);

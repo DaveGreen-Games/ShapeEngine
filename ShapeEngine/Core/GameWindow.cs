@@ -677,6 +677,7 @@ public sealed class GameWindow
 
         // Only use Raylib.IsCursorOnScreen() - avoid ScreenArea check to prevent false positives on Windows
         // screenArea.ContainsPoint(Raylib.GetMousePosition()) -> old safeguard for macOS
+        
         bool initialMouseOnScreen = Raylib.IsWindowFocused() && Raylib.IsCursorOnScreen();
         MouseOnScreen = initialMouseOnScreen;
 
@@ -1347,7 +1348,12 @@ public sealed class GameWindow
         // Mouse is only "on screen" if cursor is within window bounds AND window is focused
         // Use ONLY Raylib.IsCursorOnScreen() - don't fallback to ScreenArea check because
         // MousePosition can get clamped at window edges on Windows, causing false positives
-        bool currentMouseOnScreen = isWindowFocused && Raylib.IsCursorOnScreen();
+        
+        //On MacOS on launching the app, Raylib.IsCursorOnScreen() returns false even when the mouse is on the screen,
+        //so we need to check the mouse position against the screen area as a fallback.
+        bool containsScreenCursor = Game.IsOSX() ? ScreenArea.ContainsPoint(Raylib.GetMousePosition()) : false;
+        bool isCursorOnScreen = Raylib.IsCursorOnScreen() || containsScreenCursor;
+        bool currentMouseOnScreen = isWindowFocused && isCursorOnScreen;
         
         // Update MouseOnScreen property and cursor state
         MouseOnScreen = currentMouseOnScreen;
