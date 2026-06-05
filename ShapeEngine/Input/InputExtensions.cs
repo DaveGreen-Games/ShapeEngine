@@ -62,6 +62,7 @@ public static class InputExtensions
     /// <returns>The input state for the specified mouse button.</returns>
     public static InputState GetInputState(this ShapeMouseButton button, uint accessTag = InputSystem.AllAccessTag)
     {
+        //ISSUE: Does not work anymore?!...
         if (InputSystem.Locked && !InputSystem.HasAccess(accessTag)) return new();
         return Game.Instance.Input.Mouse.GetButtonState(button);
     }
