@@ -4,6 +4,15 @@ using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.UI;
 
+//ISSUE:
+// - When button is selected and holding pressed, selecting other button with mouse will keep pressed button stuck in pressed even when releasing!
+// - Extra check has to be added to not allow navigation while button is pressed (should be done internally)
+// - GetButtonPressedState & GetButtonReleaseState has to check for Selected but GetMouseButtonPressedState & GetMouseButtonReleaseState does not have to check for Selected or MouseInside!
+// - Add Navigation input timer to ControlNode? Whenever GetNavigationDirection reports a direction and change is valid (selection changes) start timer?
+// - If pressed is true selected is also true - Should this stay this way or should there only be one state (None, Selected, Pressed, Release) + MouseInside?
+// - Should I add GetUpDirection, GetDownDirection, GetLeftDirection, GetRightDirection or should I keep GetNavigationDirection?
+
+
 /// <summary>
 /// Represents an abstract base class for UI control nodes, providing core functionality for hierarchy, state, events, and input handling.
 /// </summary>
