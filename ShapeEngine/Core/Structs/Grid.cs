@@ -209,7 +209,7 @@ public readonly struct Grid : IEquatable<Grid>
     /// </summary>
     /// <param name="index">The index to check.</param>
     /// <returns>True if the index is within bounds, otherwise false.</returns>
-    public bool IsIndexInBounds(int index) => index >= 0 && index <= Count;
+    public bool IsIndexInBounds(int index) => index >= 0 && index < Count;
   
     /// <summary>
     /// Calculates the size of each cell in the grid based on the given bounds.
@@ -237,7 +237,7 @@ public readonly struct Grid : IEquatable<Grid>
     /// <returns>The index of the cell, or -1 if out of bounds.</returns>
     public int GetCellIndexUnclamped(Vector2 pos, Rect bounds)
     {
-        var result = GetCellCoordinate(pos, bounds);
+        var result = GetCellCoordinateUnclamped(pos, bounds);
         if (!AreCoordinatesInside(result)) return -1;
         return CoordinatesToIndex(result);
     }
@@ -289,8 +289,8 @@ public readonly struct Grid : IEquatable<Grid>
     /// <returns>The clamped coordinates.</returns>
     public Coordinates ClampCoordinates(Coordinates coordinates)
     {
-        var col = coordinates.Col < 0 ? 0 : coordinates.Col > Cols ? Cols - 1 : coordinates.Col;
-        var row = coordinates.Row < 0 ? 0 : coordinates.Row > Rows ? Rows - 1 : coordinates.Row;
+        var col = coordinates.Col < 0 ? 0 : coordinates.Col >= Cols ? Cols - 1 : coordinates.Col;
+        var row = coordinates.Row < 0 ? 0 : coordinates.Row >= Rows ? Rows - 1 : coordinates.Row;
         return new(col, row);
         
     }
@@ -349,11 +349,13 @@ public readonly struct Grid : IEquatable<Grid>
     {
         var topLeft = GetCellCoordinate(rect.TopLeft, bounds);
         var bottomRight = GetCellCoordinate(rect.BottomRight, bounds);
+        var min = topLeft.Min(bottomRight);
+        var max = topLeft.Max(bottomRight);
 
         int count = indices.Count;
-        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        for (int j = min.Row; j <= max.Row; j++)
         {
-            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            for (int i = min.Col; i <= max.Col; i++)
             {
                 int id = CoordinatesToIndex(new(i, j));
                 indices.Add(id);
@@ -371,6 +373,8 @@ public readonly struct Grid : IEquatable<Grid>
     public Coordinates IndexToCoordinates(int index)
     {
         if (!IsValid) return new(-1, -1);
+        
+        if(!IsIndexInBounds(index)) return new(-1, -1);
         
         if (!IsTopToBottomFirst)
         {
@@ -398,11 +402,15 @@ public readonly struct Grid : IEquatable<Grid>
         
         if (IsLeftToRightFirst)
         {
-            return coordinates.Row * Cols + coordinates.Col;
+            var index = coordinates.Row * Cols + coordinates.Col;
+            if(!IsIndexInBounds(index)) return -1;
+            return index;
         }
         else
         {
-            return coordinates.Col * Rows + coordinates.Row;
+            var index = coordinates.Col * Rows + coordinates.Row;
+            if(!IsIndexInBounds(index)) return -1;
+            return index;
         }
     }
 
