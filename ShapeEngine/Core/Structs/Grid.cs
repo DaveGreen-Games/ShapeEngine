@@ -49,7 +49,7 @@ public readonly struct Grid : IEquatable<Grid>
 
         if (IsGrid)
         {
-            return new(0, Placement.Vertical);
+            return IsTopToBottomFirst ? new(0, Placement.Vertical) : new(Placement.Horizontal, 0);
         }
 
         return Placement;
@@ -66,7 +66,7 @@ public readonly struct Grid : IEquatable<Grid>
         
         if (IsGrid)
         {
-            return new(0, -Placement.Vertical);
+            return IsTopToBottomFirst ? new(0, -Placement.Vertical) : new(-Placement.Horizontal, 0);
         }
 
         return new(-Placement.Horizontal, -Placement.Vertical);//reversed for previous
