@@ -123,23 +123,18 @@ namespace Examples.UIElements
             }
             else ContainerStretch = 1f;
         }
-        protected override void PressedWasChanged(bool value)
+
+        protected override void PressWasReleased()
         {
             if (Scene == null) return;
-            if (!value)
+            if (PressDelay > 0f)
             {
-                // Console.WriteLine($"Button Pressed - Scene {Scene.Title}");
-                // GAMELOOP.GoToScene(Scene);
-                if (PressDelay > 0f)
-                {
-                    pressDelayTimer = PressDelay;
-                }
-                else
-                {
-                    mouseInsideAnimationTimer = 0f;
-                    GameloopExamples.Instance.GoToScene(Scene);
-                }
-                
+                pressDelayTimer = PressDelay;
+            }
+            else
+            {
+                mouseInsideAnimationTimer = 0f;
+                GameloopExamples.Instance.GoToScene(Scene);
             }
         }
 
@@ -179,26 +174,21 @@ namespace Examples.UIElements
             {
                 var amount = Rect.Size.Min() * 0.25f;
                 var outside = Rect.ChangeSize(amount, new AnchorPoint(0.5f, 0.5f));
-                // outside.DrawLines(2f, Colors.Medium);
                 
                 var animationFactor = mouseInsideAnimationTimer / mouseInsideAnimationDuration;
                 var lineThickness = outside.Size.Min() * 0.04f;
-                // var spacing = lineThickness * ShapeMath.LerpFloat(4f, 5f, ShapeTween.PingPong(animationFactor));
-                // var info = new LineDrawingInfo(lineThickness, Colors.Dark, LineCapType.Capped, 6);
-                // outside.DrawStriped(spacing, 35f, info);
                 var cornerLength = outside.Size.Min() * ShapeMath.LerpFloat(0.15f, 0.35f, ShapeTween.PingPong(animationFactor));
                 outside.DrawCorners(lineThickness, Colors.Highlight, cornerLength);
-                // outside.LeftSegment.Draw(lineThickness, Colors.Highlight);
             }
             
-            if (Selected)
-            {
-                textFont.ColorRgba = Colors.Highlight;
-                textFont.DrawTextWrapNone(text, r, new(0f));
-            }
-            else if (Pressed)
+            if (Pressed)
             {
                 textFont.ColorRgba = Colors.Special;
+                textFont.DrawTextWrapNone(text, r, new(0f));
+            }
+            else if (Selected)
+            {
+                textFont.ColorRgba = Colors.Highlight;
                 textFont.DrawTextWrapNone(text, r, new(0f));
             }
             else

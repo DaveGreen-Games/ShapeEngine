@@ -86,6 +86,7 @@ public class ControlNodeNavigator
         selectedNode?.NavigationSelect();
         ResolveOnNavigationStarted();
     }
+    
     /// <summary>
     /// Ends navigation mode, disabling selection and navigation of control nodes.
     /// </summary>
@@ -108,6 +109,7 @@ public class ControlNodeNavigator
             RemoveNode(node);
         }
     }
+  
     /// <summary>
     /// Adds a control node to the navigator.
     /// </summary>
@@ -120,6 +122,7 @@ public class ControlNodeNavigator
         HandleNodeAddition(node);
         return true;
     }
+    
     /// <summary>
     /// Removes a control node from the navigator.
     /// </summary>
@@ -143,7 +146,7 @@ public class ControlNodeNavigator
     /// <param name="grid">The grid describing navigation layout and direction.</param>
     public void SelectNext(Grid grid)
     {
-        if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
+        if (!CanNavigate() || !grid.IsValid) return;
         var dir = grid.GetNextDirection();
         if (grid.IsGrid)
         {
@@ -151,7 +154,7 @@ public class ControlNodeNavigator
             if (next == null || next == selectedNode) return;
             nextNodeToSelect = next;
         }
-        selectedNode.NavigatedTo(dir);
+        // selectedNode!.NavigatedTo(dir);
         navigationPending = true;
         prevDir = dir;
     }
@@ -162,7 +165,7 @@ public class ControlNodeNavigator
     /// <param name="grid">The grid describing navigation layout and direction.</param>
     public void SelectPrevious(Grid grid)
     {
-        if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
+        if (!CanNavigate() || !grid.IsValid) return;
         var dir = grid.GetPreviousDirection();
         if (grid.IsGrid)
         {
@@ -170,7 +173,7 @@ public class ControlNodeNavigator
             if (prev == null || prev == selectedNode) return;
             nextNodeToSelect = prev;
         }
-        selectedNode.NavigatedTo(dir);
+        // selectedNode!.NavigatedTo(dir);
         navigationPending = true;
         prevDir = dir;
     }
@@ -181,6 +184,7 @@ public class ControlNodeNavigator
     public void Update()
     {
         if (!IsNavigating) return;
+        
         if (selectedNode == null)
         {
             var navigable = GetNavigableNodes();
@@ -195,26 +199,22 @@ public class ControlNodeNavigator
             }
             else return;
         }
+        
         if (navigationPending)
         {
             navigationPending = false;
+
             var dir = prevDir;
-            var nextNode = nextNodeToSelect ?? GetNextNode(dir);
+            var nextNode = nextNodeToSelect;
             nextNodeToSelect = null;
-            if (nextNode != null && CheckNextNode(nextNode, dir))
-            {
-                selectedNode.NavigationDeselect();
-                SetSelectedNode(nextNode);
-                selectedNode.NavigationSelect();
-                ResolveOnNavigated(dir);
-            }
+
+            TryNavigate(dir, nextNode);
         }
         else
         {
             var dir = selectedNode.GetNavigationDirection();
             if (dir.IsValid)
             {
-                selectedNode.NavigatedTo(dir);
                 navigationPending = true;
                 prevDir = dir;
             }
@@ -241,7 +241,36 @@ public class ControlNodeNavigator
         }
     }
     
+    private bool TryNavigate(Direction dir, ControlNode? explicitNextNode = null)
+    {
+        if (!IsNavigating || selectedNode == null || !dir.IsValid) return false;
+
+        var currentNode = selectedNode;
+        var nextNode = explicitNextNode ?? GetNextNode(dir);
+
+        if (nextNode == null || nextNode == currentNode) return false;
+        if (!CheckNextNode(nextNode, dir)) return false;
+
+        currentNode.NavigatedTo(dir);
+        currentNode.NavigationDeselect();
+
+        SetSelectedNode(nextNode);
+
+        if (selectedNode == null || !selectedNode.NavigationSelect())
+        {
+            throw new WarningException(
+                "Control Node Navigation Selected return false when it should have returned true!");
+        }
+
+        ResolveOnNavigated(dir);
+        return true;
+    }
     
+    private bool CanNavigate()
+    {
+        return IsNavigating && selectedNode != null;
+    }
+   
     private ControlNode? GetClosestNode(ControlNode node)
     {
         var navigable = GetNavigableNodes();
@@ -261,6 +290,7 @@ public class ControlNodeNavigator
         }
         return closestNode;
     }
+    
     private ControlNode? GetNextNode()
     {
         if (selectedNode == null) return null;
@@ -272,6 +302,7 @@ public class ControlNodeNavigator
         if (index >= navigable.Count) index = 0;
         return navigable[index];
     }
+    
     private ControlNode? GetPrevNode()
     {
         if (selectedNode == null) return null;
@@ -283,6 +314,7 @@ public class ControlNodeNavigator
         if (index < 0) index = navigable.Count - 1;
         return navigable[index];
     }
+    
     private ControlNode? GetNextNode(Direction dir)
     {
         if (!dir.IsValid) return null;
@@ -306,6 +338,7 @@ public class ControlNodeNavigator
         }
         return newNode;
     }
+    
     private float GetNeighborDistance(Vector2 dif, Direction dir)
     {
         if (dir.IsLeft) return dif.X < 0 ? dif.LengthSquared() : float.MaxValue;
@@ -320,11 +353,13 @@ public class ControlNodeNavigator
         
         return float.MaxValue;
     }
+    
     private List<ControlNode> GetNavigableNodes()
     {
         if(dirty) CompileNavigableControlNodes();
         return navigableNodes;
     }
+    
     private void CompileNavigableControlNodes()
     {
         dirty = false;
@@ -338,6 +373,7 @@ public class ControlNodeNavigator
 
         if (result.Count > 0) navigableNodes.AddRange(result);
     }
+    
     private void HandleNodeAddition(ControlNode node)
     {
         if (node.Selected)
@@ -358,6 +394,7 @@ public class ControlNodeNavigator
             HandleNodeAddition(child);
         }
     }
+    
     private void HandleNodeRemoval(ControlNode node)
     {
         node.OnNavigableChanged -= OnControlNodeNavigableChanged;
@@ -371,16 +408,19 @@ public class ControlNodeNavigator
             HandleNodeRemoval(child);
         }
     }
+    
     private void OnControlNodeChildAdded(ControlNode node, ControlNode child)
     {
         dirty = true;
         HandleNodeAddition(child);
     }
+    
     private void OnControlNodeChildRemoved(ControlNode node, ControlNode child)
     {
         dirty = true;
         HandleNodeRemoval(child);
     }
+    
     private void OnNodeSelectionChanged(ControlNode node, bool value)
     {
         if (!value) return;
@@ -400,6 +440,7 @@ public class ControlNodeNavigator
             selectedNode.NavigationSelect();
         }
     }
+    
     private void OnControlNodeNavigableChanged(ControlNode node, bool navigable)
     {
         dirty = true;
