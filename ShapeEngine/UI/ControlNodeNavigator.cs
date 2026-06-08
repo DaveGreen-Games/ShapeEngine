@@ -46,9 +46,27 @@ public class ControlNodeNavigator
     private bool dirty;
     private ControlNode? selectedNode;
 
+    private Direction currentRepeatDir = new();
+    private float repeatTimer = 0f;
+
     #endregion
 
     #region Getter & Setter
+
+    /// <summary>
+    /// Gets or sets whether navigation repeat is enabled.
+    /// </summary>
+    public bool NavigationRepeatEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the delay before navigation starts repeating when a direction is held.
+    /// </summary>
+    public float NavigationRepeatDelay { get; set; } = 0.35f;
+
+    /// <summary>
+    /// Gets or sets the interval between navigation repeats when a direction is held.
+    /// </summary>
+    public float NavigationRepeatInterval { get; set; } = 0.1f;
 
     /// <summary>
     /// Gets the currently selected control node.
@@ -65,6 +83,10 @@ public class ControlNodeNavigator
         if (selectedNode == newNode) return;
         var prev = selectedNode;
         selectedNode = newNode;
+
+        currentRepeatDir = new();
+        repeatTimer = 0f;
+
         ResolveOnSelectedControlNodeChanged(prev, selectedNode);
     }
 
@@ -181,10 +203,18 @@ public class ControlNodeNavigator
     /// <summary>
     /// Updates the navigation state, handling pending navigation and selection changes.
     /// </summary>
-    public void Update()
+    /// <remarks> This function is deprecated and will be removed in a future update!
+    /// Use <see cref="Update(float)"/> instead.</remarks>
+    public void Update() => Update(0f);
+
+    /// <summary>
+    /// Updates the navigation state, handling pending navigation and selection changes.
+    /// </summary>
+    /// <param name="dt">The delta time since the last update.</param>
+    public void Update(float dt)
     {
         if (!IsNavigating) return;
-        
+
         if (selectedNode == null)
         {
             var navigable = GetNavigableNodes();
@@ -199,7 +229,7 @@ public class ControlNodeNavigator
             }
             else return;
         }
-        
+
         if (navigationPending)
         {
             navigationPending = false;
@@ -208,15 +238,58 @@ public class ControlNodeNavigator
             var nextNode = nextNodeToSelect;
             nextNodeToSelect = null;
 
-            TryNavigate(dir, nextNode);
+            if (TryNavigate(dir, nextNode))
+            {
+                currentRepeatDir = dir;
+                repeatTimer = NavigationRepeatDelay;
+            }
         }
         else
         {
             var dir = selectedNode.GetNavigationDirection();
             if (dir.IsValid)
             {
-                navigationPending = true;
-                prevDir = dir;
+                if (NavigationRepeatEnabled)
+                {
+                    if (dir != currentRepeatDir)
+                    {
+                        if (TryNavigate(dir))
+                        {
+                            currentRepeatDir = dir;
+                            repeatTimer = NavigationRepeatDelay;
+                        }
+                        else
+                        {
+                            currentRepeatDir = dir;
+                            repeatTimer = NavigationRepeatDelay;
+                        }
+                    }
+                    else
+                    {
+                        repeatTimer -= dt;
+                        if (repeatTimer <= 0)
+                        {
+                            if (TryNavigate(dir))
+                            {
+                                currentRepeatDir = dir;
+                                repeatTimer = NavigationRepeatInterval;
+                            }
+                            else
+                            {
+                                repeatTimer = NavigationRepeatInterval;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    TryNavigate(dir);
+                }
+            }
+            else
+            {
+                currentRepeatDir = new();
+                repeatTimer = 0f;
             }
         }
     }
