@@ -4,11 +4,6 @@ using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.UI;
 
-//ISSUE:
-// - Add Navigation input timer to ControlNode? Whenever GetNavigationDirection reports a direction and change is valid (selection changes) start timer?
-// - Should I add GetUpDirection, GetDownDirection, GetLeftDirection, GetRightDirection or should I keep GetNavigationDirection?
-
-
 /// <summary>
 /// Represents an abstract base class for UI control nodes, providing core functionality for hierarchy, state, events, and input handling.
 /// </summary>

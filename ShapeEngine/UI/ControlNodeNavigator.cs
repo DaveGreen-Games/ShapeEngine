@@ -4,6 +4,13 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.UI;
 
+//ISSUE: When navigating a scrollable container:
+// - and reaching the end (and no other items are selectable) selection will jump to the top instead of just not moving
+// - and reaching the top (and no other items are selectable) selection will jump to the second item instead of just not moving
+// (will keep alternating between the top and second item)
+// - if item is selected by mouse after reaching an end and container scrolls, selection will jump to the mouse selected item
+// instead of the new available item!
+
 /// <summary>
 /// Provides navigation and selection logic for a set of <see cref="ControlNode"/> instances, supporting keyboard/gamepad navigation and selection events.
 /// </summary>
@@ -258,11 +265,6 @@ public class ControlNodeNavigator
                             currentRepeatDir = dir;
                             repeatTimer = NavigationRepeatDelay;
                         }
-                        else
-                        {
-                            currentRepeatDir = dir;
-                            repeatTimer = NavigationRepeatDelay;
-                        }
                     }
                     else
                     {
@@ -272,10 +274,6 @@ public class ControlNodeNavigator
                             if (TryNavigate(dir))
                             {
                                 currentRepeatDir = dir;
-                                repeatTimer = NavigationRepeatInterval;
-                            }
-                            else
-                            {
                                 repeatTimer = NavigationRepeatInterval;
                             }
                         }
@@ -319,20 +317,21 @@ public class ControlNodeNavigator
         if (!IsNavigating || selectedNode == null || !dir.IsValid) return false;
 
         var currentNode = selectedNode;
+        currentNode.NavigatedTo(dir);
+        
         var nextNode = explicitNextNode ?? GetNextNode(dir);
 
-        if (nextNode == null || nextNode == currentNode) return false;
-        if (!CheckNextNode(nextNode, dir)) return false;
-
-        currentNode.NavigatedTo(dir);
-        currentNode.NavigationDeselect();
-
-        SetSelectedNode(nextNode);
-
-        if (selectedNode == null || !selectedNode.NavigationSelect())
+        if (nextNode != null && nextNode != currentNode && CheckNextNode(nextNode, dir))
         {
-            throw new WarningException(
-                "Control Node Navigation Selected return false when it should have returned true!");
+            currentNode.NavigationDeselect();
+
+            SetSelectedNode(nextNode);
+
+            if (selectedNode == null || !selectedNode.NavigationSelect())
+            {
+                throw new WarningException(
+                    "Control Node Navigation Selected return false when it should have returned true!");
+            }
         }
 
         ResolveOnNavigated(dir);
@@ -405,6 +404,12 @@ public class ControlNodeNavigator
             
             var dif = node.GetNavigationOrigin(dir) - origin;
             var neighborDistanceSquared = GetNeighborDistance(dif, dir);
+            
+            if (node.Parent != null && node.Parent == selectedNode.Parent)
+            {
+                neighborDistanceSquared *= 0.1f;
+            }
+
             if (neighborDistanceSquared >= minDisSq) continue;
             minDisSq = neighborDistanceSquared;
             newNode = node;

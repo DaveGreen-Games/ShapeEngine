@@ -95,7 +95,8 @@ public class ControlNodeContainer : ControlNode
                 displayIndex = value;
             }
             
-
+            CompileDisplayedNodes();
+            RefreshChildRects();
         }
     }
 
@@ -141,6 +142,11 @@ public class ControlNodeContainer : ControlNode
     /// <param name="mousePosValid">Indicates if the mouse position is valid.</param>
     protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
     {
+        UpdateLayoutConstants();
+    }
+
+    private void UpdateLayoutConstants()
+    {
         if (!Grid.IsValid) return;
         if(dirty) CompileDisplayedNodes();
 
@@ -179,8 +185,21 @@ public class ControlNodeContainer : ControlNode
         direction = Grid.Placement.ToVector2();
         alignment = Grid.Placement.Invert().ToAlignement();
         curOffset = new(0f, 0f);
-
-
+    }
+    
+    private void RefreshChildRects()
+    {
+        UpdateLayoutConstants();
+        if (DisplayedChildren == null) return;
+        curOffset = new(0f, 0f);
+        foreach (var child in DisplayedChildren)
+        {
+            child.UpdateRect(SetChildRect(child, Rect));
+            if (child is ControlNodeContainer container)
+            {
+                container.RefreshChildRects();
+            }
+        }
     }
     /// <summary>
     /// Sets the rectangle for a child node based on the current layout.
