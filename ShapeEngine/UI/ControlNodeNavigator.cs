@@ -310,6 +310,9 @@ public class ControlNodeNavigator
         if (!IsNavigating || selectedNode == null || !dir.IsValid) return false;
 
         var currentNode = selectedNode;
+        
+        // Always notify the current node of the navigation attempt.
+        // This is required for container scrolling to work even if focus doesn't change.
         currentNode.NavigatedTo(dir);
         
         var nextNode = explicitNextNode ?? GetNextNode(dir);
@@ -325,10 +328,14 @@ public class ControlNodeNavigator
                 throw new WarningException(
                     "Control Node Navigation Selected return false when it should have returned true!");
             }
+   
+            // Successfully navigated to a new node
+            ResolveOnNavigated(dir);
+            return true;
         }
 
-        ResolveOnNavigated(dir);
-        return true;
+        // No navigation occurred
+        return false;
     }
     
     private bool CanNavigate()
