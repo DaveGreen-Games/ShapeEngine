@@ -1003,7 +1003,7 @@ public abstract class ControlNode
                         pressed = Pressed;
                     }
 
-                    down = buttonDown;
+                    down = buttonDown && Selected;
                 }
                 else if (InputFilter == InputFilter.All)
                 {
@@ -1030,7 +1030,7 @@ public abstract class ControlNode
                         pressed = Pressed;
                     }
 
-                    down = (MouseInside && mouseDown) || buttonDown;
+                    down = (MouseInside && mouseDown) || (buttonDown && Selected);
                 }
                 
                 if (Pressed != pressed)
