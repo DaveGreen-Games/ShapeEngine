@@ -458,6 +458,7 @@ public class ControlNodeNavigator
         node.OnChildAdded += OnControlNodeChildAdded;
         node.OnChildRemoved += OnControlNodeChildRemoved;
         node.OnSelectedChanged += OnNodeSelectionChanged;
+        node.OnPressedReleased += OnNodePressedReleased;
         
         ResolveOnControlNodeAdded(node);
 
@@ -473,8 +474,12 @@ public class ControlNodeNavigator
         node.OnChildAdded -= OnControlNodeChildAdded;
         node.OnChildRemoved -= OnControlNodeChildRemoved;
         node.OnSelectedChanged -= OnNodeSelectionChanged;
+        node.OnPressedReleased -= OnNodePressedReleased;
+        
         if (node == selectedNode) SetSelectedNode(null);
+        
         ResolveOnControlNodeRemoved(node);
+        
         foreach (var child in node.GetChildrenEnumerable)
         {
             HandleNodeRemoval(child);
@@ -493,34 +498,99 @@ public class ControlNodeNavigator
         HandleNodeRemoval(child);
     }
     
+    private void OnNodePressedReleased(ControlNode node)
+    {
+        // Only treat it as a "mouse click selects" when the mouse is actually over that node.
+        // Keyboard/gamepad "accept" releases should keep normal navigation behavior.
+        if (!node.MouseInside) return;
+
+        // If the node can't be selected, do nothing.
+        if (!node.IsActiveInHierarchy || !node.IsVisibleInHierarchy) return;
+        if (node.SelectionFilter is SelectFilter.None or SelectFilter.Navigation) return;
+
+        // Force transfer selection to the clicked/hovered node.
+        // This intentionally overrides the "hover shouldn't steal navigation focus" rule in OnNodeSelectionChanged.
+        if (selectedNode != null && selectedNode != node)
+        {
+            if (IsNavigating) selectedNode.NavigationDeselect();
+            else selectedNode.Deselect();
+        }
+
+        SetSelectedNode(node);
+
+        if (IsNavigating)
+        {
+            // Keep navigator state consistent: selected node should be navigation-selected.
+            node.NavigationSelect();
+        }
+        else
+        {
+            node.Select();
+        }
+    }
+    
     private void OnNodeSelectionChanged(ControlNode node, bool value)
     {
         if (!value) return;
+        
+        // Only react to nodes that are currently eligible for navigator focus
         if (!node.Navigable) return;
+        
+        // If we're not in navigation mode, don't enforce any "hover can't steal focus" rules.
+        // (Mouse click selection is handled elsewhere via OnPressedReleased.)
+        if (!IsNavigating) return;
         
         if (selectedNode == null)
         {
             SetSelectedNode(node);
-            node.NavigationSelect();
+            
+            if (selectedNode == null || !selectedNode.NavigationSelect())
+            {
+                throw new WarningException(
+                    "Control Node Navigation Selected returned false when it should have returned true!");
+            }
+            
+            // node.NavigationSelect();
             return;
         }
         
-        if (node != selectedNode)
+        // If the currently navigation-selected node is also selected, do nothing.
+        if (node == selectedNode) return;
+        
+        // Hover-selection should not steal navigation focus within the same container
+        if (node.MouseInside && node.Parent == selectedNode.Parent)
         {
-            //if navigation selection changed and a node is currently hovered by the mouse,
-            //the mouse selected node will be ignored in favor of the current selected node (if both have the same parent)
-            if (node.MouseInside && node.Parent == selectedNode.Parent)
-            {
-                node.Deselect();
-                SetSelectedNode(selectedNode);
-                selectedNode.NavigationSelect();
-                return;
-            }
-            
-            selectedNode.Deselect();
-            SetSelectedNode(node);
-            selectedNode.NavigationSelect();
+            node.Deselect();               // undo hover-based selection
+            selectedNode.NavigationSelect(); // re-assert navigation selection state
+            return;
         }
+        
+        // Otherwise, treat it as a legitimate navigation selection change
+        selectedNode.NavigationDeselect();
+        SetSelectedNode(node);
+        
+        if (selectedNode == null || !selectedNode.NavigationSelect())
+        {
+            throw new WarningException(
+                "Control Node Navigation Selected returned false when it should have returned true!");
+        }
+        
+        // if (node != selectedNode)
+        // {
+        //     //if navigation selection changed and a node is currently hovered by the mouse,
+        //     //the mouse selected node will be ignored in favor of the current selected node (if both have the same parent)
+        //     if (node.MouseInside && node.Parent == selectedNode.Parent)
+        //     {
+        //         node.Deselect();
+        //         // SetSelectedNode(selectedNode);
+        //         selectedNode.NavigationSelect();
+        //         return;
+        //     }
+        //     
+        //     selectedNode.Deselect();
+        //     SetSelectedNode(node);
+        //     selectedNode.NavigationSelect();
+        // }
     }
     
     private void OnControlNodeNavigableChanged(ControlNode node, bool navigable)
