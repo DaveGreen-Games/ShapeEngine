@@ -59,8 +59,6 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class ControlNodeButton : ControlNode
     {
-        private float inputCooldownTimer = 0f;
-        private const float inputCooldown = 0.1f;
         public ControlNodeButton(string text, AnchorPoint anchor, Vector2 stretch)
         {
             this.Anchor = anchor;
@@ -115,18 +113,6 @@ namespace Examples.Scenes.ExampleScenes
             var rightState = GameloopExamples.Instance.InputActionUIRight.Consume(out _);
             var leftState = GameloopExamples.Instance.InputActionUILeft.Consume(out _);
             
-            if (inputCooldownTimer > 0f)
-            {
-                if (upState is { Consumed: false, Released: true } ||
-                    downState is { Consumed: false, Released: true } ||
-                    rightState is { Consumed: false, Released: true } ||
-                    leftState is { Consumed: false, Released: true })
-                {
-                    inputCooldownTimer = 0f;
-                }
-                else return new();
-            }
-            
             var hor = 0;
             var vert = 0;
             if (leftState is { Consumed: false, Down: true }) hor = -1;
@@ -141,7 +127,6 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (value)
             {
-                inputCooldownTimer = inputCooldown;
                 ContainerStretch =  1.25f;
             }
             else ContainerStretch = 1f;
@@ -179,16 +164,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
-        {
-            if (inputCooldownTimer > 0)
-            {
-                inputCooldownTimer -= dt;
-            }
-        }
     }
-    
-    
     
     
     public class ControlNodeExampleScene : ExampleScene
@@ -364,7 +340,7 @@ namespace Examples.Scenes.ExampleScenes
             
             container.UpdateRect(ui.Area);
             container.Update(time.Delta, ui.MousePos);
-            navigator.Update();
+            navigator.Update(time.Delta);
         }
 
         protected override void OnDrawUIExample(ScreenInfo ui)

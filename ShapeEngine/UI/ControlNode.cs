@@ -102,6 +102,18 @@ public abstract class ControlNode
     public event Action<ControlNode, bool>? OnPressedChanged;
     
     /// <summary>
+    /// Occurs when a press is successfully released and should be treated as confirmed.
+    /// Parameters: Invoker
+    /// </summary>
+    public event Action<ControlNode>? OnPressedReleased;
+
+    /// <summary>
+    /// Occurs when an active press is cancelled.
+    /// Parameters: Invoker
+    /// </summary>
+    public event Action<ControlNode>? OnPressedCancelled;
+    
+    /// <summary>
     /// Occurs when the down state changes.
     /// Parameters: Invoker, Value
     /// </summary>
@@ -253,6 +265,13 @@ public abstract class ControlNode
             prevNavigable = Navigable;
             prevIsVisibleInHierarchy = IsVisibleInHierarchy;
             displayed = value;
+            
+            if (!displayed)
+            {
+                CancelInputState();
+            }
+
+            
             ResolveOnDisplayedChanged();
             foreach (var child in children)
             {
@@ -745,6 +764,9 @@ public abstract class ControlNode
     public bool Deselect()
     {
         if (SelectionFilter == SelectFilter.None) return false;
+        
+        CancelInputState();
+        
         Selected = false;
         navigationSelected = false;
         return true;
@@ -771,6 +793,9 @@ public abstract class ControlNode
     {
         if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return false;
         if (InputFilter is InputFilter.None or InputFilter.MouseOnly) return false;
+        
+        CancelInputState();
+        
         Selected = false;
         navigationSelected = false;
         return true;
@@ -792,6 +817,9 @@ public abstract class ControlNode
     {
         if (SelectionFilter is SelectFilter.Navigation or SelectFilter.None) return;
         if (navigationSelected) return;
+        
+        CancelInputState();
+        
         Selected = false;
     }
     
@@ -935,53 +963,80 @@ public abstract class ControlNode
             if (InputFilter != InputFilter.None)
             {
                 var pressed = Pressed;
+                var down = false;
+
                 if (InputFilter == InputFilter.MouseOnly)
                 {
-                    if (GetMouseButtonPressedState())
+                    var mousePressed = GetMouseButtonPressedState();
+                    var mouseReleased = GetMouseButtonReleasedState();
+                    var mouseDown = GetMouseButtonDownState();
+
+                    if (mousePressed && MouseInside)
                     {
-                        if (MouseInside) pressed = true;
+                        pressed = true;
                     }
-                    else if (GetMouseButtonReleasedState())
+                    else if (mouseReleased && Pressed)
                     {
-                        pressed = false;
+                        if (MouseInside) ReleaseInputState();
+                        else CancelInputState();
+
+                        pressed = Pressed;
                     }
-                    
+
+                    down = MouseInside && mouseDown;
                 } 
                 else if (InputFilter == InputFilter.MouseNever)
                 {
-                    if (GetButtonPressedState()) pressed = true;
-                    else if (GetButtonReleasedState()) pressed = false;
+                    var buttonPressed = GetButtonPressedState();
+                    var buttonReleased = GetButtonReleasedState();
+                    var buttonDown = GetButtonDownState();
+
+                    if (buttonPressed && Selected)
+                    {
+                        pressed = true;
+                    }
+                    else if (buttonReleased && Pressed)
+                    {
+                        if (Selected) ReleaseInputState();
+                        else CancelInputState();
+
+                        pressed = Pressed;
+                    }
+
+                    down = buttonDown && Selected;
                 }
                 else if (InputFilter == InputFilter.All)
                 {
-                    if (GetMouseButtonPressedState() || GetButtonPressedState())
-                    {
-                        pressed = (GetMouseButtonPressedState() && MouseInside) || GetButtonPressedState();
-                    }
-                    else if (GetMouseButtonReleasedState() || GetButtonReleasedState())
-                    {
-                        pressed = false;
-                    }
-                }
+                    var mousePressed = GetMouseButtonPressedState();
+                    var mouseReleased = GetMouseButtonReleasedState();
+                    var mouseDown = GetMouseButtonDownState();
 
+                    var buttonPressed = GetButtonPressedState();
+                    var buttonReleased = GetButtonReleasedState();
+                    var buttonDown = GetButtonDownState();
+
+                    if ((mousePressed && MouseInside) || (buttonPressed && Selected))
+                    {
+                        pressed = true;
+                    }
+                    else if ((mouseReleased || buttonReleased) && Pressed)
+                    {
+                        var validMouseRelease = mouseReleased && MouseInside;
+                        var validButtonRelease = buttonReleased && Selected;
+
+                        if (validMouseRelease || validButtonRelease) ReleaseInputState();
+                        else CancelInputState();
+
+                        pressed = Pressed;
+                    }
+
+                    down = (MouseInside && mouseDown) || (buttonDown && Selected);
+                }
+                
                 if (Pressed != pressed)
                 {
                     Pressed = pressed;
                     ResolvePressedChanged();
-                }
-                
-                var down = false;
-                if (InputFilter == InputFilter.MouseOnly)
-                {
-                    down = MouseInside && GetMouseButtonDownState();
-                } 
-                else if (InputFilter == InputFilter.MouseNever)
-                {
-                    down = GetButtonDownState();
-                }
-                else if (InputFilter == InputFilter.All)
-                {
-                    down = (MouseInside && GetMouseButtonDownState()) || GetButtonDownState();
                 }
 
                 if (IsDown != down)
@@ -989,7 +1044,6 @@ public abstract class ControlNode
                     IsDown = down;
                     ResolveIsDownChanged();
                 }
-            
             }
         }
         
@@ -1217,6 +1271,16 @@ public abstract class ControlNode
     protected virtual void PressedWasChanged(bool value) { }
  
     /// <summary>
+    /// Called when a press is successfully released and should be treated as confirmed.
+    /// </summary>
+    protected virtual void PressWasReleased() { }
+
+    /// <summary>
+    /// Called when an active press is cancelled.
+    /// </summary>
+    protected virtual void PressWasCancelled() { }
+    
+    /// <summary>
     /// Called when the IsDown state changes.
     /// </summary>
     /// <param name="value">The new IsDown state.</param>
@@ -1306,6 +1370,11 @@ public abstract class ControlNode
     /// </summary>
     private void ResolveActiveChanged()
     {
+        if (!active)
+        {
+            CancelInputState();
+        }
+        
         ActiveWasChanged(active);
         OnActiveChanged?.Invoke(this, active);
         ResolveOnNavigableChanged();
@@ -1317,6 +1386,11 @@ public abstract class ControlNode
     /// </summary>
     private void ResolveVisibleChanged()
     {
+        if (!visible)
+        {
+            CancelInputState();
+        }
+        
         VisibleWasChanged(visible);
         OnVisibleChanged?.Invoke(this, visible);
         ResolveOnNavigableChanged();
@@ -1328,6 +1402,11 @@ public abstract class ControlNode
     /// </summary>
     private void ResolveParentVisibleChanged()
     {
+        if (!parentVisible)
+        {
+            CancelInputState();
+        }
+        
         ParentVisibleWasChanged(parentVisible);
         OnParentVisibleChanged?.Invoke(this, parentVisible);
         ResolveOnNavigableChanged();
@@ -1339,6 +1418,11 @@ public abstract class ControlNode
     /// </summary>
     private void ResolveParentActiveChanged()
     {
+        if (!parentActive)
+        {
+            CancelInputState();
+        }
+        
         ParentActiveWasChanged(parentActive);
         OnParentActiveChanged?.Invoke(this, parentActive);
         ResolveOnNavigableChanged();
@@ -1417,12 +1501,30 @@ public abstract class ControlNode
     }
     
     /// <summary>
+    /// Resolves a successful press release.
+    /// </summary>
+    private void ResolvePressedReleased()
+    {
+        PressWasReleased();
+        OnPressedReleased?.Invoke(this);
+    }
+
+    /// <summary>
+    /// Resolves a cancelled press.
+    /// </summary>
+    private void ResolvePressedCancelled()
+    {
+        PressWasCancelled();
+        OnPressedCancelled?.Invoke(this);
+    }
+    
+    /// <summary>
     /// Resolves changes to the IsDown state and triggers related events.
     /// </summary>
     private void ResolveIsDownChanged()
     {
-        IsDownWasChanged(Pressed);
-        OnIsDownChanged?.Invoke(this, Pressed);
+        IsDownWasChanged(IsDown);
+        OnIsDownChanged?.Invoke(this, IsDown);
     }
     
     /// <summary>
@@ -1469,6 +1571,58 @@ public abstract class ControlNode
         NavigableWasChanged(Navigable);
         OnNavigableChanged?.Invoke(this, Navigable);
     }
+    
+    /// <summary>
+    /// Clears transient input state owned by this node.
+    /// </summary>
+    private void CancelInputState()
+    {
+        var wasPressed = Pressed;
+
+        if (Pressed)
+        {
+            Pressed = false;
+            ResolvePressedChanged();
+        }
+
+        if (IsDown)
+        {
+            IsDown = false;
+            ResolveIsDownChanged();
+        }
+
+        if (wasPressed)
+        {
+            ResolvePressedCancelled();
+        }
+    }
+    
+    /// <summary>
+    /// Releases transient input state owned by this node.
+    /// This represents a successful/confirmed press release.
+    /// </summary>
+    private void ReleaseInputState()
+    {
+        var wasPressed = Pressed;
+
+        if (Pressed)
+        {
+            Pressed = false;
+            ResolvePressedChanged();
+        }
+
+        if (IsDown)
+        {
+            IsDown = false;
+            ResolveIsDownChanged();
+        }
+
+        if (wasPressed)
+        {
+            ResolvePressedReleased();
+        }
+    }
+
     #endregion
     
 }

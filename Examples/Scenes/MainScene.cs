@@ -185,7 +185,7 @@ namespace Examples.Scenes
             
             buttonContainer.UpdateRect(ui.Area);
             buttonContainer.Update(time.Delta, ui.MousePos);
-            navigator.Update();
+            navigator.Update(time.Delta);
         }
         protected override void OnDrawUI(ScreenInfo ui)
         {

@@ -9,8 +9,6 @@ namespace Examples.UIElements
 {
     public class ExampleSelectionButton : ControlNode
     {
-        private float inputCooldownTimer = 0f;
-        private const float inputCooldown = 0.1f;
         public ExampleScene? Scene { get; private set; } = null;
         private TextFont textFont;
         public bool Hidden => Scene == null;
@@ -88,27 +86,8 @@ namespace Examples.UIElements
             
             var downState = GameloopExamples.Instance.InputActionUIDown.Consume(out _);
             var upState = GameloopExamples.Instance.InputActionUIUp.Consume(out _);
-            // var leftState = GAMELOOP.InputActionUILeft.Consume();
-            // var rightState = GAMELOOP.InputActionUIRight.Consume();
-            // Console.WriteLine($"Button {Scene.Title} - Down: {downState.Consumed}, Up: {upState.Consumed}, Left: {leftState.Consumed}, Right: {rightState.Consumed}");
             
-            if (inputCooldownTimer > 0f)
-            {
-                if (downState is {Consumed:false, Released:true} ||
-                    upState is {Consumed:false, Released:true})
-                    // leftState is {Consumed:false, Released:true} ||
-                    // rightState is {Consumed:false, Released:true})
-                {
-                    inputCooldownTimer = 0f;
-                }
-                else return new();
-            }
-            
-            // var hor = 0;
             var vert = 0;
-            // if (leftState is {Consumed:false, Down:true}) hor = -1;
-            // else if (rightState is {Consumed:false, Down:true}) hor = 1;
-            
             if (upState is {Consumed:false, Down:true}) vert = -1;
             else if (downState is {Consumed:false, Down:true}) vert = 1;
             return new(0, vert);
@@ -118,38 +97,28 @@ namespace Examples.UIElements
         {
             if (value)
             {
-                inputCooldownTimer = inputCooldown;
                 ContainerStretch =  1.25f;
             }
             else ContainerStretch = 1f;
         }
-        protected override void PressedWasChanged(bool value)
+
+        protected override void PressWasReleased()
         {
             if (Scene == null) return;
-            if (!value)
+            if (PressDelay > 0f)
             {
-                // Console.WriteLine($"Button Pressed - Scene {Scene.Title}");
-                // GAMELOOP.GoToScene(Scene);
-                if (PressDelay > 0f)
-                {
-                    pressDelayTimer = PressDelay;
-                }
-                else
-                {
-                    mouseInsideAnimationTimer = 0f;
-                    GameloopExamples.Instance.GoToScene(Scene);
-                }
-                
+                pressDelayTimer = PressDelay;
+            }
+            else
+            {
+                mouseInsideAnimationTimer = 0f;
+                GameloopExamples.Instance.GoToScene(Scene);
             }
         }
 
         protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
         {
             base.OnUpdate(dt, mousePos, mousePosValid);
-            if (inputCooldownTimer > 0)
-            {
-                inputCooldownTimer -= dt;
-            }
 
             if (pressDelayTimer > 0)
             {
@@ -179,26 +148,21 @@ namespace Examples.UIElements
             {
                 var amount = Rect.Size.Min() * 0.25f;
                 var outside = Rect.ChangeSize(amount, new AnchorPoint(0.5f, 0.5f));
-                // outside.DrawLines(2f, Colors.Medium);
                 
                 var animationFactor = mouseInsideAnimationTimer / mouseInsideAnimationDuration;
                 var lineThickness = outside.Size.Min() * 0.04f;
-                // var spacing = lineThickness * ShapeMath.LerpFloat(4f, 5f, ShapeTween.PingPong(animationFactor));
-                // var info = new LineDrawingInfo(lineThickness, Colors.Dark, LineCapType.Capped, 6);
-                // outside.DrawStriped(spacing, 35f, info);
                 var cornerLength = outside.Size.Min() * ShapeMath.LerpFloat(0.15f, 0.35f, ShapeTween.PingPong(animationFactor));
                 outside.DrawCorners(lineThickness, Colors.Highlight, cornerLength);
-                // outside.LeftSegment.Draw(lineThickness, Colors.Highlight);
             }
             
-            if (Selected)
-            {
-                textFont.ColorRgba = Colors.Highlight;
-                textFont.DrawTextWrapNone(text, r, new(0f));
-            }
-            else if (Pressed)
+            if (Pressed)
             {
                 textFont.ColorRgba = Colors.Special;
+                textFont.DrawTextWrapNone(text, r, new(0f));
+            }
+            else if (Selected)
+            {
+                textFont.ColorRgba = Colors.Highlight;
                 textFont.DrawTextWrapNone(text, r, new(0f));
             }
             else

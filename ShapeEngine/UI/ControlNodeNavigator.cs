@@ -46,9 +46,27 @@ public class ControlNodeNavigator
     private bool dirty;
     private ControlNode? selectedNode;
 
+    private Direction currentRepeatDir = new();
+    private float repeatTimer = 0f;
+
     #endregion
 
     #region Getter & Setter
+
+    /// <summary>
+    /// Gets or sets whether navigation repeat is enabled.
+    /// </summary>
+    public bool NavigationRepeatEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the delay before navigation starts repeating when a direction is held.
+    /// </summary>
+    public float NavigationRepeatDelay { get; set; } = 0.35f;
+
+    /// <summary>
+    /// Gets or sets the interval between navigation repeats when a direction is held.
+    /// </summary>
+    public float NavigationRepeatInterval { get; set; } = 0.1f;
 
     /// <summary>
     /// Gets the currently selected control node.
@@ -65,6 +83,10 @@ public class ControlNodeNavigator
         if (selectedNode == newNode) return;
         var prev = selectedNode;
         selectedNode = newNode;
+
+        currentRepeatDir = new();
+        repeatTimer = 0f;
+
         ResolveOnSelectedControlNodeChanged(prev, selectedNode);
     }
 
@@ -72,7 +94,7 @@ public class ControlNodeNavigator
     /// Gets whether navigation is currently active.
     /// </summary>
     public bool IsNavigating { get; private set; }
-
+    
     #endregion
 
     #region Public
@@ -86,6 +108,7 @@ public class ControlNodeNavigator
         selectedNode?.NavigationSelect();
         ResolveOnNavigationStarted();
     }
+    
     /// <summary>
     /// Ends navigation mode, disabling selection and navigation of control nodes.
     /// </summary>
@@ -108,6 +131,7 @@ public class ControlNodeNavigator
             RemoveNode(node);
         }
     }
+  
     /// <summary>
     /// Adds a control node to the navigator.
     /// </summary>
@@ -120,6 +144,7 @@ public class ControlNodeNavigator
         HandleNodeAddition(node);
         return true;
     }
+    
     /// <summary>
     /// Removes a control node from the navigator.
     /// </summary>
@@ -143,7 +168,7 @@ public class ControlNodeNavigator
     /// <param name="grid">The grid describing navigation layout and direction.</param>
     public void SelectNext(Grid grid)
     {
-        if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
+        if (!CanNavigate() || !grid.IsValid) return;
         var dir = grid.GetNextDirection();
         if (grid.IsGrid)
         {
@@ -151,7 +176,7 @@ public class ControlNodeNavigator
             if (next == null || next == selectedNode) return;
             nextNodeToSelect = next;
         }
-        selectedNode.NavigatedTo(dir);
+        // selectedNode!.NavigatedTo(dir);
         navigationPending = true;
         prevDir = dir;
     }
@@ -162,7 +187,7 @@ public class ControlNodeNavigator
     /// <param name="grid">The grid describing navigation layout and direction.</param>
     public void SelectPrevious(Grid grid)
     {
-        if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
+        if (!CanNavigate() || !grid.IsValid) return;
         var dir = grid.GetPreviousDirection();
         if (grid.IsGrid)
         {
@@ -170,7 +195,7 @@ public class ControlNodeNavigator
             if (prev == null || prev == selectedNode) return;
             nextNodeToSelect = prev;
         }
-        selectedNode.NavigatedTo(dir);
+        // selectedNode!.NavigatedTo(dir);
         navigationPending = true;
         prevDir = dir;
     }
@@ -178,9 +203,18 @@ public class ControlNodeNavigator
     /// <summary>
     /// Updates the navigation state, handling pending navigation and selection changes.
     /// </summary>
-    public void Update()
+    /// <remarks> This function is deprecated and will be removed in a future update!
+    /// Use <see cref="Update(float)"/> instead.</remarks>
+    public void Update() => Update(0f);
+
+    /// <summary>
+    /// Updates the navigation state, handling pending navigation and selection changes.
+    /// </summary>
+    /// <param name="dt">The delta time since the last update.</param>
+    public void Update(float dt)
     {
         if (!IsNavigating) return;
+
         if (selectedNode == null)
         {
             var navigable = GetNavigableNodes();
@@ -195,18 +229,19 @@ public class ControlNodeNavigator
             }
             else return;
         }
+
         if (navigationPending)
         {
             navigationPending = false;
+
             var dir = prevDir;
-            var nextNode = nextNodeToSelect ?? GetNextNode(dir);
+            var nextNode = nextNodeToSelect;
             nextNodeToSelect = null;
-            if (nextNode != null && CheckNextNode(nextNode, dir))
+
+            if (TryNavigate(dir, nextNode))
             {
-                selectedNode.NavigationDeselect();
-                SetSelectedNode(nextNode);
-                selectedNode.NavigationSelect();
-                ResolveOnNavigated(dir);
+                currentRepeatDir = dir;
+                repeatTimer = NavigationRepeatDelay;
             }
         }
         else
@@ -214,9 +249,38 @@ public class ControlNodeNavigator
             var dir = selectedNode.GetNavigationDirection();
             if (dir.IsValid)
             {
-                selectedNode.NavigatedTo(dir);
-                navigationPending = true;
-                prevDir = dir;
+                if (NavigationRepeatEnabled)
+                {
+                    if (dir != currentRepeatDir)
+                    {
+                        if (TryNavigate(dir))
+                        {
+                            currentRepeatDir = dir;
+                            repeatTimer = NavigationRepeatDelay;
+                        }
+                    }
+                    else
+                    {
+                        repeatTimer -= dt;
+                        if (repeatTimer <= 0)
+                        {
+                            if (TryNavigate(dir))
+                            {
+                                currentRepeatDir = dir;
+                                repeatTimer = NavigationRepeatInterval;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    TryNavigate(dir);
+                }
+            }
+            else
+            {
+                currentRepeatDir = new();
+                repeatTimer = 0f;
             }
         }
     }
@@ -241,7 +305,44 @@ public class ControlNodeNavigator
         }
     }
     
+    private bool TryNavigate(Direction dir, ControlNode? explicitNextNode = null)
+    {
+        if (!IsNavigating || selectedNode == null || !dir.IsValid) return false;
+
+        var currentNode = selectedNode;
+        
+        // Always notify the current node of the navigation attempt.
+        // This is required for container scrolling to work even if focus doesn't change.
+        currentNode.NavigatedTo(dir);
+        
+        var nextNode = explicitNextNode ?? GetNextNode(dir);
+
+        if (nextNode != null && nextNode != currentNode && CheckNextNode(nextNode, dir))
+        {
+            currentNode.NavigationDeselect();
+
+            SetSelectedNode(nextNode);
+
+            if (selectedNode == null || !selectedNode.NavigationSelect())
+            {
+                throw new WarningException(
+                    "Control Node Navigation Selected return false when it should have returned true!");
+            }
+   
+            // Successfully navigated to a new node
+            ResolveOnNavigated(dir);
+            return true;
+        }
+
+        // No navigation occurred
+        return false;
+    }
     
+    private bool CanNavigate()
+    {
+        return IsNavigating && selectedNode != null;
+    }
+   
     private ControlNode? GetClosestNode(ControlNode node)
     {
         var navigable = GetNavigableNodes();
@@ -261,6 +362,7 @@ public class ControlNodeNavigator
         }
         return closestNode;
     }
+    
     private ControlNode? GetNextNode()
     {
         if (selectedNode == null) return null;
@@ -269,9 +371,13 @@ public class ControlNodeNavigator
         if (index < 0) return null;
 
         index += 1;
-        if (index >= navigable.Count) index = 0;
+        if (index >= navigable.Count)
+        {
+            index = 0;
+        }
         return navigable[index];
     }
+    
     private ControlNode? GetPrevNode()
     {
         if (selectedNode == null) return null;
@@ -280,9 +386,13 @@ public class ControlNodeNavigator
         if (index < 0) return null;
 
         index -= 1;
-        if (index < 0) index = navigable.Count - 1;
+        if (index < 0)
+        {
+            index = navigable.Count - 1;
+        }
         return navigable[index];
     }
+    
     private ControlNode? GetNextNode(Direction dir)
     {
         if (!dir.IsValid) return null;
@@ -300,12 +410,14 @@ public class ControlNodeNavigator
             
             var dif = node.GetNavigationOrigin(dir) - origin;
             var neighborDistanceSquared = GetNeighborDistance(dif, dir);
+            
             if (neighborDistanceSquared >= minDisSq) continue;
             minDisSq = neighborDistanceSquared;
             newNode = node;
         }
         return newNode;
     }
+    
     private float GetNeighborDistance(Vector2 dif, Direction dir)
     {
         if (dir.IsLeft) return dif.X < 0 ? dif.LengthSquared() : float.MaxValue;
@@ -320,11 +432,13 @@ public class ControlNodeNavigator
         
         return float.MaxValue;
     }
+    
     private List<ControlNode> GetNavigableNodes()
     {
         if(dirty) CompileNavigableControlNodes();
         return navigableNodes;
     }
+    
     private void CompileNavigableControlNodes()
     {
         dirty = false;
@@ -338,6 +452,7 @@ public class ControlNodeNavigator
 
         if (result.Count > 0) navigableNodes.AddRange(result);
     }
+    
     private void HandleNodeAddition(ControlNode node)
     {
         if (node.Selected)
@@ -350,6 +465,7 @@ public class ControlNodeNavigator
         node.OnChildAdded += OnControlNodeChildAdded;
         node.OnChildRemoved += OnControlNodeChildRemoved;
         node.OnSelectedChanged += OnNodeSelectionChanged;
+        node.OnPressedReleased += OnNodePressedReleased;
         
         ResolveOnControlNodeAdded(node);
 
@@ -358,48 +474,132 @@ public class ControlNodeNavigator
             HandleNodeAddition(child);
         }
     }
+    
     private void HandleNodeRemoval(ControlNode node)
     {
         node.OnNavigableChanged -= OnControlNodeNavigableChanged;
         node.OnChildAdded -= OnControlNodeChildAdded;
         node.OnChildRemoved -= OnControlNodeChildRemoved;
         node.OnSelectedChanged -= OnNodeSelectionChanged;
+        node.OnPressedReleased -= OnNodePressedReleased;
+        
         if (node == selectedNode) SetSelectedNode(null);
+        
         ResolveOnControlNodeRemoved(node);
+        
         foreach (var child in node.GetChildrenEnumerable)
         {
             HandleNodeRemoval(child);
         }
     }
+    
     private void OnControlNodeChildAdded(ControlNode node, ControlNode child)
     {
         dirty = true;
         HandleNodeAddition(child);
     }
+    
     private void OnControlNodeChildRemoved(ControlNode node, ControlNode child)
     {
         dirty = true;
         HandleNodeRemoval(child);
     }
+    
+    private void OnNodePressedReleased(ControlNode node)
+    {
+        // Only treat it as a "mouse click selects" when the mouse is actually over that node.
+        // Keyboard/gamepad "accept" releases should keep normal navigation behavior.
+        if (!node.MouseInside) return;
+
+        // If the node can't be selected, do nothing.
+        if (!node.IsActiveInHierarchy || !node.IsVisibleInHierarchy) return;
+        if (node.SelectionFilter is SelectFilter.None or SelectFilter.Navigation) return;
+
+        // Force transfer selection to the clicked/hovered node.
+        // This intentionally overrides the "hover shouldn't steal navigation focus" rule in OnNodeSelectionChanged.
+        if (selectedNode != null && selectedNode != node)
+        {
+            if (IsNavigating) selectedNode.NavigationDeselect();
+            else selectedNode.Deselect();
+        }
+
+        SetSelectedNode(node);
+
+        if (IsNavigating)
+        {
+            // Keep navigator state consistent: selected node should be navigation-selected.
+            node.NavigationSelect();
+        }
+        else
+        {
+            node.Select();
+        }
+    }
+    
     private void OnNodeSelectionChanged(ControlNode node, bool value)
     {
         if (!value) return;
+        
+        // Only react to nodes that are currently eligible for navigator focus
         if (!node.Navigable) return;
+        
+        // If we're not in navigation mode, don't enforce any "hover can't steal focus" rules.
+        // (Mouse click selection is handled elsewhere via OnPressedReleased.)
+        if (!IsNavigating) return;
         
         if (selectedNode == null)
         {
             SetSelectedNode(node);
-            node.NavigationSelect();
+            
+            if (selectedNode == null || !selectedNode.NavigationSelect())
+            {
+                throw new WarningException(
+                    "Control Node Navigation Selected returned false when it should have returned true!");
+            }
+            
+            // node.NavigationSelect();
             return;
         }
         
-        if (node != selectedNode)
+        // If the currently navigation-selected node is also selected, do nothing.
+        if (node == selectedNode) return;
+        
+        // Hover-selection should not steal navigation focus within the same container
+        if (node.MouseInside && node.Parent == selectedNode.Parent)
         {
-            selectedNode.Deselect();
-            SetSelectedNode(node);
-            selectedNode.NavigationSelect();
+            node.Deselect();               // undo hover-based selection
+            selectedNode.NavigationSelect(); // re-assert navigation selection state
+            return;
         }
+        
+        // Otherwise, treat it as a legitimate navigation selection change
+        selectedNode.NavigationDeselect();
+        SetSelectedNode(node);
+        
+        if (selectedNode == null || !selectedNode.NavigationSelect())
+        {
+            throw new WarningException(
+                "Control Node Navigation Selected returned false when it should have returned true!");
+        }
+        
+        // if (node != selectedNode)
+        // {
+        //     //if navigation selection changed and a node is currently hovered by the mouse,
+        //     //the mouse selected node will be ignored in favor of the current selected node (if both have the same parent)
+        //     if (node.MouseInside && node.Parent == selectedNode.Parent)
+        //     {
+        //         node.Deselect();
+        //         // SetSelectedNode(selectedNode);
+        //         selectedNode.NavigationSelect();
+        //         return;
+        //     }
+        //     
+        //     selectedNode.Deselect();
+        //     SetSelectedNode(node);
+        //     selectedNode.NavigationSelect();
+        // }
     }
+    
     private void OnControlNodeNavigableChanged(ControlNode node, bool navigable)
     {
         dirty = true;
