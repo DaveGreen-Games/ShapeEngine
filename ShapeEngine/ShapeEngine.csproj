@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>5.0.0</Version>
+	<Version>5.1.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,22 +18,43 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>5.0.0</AssemblyVersion>
-	<FileVersion>5.0.0</FileVersion>
+	<AssemblyVersion>5.1.0</AssemblyVersion>
+	<FileVersion>5.1.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2026</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
-	#Summary
+		
+	#5.1 Release Notes
+
+	##New Features
+		- Add hash function to Coordinates struct (PR #170) – New hashing system added to the Coordinates struct to enable better usage patterns with collections
+	
+	##Bug Fixes
+		- Grid GetRect function does not use supplied coordinates (PR #167) – Fixed rect calculation in the Grid struct to properly utilize supplied coordinates
+		- Mouse On Screen Detection Broken on MacOS (PR #169) – Restored mouse screen detection functionality on macOS after startup issues were introduced in recent GameWindow refactoring
+		- ControlNode Selection Issues (PR #171) – Major refactor addressing multiple UI control issues:
+			- Fixed selected button staying pressed when switching to another button with mouse
+			- Added internal validation to clear current selection when navigation while button is pressed
+			- Corrected state management for button press/release detection vs. mouse input detection
+	
+	##Dependencies
+		- Bump Raylib-cs from 7.0.2 to 8.0.0 (PR #158) – Updated to latest Raylib-cs version wich includes GameWindow, Mouse, and ScreenTexture updates based on the raylib 6.0 release.
+		- Automated monthly update of gamecontrollerdb.txt (PR #165) – Updated game controller database
+		- Update dependency-versions.txt from csproj (PR #166) – Synchronized dependency version documentation
+	
+	#5.0 Release Notes
+	
+	##Summary
 	The 5.0 release is focused on refactoring and cleanup of existing systems while also introducing a selection of targeted new features to make the engine cleaner, faster, and easier to extend.
 	First of all, the input system was overhauled: there is a new InputActionSettings struct, a redesigned gesture system, and improved gamepad handling. The most notable fix is that gamepads now work on macOS again.
 	Next, the collision system was decoupled from the spatial-partitioning system to allow custom broadphase implementations. The pathfinding system received several improvements and an optional parallelization mode, allowing path requests to be handled concurrently rather than sequentially. The collision system also gained partial parallelization, allowing parts of the collision-detection algorithm to run in parallel.
 	A new resource-packer project was added to bundle resources into text or binary packs, and the ShapeEngine content system was updated to support these packs. Alongside this, I cleaned up and modernized the legacy content system and added simple JSON and XML serializer classes to replace the old, JSON-only serializer. I also included example scenes for JSON and XML serialization; these scenes can load custom JSON and XML files to alter scene behavior at runtime.
 	Many drawing APIs were modernized, renamed, and decluttered. Drawing functions are now all grouped within each shape. New MaskedDrawing* functions were implemented, and StripedDrawing* was overhauled and modernized. Several GitHub workflows were added to simplify repository and engine maintenance.
 	
-	#Changelog
-	##Input System
+	##Changelog
+	###Input System
 	- [BREAKING] Input system improvements.
 	- [NEW] InputGesture system added  (LongPress, DoubleTap, etc.).
 	- [NEW] InputDeviceSettings struct added for easier setup of the input system.
@@ -41,38 +62,38 @@
 	- [NEW] Automated system for applying the current gamepad mappings added (gamepads now works on macOS).
 	- [UPDATE] Gamepad management improved.
 	
-	##Collision System
+	###Collision System
 	- [BREAKING] Collision system improved.
 	- [BREAKING] Collision system separated from spatial partitioning algorithm to allow use of custom algorithms.
 	- [NEW] Optional parallelization features for better performance added (allows to run certain parts of the collision detection algorithm concurrently).
 	- [NEW] MotionType and BroadphaseType enums added to the collision system.
 	
-	##Pathfinding
+	###Pathfinding
 	- [BREAKING] Pathfinding system improved.
 	- [NEW] Optional parallelization features for PathRequest handling added.
 	
-	##Savegame
+	###Savegame
 	- [BREAKING] Savegame system improved.
 	- [NEW] Savegame folder is now automatically created based on ApplicationName and SaveDirectory.
 	- [NEW] Automated savegame backup system added (automatically creates a backup folder in the savegame directory and it can create and apply backups).
 	
-	##Docs
+	###Docs
 	- [NEW] XML summaries added to every class, member, and function that is public.
 	
-	##Drawing
+	###Drawing
 	- [BREAKING] Overhaul of all outline drawing functions of all closed shapes and polyline to allow using transparent colors without overlapping artifacts.
 	- [NEW] MaskedDrawing* functions added (Allows to only draw a shape or shape outline within a certain area or outside of a certain area).
 	- [NEW] StripedDrawing* overloads added.
 	- [UPDATE] Striped drawing functions improved.
 	- [UPDATE] Striped drawing functions moved into shape structs/classes.
 	
-	##Workflows
+	###Workflows
 	- [NEW] Workflow added to automatically update the gamepad mappings file once a month (SDL GameController DB is used as source).
 	- [NEW] Workflow added to automatically keep ShapeEngines dependencies up to date (raylib and Clipper2).
 	- [NEW] Workflow added to automatically attach Example project builds to new releases.
 	- [NEW] Workflow added to upload ShapeEngine nuget packages to nuget.org (manually triggered only).
 	
-	##Core
+	###Core
 	- [NEW] ApplicationName property added (used for setting up the savegame folder).
 	- [NEW] ShapeEngine now handles capping of FrameRate to the set FrameRateLimit.
 	- [NEW] AdaptiveFpsLimiter class added.
@@ -92,7 +113,7 @@
 	- [BREAKING] Clipper2 wrapper system completely overhauled and improved (cleaner api, less memory allocations, moved to Path64 from PathD for better accuracy, and much more)
 	- [UPDATE] .net 8.0 updated to .net 10.0
 	
-	##Shapes
+	###Shapes
 	- [NEW] Polygon GetIncircle() function added
 	- [NEW] Polygon Round()/RoundCopy() functions added
 	- [NEW] Polygon ToAbsolute() function added
@@ -101,7 +122,7 @@
 	- [NEW] Polygon Triangulate() overload added with ref parameter (reduce allocations)
 	- [NEW] Various new  geometric functions added to certain Shapes.
 	
-	##Misc
+	###Misc
 	- [BREAKING] Pool System overhauled and drastically simplified.
 	- [NEW] PerlinNoise class added (thanks to Fixin).
 	- [NEW] ResourcePacker project added - Allows packing/ unpacking of resources to text or binary files. 
@@ -112,7 +133,7 @@
 	- [NEW] PerformanceMeasureWatch class added.
 	- [NEW] MacOS app bundling added
 	
-	##Example Scenes
+	###Example Scenes
 	- [NEW] New Savegame Example Scene added.
 	- [NEW] New XML / JSON serialization systems added.
 	- [NEW] New XML / JSON Example Scenes added.
