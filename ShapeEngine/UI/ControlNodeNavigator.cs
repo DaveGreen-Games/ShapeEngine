@@ -4,13 +4,6 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.UI;
 
-//ISSUE: When navigating a scrollable container:
-// - and reaching the end (and no other items are selectable) selection will jump to the top instead of just not moving
-// - and reaching the top (and no other items are selectable) selection will jump to the second item instead of just not moving
-// (will keep alternating between the top and second item)
-// - if item is selected by mouse after reaching an end and container scrolls, selection will jump to the mouse selected item
-// instead of the new available item!
-
 /// <summary>
 /// Provides navigation and selection logic for a set of <see cref="ControlNode"/> instances, supporting keyboard/gamepad navigation and selection events.
 /// </summary>
@@ -101,7 +94,7 @@ public class ControlNodeNavigator
     /// Gets whether navigation is currently active.
     /// </summary>
     public bool IsNavigating { get; private set; }
-
+    
     #endregion
 
     #region Public
@@ -371,7 +364,10 @@ public class ControlNodeNavigator
         if (index < 0) return null;
 
         index += 1;
-        if (index >= navigable.Count) index = 0;
+        if (index >= navigable.Count)
+        {
+            index = 0;
+        }
         return navigable[index];
     }
     
@@ -383,7 +379,10 @@ public class ControlNodeNavigator
         if (index < 0) return null;
 
         index -= 1;
-        if (index < 0) index = navigable.Count - 1;
+        if (index < 0)
+        {
+            index = navigable.Count - 1;
+        }
         return navigable[index];
     }
     
@@ -405,11 +404,6 @@ public class ControlNodeNavigator
             var dif = node.GetNavigationOrigin(dir) - origin;
             var neighborDistanceSquared = GetNeighborDistance(dif, dir);
             
-            if (node.Parent != null && node.Parent == selectedNode.Parent)
-            {
-                neighborDistanceSquared *= 0.1f;
-            }
-
             if (neighborDistanceSquared >= minDisSq) continue;
             minDisSq = neighborDistanceSquared;
             newNode = node;
@@ -513,6 +507,16 @@ public class ControlNodeNavigator
         
         if (node != selectedNode)
         {
+            //if navigation selection changed and a node is currently hovered by the mouse,
+            //the mouse selected node will be ignored in favor of the current selected node (if both have the same parent)
+            if (node.MouseInside && node.Parent == selectedNode.Parent)
+            {
+                node.Deselect();
+                SetSelectedNode(selectedNode);
+                selectedNode.NavigationSelect();
+                return;
+            }
+            
             selectedNode.Deselect();
             SetSelectedNode(node);
             selectedNode.NavigationSelect();
