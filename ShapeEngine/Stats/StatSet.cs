@@ -43,6 +43,8 @@ namespace ShapeEngine.Stats;
 /// </remarks>
 public class StatSet
 {
+    //TODO: Make thread safe
+    
     private readonly Dictionary<StatId, Stat> stats = new(16);
     private readonly Dictionary<uint, IStatModifierSource> sources = new(24);
     private readonly List<uint> expiredSourceIds = new(8);
@@ -82,6 +84,9 @@ public class StatSet
     /// </summary>
     public IReadOnlyCollection<IStatModifierSource> Sources => sources.Values;
 
+    //TODO: Add Reset() function
+    
+    
     /// <summary>
     /// Adds or replaces a stat.
     /// </summary>
@@ -99,6 +104,7 @@ public class StatSet
     /// <returns>True if a stat was removed.</returns>
     public bool RemoveStat(StatId id)
     {
+        //Q: Should this remove relevant sources as well?
         var removed = stats.Remove(id);
         if (removed) Recalculate();
         return removed;
@@ -133,6 +139,7 @@ public class StatSet
     /// <returns>True if the source was newly added; false if an existing source was reapplied.</returns>
     public bool AddSource(IStatModifierSource source)
     {
+        //Q: Add null checks for source?
         if (sources.TryGetValue(source.Id, out var existing))
         {
             var beforeStacks = existing.Stacks;
@@ -242,12 +249,19 @@ public class StatSet
     /// </summary>
     public void Recalculate()
     {
+        //ISSUE: Creates garbage (allocates a new array each time it is called)
+        //Fix: use buffer or pool here
         var modifiers = sources.Values.SelectMany(source => source.GetModifiers()).ToArray();
 
         foreach (var stat in stats.Values)
         {
             var previous = stat.Value;
             var current = stat.Recalculate(modifiers);
+            
+            //Issue: Floating point comparision
+            // const float epsilon = 0.001f;
+            // if (Math.Abs(previous - current) > epsilon)
+            
             if (!previous.Equals(current))
             {
                 OnStatChanged?.Invoke(stat, previous, current);
