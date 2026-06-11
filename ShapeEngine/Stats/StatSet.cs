@@ -1,8 +1,46 @@
 namespace ShapeEngine.Stats;
 
 /// <summary>
-/// Manages stats and their active modifier sources.
+/// Manages stats and their active modifier sources. This is the new entry point of the stat system.
+/// You create stats, add modifier sources, call Update(dt) each frame if you have timed effects, and read the final stat values back out.
+/// <list type="bullet">
+/// <item>Holds <see cref="Stat"/> objects and <see cref="IStatModifierSource"/> (like <see cref="StatModifierSource"/>, <see cref="TimedStatModifierSource"/>, <see cref="StackableStatModifierSource"/>)</item>
+/// <item>Formula: ((Base + Flat) * (1 + AdditivePercent)) * MultiplicativeFactor</item>
+/// </list>
 /// </summary>
+/// <remarks>
+/// Main flow:
+/// <list type="bullet">
+/// <item>You define a stat with new Stat(...).</item>
+/// <item>You register it in StatSet.AddStat(...).</item>
+/// <item>You register one or more sources with StatSet.AddSource(...).</item>
+/// <item>StatSet recalculates all stats from all active sources.</item>
+/// <item>If you have timed sources, you call StatSet.Update(dt) each frame.</item>
+/// <item>You read the result with StatSet.GetValue(statId) or stat.Value.</item>
+/// </list>
+///
+/// What each class is for
+/// <list type="bullet">
+/// <item><see cref="StatId"/>: a lightweight wrapper around uint, used as the stable key for stats.</item>
+/// <item><see cref="Stat"/>: one actual stat definition plus its current computed value, name, base value, optional min/max, and optional tags.</item>
+/// <item><see cref="StatModifier"/>: one contribution to one stat, like “+5 flat” or “+20% multiplicative”.</item>
+/// <item><see cref="StatModifierKind"/>: says how the modifier participates in the calculation pipeline.</item>
+/// <item><see cref="StatModifierSource"/>: a permanent or manually removed source, like an item affix or passive.</item>
+/// <item><see cref="TimedStatModifierSource"/>: a source with duration and expiry.</item>
+/// <item><see cref="StackableStatModifierSource"/>: a timed source whose modifiers scale by stack count.</item>
+/// <item><see cref="StatSet"/>: the manager that holds everything, updates timed sources, and recalculates values.</item>
+/// </list>
+///
+/// How stacking works:
+/// <list type="bullet">
+/// <item>Sources have a stable Id.</item>
+/// <item>If you add a source with an id that already exists, StatSet does not add a second copy.</item>
+/// <item>Instead, it calls Reapply(...) on the existing source.</item>
+/// <item>For timed sources, Reapply(...) refreshes duration.</item>
+/// <item>For stackable sources, Reapply(...) adds stacks and refreshes duration by default.</item>
+/// <item><see cref="AddStacks"/> and <see cref="RemoveStacks"/> let you manipulate an existing source directly.</item>
+/// </list>
+/// </remarks>
 public class StatSet
 {
     private readonly Dictionary<StatId, Stat> stats = new(16);
