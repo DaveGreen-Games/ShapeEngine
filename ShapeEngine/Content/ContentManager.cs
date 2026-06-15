@@ -837,6 +837,20 @@ public sealed class ContentManager
         return false;
     }
 
+    /// <summary>
+    /// Prepends the root directory to a file path if it doesn't already start with the root directory.
+    /// </summary>
+    /// <param name="filePath">The file path to validate and correct.</param>
+    /// <returns>The corrected file path with the root directory prefix if necessary,
+    /// or the original path if it already starts with the root directory.</returns>
+    private string FixFilePathRoot(string filePath)
+    {
+        if (RootDirectory == string.Empty) return filePath;
+
+        if (filePath.StartsWith(RootDirectory)) return filePath;
+        
+        return RootDirectory + "/"  + filePath;
+    }
     #endregion
     
 }
