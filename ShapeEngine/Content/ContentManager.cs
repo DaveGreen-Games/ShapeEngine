@@ -837,12 +837,18 @@ public sealed class ContentManager
         return false;
     }
 
+        
     /// <summary>
-    /// Prepends the root directory to a file path if it doesn't already start with the root directory.
+    /// Fixes the root directory of the specified file path by ensuring it is prefixed with the ContentManager's root directory.
     /// </summary>
-    /// <param name="filePath">The file path to validate and correct.</param>
-    /// <returns>The corrected file path with the root directory prefix if necessary,
-    /// or the original path if it already starts with the root directory.</returns>
+    /// <param name="filePath">The file path to fix.</param>
+    /// <returns>A file path with the correct root directory prefix.</returns>
+    /// <remarks>
+    /// If the <paramref name="filePath"/> is empty or does not already start with the <see cref="RootDirectory"/>,
+    /// the root directory is prepended to the path using the directory separator ("/").
+    /// If the <paramref name="filePath"/> is empty, it is returned as-is.
+    /// If the <paramref name="filePath"/> already starts with the <see cref="RootDirectory"/>, it is returned unchanged.
+    /// </remarks>
     private string FixFilePathRoot(string filePath)
     {
         if (RootDirectory == string.Empty) return filePath;
