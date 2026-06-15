@@ -28,7 +28,7 @@ public class SimpleStat
     /// Duration value that represents a permanent modifier (never expires).
     /// </summary>
     /// <remarks>
-    /// Duration of 0 or lower all represents a permanent modifier.
+    /// Duration of 0 or lower represents a permanent modifier.
     /// </remarks>
     public const float PermanentDuration = -1f;
 
@@ -68,12 +68,12 @@ public class SimpleStat
         public int MaxStacks;
 
         /// <summary>
-        /// The priority of the modifier. Highest wins, equal does not change. Only affects override, min and max modifiers.
+        /// The priority of the modifier. Highest wins, if equal highest ID wins. Only affects override, min and max modifiers.
         /// </summary>
         public int Priority;
 
         /// <summary>
-        /// Caculates if this modifier is more important than the other.
+        /// Calculates if this modifier is more important than the other.
         /// If Priority is equal, the ID is used to determine the order, where highest ID wins.
         /// </summary>
         /// <param name="other">The other modifier to compare against.</param>
@@ -893,7 +893,7 @@ public class SimpleStat
         
         for (int i = 0; i < maxModifierCount; i++)
         {
-            var currentModifier = minModifiers[i];
+            var currentModifier = maxModifiers[i];
             if (maxModifier == null || currentModifier.TakesPriority(maxModifier.Value))
             {
                 maxModifier = currentModifier;
