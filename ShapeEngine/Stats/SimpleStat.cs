@@ -58,10 +58,14 @@ public class SimpleStat
         /// </summary>
         public int Stacks;
 
-        //TODO: Docs
+        /// <summary>
+        /// The maximum number of stacks for this modifier.
+        /// </summary>
         public int MaxStacks;
 
-        //Todo: Docs - Highest wins, equal does not change, only affects override, min and max
+        /// <summary>
+        /// The priority of the modifier. Highest wins, equal does not change. Only affects override, min and max modifiers.
+        /// </summary>
         public int Priority;
     }
 
@@ -82,13 +86,19 @@ public class SimpleStat
     /// </summary>
     private Modifier[] multiplicativePercentageModifiers;
 
-    //TODO: Add docs
+    /// <summary>
+    /// Array of override modifiers.
+    /// </summary>
     private Modifier[] overrideModifiers;
     
-    //TODO: Add docs
+    /// <summary>
+    /// Array of minimum value modifiers.
+    /// </summary>
     private Modifier[] minModifiers;
     
-    //TODO: Add docs
+    /// <summary>
+    /// Array of maximum value modifiers.
+    /// </summary>
     private Modifier[] maxModifiers;
     
     /// <summary>
@@ -106,13 +116,19 @@ public class SimpleStat
     /// </summary>
     private int multiplicativePercentageModifierCount;
     
-    //TODO: Add docs
+    /// <summary>
+    /// Number of override modifiers currently applied.
+    /// </summary>
     private int overrideModifierCount;
     
-    //TODO: Add docs
+    /// <summary>
+    /// Number of minimum value modifiers currently applied.
+    /// </summary>
     private int minModifierCount;
     
-    //TODO: Add docs
+    /// <summary>
+    /// Number of maximum value modifiers currently applied.
+    /// </summary>
     private int maxModifierCount;
 
     /// <summary>
@@ -145,7 +161,9 @@ public class SimpleStat
     /// </summary>
     private bool hasMaxValue;
 
-    //Todo: Docs
+    /// <summary>
+    /// True if the stat's current value needs to be recalculated.
+    /// </summary>
     private bool dirty;
     #endregion
     
@@ -398,7 +416,12 @@ public class SimpleStat
         // Recalculate();
     }
 
-    //TODO: Add Docs
+    /// <summary>
+    /// Checks if a modifier with the specified ID and kind is currently applied to the stat.
+    /// </summary>
+    /// <param name="id">The unique identifier of the modifier.</param>
+    /// <param name="kind">The kind of modifier to check for.</param>
+    /// <returns>True if the modifier is found; otherwise, false.</returns>
     public bool HasModifier(int id, StatModifierKind kind)
     {
         switch (kind)
@@ -414,7 +437,17 @@ public class SimpleStat
         return false;
     }
     
-    //TODO: Docs
+    /// <summary>
+    /// Adds a new modifier to the stat or updates an existing one if the ID already exists for the specified kind.
+    /// </summary>
+    /// <param name="id">The unique identifier for the modifier.</param>
+    /// <param name="value">The value of the modifier.</param>
+    /// <param name="kind">The kind of modifier.</param>
+    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for permanent modifiers.</param>
+    /// <param name="stacks">The number of stacks to add.</param>
+    /// <param name="maxStacks">The maximum number of stacks allowed for this modifier.</param>
+    /// <param name="priority">The priority of the modifier (used for override, min, and max kinds).</param>
+    /// <returns>True if the modifier was successfully added or updated; otherwise, false.</returns>
     public bool AddModifier(int id, float value, StatModifierKind kind, float duration = PermanentDuration, int stacks = 1, int maxStacks = 1, int priority = 0)
     {
         switch (kind)
@@ -430,7 +463,12 @@ public class SimpleStat
         return false;
     }
 
-    //TODO: Docs
+    /// <summary>
+    /// Removes the modifier with the specified ID and kind from the stat.
+    /// </summary>
+    /// <param name="id">The unique identifier of the modifier to remove.</param>
+    /// <param name="kind">The kind of modifier to remove.</param>
+    /// <returns>True if the modifier was found and removed; otherwise, false.</returns>
     public bool RemoveModifier(int id, StatModifierKind kind)
     {
         switch (kind)
@@ -446,7 +484,17 @@ public class SimpleStat
         return false;
     }
 
-    //TODO: Docs
+    /// <summary>
+    /// Adjusts the number of stacks for an existing modifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the modifier.</param>
+    /// <param name="kind">The kind of modifier.</param>
+    /// <param name="stacks">The number of stacks to add (positive) or remove (negative).</param>
+    /// <returns>True if the modifier was found and adjusted; otherwise, false.</returns>
+    /// <remarks>
+    /// If stacks reach 0 or less, the modifier is removed.
+    /// Adding stacks refreshes the duration of timed modifiers.
+    /// </remarks>
     public bool AdjustModifierStacks(int id, StatModifierKind kind, int stacks)
     {
         if (stacks == 0) return false;
@@ -505,7 +553,10 @@ public class SimpleStat
         // Recalculate();
     }
 
-    //TODO: Add docs
+    /// <summary>
+    /// Resets (removes) all modifiers of a specific kind.
+    /// </summary>
+    /// <param name="kind">The kind of modifiers to reset.</param>
     public void Reset(StatModifierKind kind)
     {
         switch (kind)
@@ -580,7 +631,18 @@ public class SimpleStat
     #endregion
     
     #region Private Functions
-    //Todo: Docs
+    /// <summary>
+    /// Adds a modifier to the specified array, ensuring capacity and handling existing modifiers.
+    /// </summary>
+    /// <param name="modifiers">The array of modifiers to add to.</param>
+    /// <param name="count">The current count of modifiers in the array.</param>
+    /// <param name="id">The unique identifier for the modifier.</param>
+    /// <param name="value">The value of the modifier.</param>
+    /// <param name="duration">The duration of the modifier.</param>
+    /// <param name="stacks">The initial number of stacks.</param>
+    /// <param name="maxStacks">The maximum number of stacks.</param>
+    /// <param name="priority">The priority of the modifier.</param>
+    /// <returns>True if successful; otherwise, false.</returns>
     private bool AddModifier(ref Modifier[] modifiers, ref int count, int id, float value, float duration, int stacks, int maxStacks, int priority)
     {
         if (stacks <= 0 || maxStacks <= 0)
@@ -635,7 +697,13 @@ public class SimpleStat
         return true;
     }
     
-    //Todo: Docs
+    /// <summary>
+    /// Removes a modifier with the specified ID from the given array.
+    /// </summary>
+    /// <param name="modifiers">The array of modifiers.</param>
+    /// <param name="count">The current count of modifiers in the array.</param>
+    /// <param name="id">The unique identifier of the modifier to remove.</param>
+    /// <returns>True if found and removed; otherwise, false.</returns>
     private bool RemoveModifier(Modifier[] modifiers, ref int count, int id)
     {
         //find modifier
@@ -657,7 +725,14 @@ public class SimpleStat
         return false;
     }
     
-    //Todo: Docs
+    /// <summary>
+    /// Adjusts the stacks of a modifier in the given array.
+    /// </summary>
+    /// <param name="modifiers">The array of modifiers.</param>
+    /// <param name="count">The current count of modifiers in the array.</param>
+    /// <param name="id">The unique identifier of the modifier.</param>
+    /// <param name="stacks">The number of stacks to add or remove.</param>
+    /// <returns>True if found and adjusted; otherwise, false.</returns>
     private bool AdjustModifierStacks(Modifier[] modifiers, ref int count, int id, int stacks)
     {
         if (stacks == 0) return false;
@@ -774,7 +849,15 @@ public class SimpleStat
         return sum;
     }
 
-    //Todo: Docs
+    /// <summary>
+    /// Applies min and max modifiers to a value based on their priority.
+    /// </summary>
+    /// <param name="minModifiers">The array of minimum modifiers.</param>
+    /// <param name="minModifierCount">The count of minimum modifiers.</param>
+    /// <param name="maxModifiers">The array of maximum modifiers.</param>
+    /// <param name="maxModifierCount">The count of maximum modifiers.</param>
+    /// <param name="value">The value to clamp.</param>
+    /// <returns>The clamped value.</returns>
     private static float ApplyModifierBounds(Modifier[] minModifiers, int minModifierCount, Modifier[] maxModifiers, int maxModifierCount, float value)
     {
         if (minModifierCount <= 0 && maxModifierCount <= 0) return value;
@@ -831,7 +914,13 @@ public class SimpleStat
         return value;
     }
 
-    //Todo: Docs
+    /// <summary>
+    /// Applies multiplicative percentage modifiers to the given value.
+    /// </summary>
+    /// <param name="modifiers">The array of multiplicative modifiers.</param>
+    /// <param name="count">The count of multiplicative modifiers.</param>
+    /// <param name="value">The value to modify.</param>
+    /// <returns>The modified value.</returns>
     private static float ApplyMultiplicativePercentageModifiers(Modifier[] modifiers, int count, float value)
     {
         for (var i = 0; i < count; i++)
@@ -847,7 +936,14 @@ public class SimpleStat
         return value;
     }
 
-    //Todo: Docs
+    /// <summary>
+    /// Determines the override value to use based on modifier priorities.
+    /// </summary>
+    /// <param name="modifiers">The array of override modifiers.</param>
+    /// <param name="count">The count of override modifiers.</param>
+    /// <param name="value">The original value.</param>
+    /// <param name="overrideFound">Outputs true if an override modifier was found.</param>
+    /// <returns>The override value if found; otherwise, the original value.</returns>
     private static float ApplyOverrideValue(Modifier[] modifiers, int count, float value, out bool overrideFound)
     {
         overrideFound = false;
@@ -931,7 +1027,13 @@ public class SimpleStat
         }
     }
     
-    //Todo: Docs
+    /// <summary>
+    /// Checks if a modifier with the specified ID exists in the given array.
+    /// </summary>
+    /// <param name="modifiers">The array of modifiers.</param>
+    /// <param name="count">The current count of modifiers in the array.</param>
+    /// <param name="id">The unique identifier to look for.</param>
+    /// <returns>True if found; otherwise, false.</returns>
     private static bool ContainsModifier(Modifier[] modifiers, int count, int id)
     {
         if (count <= 0) return false;
