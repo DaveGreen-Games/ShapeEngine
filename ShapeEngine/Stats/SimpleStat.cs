@@ -19,6 +19,7 @@ namespace ShapeEngine.Stats;
 /// <item>If at least 1 override modifier is active the override value with the highest priority is used to set the current value directly. No flat or percentage modifiers are applied. Stacks are ignored.</item>
 /// <item>The min & max modifiers with the highest priority are used to clamp the current value. Stacks are ignored.</item>
 /// <item>The stats bounds are used (if set) to clamp the current value.</item>
+/// <item>If priority is tied for 2 modifiers, the modifier with the higher ID wins.</item>
 /// </list>
 /// </remarks>
 public class SimpleStat
@@ -70,6 +71,21 @@ public class SimpleStat
         /// The priority of the modifier. Highest wins, equal does not change. Only affects override, min and max modifiers.
         /// </summary>
         public int Priority;
+
+        /// <summary>
+        /// Caculates if this modifier is more important than the other.
+        /// If Priority is equal, the ID is used to determine the order, where highest ID wins.
+        /// </summary>
+        /// <param name="other">The other modifier to compare against.</param>
+        /// <returns>Returns true if this modifier is more important than the other; otherwise false.</returns>
+        public bool TakesPriority(Modifier other)
+        {
+            if (Priority == other.Priority)
+            {
+                return Id > other.Id;
+            }
+            return Priority > other.Priority;
+        }
     }
 
     #region Private Members
@@ -188,7 +204,7 @@ public class SimpleStat
     public string Description { get; set; }
 
     /// <summary>
-    /// Gets or sets the base value of the stat. Setting this will recalculate the current value.
+    /// Gets or sets the base value of the stat.
     /// </summary>
     public float BaseValue
     {
@@ -199,7 +215,6 @@ public class SimpleStat
         {
             baseValue = value;
             dirty = true;
-            // Recalculate();
         }
     }
 
@@ -259,12 +274,12 @@ public class SimpleStat
     public int OverrideModifierCount => overrideModifierCount;
     
     /// <summary>
-    /// Gets the number of minimum value modifiers currently applied.
+    /// Gets the number of maximum value modifiers currently applied.
     /// </summary>
     public int MaxModifierCount => maxModifierCount;
     
     /// <summary>
-    /// Gets the number of maximum value modifiers currently applied.
+    /// Gets the number of minimum value modifiers currently applied.
     /// </summary>
     public int MinModifierCount => minModifierCount;
     #endregion
@@ -361,7 +376,6 @@ public class SimpleStat
         }
 
         dirty = true;
-        // Recalculate();
     }
 
     /// <summary>
@@ -379,7 +393,6 @@ public class SimpleStat
         }
 
         dirty = true;
-        // Recalculate();
     }
 
     /// <summary>
@@ -399,7 +412,6 @@ public class SimpleStat
         hasMinValue = true;
         hasMaxValue = true;
         dirty = true;
-        // Recalculate();
     }
 
     /// <summary>
@@ -409,7 +421,6 @@ public class SimpleStat
     {
         hasMinValue = false;
         dirty = true;
-        // Recalculate();
     }
 
     /// <summary>
@@ -419,7 +430,6 @@ public class SimpleStat
     {
         hasMaxValue = false;
         dirty = true;
-        // Recalculate();
     }
 
     /// <summary>
@@ -430,7 +440,6 @@ public class SimpleStat
         hasMinValue = false;
         hasMaxValue = false;
         dirty = true;
-        // Recalculate();
     }
 
     /// <summary>
@@ -461,8 +470,8 @@ public class SimpleStat
     /// <param name="id">The unique identifier for the modifier.</param>
     /// <param name="value">The value of the modifier.</param>
     /// <param name="kind">The kind of modifier.</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for permanent modifiers. 0 counts as permantent too!</param>
-    /// <param name="stacks">The number of stacks to add.</param>
+    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for permanent modifiers. 0 counts as permanent too!</param>
+    /// <param name="stacks">The number of stacks to start with.</param>
     /// <param name="maxStacks">The maximum number of stacks allowed for this modifier.</param>
     /// <param name="priority">The priority of the modifier (used for override, min, and max kinds).</param>
     /// <returns>True if the modifier was successfully added or updated; otherwise, false.</returns>
@@ -552,7 +561,6 @@ public class SimpleStat
         if (changed)
         {
             dirty = true;
-            // Recalculate();
         }
     }
 
@@ -568,7 +576,6 @@ public class SimpleStat
         minModifierCount = 0;
         maxModifierCount = 0;
         dirty = true;
-        // Recalculate();
     }
 
     /// <summary>
@@ -582,32 +589,26 @@ public class SimpleStat
             case StatModifierKind.Flat:
                 flatModifierCount = 0;
                 dirty = true;
-                // Recalculate();
                 break;
             case StatModifierKind.AdditivePercent:
                 additivePercentageModifierCount = 0;
                 dirty = true;
-                // Recalculate();
                 break;
             case StatModifierKind.MultiplicativePercent:
                 multiplicativePercentageModifierCount = 0;
                 dirty = true;
-                // Recalculate();
                 break;
             case StatModifierKind.Override:
                 overrideModifierCount = 0;
                 dirty = true;
-                // Recalculate();
                 break;
             case StatModifierKind.Min:
                 minModifierCount = 0;
                 dirty = true;
-                // Recalculate();
                 break;
             case StatModifierKind.Max:
                 maxModifierCount = 0;
                 dirty = true;
-                // Recalculate();
                 break;
         }
     }
@@ -692,7 +693,6 @@ public class SimpleStat
             modifiers[i].Priority = priority;
             
             dirty = true;
-            // Recalculate();
             return true;
         }
 
@@ -713,7 +713,6 @@ public class SimpleStat
         count++;
         
         dirty = true;
-        // Recalculate();
         return true;
     }
     
@@ -738,7 +737,6 @@ public class SimpleStat
             
             dirty = true;
             
-            // Recalculate();
             return true;
         }
 
@@ -793,7 +791,6 @@ public class SimpleStat
             }
             
             dirty = true;
-            // Recalculate();
             return true;
         }
         
@@ -881,38 +878,33 @@ public class SimpleStat
     private static float ApplyModifierBounds(Modifier[] minModifiers, int minModifierCount, Modifier[] maxModifiers, int maxModifierCount, float value)
     {
         if (minModifierCount <= 0 && maxModifierCount <= 0) return value;
-        
-        int curPriority = int.MinValue;
-        float minModifierValue = float.MaxValue;
-        float maxModifierValue = float.MinValue;
-        bool minModifierFound = false;
-        bool maxModifierFound = false;
+
+        Modifier? minModifier = null;
+        Modifier? maxModifier = null;
         
         for (int i = 0; i < minModifierCount; i++)
         {
-            var min = minModifiers[i].Value;
-            var priority = minModifiers[i].Priority;
-            if (priority > curPriority)
+            var currentModifier = minModifiers[i];
+            if (minModifier == null || currentModifier.TakesPriority(minModifier.Value))
             {
-                minModifierValue = min;
-                curPriority = priority;
-                minModifierFound = true;
+                minModifier = currentModifier;
             }
         }
         
-        curPriority = int.MinValue;
         for (int i = 0; i < maxModifierCount; i++)
         {
-            var max = maxModifiers[i].Value;
-            var priority = maxModifiers[i].Priority;
-            if (priority > curPriority)
+            var currentModifier = minModifiers[i];
+            if (maxModifier == null || currentModifier.TakesPriority(maxModifier.Value))
             {
-                maxModifierValue = max;
-                curPriority = priority;
-                maxModifierFound = true;
+                maxModifier = currentModifier;
             }
         }
 
+        bool minModifierFound = minModifier != null;
+        bool maxModifierFound = maxModifier != null;
+        var minModifierValue = minModifier != null ? minModifier.Value.Value : 0;
+        var maxModifierValue = maxModifier != null ? maxModifier.Value.Value : 0;
+        
         if (maxModifierFound && minModifierFound)
         {
             if (maxModifierValue < minModifierValue)
@@ -970,21 +962,23 @@ public class SimpleStat
         
         if (count <= 0) return value;
         
-        float overrideValue = 0;
-        int curPriority = int.MinValue;
+        Modifier? overrideModifier = null;
         
         for (var i = 0; i < count; i++)
         {
-            var priority = modifiers[i].Priority;
-            if (priority > curPriority)
+            var curModifier = modifiers[i];
+            if (overrideModifier == null || curModifier.TakesPriority(overrideModifier.Value))
             {
-                overrideValue = modifiers[i].Value;
-                curPriority = priority;
+                overrideModifier = curModifier;
                 overrideFound = true;
             }
         }
 
-        if(overrideFound) return overrideValue;
+        if(overrideModifier != null)
+        {
+            overrideFound = true;
+            return overrideModifier.Value.Value;
+        }
         
         return value;
     }
