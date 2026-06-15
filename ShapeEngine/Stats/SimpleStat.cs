@@ -3,6 +3,24 @@ namespace ShapeEngine.Stats;
 /// <summary>
 /// Represents a simple stat with a base value and modifiers that affect it.
 /// </summary>
+/// <remarks>
+/// <list type="bullet">
+/// <item>A base value and upper/lower bounds can be set.</item>
+/// <item>Modifiers can be added, removed, and stacks of modifiers can be adjusted (reduced, increased).</item>
+/// <item>Modifiers have an ID to identify them.</item>
+/// <item>Modifiers can be permanent or timed. Timed modifiers that will run out are completely removed.</item>
+/// <item>Adding stacks refreshes the modifier's remaining duration, if it is timed.</item>
+/// <item>Removing stacks to 0 will remove the modifier.</item>
+/// <item>Max stacks can be used to cap the stack number that can be reached. Timer will still be refreshed on timed modifiers.</item>
+/// <item>There a flat, additive percentage, multiplicative percentage, override, min, and max modifiers.</item>
+/// <item>Flat modifiers are summed up and added to the base value. Stacks apply.</item>
+/// <item>Additive percentage modifiers are summed up and then multiplied with the current value. Stacks apply.</item>
+/// <item>Each multiplicative modifier is multiplied with the current value seperatly for the amount of stacks it has.</item>
+/// <item>If at least 1 override modifier is active the override value with the highest priority is used to set the current value directly. No flat or percentage modifiers are applied. Stacks are ignored.</item>
+/// <item>The min & max modifiers with the highest priority are used to clamp the current value. Stacks are ignored.</item>
+/// <item>The stats bounds are used (if set) to clamp the current value.</item>
+/// </list>
+/// </remarks>
 public class SimpleStat
 {
     /// <summary>
@@ -39,37 +57,63 @@ public class SimpleStat
         /// The number of times the modifier is stacked.
         /// </summary>
         public int Stacks;
+
+        //TODO: Docs
+        public int MaxStacks;
+
+        //Todo: Docs - Highest wins, equal does not change, only affects override, min and max
+        public int Priority;
     }
 
+    #region Private Members
+    
     /// <summary>
     /// Array of flat bonus modifiers.
     /// </summary>
-    private Modifier[] flatBonuses;
+    private Modifier[] flatModifiers;
 
     /// <summary>
     /// Array of additive multiplier modifiers.
     /// </summary>
-    private Modifier[] additiveMultipliers;
+    private Modifier[] additivePercentageModifiers;
 
     /// <summary>
     /// Array of multiplicative multiplier modifiers.
     /// </summary>
-    private Modifier[] multiplicativeMultipliers;
+    private Modifier[] multiplicativePercentageModifiers;
 
+    //TODO: Add docs
+    private Modifier[] overrideModifiers;
+    
+    //TODO: Add docs
+    private Modifier[] minModifiers;
+    
+    //TODO: Add docs
+    private Modifier[] maxModifiers;
+    
     /// <summary>
     /// Number of flat bonus modifiers currently applied.
     /// </summary>
-    private int flatBonusCount;
+    private int flatModifierCount;
 
     /// <summary>
     /// Number of additive multiplier modifiers currently applied.
     /// </summary>
-    private int additiveMultiplierCount;
+    private int additivePercentageModifierCount;
 
     /// <summary>
     /// Number of multiplicative multiplier modifiers currently applied.
     /// </summary>
-    private int multiplicativeMultiplierCount;
+    private int multiplicativePercentageModifierCount;
+    
+    //TODO: Add docs
+    private int overrideModifierCount;
+    
+    //TODO: Add docs
+    private int minModifierCount;
+    
+    //TODO: Add docs
+    private int maxModifierCount;
 
     /// <summary>
     /// The base value of the stat.
@@ -101,6 +145,12 @@ public class SimpleStat
     /// </summary>
     private bool hasMaxValue;
 
+    //Todo: Docs
+    private bool dirty;
+    #endregion
+    
+    #region Public Members
+    
     /// <summary>
     /// The display name of the stat.
     /// </summary>
@@ -127,14 +177,25 @@ public class SimpleStat
         set
         {
             baseValue = value;
-            Recalculate();
+            dirty = true;
+            // Recalculate();
         }
     }
 
     /// <summary>
     /// Gets the current calculated value of the stat.
     /// </summary>
-    public float CurrentValue => currentValue;
+    public float CurrentValue
+    {
+        get
+        {
+            if(dirty)
+            {
+                Recalculate();
+            }
+            return currentValue;
+        }
+    }
 
     /// <summary>
     /// Gets a value indicating whether the stat has a minimum value bound set.
@@ -159,18 +220,22 @@ public class SimpleStat
     /// <summary>
     /// Gets the number of flat bonus modifiers currently applied.
     /// </summary>
-    public int FlatBonusCount => flatBonusCount;
+    public int FlatModifierCount => flatModifierCount;
 
     /// <summary>
     /// Gets the number of additive multiplier modifiers currently applied.
     /// </summary>
-    public int AdditiveMultiplierCount => additiveMultiplierCount;
+    public int AdditivePercentageModifierCount => additivePercentageModifierCount;
 
     /// <summary>
     /// Gets the number of multiplicative multiplier modifiers currently applied.
     /// </summary>
-    public int MultiplicativeMultiplierCount => multiplicativeMultiplierCount;
+    public int MultiplicativePercentageModifierCount => multiplicativePercentageModifierCount;
 
+    #endregion
+    
+    #region Constructors
+    
     /// <summary>
     /// Creates a new simple stat with the specified base value and optional modifiers.
     /// </summary>
@@ -178,26 +243,27 @@ public class SimpleStat
     /// <param name="name">The display name of the stat.</param>
     /// <param name="abbreviation">The abbreviated display name of the stat.</param>
     /// <param name="description">The description of the stat.</param>
-    /// <param name="flatBonusCapacity">The initial capacity for flat bonus modifiers (default 4).</param>
-    /// <param name="additiveMultiplierCapacity">The initial capacity for additive multiplier modifiers (default 4).</param>
-    /// <param name="multiplicativeMultiplierCapacity">The initial capacity for multiplicative multiplier modifiers (default 4).</param>
+    /// <param name="modifierCapacities">The initial capacity for modifiers.</param>
     public SimpleStat(
         float baseValue = 0f,
         string name = "",
         string abbreviation = "",
         string description = "",
-        int flatBonusCapacity = 4,
-        int additiveMultiplierCapacity = 4,
-        int multiplicativeMultiplierCapacity = 4)
+        int modifierCapacities = 4)
     {
         this.baseValue = baseValue;
         Name = name;
         Abbreviation = abbreviation;
         Description = description;
 
-        flatBonuses = new Modifier[flatBonusCapacity < 0 ? 0 : flatBonusCapacity];
-        additiveMultipliers = new Modifier[additiveMultiplierCapacity < 0 ? 0 : additiveMultiplierCapacity];
-        multiplicativeMultipliers = new Modifier[multiplicativeMultiplierCapacity < 0 ? 0 : multiplicativeMultiplierCapacity];
+        int capacity = modifierCapacities < 0 ? 0 : modifierCapacities;
+        
+        flatModifiers = new Modifier[capacity];
+        additivePercentageModifiers = new Modifier[capacity];
+        multiplicativePercentageModifiers = new Modifier[capacity];
+        overrideModifiers = new Modifier[capacity];
+        minModifiers = new Modifier[capacity];
+        maxModifiers = new Modifier[capacity];
 
         currentValue = ApplyBounds(baseValue);
     }
@@ -213,24 +279,38 @@ public class SimpleStat
         maxValue = other.maxValue;
         hasMinValue = other.hasMinValue;
         hasMaxValue = other.hasMaxValue;
+        dirty = other.dirty;
 
         Name = other.Name;
         Abbreviation = other.Abbreviation;
         Description = other.Description;
 
-        flatBonusCount = other.flatBonusCount;
-        additiveMultiplierCount = other.additiveMultiplierCount;
-        multiplicativeMultiplierCount = other.multiplicativeMultiplierCount;
+        flatModifierCount = other.flatModifierCount;
+        additivePercentageModifierCount = other.additivePercentageModifierCount;
+        multiplicativePercentageModifierCount = other.multiplicativePercentageModifierCount;
+        overrideModifierCount = other.overrideModifierCount;
+        minModifierCount = other.minModifierCount;
+        maxModifierCount = other.maxModifierCount;
 
-        flatBonuses = new Modifier[other.flatBonuses.Length];
-        additiveMultipliers = new Modifier[other.additiveMultipliers.Length];
-        multiplicativeMultipliers = new Modifier[other.multiplicativeMultipliers.Length];
+        flatModifiers = new Modifier[other.flatModifiers.Length];
+        additivePercentageModifiers = new Modifier[other.additivePercentageModifiers.Length];
+        multiplicativePercentageModifiers = new Modifier[other.multiplicativePercentageModifiers.Length];
+        overrideModifiers = new Modifier[other.overrideModifiers.Length];
+        minModifiers = new Modifier[other.minModifiers.Length];
+        maxModifiers = new Modifier[other.maxModifiers.Length];
 
-        CopyModifiers(other.flatBonuses, flatBonuses, flatBonusCount);
-        CopyModifiers(other.additiveMultipliers, additiveMultipliers, additiveMultiplierCount);
-        CopyModifiers(other.multiplicativeMultipliers, multiplicativeMultipliers, multiplicativeMultiplierCount);
+        CopyModifiers(other.flatModifiers, flatModifiers, flatModifierCount);
+        CopyModifiers(other.additivePercentageModifiers, additivePercentageModifiers, additivePercentageModifierCount);
+        CopyModifiers(other.multiplicativePercentageModifiers, multiplicativePercentageModifiers, multiplicativePercentageModifierCount);
+        CopyModifiers(other.overrideModifiers, overrideModifiers, overrideModifierCount);
+        CopyModifiers(other.minModifiers, minModifiers, minModifierCount);
+        CopyModifiers(other.maxModifiers, maxModifiers, maxModifierCount);
     }
 
+    #endregion
+    
+    #region Public Functions
+    
     /// <summary>
     /// Sets the minimum value bound for the stat. If the current maximum is lower than this value, the maximum is also updated to match.
     /// </summary>
@@ -245,7 +325,8 @@ public class SimpleStat
             maxValue = minValue;
         }
 
-        Recalculate();
+        dirty = true;
+        // Recalculate();
     }
 
     /// <summary>
@@ -262,7 +343,8 @@ public class SimpleStat
             minValue = maxValue;
         }
 
-        Recalculate();
+        dirty = true;
+        // Recalculate();
     }
 
     /// <summary>
@@ -274,14 +356,15 @@ public class SimpleStat
     {
         if (max < min)
         {
-            max = min;
+            (min, max) = (max, min);
         }
 
         minValue = min;
         maxValue = max;
         hasMinValue = true;
         hasMaxValue = true;
-        Recalculate();
+        dirty = true;
+        // Recalculate();
     }
 
     /// <summary>
@@ -290,7 +373,8 @@ public class SimpleStat
     public void ClearMin()
     {
         hasMinValue = false;
-        Recalculate();
+        dirty = true;
+        // Recalculate();
     }
 
     /// <summary>
@@ -299,7 +383,8 @@ public class SimpleStat
     public void ClearMax()
     {
         hasMaxValue = false;
-        Recalculate();
+        dirty = true;
+        // Recalculate();
     }
 
     /// <summary>
@@ -309,108 +394,77 @@ public class SimpleStat
     {
         hasMinValue = false;
         hasMaxValue = false;
-        Recalculate();
+        dirty = true;
+        // Recalculate();
     }
 
-    /// <summary>
-    /// Adds a flat modifier to the stat.
-    /// </summary>
-    /// <param name="value">The flat value to add.</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for a permanent modifier.</param>
-    /// <param name="stacks">The number of times to stack the modifier.</param>
-    public void AddFlat(float value, float duration = PermanentDuration, int stacks = 1)
+    //TODO: Add Docs
+    public bool HasModifier(int id, StatModifierKind kind)
     {
-        AddModifier(ref flatBonuses, ref flatBonusCount, 0, value, duration, stacks, false);
-    }
+        switch (kind)
+        {
+            case StatModifierKind.Flat: return ContainsModifier(flatModifiers, flatModifierCount, id);
+            case StatModifierKind.AdditivePercent: return ContainsModifier(additivePercentageModifiers, additivePercentageModifierCount, id);
+            case StatModifierKind.MultiplicativePercent: return ContainsModifier(multiplicativePercentageModifiers, multiplicativePercentageModifierCount, id);
+            case StatModifierKind.Override: return ContainsModifier(overrideModifiers, overrideModifierCount, id);
+            case StatModifierKind.Min: return ContainsModifier(minModifiers, minModifierCount, id);
+            case StatModifierKind.Max: return ContainsModifier(maxModifiers, maxModifierCount, id);
+        }
 
-    /// <summary>
-    /// Adds a flat modifier to the stat with a specific id.
-    /// </summary>
-    /// <param name="id">The unique identifier for the modifier.</param>
-    /// <param name="value">The flat value to add.</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for a permanent modifier.</param>
-    /// <param name="stacks">The number of times to stack the modifier.</param>
-    public void AddFlat(int id, float value, float duration = PermanentDuration, int stacks = 1)
+        return false;
+    }
+    
+    //TODO: Docs
+    public bool AddModifier(int id, float value, StatModifierKind kind, float duration = PermanentDuration, int stacks = 1, int maxStacks = 1, int priority = 0)
     {
-        AddModifier(ref flatBonuses, ref flatBonusCount, id, value, duration, stacks, true);
+        switch (kind)
+        {
+            case StatModifierKind.Flat: return AddModifier(ref flatModifiers, ref flatModifierCount, id, value, duration, stacks, maxStacks, priority);
+            case StatModifierKind.AdditivePercent: return AddModifier(ref additivePercentageModifiers, ref additivePercentageModifierCount, id, value, duration, stacks, maxStacks, priority);
+            case StatModifierKind.MultiplicativePercent: return AddModifier(ref multiplicativePercentageModifiers, ref multiplicativePercentageModifierCount, id, value, duration, stacks, maxStacks, priority);
+            case StatModifierKind.Override: return AddModifier(ref overrideModifiers, ref overrideModifierCount, id, value, duration, stacks, maxStacks, priority);
+            case StatModifierKind.Min: return AddModifier(ref minModifiers, ref minModifierCount, id, value, duration, stacks, maxStacks, priority);
+            case StatModifierKind.Max: return AddModifier(ref maxModifiers, ref maxModifierCount, id, value, duration, stacks, maxStacks, priority);
+        }
+
+        return false;
     }
 
-    /// <summary>
-    /// Adds an additive percentage modifier to the stat.
-    /// </summary>
-    /// <param name="value">The percentage multiplier to add (e.g., 0.25 for +25%).</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for a permanent modifier.</param>
-    /// <param name="stacks">The number of times to stack the modifier.</param>
-    public void AddAdditiveMultiplier(float value, float duration = PermanentDuration, int stacks = 1)
+    //TODO: Docs
+    public bool RemoveModifier(int id, StatModifierKind kind)
     {
-        AddModifier(ref additiveMultipliers, ref additiveMultiplierCount, 0, value, duration, stacks, false);
+        switch (kind)
+        {
+            case StatModifierKind.Flat: return RemoveModifier(flatModifiers, ref flatModifierCount, id);
+            case StatModifierKind.AdditivePercent: return RemoveModifier(additivePercentageModifiers, ref additivePercentageModifierCount, id);
+            case StatModifierKind.MultiplicativePercent: return RemoveModifier(multiplicativePercentageModifiers, ref multiplicativePercentageModifierCount, id);
+            case StatModifierKind.Override: return RemoveModifier(overrideModifiers, ref overrideModifierCount, id);
+            case StatModifierKind.Min: return RemoveModifier(minModifiers, ref minModifierCount, id);
+            case StatModifierKind.Max: return RemoveModifier(maxModifiers, ref maxModifierCount, id);
+        }
+
+        return false;
     }
 
-    /// <summary>
-    /// Adds an additive percentage modifier to the stat with a specific id.
-    /// </summary>
-    /// <param name="id">The unique identifier for the modifier.</param>
-    /// <param name="value">The percentage multiplier to add (e.g., 0.25 for +25%).</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for a permanent modifier.</param>
-    /// <param name="stacks">The number of times to stack the modifier.</param>
-    public void AddAdditiveMultiplier(int id, float value, float duration = PermanentDuration, int stacks = 1)
+    //TODO: Docs
+    public bool AdjustModifierStacks(int id, StatModifierKind kind, int stacks)
     {
-        AddModifier(ref additiveMultipliers, ref additiveMultiplierCount, id, value, duration, stacks, true);
-    }
+        if (stacks == 0) return false;
 
-    /// <summary>
-    /// Adds a multiplicative percentage modifier to the stat.
-    /// </summary>
-    /// <param name="value">The multiplier to add (e.g., 0.25 for x1.25).</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for a permanent modifier.</param>
-    /// <param name="stacks">The number of times to stack the modifier.</param>
-    public void AddMultiplicativeMultiplier(float value, float duration = PermanentDuration, int stacks = 1)
-    {
-        AddModifier(ref multiplicativeMultipliers, ref multiplicativeMultiplierCount, 0, value, duration, stacks, false);
+        switch (kind)
+        {
+            case StatModifierKind.Flat: return AdjustModifierStacks(flatModifiers, ref flatModifierCount, id, stacks);
+            case StatModifierKind.AdditivePercent: return AdjustModifierStacks(additivePercentageModifiers, ref additivePercentageModifierCount, id, stacks);
+            case StatModifierKind.MultiplicativePercent: return AdjustModifierStacks(multiplicativePercentageModifiers, ref multiplicativePercentageModifierCount, id, stacks);
+            case StatModifierKind.Override: return AdjustModifierStacks(overrideModifiers, ref overrideModifierCount, id, stacks);
+            case StatModifierKind.Min: return AdjustModifierStacks(minModifiers, ref minModifierCount, id, stacks);
+            case StatModifierKind.Max: return AdjustModifierStacks(maxModifiers, ref maxModifierCount, id, stacks);
+        }
+        
+        return false;
     }
-
-    /// <summary>
-    /// Adds a multiplicative percentage modifier to the stat with a specific id.
-    /// </summary>
-    /// <param name="id">The unique identifier for the modifier.</param>
-    /// <param name="value">The multiplier to add (e.g., 0.25 for x1.25).</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for a permanent modifier.</param>
-    /// <param name="stacks">The number of times to stack the modifier.</param>
-    public void AddMultiplicativeMultiplier(int id, float value, float duration = PermanentDuration, int stacks = 1)
-    {
-        AddModifier(ref multiplicativeMultipliers, ref multiplicativeMultiplierCount, id, value, duration, stacks, true);
-    }
-
-    /// <summary>
-    /// Removes a flat modifier by id if it exists.
-    /// </summary>
-    /// <param name="id">The unique identifier of the modifier to remove.</param>
-    /// <returns>True if a modifier with the given id was removed.</returns>
-    public bool RemoveFlat(int id)
-    {
-        return RemoveModifier(flatBonuses, ref flatBonusCount, id);
-    }
-
-    /// <summary>
-    /// Removes an additive multiplier by id if it exists.
-    /// </summary>
-    /// <param name="id">The unique identifier of the modifier to remove.</param>
-    /// <returns>True if a modifier with the given id was removed.</returns>
-    public bool RemoveAdditiveMultiplier(int id)
-    {
-        return RemoveModifier(additiveMultipliers, ref additiveMultiplierCount, id);
-    }
-
-    /// <summary>
-    /// Removes a multiplicative multiplier by id if it exists.
-    /// </summary>
-    /// <param name="id">The unique identifier of the modifier to remove.</param>
-    /// <returns>True if a modifier with the given id was removed.</returns>
-    public bool RemoveMultiplicativeMultiplier(int id)
-    {
-        return RemoveModifier(multiplicativeMultipliers, ref multiplicativeMultiplierCount, id);
-    }
-
+    
+    
     /// <summary>
     /// Updates timed modifiers by reducing their remaining duration.
     /// </summary>
@@ -422,25 +476,71 @@ public class SimpleStat
             return;
         }
 
-        var changed = UpdateModifiers(flatBonuses, ref flatBonusCount, dt);
-        changed |= UpdateModifiers(additiveMultipliers, ref additiveMultiplierCount, dt);
-        changed |= UpdateModifiers(multiplicativeMultipliers, ref multiplicativeMultiplierCount, dt);
-
+        var changed = UpdateModifiers(flatModifiers, ref flatModifierCount, dt);
+        changed |= UpdateModifiers(additivePercentageModifiers, ref additivePercentageModifierCount, dt);
+        changed |= UpdateModifiers(multiplicativePercentageModifiers, ref multiplicativePercentageModifierCount, dt);
+        changed |= UpdateModifiers(overrideModifiers, ref overrideModifierCount, dt);
+        changed |= UpdateModifiers(minModifiers, ref minModifierCount, dt);
+        changed |= UpdateModifiers(maxModifiers, ref maxModifierCount, dt);
+        
         if (changed)
         {
-            Recalculate();
+            dirty = true;
+            // Recalculate();
         }
     }
 
     /// <summary>
     /// Resets all modifiers to their initial state (removes all modifiers).
     /// </summary>
-    public void Reset()
+    public void ResetAllModifiers()
     {
-        flatBonusCount = 0;
-        additiveMultiplierCount = 0;
-        multiplicativeMultiplierCount = 0;
-        Recalculate();
+        flatModifierCount = 0;
+        additivePercentageModifierCount = 0;
+        multiplicativePercentageModifierCount = 0;
+        overrideModifierCount = 0;
+        minModifierCount = 0;
+        maxModifierCount = 0;
+        dirty = true;
+        // Recalculate();
+    }
+
+    //TODO: Add docs
+    public void Reset(StatModifierKind kind)
+    {
+        switch (kind)
+        {
+            case StatModifierKind.Flat:
+                flatModifierCount = 0;
+                dirty = true;
+                // Recalculate();
+                break;
+            case StatModifierKind.AdditivePercent:
+                additivePercentageModifierCount = 0;
+                dirty = true;
+                // Recalculate();
+                break;
+            case StatModifierKind.MultiplicativePercent:
+                multiplicativePercentageModifierCount = 0;
+                dirty = true;
+                // Recalculate();
+                break;
+            case StatModifierKind.Override:
+                overrideModifierCount = 0;
+                dirty = true;
+                // Recalculate();
+                break;
+            case StatModifierKind.Min:
+                minModifierCount = 0;
+                dirty = true;
+                // Recalculate();
+                break;
+            case StatModifierKind.Max:
+                maxModifierCount = 0;
+                dirty = true;
+                // Recalculate();
+                break;
+        }
     }
 
     /// <summary>
@@ -457,66 +557,64 @@ public class SimpleStat
     /// </summary>
     public void Recalculate()
     {
-        var value = baseValue + SumModifiers(flatBonuses, flatBonusCount);
-        value *= 1f + SumModifiers(additiveMultipliers, additiveMultiplierCount);
+        var value = ApplyOverrideValue(overrideModifiers, overrideModifierCount, baseValue, out bool overrideFound);
 
-        for (var i = 0; i < multiplicativeMultiplierCount; i++)
+        if (!overrideFound)
         {
-            var multiplier = 1f + multiplicativeMultipliers[i].Value;
+            //apply flat modifiers
+            value += SumModifiers(flatModifiers, flatModifierCount);
+        
+            //apply additive percentage modifiers
+            value *= 1f + SumModifiers(additivePercentageModifiers, additivePercentageModifierCount);
 
-            for (var stack = 0; stack < multiplicativeMultipliers[i].Stacks; stack++)
-            {
-                value *= multiplier;
-            }
+            //apply multiplicative percentage modifiers
+            value = ApplyMultiplicativePercentageModifiers(multiplicativePercentageModifiers, multiplicativePercentageModifierCount, value);
         }
+
+        //apply bound modifiers (min, max)
+        value = ApplyModifierBounds(minModifiers, minModifierCount, maxModifiers, maxModifierCount, value);
 
         currentValue = ApplyBounds(value);
     }
 
-    /// <summary>
-    /// Adds or updates a modifier in the specified modifier array.
-    /// </summary>
-    /// <param name="modifiers">The array to add the modifier to.</param>
-    /// <param name="count">The current count of modifiers in the array.</param>
-    /// <param name="id">The unique identifier for the modifier. Use 0 for auto-generated id.</param>
-    /// <param name="value">The value of the modifier.</param>
-    /// <param name="duration">The duration of the modifier.</param>
-    /// <param name="stacks">The number of times to stack the modifier.</param>
-    /// <param name="useId">If true, tries to find and update an existing modifier with the given id instead of adding a new one.</param>
-    private void AddModifier(ref Modifier[] modifiers, ref int count, int id, float value, float duration, int stacks, bool useId)
+    #endregion
+    
+    #region Private Functions
+    //Todo: Docs
+    private bool AddModifier(ref Modifier[] modifiers, ref int count, int id, float value, float duration, int stacks, int maxStacks, int priority)
     {
-        if (stacks <= 0)
+        if (stacks <= 0 || maxStacks <= 0)
         {
-            return;
+            return false;
         }
 
-        if (useId)
+        if (stacks > maxStacks)
         {
-            for (var i = 0; i < count; i++)
+            stacks = maxStacks;
+        }
+        
+        //look if modifier already exists, 
+        //if so, set the existing modifier's value and duration to the new values
+        for (var i = 0; i < count; i++)
+        {
+            if (modifiers[i].Id != id)
             {
-                if (modifiers[i].Id != id)
-                {
-                    continue;
-                }
-
-                modifiers[i].Value = value;
-                modifiers[i].Stacks += stacks;
-
-                if (duration > 0f)
-                {
-                    modifiers[i].Duration = duration;
-                    modifiers[i].Remaining = duration;
-                }
-                else if (modifiers[i].Duration > 0f)
-                {
-                    modifiers[i].Remaining = modifiers[i].Duration;
-                }
-
-                Recalculate();
-                return;
+                continue;
             }
+
+            modifiers[i].Value = value;
+            modifiers[i].Stacks = stacks;
+            modifiers[i].MaxStacks = maxStacks;
+            modifiers[i].Duration = duration;
+            modifiers[i].Remaining = duration;
+            modifiers[i].Priority = priority;
+            
+            dirty = true;
+            // Recalculate();
+            return true;
         }
 
+        //if modifier doesn't exist, add it to the array'
         EnsureCapacity(ref modifiers, count + 1);
 
         modifiers[count] = new Modifier
@@ -525,37 +623,88 @@ public class SimpleStat
             Value = value,
             Duration = duration,
             Remaining = duration,
-            Stacks = stacks
+            Stacks = stacks,
+            MaxStacks = maxStacks,
+            Priority = priority,
         };
 
         count++;
-        Recalculate();
+        
+        dirty = true;
+        // Recalculate();
+        return true;
     }
-
-    /// <summary>
-    /// Removes a modifier from the specified array by id if it exists.
-    /// </summary>
-    /// <param name="modifiers">The array to search for the modifier.</param>
-    /// <param name="count">The count of modifiers in the array.</param>
-    /// <param name="id">The unique identifier of the modifier to remove.</param>
-    /// <returns>True if a modifier with the given id was found and removed.</returns>
+    
+    //Todo: Docs
     private bool RemoveModifier(Modifier[] modifiers, ref int count, int id)
     {
+        //find modifier
         for (var i = 0; i < count; i++)
         {
             if (modifiers[i].Id != id)
             {
                 continue;
             }
-
+            
             RemoveAt(modifiers, ref count, i);
-            Recalculate();
+            
+            dirty = true;
+            
+            // Recalculate();
             return true;
         }
 
         return false;
     }
+    
+    //Todo: Docs
+    private bool AdjustModifierStacks(Modifier[] modifiers, ref int count, int id, int stacks)
+    {
+        if (stacks == 0) return false;
+        
+        for (var i = 0; i < count; i++)
+        {
+            if (modifiers[i].Id != id)
+            {
+                continue;
+            }
+            
+            if (stacks > 0)
+            {
+                modifiers[i].Stacks += stacks;
+                
+                //clamp to max stacks if max stacks is greater than 0
+                var maxStacks = modifiers[i].MaxStacks;
+                if (maxStacks > 0 && modifiers[i].Stacks > maxStacks)
+                {
+                    modifiers[i].Stacks = maxStacks;
+                }
 
+                //reset Remaining time if duration is greater than 0
+                if (modifiers[i].Duration > 0)
+                {
+                    modifiers[i].Remaining = modifiers[i].Duration;
+                }
+            }
+            else
+            {
+                //removing stacks does not reset timer!
+                modifiers[i].Stacks -= stacks;
+                if (modifiers[i].Stacks <= 0)
+                {
+                    RemoveAt(modifiers, ref count, i);
+                }
+                
+            }
+            
+            dirty = true;
+            // Recalculate();
+            return true;
+        }
+        
+        return false;
+    }
+    
     /// <summary>
     /// Updates all timed modifiers by reducing their remaining duration by dt seconds.
     /// </summary>
@@ -581,6 +730,7 @@ public class SimpleStat
                 continue;
             }
 
+            //if has duration and timer runs out, modifier is completely removed (not just a single stack!)
             RemoveAt(modifiers, ref count, i);
             changed = true;
         }
@@ -624,6 +774,105 @@ public class SimpleStat
         return sum;
     }
 
+    //Todo: Docs
+    private static float ApplyModifierBounds(Modifier[] minModifiers, int minModifierCount, Modifier[] maxModifiers, int maxModifierCount, float value)
+    {
+        if (minModifierCount <= 0 && maxModifierCount <= 0) return value;
+        
+        int curPriority = int.MinValue;
+        float minModifierValue = float.MaxValue;
+        float maxModifierValue = float.MinValue;
+        bool minModifierFound = false;
+        bool maxModifierFound = false;
+        
+        for (int i = 0; i < minModifierCount; i++)
+        {
+            var min = minModifiers[i].Value;
+            var priority = minModifiers[i].Priority;
+            if (priority > curPriority)
+            {
+                minModifierValue = min;
+                curPriority = priority;
+                minModifierFound = true;
+            }
+        }
+        
+        curPriority = int.MinValue;
+        for (int i = 0; i < maxModifierCount; i++)
+        {
+            var max = maxModifiers[i].Value;
+            var priority = maxModifiers[i].Priority;
+            if (priority > curPriority)
+            {
+                maxModifierValue = max;
+                curPriority = priority;
+                maxModifierFound = true;
+            }
+        }
+
+        if (maxModifierFound && minModifierFound)
+        {
+            if (maxModifierValue < minModifierValue)
+            {
+                (minModifierValue, maxModifierValue) = (maxModifierValue, minModifierValue);
+            }
+        }
+
+        if (minModifierFound && value < minModifierValue)
+        {
+            value = minModifierValue;
+        }
+
+        if (maxModifierFound && value > maxModifierValue)
+        {
+            value = maxModifierValue;
+        }
+
+        return value;
+    }
+
+    //Todo: Docs
+    private static float ApplyMultiplicativePercentageModifiers(Modifier[] modifiers, int count, float value)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            var multiplier = 1f + modifiers[i].Value;
+
+            for (var stack = 0; stack < modifiers[i].Stacks; stack++)
+            {
+                value *= multiplier;
+            }
+        }
+
+        return value;
+    }
+
+    //Todo: Docs
+    private static float ApplyOverrideValue(Modifier[] modifiers, int count, float value, out bool overrideFound)
+    {
+        overrideFound = false;
+        
+        if (count <= 0) return value;
+        
+        float overrideValue = 0;
+        int curPriority = int.MinValue;
+        
+        for (var i = 0; i < count; i++)
+        {
+            var priority = modifiers[i].Priority;
+            if (priority > curPriority)
+            {
+                overrideValue = modifiers[i].Value;
+                curPriority = priority;
+                overrideFound = true;
+            }
+        }
+
+        if(overrideFound) return overrideValue;
+        
+        return value;
+    }
+   
     /// <summary>
     /// Applies the minimum and maximum value bounds to the given value.
     /// </summary>
@@ -681,4 +930,21 @@ public class SimpleStat
             destination[i] = source[i];
         }
     }
+    
+    //Todo: Docs
+    private static bool ContainsModifier(Modifier[] modifiers, int count, int id)
+    {
+        if (count <= 0) return false;
+        if (count == 1) return modifiers[0].Id == id;
+        else
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if(modifiers[i].Id == id) return true;
+            }
+
+            return false;
+        }
+    }
+    #endregion
 }
