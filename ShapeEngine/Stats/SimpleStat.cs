@@ -10,12 +10,12 @@ namespace ShapeEngine.Stats;
 /// <item>Modifiers have an ID to identify them.</item>
 /// <item>Modifiers can be permanent or timed. Timed modifiers that will run out are completely removed.</item>
 /// <item>Adding stacks refreshes the modifier's remaining duration, if it is timed.</item>
-/// <item>Removing stacks to 0 will remove the modifier.</item>
+/// <item>Removing stacks to 0 or below will remove the modifier.</item>
 /// <item>Max stacks can be used to cap the stack number that can be reached. Timer will still be refreshed on timed modifiers.</item>
-/// <item>There a flat, additive percentage, multiplicative percentage, override, min, and max modifiers.</item>
+/// <item>There are flat, additive percentage, multiplicative percentage, override, min, and max modifiers.</item>
 /// <item>Flat modifiers are summed up and added to the base value. Stacks apply.</item>
 /// <item>Additive percentage modifiers are summed up and then multiplied with the current value. Stacks apply.</item>
-/// <item>Each multiplicative modifier is multiplied with the current value seperatly for the amount of stacks it has.</item>
+/// <item>Each multiplicative modifier is multiplied with the current value separately for the amount of stacks it has.</item>
 /// <item>If at least 1 override modifier is active the override value with the highest priority is used to set the current value directly. No flat or percentage modifiers are applied. Stacks are ignored.</item>
 /// <item>The min & max modifiers with the highest priority are used to clamp the current value. Stacks are ignored.</item>
 /// <item>The stats bounds are used (if set) to clamp the current value.</item>
@@ -26,6 +26,9 @@ public class SimpleStat
     /// <summary>
     /// Duration value that represents a permanent modifier (never expires).
     /// </summary>
+    /// <remarks>
+    /// Duration of 0 or lower all represents a permanent modifier.
+    /// </remarks>
     public const float PermanentDuration = -1f;
 
     /// <summary>
@@ -250,6 +253,20 @@ public class SimpleStat
     /// </summary>
     public int MultiplicativePercentageModifierCount => multiplicativePercentageModifierCount;
 
+    /// <summary>
+    /// Gets the number of override modifiers currently applied.
+    /// </summary>
+    public int OverrideModifierCount => overrideModifierCount;
+    
+    /// <summary>
+    /// Gets the number of minimum value modifiers currently applied.
+    /// </summary>
+    public int MaxModifierCount => maxModifierCount;
+    
+    /// <summary>
+    /// Gets the number of maximum value modifiers currently applied.
+    /// </summary>
+    public int MinModifierCount => minModifierCount;
     #endregion
     
     #region Constructors
@@ -438,12 +455,13 @@ public class SimpleStat
     }
     
     /// <summary>
-    /// Adds a new modifier to the stat or updates an existing one if the ID already exists for the specified kind.
+    /// Adds a new modifier to the stat or sets the values of an existing one if the ID already exists for the specified kind.
+    /// If existing modifier is found, it is updated with the new values.
     /// </summary>
     /// <param name="id">The unique identifier for the modifier.</param>
     /// <param name="value">The value of the modifier.</param>
     /// <param name="kind">The kind of modifier.</param>
-    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for permanent modifiers.</param>
+    /// <param name="duration">The duration of the modifier. Use <see cref="PermanentDuration"/> for permanent modifiers. 0 counts as permantent too!</param>
     /// <param name="stacks">The number of stacks to add.</param>
     /// <param name="maxStacks">The maximum number of stacks allowed for this modifier.</param>
     /// <param name="priority">The priority of the modifier (used for override, min, and max kinds).</param>
@@ -626,6 +644,8 @@ public class SimpleStat
         value = ApplyModifierBounds(minModifiers, minModifierCount, maxModifiers, maxModifierCount, value);
 
         currentValue = ApplyBounds(value);
+
+        dirty = false;
     }
 
     #endregion
@@ -764,7 +784,7 @@ public class SimpleStat
             else
             {
                 //removing stacks does not reset timer!
-                modifiers[i].Stacks -= stacks;
+                modifiers[i].Stacks += stacks; //stacks is negative here, so adding is correct!
                 if (modifiers[i].Stacks <= 0)
                 {
                     RemoveAt(modifiers, ref count, i);
