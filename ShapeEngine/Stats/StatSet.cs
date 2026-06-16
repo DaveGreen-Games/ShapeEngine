@@ -70,10 +70,14 @@ public class StatSet
     /// </summary>
     public event Action<IStatModifierSource, int>? OnSourceStacksRemoved;
 
-    //TODO: Add docs
+    /// <summary>
+    /// Raised when a new stat is added to the set.
+    /// </summary>
     public event Action<Stat>? OnStatAdded;
    
-    //TODO: Add docs
+    /// <summary>
+    /// Raised when a stat is removed from the set.
+    /// </summary>
     public event Action<Stat>? OnStatRemoved;
     #endregion
     
@@ -153,7 +157,12 @@ public class StatSet
         }
     }
 
-    //Todo: Add Docs
+    /// <summary>
+    /// Clears all stats and modifier sources from the set and recalculates values.
+    /// </summary>
+    /// <remarks>
+    /// Raises <see cref="OnStatRemoved"/> for each removed stat and <see cref="OnSourceRemoved"/> for each removed source.
+    /// </remarks>
     public void Clear()
     {
         bool changed = false;
@@ -257,7 +266,12 @@ public class StatSet
         return false;
     }
 
-    //TODO: Add docs
+    /// <summary>
+    /// Removes all stats from the set and recalculates values.
+    /// </summary>
+    /// <remarks>
+    /// Raises <see cref="OnStatRemoved"/> for each removed stat.
+    /// </remarks>
     public void ClearStats()
     {
         if(stats.Count <= 0) return;
@@ -383,7 +397,12 @@ public class StatSet
         return removed;
     }
 
-    //TODO: Add docs
+    /// <summary>
+    /// Removes all modifier sources from the set and recalculates values.
+    /// </summary>
+    /// <remarks>
+    /// Raises <see cref="OnSourceRemoved"/> for each removed source.
+    /// </remarks>
     public void ClearSources()
     {
         if(sources.Count <= 0) return;
@@ -410,7 +429,10 @@ public class StatSet
     
     #region Private Functions
 
-    //TODO: Docs
+    /// <summary>
+    /// Collects all modifiers from all active sources into the stat modifier buffer.
+    /// </summary>
+    /// <returns>The total count of modifiers collected.</returns>
     private int CollectAllStatModifiers()
     {
         statModifierBuffer.Clear();
