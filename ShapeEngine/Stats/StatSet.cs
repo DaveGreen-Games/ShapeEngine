@@ -96,7 +96,6 @@ public class StatSet
     #endregion
     
     #region Private Collections
-    //TODO: Make thread safe
     
     private readonly Dictionary<StatId, Stat> stats = new(16);
     private readonly Dictionary<uint, IStatModifierSource> sources = new(24);
