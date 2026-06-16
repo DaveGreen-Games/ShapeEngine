@@ -1,5 +1,8 @@
 namespace ShapeEngine.Stats;
 
+//TODO: What is the point of this? Can I just use uint? 
+// - would unify ids to uint across the Stats namespace!
+
 /// <summary>
 /// Represents the stable identifier of a stat.
 /// </summary>

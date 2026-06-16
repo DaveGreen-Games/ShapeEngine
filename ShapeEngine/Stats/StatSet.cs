@@ -1,5 +1,20 @@
 namespace ShapeEngine.Stats;
 
+
+
+//TODO: Recalculate() is Aggressive -> use dirty system somehow?
+// With 100 stats and 50 sources, every AddSource() call does 100 stat recalculations even if only 2 stats are affected. Consider:
+// - Dirty flag per stat (like SimpleStat)
+// - Track which stats are affected by a source
+// - Batch operations: BeginChanges() / EndChanges()
+// Example:
+// statSet.BeginUpdate();
+// statSet.AddSource(buff1);
+// statSet.AddSource(buff2);
+// statSet.AddSource(buff3);
+// statSet.EndUpdate(); // Recalculate once here
+
+
 /// <summary>
 /// Manages stats and their active modifier sources. This is the new entry point of the stat system.
 /// You create stats, add modifier sources, call Update(dt) each frame if you have timed effects, and read the final stat values back out.

@@ -1,5 +1,18 @@
 namespace ShapeEngine.Stats;
 
+//TODO: SimpleStat: maxStacks <= 0 fails validation in AddModifier -> maxStacks of 0 or less should mean unlimited stacks!
+
+//TODO: Fix min/max bounds using priority -> should strictes bound win or should I add flag to decide if priority is used?
+// No Min/Max Modifier Priority Override If I have:
+// - Min modifier: 10 (priority 5)
+// - Min modifier: 20 (priority 3)
+// - The result is min = 10 (higher priority), even though 20 is a stricter bound. Some games want "highest minimum wins regardless of priority". Consider a flag.
+
+//TODO: Use uint for IDs instead of int
+
+//TODO: Add explanation to summary for when to use SimpleStat and when to use StatSet
+
+
 /// <summary>
 /// Represents a simple stat with a base value and modifiers that affect it.
 /// </summary>
@@ -879,6 +892,20 @@ public class SimpleStat
     {
         if (minModifierCount <= 0 && maxModifierCount <= 0) return value;
 
+        //TODO: SimpleStat: Nullable Modifier? -> fix with using default and hasMinModifier/hasMaxModifier
+        
+        // bool hasMinModifier = false;
+        // Modifier minModifier = default;
+        //
+        // for (int i = 0; i < minModifierCount; i++)
+        // {
+        //     if (!hasMinModifier || minModifiers[i].TakesPriority(minModifier))
+        //     {
+        //         minModifier = minModifiers[i];
+        //         hasMinModifier = true;
+        //     }
+        // }
+        
         Modifier? minModifier = null;
         Modifier? maxModifier = null;
         
