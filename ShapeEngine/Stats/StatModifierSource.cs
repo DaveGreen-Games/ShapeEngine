@@ -87,6 +87,18 @@ public class StatModifierSource : IStatModifierSource
     public virtual IEnumerable<StatModifier> GetModifiers() => modifiers;
 
     /// <inheritdoc />
+    public int CollectAllModifiers(ref List<StatModifier> target)
+    {
+        foreach (var modifier in modifiers)
+        {
+            target.Add(modifier);
+        }
+
+        return modifiers.Count;
+    }
+
+
+    /// <inheritdoc />
     public virtual void Update(float dt) { }
 
     /// <inheritdoc />

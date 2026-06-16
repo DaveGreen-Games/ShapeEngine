@@ -43,12 +43,8 @@ namespace ShapeEngine.Stats;
 /// </remarks>
 public class StatSet
 {
-    //TODO: Make thread safe
+    #region Events
     
-    private readonly Dictionary<StatId, Stat> stats = new(16);
-    private readonly Dictionary<uint, IStatModifierSource> sources = new(24);
-    private readonly List<uint> expiredSourceIds = new(8);
-
     /// <summary>
     /// Raised when a stat value changes after recalculation.
     /// </summary>
@@ -74,6 +70,15 @@ public class StatSet
     /// </summary>
     public event Action<IStatModifierSource, int>? OnSourceStacksRemoved;
 
+    //TODO: Add docs
+    public event Action<Stat>? OnStatAdded;
+   
+    //TODO: Add docs
+    public event Action<Stat>? OnStatRemoved;
+    #endregion
+    
+    #region Public Collections
+    
     /// <summary>
     /// The registered stats.
     /// </summary>
@@ -84,8 +89,111 @@ public class StatSet
     /// </summary>
     public IReadOnlyCollection<IStatModifierSource> Sources => sources.Values;
 
-    //TODO: Add Reset() function
+    #endregion
     
+    #region Private Collections
+    //TODO: Make thread safe
+    
+    private readonly Dictionary<StatId, Stat> stats = new(16);
+    private readonly Dictionary<uint, IStatModifierSource> sources = new(24);
+    private readonly List<uint> expiredSourceIds = new(8);
+    private  List<StatModifier> statModifierBuffer = new(32);
+    #endregion
+    
+    #region Public Functions
+    
+    /// <summary>
+    /// Advances all sources, removes expired sources, and recalculates stats.
+    /// </summary>
+    /// <param name="dt">The elapsed time in seconds.</param>
+    public void Update(float dt)
+    {
+        expiredSourceIds.Clear();
+
+        foreach (var kvp in sources)
+        {
+            var source = kvp.Value;
+            source.Update(dt);
+            if (source.IsExpired) expiredSourceIds.Add(kvp.Key);
+        }
+
+        foreach (var sourceId in expiredSourceIds)
+        {
+            if (sources.Remove(sourceId, out var source))
+            {
+                //This avoids potential race issues if subscribers change between check and call.
+                var handler = OnSourceRemoved;
+                handler?.Invoke(source);
+            }
+        }
+
+        Recalculate();
+    }
+
+    /// <summary>
+    /// Recalculates all stats from the currently active sources.
+    /// </summary>
+    public void Recalculate()
+    {
+        CollectAllStatModifiers();
+        
+        foreach (var kvp in stats)
+        {
+            var stat = kvp.Value;
+            var previous = stat.Value;
+            var current = stat.Recalculate(statModifierBuffer);
+            
+            const float epsilon = 0.001f;
+            if (Math.Abs(previous - current) > epsilon)
+            {
+                //This avoids potential race issues if subscribers change between check and call.
+                var handler = OnStatChanged;
+                handler?.Invoke(stat, previous, current);
+            }
+        }
+    }
+
+    //Todo: Add Docs
+    public void Clear()
+    {
+        bool changed = false;
+        if (stats.Count > 0)
+        {
+            foreach (var kvp in stats)
+            {
+                var statId = kvp.Key;
+                if (!stats.TryGetValue(statId, out var stat)) continue;
+                if (!stats.Remove(statId)) continue;
+                //This avoids potential race issues if subscribers change between check and call.
+                var handler = OnStatRemoved;
+                handler?.Invoke(stat);
+                changed = true;
+            }
+        
+            stats.Clear();
+        }
+
+        if (sources.Count > 0)
+        {
+            foreach (var kvp in sources)
+            {
+                var sourceId = kvp.Key;
+                if (!sources.Remove(sourceId, out var source)) continue;
+                //This avoids potential race issues if subscribers change between check and call.
+                var handler = OnSourceRemoved;
+                handler?.Invoke(source);
+                changed = true;
+            }
+        
+            sources.Clear();
+        }
+        
+        if(changed) Recalculate();
+    }
+    
+    #endregion
+    
+    #region Stat Functions
     
     /// <summary>
     /// Adds or replaces a stat.
@@ -94,6 +202,9 @@ public class StatSet
     public void AddStat(Stat stat)
     {
         stats[stat.Id] = stat;
+        //This avoids potential race issues if subscribers change between check and call.
+        var handler = OnStatAdded;
+        handler?.Invoke(stat);
         Recalculate();
     }
 
@@ -104,9 +215,19 @@ public class StatSet
     /// <returns>True if a stat was removed.</returns>
     public bool RemoveStat(StatId id)
     {
-        //Q: Should this remove relevant sources as well?
+        //StatSources can have multiple modifiers, each targeting a different stat.
+        //So removing a stat should not remove all sources that target it.
+
+        if (!stats.TryGetValue(id, out var stat)) return false;
+        
         var removed = stats.Remove(id);
-        if (removed) Recalculate();
+        if (removed)
+        {
+            //This avoids potential race issues if subscribers change between check and call.
+            var handler = OnStatRemoved;
+            handler?.Invoke(stat);
+            Recalculate();
+        }
         return removed;
     }
 
@@ -119,19 +240,49 @@ public class StatSet
     public bool TryGetStat(StatId id, out Stat stat) => stats.TryGetValue(id, out stat!);
 
     /// <summary>
-    /// Gets a stat by id.
+    /// Attempts to get a stat value by id.
     /// </summary>
     /// <param name="id">The stat id.</param>
-    /// <returns>The registered stat.</returns>
-    public Stat GetStat(StatId id) => stats[id];
+    /// <param name="value">The value of the found stat.</param>
+    /// <returns>True if the stat exists.</returns>
+    public bool TryGetValue(StatId id, out float value)
+    {
+        value = 0f;
+        if (TryGetStat(id, out var stat))
+        {
+            value = stat.Value;
+            return true;
+        }
 
-    /// <summary>
-    /// Gets the current value of a stat by id.
-    /// </summary>
-    /// <param name="id">The stat id.</param>
-    /// <returns>The current stat value.</returns>
-    public float GetValue(StatId id) => stats[id].Value;
+        return false;
+    }
 
+    //TODO: Add docs
+    public void ClearStats()
+    {
+        if(stats.Count <= 0) return;
+        
+        bool changed = false;
+        foreach (var kvp in stats)
+        {
+            var statId = kvp.Key;
+            if (!stats.TryGetValue(statId, out var stat)) continue;
+            if (!stats.Remove(statId)) continue;
+            //This avoids potential race issues if subscribers change between check and call.
+            var handler = OnStatRemoved;
+            handler?.Invoke(stat);
+            changed = true;
+        }
+        
+        stats.Clear();
+        
+        if(changed) Recalculate();
+    }
+    
+    #endregion
+
+    #region Source Functions
+    
     /// <summary>
     /// Adds a modifier source. If a source with the same id already exists, it is reapplied instead.
     /// </summary>
@@ -139,19 +290,25 @@ public class StatSet
     /// <returns>True if the source was newly added; false if an existing source was reapplied.</returns>
     public bool AddSource(IStatModifierSource source)
     {
-        //Q: Add null checks for source?
         if (sources.TryGetValue(source.Id, out var existing))
         {
             var beforeStacks = existing.Stacks;
             existing.Reapply(source);
             var addedStacks = existing.Stacks - beforeStacks;
-            if (addedStacks > 0) OnSourceStacksAdded?.Invoke(existing, addedStacks);
+            if (addedStacks > 0)
+            {
+                //This avoids potential race issues if subscribers change between check and call.
+                var handler = OnSourceStacksAdded;
+                handler?.Invoke(existing, addedStacks);
+            }
             Recalculate();
             return false;
         }
 
         sources.Add(source.Id, source);
-        OnSourceAdded?.Invoke(source);
+        //This avoids potential race issues if subscribers change between check and call.
+        var handler2 = OnSourceAdded;
+        handler2?.Invoke(source);
         Recalculate();
         return true;
     }
@@ -165,7 +322,10 @@ public class StatSet
     {
         if (!sources.Remove(sourceId, out var source)) return false;
 
-        OnSourceRemoved?.Invoke(source);
+        //This avoids potential race issues if subscribers change between check and call.
+        var handler = OnSourceRemoved;
+        handler?.Invoke(source);
+        
         Recalculate();
         return true;
     }
@@ -191,7 +351,9 @@ public class StatSet
         var added = source.AddStacks(amount);
         if (added > 0)
         {
-            OnSourceStacksAdded?.Invoke(source, added);
+            //This avoids potential race issues if subscribers change between check and call.
+            var handler = OnSourceStacksAdded;
+            handler?.Invoke(source, added);
             Recalculate();
         }
 
@@ -211,61 +373,54 @@ public class StatSet
         var removed = source.RemoveStacks(amount);
         if (removed <= 0) return 0;
 
-        OnSourceStacksRemoved?.Invoke(source, removed);
+        //This avoids potential race issues if subscribers change between check and call.
+        var handler = OnSourceStacksRemoved;
+        handler?.Invoke(source, removed);
+        
         if (source.IsExpired) RemoveSource(sourceId);
         else Recalculate();
 
         return removed;
     }
 
-    /// <summary>
-    /// Advances all sources, removes expired sources, and recalculates stats.
-    /// </summary>
-    /// <param name="dt">The elapsed time in seconds.</param>
-    public void Update(float dt)
+    //TODO: Add docs
+    public void ClearSources()
     {
-        expiredSourceIds.Clear();
+        if(sources.Count <= 0) return;
+        
+        var changed = false;
+        foreach (var kvp in sources)
+        {
+            var sourceId = kvp.Key;
+            if (!sources.Remove(sourceId, out var source)) continue;
+            
+            //This avoids potential race issues if subscribers change between check and call.
+            var handler = OnSourceRemoved;
+            handler?.Invoke(source);
+            
+            changed = true;
+        }
+        
+        sources.Clear();
+        
+        if(changed) Recalculate();
+    }
+    
+    #endregion
+    
+    #region Private Functions
 
+    //TODO: Docs
+    private int CollectAllStatModifiers()
+    {
+        statModifierBuffer.Clear();
         foreach (var kvp in sources)
         {
             var source = kvp.Value;
-            source.Update(dt);
-            if (source.IsExpired) expiredSourceIds.Add(kvp.Key);
+            source.CollectAllModifiers(ref statModifierBuffer);
         }
-
-        foreach (var sourceId in expiredSourceIds)
-        {
-            if (sources.Remove(sourceId, out var source))
-            {
-                OnSourceRemoved?.Invoke(source);
-            }
-        }
-
-        Recalculate();
+        return statModifierBuffer.Count;
     }
-
-    /// <summary>
-    /// Recalculates all stats from the currently active sources.
-    /// </summary>
-    public void Recalculate()
-    {
-        //ISSUE: Creates garbage (allocates a new array each time it is called)
-        //Fix: use buffer or pool here
-        var modifiers = sources.Values.SelectMany(source => source.GetModifiers()).ToArray();
-
-        foreach (var stat in stats.Values)
-        {
-            var previous = stat.Value;
-            var current = stat.Recalculate(modifiers);
-            
-            //Issue: Floating point comparision
-            // const float epsilon = 0.001f;
-            // if (Math.Abs(previous - current) > epsilon)
-            
-            if (!previous.Equals(current))
-            {
-                OnStatChanged?.Invoke(stat, previous, current);
-            }
-        }
-    }
+    
+    #endregion
 }

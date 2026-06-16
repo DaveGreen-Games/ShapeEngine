@@ -55,6 +55,14 @@ public interface IStatModifierSource
     /// </summary>
     /// <returns>The active stat modifiers.</returns>
     public IEnumerable<StatModifier> GetModifiers();
+    
+    /// <summary>
+    /// Is called by <see cref="StatSet"/> to collect all modifiers.
+    /// Do not clear <see cref="target"/>, or remove items!
+    /// </summary>
+    /// <param name="target">The target list all modifiers should be added to.</param>
+    /// <returns>How many items were added.</returns>
+    public int CollectAllModifiers(ref List<StatModifier> target);
 
     /// <summary>
     /// Advances any runtime state for this source.
