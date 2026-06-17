@@ -216,9 +216,9 @@ public sealed class ContentManager
     public bool TryLoadTexture(string filePath, out Texture2D texture)
     {
         texture = default;
-    
+
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
     
         // Check cache first
         if (loadedTextures.TryGetValue(relativePath, out texture))
@@ -275,7 +275,7 @@ public sealed class ContentManager
         shader = default;
 
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
 
         // Check cache first
         if (loadedShaders.TryGetValue(relativePath, out shader))
@@ -329,7 +329,7 @@ public sealed class ContentManager
         shader = default;
 
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
 
         // Check cache first
         if (loadedShaders.TryGetValue(relativePath, out shader))
@@ -382,7 +382,7 @@ public sealed class ContentManager
         image = default;
 
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
 
         // Check cache first
         if (loadedImages.TryGetValue(relativePath, out image))
@@ -436,9 +436,10 @@ public sealed class ContentManager
     public bool TryLoadFont(string filePath, out Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
         font = default;
-
+        
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
+        
         // Check cache first
         if (loadedFonts.TryGetValue(relativePath, out var fontDict))
         {
@@ -487,6 +488,7 @@ public sealed class ContentManager
         font = loadedFont;
         return true;
     }
+  
     /// <summary>
     /// Attempts to load a sound from the specified file path.
     /// Checks the cache, content packs, and file system in order.
@@ -499,7 +501,7 @@ public sealed class ContentManager
         sound = default;
 
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
 
         // Check cache first
         if (loadedSounds.TryGetValue(relativePath, out sound))
@@ -540,6 +542,7 @@ public sealed class ContentManager
         sound = loadedSound;
         return true;
     }
+    
     /// <summary>
     /// Attempts to load a music stream from the specified file path.
     /// Checks the cache, content packs, and file system in order.
@@ -552,7 +555,7 @@ public sealed class ContentManager
         music = default;
 
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
 
         // Check cache first
         if (loadedMusicStreams.TryGetValue(relativePath, out music))
@@ -593,6 +596,7 @@ public sealed class ContentManager
         music = loadedMusic;
         return true;
     }
+    
     /// <summary>
     /// Attempts to load a wave from the specified file path.
     /// Checks the cache, content packs, and file system in order.
@@ -605,7 +609,7 @@ public sealed class ContentManager
         wave = default;
 
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
 
         // Check cache first
         if (loadedWaves.TryGetValue(relativePath, out wave))
@@ -646,6 +650,7 @@ public sealed class ContentManager
         wave = loadedWave;
         return true;
     }
+    
     /// <summary>
     /// Attempts to load a text file from the specified file path.
     /// Checks the cache, content packs, and file system in order.
@@ -658,7 +663,7 @@ public sealed class ContentManager
         text = string.Empty;
 
         // Normalize path to be relative to RootDirectory
-        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        string relativePath = GetRelativeContentPath(filePath);
 
         // Check cache first
         if (loadedTexts.TryGetValue(relativePath, out string? cachedText))
@@ -837,25 +842,20 @@ public sealed class ContentManager
         return false;
     }
 
-        
-    /// <summary>
-    /// Fixes the root directory of the specified file path by ensuring it is prefixed with the ContentManager's root directory.
-    /// </summary>
-    /// <param name="filePath">The file path to fix.</param>
-    /// <returns>A file path with the correct root directory prefix.</returns>
-    /// <remarks>
-    /// If the <paramref name="filePath"/> is empty or does not already start with the <see cref="RootDirectory"/>,
-    /// the root directory is prepended to the path using the directory separator ("/").
-    /// If the <paramref name="filePath"/> is empty, it is returned as-is.
-    /// If the <paramref name="filePath"/> already starts with the <see cref="RootDirectory"/>, it is returned unchanged.
-    /// </remarks>
-    private string FixFilePathRoot(string filePath)
+    
+    private string GetRelativeContentPath(string filePath)
     {
-        if (RootDirectory == string.Empty) return filePath;
+        if (RootDirectory == string.Empty || filePath == string.Empty) return filePath;
 
-        if (filePath.StartsWith(RootDirectory)) return filePath;
+        string normalizedRoot = RootDirectory.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        string normalizedFile = filePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         
-        return RootDirectory + "/"  + filePath;
+        if (normalizedFile.StartsWith(normalizedRoot))
+        {
+            return Path.GetRelativePath(normalizedRoot, normalizedFile);
+        }
+        
+        return filePath;
     }
     #endregion
     
