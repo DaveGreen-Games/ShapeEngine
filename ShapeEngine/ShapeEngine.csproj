@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>5.1.0</Version>
+	<Version>5.2.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,16 +18,42 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>5.1.0</AssemblyVersion>
-	<FileVersion>5.1.0</FileVersion>
+	<AssemblyVersion>5.2.0</AssemblyVersion>
+	<FileVersion>5.2.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2026</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+	#5.2 Release Notes 
+		
+	##Stats system redesign
+	This is a breaking change! The Stats namespace is completely independent from the rest of Shape Engine; therefore, these breaking changes only affect
+	the Stats namespace directly. I did not want to make a major release just for this, so in this case, there are breaking changes in a minor release.
+	Sorry for the inconvenience!
+	
+	- Replaced old Buff / BuffTimed / BuffStacked / BuffValue model with:
+		- StatId
+		- Stat
+		- StatModifier
+		- StatModifierKind
+		- IStatModifierSource
+		- StatModifierSource
+		- TimedStatModifierSource
+		- StackableStatModifierSource
+		- StatSet
+	- Added layered calculation order: flat, additive percent, multiplicative percent, override, min/max clamp.
+	- Added source categories for buff, debuff, equipment, passive, upgrade, custom.
+	- Added stackable timed sources with max stacks and duration refresh on reapply.
+	- Removed drawing concerns from the core stats classes.
+	- Added simple StatsExample scene to test out the new stat system.
+	- Added a SimpleStat class for prototyping or when performance, memory or complexity is a major concern.
+
+	##Content Manager TryLoad
+	- [Fix] RelativePath calculation was improved when RootDirectory of the ContentManager is set and filePath for loading a resource is already a relative path.
 		
 	#5.1 Release Notes
-
+		
 	##New Features
 		- Add hash function to Coordinates struct (PR #170) – New hashing system added to the Coordinates struct to enable better usage patterns with collections
 	
