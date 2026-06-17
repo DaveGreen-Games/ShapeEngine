@@ -917,48 +917,35 @@ public class SimpleStat
     private static float ApplyModifierBounds(Modifier[] minModifiers, int minModifierCount, Modifier[] maxModifiers, int maxModifierCount, float value)
     {
         if (minModifierCount <= 0 && maxModifierCount <= 0) return value;
-
-        //TODO: SimpleStat: Nullable Modifier? -> fix with using default and hasMinModifier/hasMaxModifier
         
-        // bool hasMinModifier = false;
-        // Modifier minModifier = default;
-        //
-        // for (int i = 0; i < minModifierCount; i++)
-        // {
-        //     if (!hasMinModifier || minModifiers[i].TakesPriority(minModifier))
-        //     {
-        //         minModifier = minModifiers[i];
-        //         hasMinModifier = true;
-        //     }
-        // }
-        
-        Modifier? minModifier = null;
-        Modifier? maxModifier = null;
-        
+        bool hasMinModifier = false;
+        Modifier minModifier = default;
         for (int i = 0; i < minModifierCount; i++)
         {
             var currentModifier = minModifiers[i];
-            if (minModifier == null || currentModifier.TakesPriority(minModifier.Value, StatModifierKind.Min))
+            if (!hasMinModifier || currentModifier.TakesPriority(minModifier, StatModifierKind.Min))
             {
                 minModifier = currentModifier;
+                hasMinModifier = true;
             }
         }
         
+        bool hasMaxModifier = false;
+        Modifier maxModifier = default;
         for (int i = 0; i < maxModifierCount; i++)
         {
             var currentModifier = maxModifiers[i];
-            if (maxModifier == null || currentModifier.TakesPriority(maxModifier.Value, StatModifierKind.Max))
+            if (!hasMaxModifier || currentModifier.TakesPriority(maxModifier, StatModifierKind.Min))
             {
                 maxModifier = currentModifier;
+                hasMaxModifier = true;
             }
         }
-
-        bool minModifierFound = minModifier != null;
-        bool maxModifierFound = maxModifier != null;
-        var minModifierValue = minModifier != null ? minModifier.Value.Value : 0;
-        var maxModifierValue = maxModifier != null ? maxModifier.Value.Value : 0;
         
-        if (maxModifierFound && minModifierFound)
+        var minModifierValue = hasMinModifier ? minModifier.Value : 0;
+        var maxModifierValue = hasMaxModifier ? maxModifier.Value : 0;
+        
+        if (hasMaxModifier && hasMinModifier)
         {
             if (maxModifierValue < minModifierValue)
             {
@@ -966,12 +953,12 @@ public class SimpleStat
             }
         }
 
-        if (minModifierFound && value < minModifierValue)
+        if (hasMinModifier && value < minModifierValue)
         {
             value = minModifierValue;
         }
 
-        if (maxModifierFound && value > maxModifierValue)
+        if (hasMaxModifier && value > maxModifierValue)
         {
             value = maxModifierValue;
         }
