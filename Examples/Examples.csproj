@@ -20,12 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
- <!--
- <Content Include="Resources\**">
-   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
- </Content>
- -->
-      
+        
     <Content Include="../NOTICE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -37,7 +32,16 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     </ItemGroup>
-
+   
+    <!-- For copying the Resource Directory to the Output Directory -->
+    <!--
+        <ItemGroup>
+            <Content Include="Resources\**">
+                <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            </Content>
+        </ItemGroup>
+    -->
+    
     <!-- For regular builds -->
     <Target Name="PackResourcesForDev" AfterTargets="Build">
         <PropertyGroup>

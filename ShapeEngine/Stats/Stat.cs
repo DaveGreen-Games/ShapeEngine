@@ -1,130 +1,176 @@
-using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.RectDef;
-
 namespace ShapeEngine.Stats;
 
 /// <summary>
-/// Represents a stat that can be affected by buffs, supporting a base value, calculated current value, and locking.
+/// Represents one calculated stat.
 /// </summary>
-/// <remarks>
-/// Implements <see cref="IStat"/> and uses a bit-mask to determine which buff tags can affect the stat.
-/// </remarks>
-public class Stat : IStat
+public sealed class Stat
 {
-    #region Private Properties
-    
-    private readonly BitFlag mask;
-    private bool locked;
-    private BuffValue total = new();
-    
-    #endregion
-    
-    #region Public Properties
-    
+    private readonly HashSet<uint> tags;
+
     /// <summary>
-    /// The unique identifier for this stat.
+    /// The stable id of this stat.
     /// </summary>
-    public uint Id { get; private set; }
-    
+    public StatId Id { get; }
+
     /// <summary>
-    /// The display name of the stat.
+    /// The display name of this stat.
     /// </summary>
-    public string Name = "";
-    
+    public string Name { get; set; }
+
     /// <summary>
-    /// The abbreviated display name of the stat.
+    /// The abbreviated display name of this stat.
     /// </summary>
-    public string NameAbbreviation = "";
-    
+    public string NameAbbreviation { get; set; }
+
     /// <summary>
-    /// The base value of the stat before any buff values are applied.
+    /// Optional display or documentation text for this stat.
+    /// </summary>
+    public string Description { get; set; }
+
+    /// <summary>
+    /// The base value before modifiers are applied.
     /// </summary>
     public float BaseValue { get; set; }
-    
+
     /// <summary>
-    /// The current value of the stat after all accumulated buff values are applied.
+    /// Optional lower clamp from the stat definition.
     /// </summary>
-    public float CurValue => total.ApplyTo(BaseValue);
-    
+    public float? MinValue { get; set; }
+
     /// <summary>
-    /// Gets or sets whether the stat is locked (prevents further buff application).
+    /// Optional upper clamp from the stat definition.
     /// </summary>
-    /// <remarks>Setting Locked to true will reset the stat.</remarks>
-    public bool Locked
-    {
-        get => locked;
-        set
-        {
-            if (value && !locked) Reset();
-            locked = value;
-        }
-    }
-    
-    #endregion
-    
-    #region Constructors
-    
+    public float? MaxValue { get; set; }
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="Stat"/> class.
+    /// The last calculated value.
     /// </summary>
-    /// <param name="id">The unique identifier for the stat.</param>
-    /// <param name="baseValue">The base value of the stat.</param>
-    /// <param name="tagMask">The tag mask for determining which buffs affect this stat.</param>
-    public Stat(uint id, float baseValue, BitFlag tagMask)
+    public float Value { get; private set; }
+
+    /// <summary>
+    /// The last calculated value.
+    /// </summary>
+    public float CurrentValue => Value;
+
+    /// <summary>
+    /// The tags assigned to this stat for grouping and filtering.
+    /// </summary>
+    public IReadOnlyCollection<uint> Tags => tags;
+
+    /// <summary>
+    /// Creates a new stat.
+    /// </summary>
+    /// <param name="id">The stable stat id.</param>
+    /// <param name="baseValue">The base value.</param>
+    /// <param name="name">The display name.</param>
+    /// <param name="nameAbbreviation">The abbreviated display name.</param>
+    /// <param name="description">Optional display or documentation text.</param>
+    /// <param name="minValue">Optional lower clamp.</param>
+    /// <param name="maxValue">Optional upper clamp.</param>
+    /// <param name="tags">Optional grouping tags.</param>
+    public Stat(
+        StatId id,
+        float baseValue,
+        string name = "",
+        string nameAbbreviation = "",
+        string description = "",
+        float? minValue = null,
+        float? maxValue = null,
+        params uint[] tags)
     {
         Id = id;
         BaseValue = baseValue;
-        mask = tagMask;
+        Name = name;
+        NameAbbreviation = nameAbbreviation;
+        Description = description;
+        MinValue = minValue;
+        MaxValue = maxValue;
+        Value = baseValue;
+        this.tags = tags.Length > 0 ? new HashSet<uint>(tags) : new HashSet<uint>();
     }
-    
-    #endregion
-    
-    #region Public Methods
-    
-    /// <summary>
-    /// Draws the stat in the specified rectangle.
-    /// Default implementation does nothing.
-    /// </summary>
-    /// <param name="rect">The rectangle to draw in.</param>
-    public virtual void Draw(Rect rect) { }
 
     /// <summary>
-    /// Returns a string representation of the stat, including its name, current value, and accumulated modifiers.
+    /// Adds a grouping tag to this stat.
     /// </summary>
-    /// <returns>A string describing the stat.</returns>
+    /// <param name="tag">The tag to add.</param>
+    /// <returns>True if the tag was added.</returns>
+    public bool AddTag(uint tag) => tags.Add(tag);
+
+    /// <summary>
+    /// Removes a grouping tag from this stat.
+    /// </summary>
+    /// <param name="tag">The tag to remove.</param>
+    /// <returns>True if the tag was removed.</returns>
+    public bool RemoveTag(uint tag) => tags.Remove(tag);
+
+    /// <summary>
+    /// Checks whether this stat has a grouping tag.
+    /// </summary>
+    /// <param name="tag">The tag to check.</param>
+    /// <returns>True if the stat has the tag.</returns>
+    public bool HasTag(uint tag) => tags.Contains(tag);
+
+    /// <summary>
+    /// Recalculates the stat using the supplied modifiers.
+    /// </summary>
+    /// <param name="modifiers">The modifiers targeting this stat.</param>
+    /// <returns>The new calculated value.</returns>
+    public float Recalculate(IEnumerable<StatModifier> modifiers)
+    {
+        var flat = 0f;
+        var additivePercent = 0f;
+        var multiplicativeFactor = 1f;
+        float? overrideValue = null;
+        var overridePriority = int.MinValue;
+        var min = MinValue;
+        var max = MaxValue;
+
+        foreach (var modifier in modifiers)
+        {
+            if (modifier.Target != Id) continue;
+
+            switch (modifier.Kind)
+            {
+                case StatModifierKind.Flat:
+                    flat += modifier.Amount;
+                    break;
+                case StatModifierKind.AdditivePercent:
+                    additivePercent += modifier.Amount;
+                    break;
+                case StatModifierKind.MultiplicativePercent:
+                    multiplicativeFactor *= 1f + modifier.Amount;
+                    break;
+                case StatModifierKind.Override:
+                    if (overrideValue == null || modifier.Priority >= overridePriority)
+                    {
+                        overrideValue = modifier.Amount;
+                        overridePriority = modifier.Priority;
+                    }
+                    break;
+                case StatModifierKind.Min:
+                    min = min == null ? modifier.Amount : MathF.Max(min.Value, modifier.Amount);
+                    break;
+                case StatModifierKind.Max:
+                    max = max == null ? modifier.Amount : MathF.Min(max.Value, modifier.Amount);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(modifiers), $"Unknown stat modifier kind {modifier.Kind}.");
+            }
+        }
+
+        var value = (BaseValue + flat) * (1f + additivePercent) * multiplicativeFactor;
+        if (overrideValue != null) value = overrideValue.Value;
+        if (min != null && value < min.Value) value = min.Value;
+        if (max != null && value > max.Value) value = max.Value;
+
+        Value = value;
+        return Value;
+    }
+
+    /// <inheritdoc />
     public override string ToString()
     {
-        return $"{Name}: {CurValue} [{BuffValue.FormatText(total.Bonus, total.Flat)}]";
+        var label = string.IsNullOrWhiteSpace(Name) ? Id.ToString() : Name;
+        return $"{label}: {Value:0.##}";
     }
- 
-    /// <summary>
-    /// Returns a string representation of the stat, optionally using the abbreviated display name.
-    /// </summary>
-    /// <param name="abbreviated">Whether to use the abbreviated name.</param>
-    /// <returns>A string describing the stat.</returns>
-    public virtual string ToText(bool abbreviated)
-    {
-        return $"{(abbreviated ? NameAbbreviation : Name)}: {CurValue} [{BuffValue.FormatText(total.Bonus, total.Flat)}]";
-    }
-    
-    /// <inheritdoc cref="IStat.IsAffected(uint)"/>
-    public bool IsAffected(uint tag) => mask.Has(tag);
-   
-    /// <inheritdoc cref="IStat.Reset()"/>
-    public void Reset()
-    {
-        total = new();
-    }
-    
-    /// <summary>
-    /// Applies a buff value to this stat if the stat is not locked.
-    /// </summary>
-    /// <param name="buffValue">The buff value to apply.</param>
-    public void Apply(BuffValue buffValue)
-    {
-        if (Locked) return;
-        total = total.Add(buffValue);
-    }
-    
-    #endregion
 }

@@ -48,6 +48,7 @@ namespace Examples.Scenes
             examples.Add(new DataExample());
             examples.Add(new XmlDataExample());
             examples.Add(new JsonDataExample());
+            examples.Add(new StatsSystemExample());
             
             examples.Add(new InputExample());
             examples.Add(new CameraExample());
