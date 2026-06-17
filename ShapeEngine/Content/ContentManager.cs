@@ -842,10 +842,10 @@ public sealed class ContentManager
         return false;
     }
 
-        
+    
     private string GetRelativeContentPath(string filePath)
     {
-        if (RootDirectory == string.Empty) return filePath;
+        if (RootDirectory == string.Empty || filePath == string.Empty) return filePath;
 
         string normalizedRoot = RootDirectory.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         string normalizedFile = filePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
