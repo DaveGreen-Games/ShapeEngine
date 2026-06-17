@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace ShapeEngine.Stats;
 
 /// <summary>
@@ -243,11 +245,12 @@ public class StatSet
         // No recalculation needed—everything is gone
     }
     
-    //TODO: Improve
     /// <summary>
-    /// Can be used for auto batching.
+    /// Creates a disposable scope for batching multiple stat changes.
+    /// When the scope is disposed, all pending recalculations are performed at once.
+    /// Supports nesting: each Batch() call must be paired with Dispose().
     /// </summary>
-    /// <returns>Returns an IDisposable batch.</returns>
+    /// <returns>An IDisposable that ends the batch when disposed.</returns>
     /// <code>
     /// using (statSet.Batch())
     /// {
@@ -679,4 +682,312 @@ public class StatSet
         }
     }
     #endregion
+    
+    #region Console Tests (Temporary - Remove in Production)
+    
+    /// <summary>
+    /// Test 1: Verifies that only affected stats are recalculated when a source is added.
+    /// </summary>
+    private static void Test_DirtyTracking_OnlyRecalculatesAffectedStats()
+    {
+        Console.WriteLine("=== Test 1: Dirty Tracking - Only Recalculates Affected Stats ===");
+        
+        var statSet = new StatSet();
+        
+        var health = new Stat(new StatId(1), 100f, "Health");
+        var mana = new Stat(new StatId(2), 50f, "Mana");
+        var stamina = new Stat(new StatId(3), 75f, "Stamina");
+        
+        statSet.AddStat(health);
+        statSet.AddStat(mana);
+        statSet.AddStat(stamina);
+        
+        int healthChanges = 0;
+        int manaChanges = 0;
+        int staminaChanges = 0;
+        
+        statSet.OnStatChanged += (stat, prev, curr) =>
+        {
+            if (stat.Id.Value == 1) healthChanges++;
+            if (stat.Id.Value == 2) manaChanges++;
+            if (stat.Id.Value == 3) staminaChanges++;
+        };
+        
+        // Add source that only affects health
+        var healthBuff = new StatModifierSource(
+            id: 100,
+            sourceType: StatModifierSourceType.Buff,
+            modifiers: new[] { StatModifier.Flat(new StatId(1), 20f) }
+        );
+        
+        statSet.AddSource(healthBuff);
+        
+        // Verify results
+        bool test1 = healthChanges == 1;
+        bool test2 = manaChanges == 0;
+        bool test3 = staminaChanges == 0;
+        bool test4 = Math.Abs(health.Value - 120f) < 0.001f;
+        bool test5 = Math.Abs(mana.Value - 50f) < 0.001f;
+        bool test6 = Math.Abs(stamina.Value - 75f) < 0.001f;
+        
+        Console.WriteLine($"  Health changes: {healthChanges} (expected 1) - {(test1 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Mana changes: {manaChanges} (expected 0) - {(test2 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Stamina changes: {staminaChanges} (expected 0) - {(test3 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Health value: {health.Value} (expected 120) - {(test4 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Mana value: {mana.Value} (expected 50) - {(test5 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Stamina value: {stamina.Value} (expected 75) - {(test6 ? "PASS" : "FAIL")}");
+        
+        bool allPassed = test1 && test2 && test3 && test4 && test5 && test6;
+        Console.WriteLine($"  Overall: {(allPassed ? "✓ PASSED" : "✗ FAILED")}");
+        Console.WriteLine();
+    }
+    
+    /// <summary>
+    /// Test 2: Verifies that BeginUpdate/EndUpdate defers recalculation until EndUpdate is called.
+    /// </summary>
+    private static void Test_BatchUpdate_DefersRecalculation()
+    {
+        Console.WriteLine("=== Test 2: Batch Update - Defers Recalculation ===");
+        
+        var statSet = new StatSet();
+        
+        var attack = new Stat(new StatId(1), 50f, "Attack");
+        statSet.AddStat(attack);
+        
+        int changeCount = 0;
+        statSet.OnStatChanged += (stat, prev, curr) => changeCount++;
+        
+        statSet.BeginUpdate();
+        
+        statSet.AddSource(new StatModifierSource(100, StatModifierSourceType.Buff,
+            modifiers: new[] { StatModifier.Flat(new StatId(1), 10f) }));
+        
+        statSet.AddSource(new StatModifierSource(101, StatModifierSourceType.Buff,
+            modifiers: new[] { StatModifier.Flat(new StatId(1), 5f) }));
+        
+        statSet.AddSource(new StatModifierSource(102, StatModifierSourceType.Buff,
+            modifiers: new[] { StatModifier.AdditivePercent(new StatId(1), 0.2f) }));
+        
+        bool test1 = changeCount == 0;
+        Console.WriteLine($"  Changes during batch: {changeCount} (expected 0) - {(test1 ? "PASS" : "FAIL")}");
+        
+        statSet.EndUpdate();
+        
+        bool test2 = changeCount == 1;
+        bool test3 = Math.Abs(attack.Value - 78f) < 0.001f; // (50 + 10 + 5) * 1.2 = 78
+        
+        Console.WriteLine($"  Changes after EndUpdate: {changeCount} (expected 1) - {(test2 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Final attack value: {attack.Value} (expected 78) - {(test3 ? "PASS" : "FAIL")}");
+        
+        bool allPassed = test1 && test2 && test3;
+        Console.WriteLine($"  Overall: {(allPassed ? "✓ PASSED" : "✗ FAILED")}");
+        Console.WriteLine();
+    }
+    
+    /// <summary>
+    /// Test 3: Verifies that nested BeginUpdate/EndUpdate calls only recalculate on the outermost EndUpdate.
+    /// </summary>
+    private static void Test_NestedBatching_OnlyRecalculatesOnOutermostEnd()
+    {
+        Console.WriteLine("=== Test 3: Nested Batching - Only Recalculates On Outermost End ===");
+        
+        var statSet = new StatSet();
+        var stat = new Stat(new StatId(1), 100f);
+        statSet.AddStat(stat);
+        
+        int changeCount = 0;
+        statSet.OnStatChanged += (s, p, c) => changeCount++;
+        
+        statSet.BeginUpdate(); // Depth = 1
+        
+        statSet.AddSource(new StatModifierSource(1, StatModifierSourceType.Buff,
+            modifiers: new[] { StatModifier.Flat(new StatId(1), 10f) }));
+        
+        bool test1 = changeCount == 0;
+        Console.WriteLine($"  Changes after first AddSource: {changeCount} (expected 0) - {(test1 ? "PASS" : "FAIL")}");
+        
+        statSet.BeginUpdate(); // Depth = 2
+        
+        statSet.AddSource(new StatModifierSource(2, StatModifierSourceType.Buff,
+            modifiers: new[] { StatModifier.Flat(new StatId(1), 5f) }));
+        
+        bool test2 = changeCount == 0;
+        Console.WriteLine($"  Changes after second AddSource: {changeCount} (expected 0) - {(test2 ? "PASS" : "FAIL")}");
+        
+        statSet.EndUpdate(); // Depth = 1, no recalc
+        
+        bool test3 = changeCount == 0;
+        Console.WriteLine($"  Changes after inner EndUpdate: {changeCount} (expected 0) - {(test3 ? "PASS" : "FAIL")}");
+        
+        statSet.EndUpdate(); // Depth = 0, recalc!
+        
+        bool test4 = changeCount == 1;
+        bool test5 = Math.Abs(stat.Value - 115f) < 0.001f;
+        
+        Console.WriteLine($"  Changes after outer EndUpdate: {changeCount} (expected 1) - {(test4 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Final value: {stat.Value} (expected 115) - {(test5 ? "PASS" : "FAIL")}");
+        
+        bool allPassed = test1 && test2 && test3 && test4 && test5;
+        Console.WriteLine($"  Overall: {(allPassed ? "✓ PASSED" : "✗ FAILED")}");
+        Console.WriteLine();
+    }
+    
+    /// <summary>
+    /// Test 4: Verifies that expired sources only recalculate affected stats.
+    /// </summary>
+    private static void Test_ExpiredSources_OnlyRecalculatesAffectedStats()
+    {
+        Console.WriteLine("=== Test 4: Expired Sources - Only Recalculates Affected Stats ===");
+        
+        var statSet = new StatSet();
+        
+        var health = new Stat(new StatId(1), 100f);
+        var mana = new Stat(new StatId(2), 50f);
+        
+        statSet.AddStat(health);
+        statSet.AddStat(mana);
+        
+        statSet.AddSource(new TimedStatModifierSource(
+            id: 100,
+            sourceType: StatModifierSourceType.Buff,
+            duration: 5f,
+            modifiers: new[] { StatModifier.Flat(new StatId(1), 20f) }
+        ));
+        
+        bool test1 = Math.Abs(health.Value - 120f) < 0.001f;
+        Console.WriteLine($"  Health after adding buff: {health.Value} (expected 120) - {(test1 ? "PASS" : "FAIL")}");
+        
+        int healthChanges = 0;
+        int manaChanges = 0;
+        
+        statSet.OnStatChanged += (stat, prev, curr) =>
+        {
+            if (stat.Id.Value == 1) healthChanges++;
+            if (stat.Id.Value == 2) manaChanges++;
+        };
+        
+        // Expire the buff
+        statSet.Update(6f);
+        
+        bool test2 = healthChanges == 1;
+        bool test3 = manaChanges == 0;
+        bool test4 = Math.Abs(health.Value - 100f) < 0.001f;
+        bool test5 = Math.Abs(mana.Value - 50f) < 0.001f;
+        
+        Console.WriteLine($"  Health changes: {healthChanges} (expected 1) - {(test2 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Mana changes: {manaChanges} (expected 0) - {(test3 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Health after expiry: {health.Value} (expected 100) - {(test4 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"  Mana after expiry: {mana.Value} (expected 50) - {(test5 ? "PASS" : "FAIL")}");
+        
+        bool allPassed = test1 && test2 && test3 && test4 && test5;
+        Console.WriteLine($"  Overall: {(allPassed ? "✓ PASSED" : "✗ FAILED")}");
+        Console.WriteLine();
+    }
+    
+    /// <summary>
+    /// Test 5: Verifies that manual Recalculate() updates all stats.
+    /// </summary>
+    private static void Test_ManualRecalculate_RecalculatesAllStats()
+    {
+        Console.WriteLine("=== Test 5: Manual Recalculate - Recalculates All Stats ===");
+        
+        var statSet = new StatSet();
+        
+        var stat = new Stat(new StatId(1), 100f);
+        statSet.AddStat(stat);
+        
+        bool test1 = Math.Abs(stat.Value - 100f) < 0.001f;
+        Console.WriteLine($"  Initial value: {stat.Value} (expected 100) - {(test1 ? "PASS" : "FAIL")}");
+        
+        // Manually change base value (bypasses dirty tracking)
+        stat.BaseValue = 200f;
+        
+        bool test2 = Math.Abs(stat.Value - 100f) < 0.001f;
+        Console.WriteLine($"  Value after changing BaseValue: {stat.Value} (expected 100 - not updated yet) - {(test2 ? "PASS" : "FAIL")}");
+        
+        // Manual recalculate
+        statSet.Recalculate();
+        
+        bool test3 = Math.Abs(stat.Value - 200f) < 0.001f;
+        Console.WriteLine($"  Value after Recalculate(): {stat.Value} (expected 200) - {(test3 ? "PASS" : "FAIL")}");
+        
+        bool allPassed = test1 && test2 && test3;
+        Console.WriteLine($"  Overall: {(allPassed ? "✓ PASSED" : "✗ FAILED")}");
+        Console.WriteLine();
+    }
+    
+    /// <summary>
+    /// Performance comparison: Old approach (recalc all) vs New approach (dirty tracking).
+    /// </summary>
+    private static void Test_Performance_Comparison()
+    {
+        Console.WriteLine("=== Performance Test: Dirty Tracking Optimization ===");
+    
+        var statSet = new StatSet();
+    
+        // Create 100 stats
+        for (uint i = 1; i <= 100; i++)
+        {
+            statSet.AddStat(new Stat(new StatId(i), 100f, $"Stat{i}"));
+        }
+    
+        int totalRecalculations = 0;
+        statSet.OnStatChanged += (stat, prev, curr) => totalRecalculations++;
+    
+        // Add 10 sources, each affecting only 3 stats
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+    
+        for (uint sourceId = 1; sourceId <= 10; sourceId++)
+        {
+            var modifiers = new[]
+            {
+                StatModifier.Flat(new StatId(sourceId), 10f),
+                StatModifier.Flat(new StatId(sourceId + 1), 5f),
+                StatModifier.Flat(new StatId(sourceId + 2), 3f)
+            };
+        
+            statSet.AddSource(new StatModifierSource(
+                id: sourceId,
+                sourceType: StatModifierSourceType.Buff,
+                modifiers: modifiers
+            ));
+        }
+    
+        sw.Stop();
+    
+        Console.WriteLine($"  100 stats, 10 sources (3 stats each)");
+        Console.WriteLine($"  Total recalculations: {totalRecalculations} (expected ~30)");
+        Console.WriteLine($"  Time elapsed: {sw.Elapsed.TotalMilliseconds:F2}ms");
+        Console.WriteLine($"  Without optimization would recalculate: 1000 times (100 stats × 10 operations)");
+        Console.WriteLine($"  Optimization factor: ~{1000.0 / totalRecalculations:F1}x faster");
+    
+        bool efficient = totalRecalculations < 100; // Should be around 30, definitely less than 100
+        Console.WriteLine($"  Overall: {(efficient ? "✓ OPTIMIZED" : "✗ NOT OPTIMIZED")}");
+        Console.WriteLine();
+    }
+    
+    /// <summary>
+    /// Runs all console tests.
+    /// </summary>
+    private static void RunAllTests()
+    {
+        Console.WriteLine("╔════════════════════════════════════════════════════════════╗");
+        Console.WriteLine("║         StatSet Optimization Tests (Console Mode)          ║");
+        Console.WriteLine("╚════════════════════════════════════════════════════════════╝");
+        Console.WriteLine();
+        
+        Test_DirtyTracking_OnlyRecalculatesAffectedStats();
+        Test_BatchUpdate_DefersRecalculation();
+        Test_NestedBatching_OnlyRecalculatesOnOutermostEnd();
+        Test_ExpiredSources_OnlyRecalculatesAffectedStats();
+        Test_ManualRecalculate_RecalculatesAllStats();
+        Test_Performance_Comparison();
+        
+        Console.WriteLine("╔════════════════════════════════════════════════════════════╗");
+        Console.WriteLine("║                      Tests Complete                        ║");
+        Console.WriteLine("╚════════════════════════════════════════════════════════════╝");
+    }
+    
+    #endregion
 }
+
