@@ -1,20 +1,5 @@
 namespace ShapeEngine.Stats;
 
-
-
-//TODO: Recalculate() is Aggressive -> use dirty system somehow?
-// With 100 stats and 50 sources, every AddSource() call does 100 stat recalculations even if only 2 stats are affected. Consider:
-// - Dirty flag per stat (like SimpleStat)
-// - Track which stats are affected by a source
-// - Batch operations: BeginChanges() / EndChanges()
-// Example:
-// statSet.BeginUpdate();
-// statSet.AddSource(buff1);
-// statSet.AddSource(buff2);
-// statSet.AddSource(buff3);
-// statSet.EndUpdate(); // Recalculate once here
-
-
 /// <summary>
 /// Manages stats and their active modifier sources. This is the new entry point of the stat system.
 /// You create stats, add modifier sources, call Update(dt) each frame if you have timed effects, and read the final stat values back out.
@@ -70,6 +55,19 @@ namespace ShapeEngine.Stats;
 /// </remarks>
 public class StatSet
 {
+    private class BatchScope : IDisposable
+    {
+        private readonly StatSet statSet;
+    
+        public BatchScope(StatSet statSet)
+        {
+            this.statSet = statSet;
+            statSet.BeginUpdate();
+        }
+    
+        public void Dispose() => statSet.EndUpdate();
+    }
+    
     #region Events
     
     /// <summary>
@@ -120,6 +118,10 @@ public class StatSet
     /// </summary>
     public IReadOnlyCollection<IStatModifierSource> Sources => sources.Values;
 
+    /// <summary>
+    /// The stats that are marked "dirty" and need to be recalculated.
+    /// </summary>
+    public IReadOnlyCollection<StatId> GetDirtyStats() => dirtyStats;
     #endregion
     
     #region Private Collections
@@ -128,6 +130,9 @@ public class StatSet
     private readonly Dictionary<uint, IStatModifierSource> sources = new(24);
     private readonly List<uint> expiredSourceIds = new(8);
     private  List<StatModifier> statModifierBuffer = new(32);
+    
+    private readonly HashSet<StatId> dirtyStats = new(16);
+    private int updateDepth = 0;
     #endregion
     
     #region Public Functions
@@ -154,10 +159,18 @@ public class StatSet
                 //This avoids potential race issues if subscribers change between check and call.
                 var handler = OnSourceRemoved;
                 handler?.Invoke(source);
+                
+                // Mark stats affected by expired source as dirty
+                MarkAffectedStatsDirty(source);
             }
         }
 
-        Recalculate();
+        // Recalculate dirty stats (from expired sources)
+        // Note - Update() is never called during batching, so we don't check updateDepth
+        if (dirtyStats.Count > 0)
+        {
+            RecalculateDirtyStats();
+        }
     }
 
     /// <summary>
@@ -165,22 +178,26 @@ public class StatSet
     /// </summary>
     public void Recalculate()
     {
-        CollectAllStatModifiers();
+        // Mark all stats dirty and recalculate
+        MarkAllStatsDirty();
+        RecalculateDirtyStats();
         
-        foreach (var kvp in stats)
-        {
-            var stat = kvp.Value;
-            var previous = stat.Value;
-            var current = stat.Recalculate(statModifierBuffer);
-            
-            const float epsilon = 0.001f;
-            if (Math.Abs(previous - current) > epsilon)
-            {
-                //This avoids potential race issues if subscribers change between check and call.
-                var handler = OnStatChanged;
-                handler?.Invoke(stat, previous, current);
-            }
-        }
+        // CollectAllStatModifiers();
+        //
+        // foreach (var kvp in stats)
+        // {
+        //     var stat = kvp.Value;
+        //     var previous = stat.Value;
+        //     var current = stat.Recalculate(statModifierBuffer);
+        //     
+        //     const float epsilon = 0.001f;
+        //     if (Math.Abs(previous - current) > epsilon)
+        //     {
+        //         //This avoids potential race issues if subscribers change between check and call.
+        //         var handler = OnStatChanged;
+        //         handler?.Invoke(stat, previous, current);
+        //     }
+        // }
     }
 
     /// <summary>
@@ -191,7 +208,6 @@ public class StatSet
     /// </remarks>
     public void Clear()
     {
-        bool changed = false;
         if (stats.Count > 0)
         {
             foreach (var kvp in stats)
@@ -202,7 +218,6 @@ public class StatSet
                 //This avoids potential race issues if subscribers change between check and call.
                 var handler = OnStatRemoved;
                 handler?.Invoke(stat);
-                changed = true;
             }
         
             stats.Clear();
@@ -217,13 +232,65 @@ public class StatSet
                 //This avoids potential race issues if subscribers change between check and call.
                 var handler = OnSourceRemoved;
                 handler?.Invoke(source);
-                changed = true;
             }
         
             sources.Clear();
         }
         
-        if(changed) Recalculate();
+        // Clear dirty set
+        dirtyStats.Clear();
+    
+        // No recalculation needed—everything is gone
+    }
+    
+    //TODO: Improve
+    /// <summary>
+    /// Can be used for auto batching.
+    /// </summary>
+    /// <returns>Returns an IDisposable batch.</returns>
+    /// <code>
+    /// using (statSet.Batch())
+    /// {
+    ///     statSet.AddSource(buff1);
+    ///     statSet.AddSource(buff2);
+    /// } // Auto EndUpdate()
+    /// </code>
+    public IDisposable Batch()
+    {
+        return new BatchScope(this);
+    }
+    #endregion
+    
+    #region Batch Update API
+    
+    /// <summary>
+    /// Begins a batch update. Multiple changes can be made without triggering recalculation until <see cref="EndUpdate"/> is called.
+    /// </summary>
+    /// <remarks>
+    /// Supports nesting: each BeginUpdate must be paired with an EndUpdate.
+    /// Recalculation happens only when the outermost EndUpdate is called.
+    /// </remarks>
+    public void BeginUpdate()
+    {
+        updateDepth++;
+    }
+    
+    /// <summary>
+    /// Ends a batch update. If this is the outermost EndUpdate, recalculates all dirty stats.
+    /// </summary>
+    public void EndUpdate()
+    {
+        if (updateDepth <= 0)
+        {
+            throw new InvalidOperationException("EndUpdate called without matching BeginUpdate.");
+        }
+        
+        updateDepth--;
+        
+        if (updateDepth == 0)
+        {
+            RecalculateDirtyStats();
+        }
     }
     
     #endregion
@@ -237,10 +304,18 @@ public class StatSet
     public void AddStat(Stat stat)
     {
         stats[stat.Id] = stat;
+        
         //This avoids potential race issues if subscribers change between check and call.
         var handler = OnStatAdded;
         handler?.Invoke(stat);
-        Recalculate();
+        
+        // New stat might be affected by existing sources
+        dirtyStats.Add(stat.Id);
+    
+        if (updateDepth == 0)
+        {
+            RecalculateDirtyStats();
+        }
     }
 
     /// <summary>
@@ -261,7 +336,11 @@ public class StatSet
             //This avoids potential race issues if subscribers change between check and call.
             var handler = OnStatRemoved;
             handler?.Invoke(stat);
-            Recalculate();
+            
+            // Remove from dirty set if it was pending recalculation
+            dirtyStats.Remove(id);
+        
+            // No recalculation needed—stat is gone
         }
         return removed;
     }
@@ -302,7 +381,6 @@ public class StatSet
     {
         if(stats.Count <= 0) return;
         
-        bool changed = false;
         foreach (var kvp in stats)
         {
             var statId = kvp.Key;
@@ -311,12 +389,14 @@ public class StatSet
             //This avoids potential race issues if subscribers change between check and call.
             var handler = OnStatRemoved;
             handler?.Invoke(stat);
-            changed = true;
         }
         
         stats.Clear();
         
-        if(changed) Recalculate();
+        // Clear dirty set since all stats are gone
+        dirtyStats.Clear();
+    
+        // No recalculation needed—nothing to recalculate
     }
     
     #endregion
@@ -341,15 +421,34 @@ public class StatSet
                 var handler = OnSourceStacksAdded;
                 handler?.Invoke(existing, addedStacks);
             }
-            Recalculate();
+            
+            // Mark stats affected by this source as dirty
+            MarkAffectedStatsDirty(existing);
+            
+            // Only recalculate if not batching
+            if (updateDepth == 0)
+            {
+                RecalculateDirtyStats();
+            }
+            
             return false;
         }
 
         sources.Add(source.Id, source);
+        
         //This avoids potential race issues if subscribers change between check and call.
         var handler2 = OnSourceAdded;
         handler2?.Invoke(source);
-        Recalculate();
+        
+        // Mark stats affected by this source as dirty
+        MarkAffectedStatsDirty(source);
+    
+        // Only recalculate if not batching
+        if (updateDepth == 0)
+        {
+            RecalculateDirtyStats();
+        }
+        
         return true;
     }
 
@@ -366,7 +465,15 @@ public class StatSet
         var handler = OnSourceRemoved;
         handler?.Invoke(source);
         
-        Recalculate();
+        // Mark stats affected by this source as dirty
+        MarkAffectedStatsDirty(source);
+    
+        // Only recalculate if not batching
+        if (updateDepth == 0)
+        {
+            RecalculateDirtyStats();
+        }
+        
         return true;
     }
 
@@ -394,7 +501,15 @@ public class StatSet
             //This avoids potential race issues if subscribers change between check and call.
             var handler = OnSourceStacksAdded;
             handler?.Invoke(source, added);
-            Recalculate();
+            
+            // Mark stats affected by this source as dirty
+            MarkAffectedStatsDirty(source);
+    
+            // Only recalculate if not batching
+            if (updateDepth == 0)
+            {
+                RecalculateDirtyStats();
+            }
         }
 
         return added;
@@ -417,8 +532,22 @@ public class StatSet
         var handler = OnSourceStacksRemoved;
         handler?.Invoke(source, removed);
         
-        if (source.IsExpired) RemoveSource(sourceId);
-        else Recalculate();
+        // Mark stats affected by this source as dirty
+        MarkAffectedStatsDirty(source);
+        
+        if (source.IsExpired)
+        {
+            // This will recalculate if needed
+            RemoveSource(sourceId);
+        }
+        else
+        {
+            // Only recalculate if not batching
+            if (updateDepth == 0)
+            {
+                RecalculateDirtyStats();
+            }
+        }
 
         return removed;
     }
@@ -448,7 +577,16 @@ public class StatSet
         
         sources.Clear();
         
-        if(changed) Recalculate();
+        if (changed)
+        {
+            // Removing all sources affects all stats
+            MarkAllStatsDirty();
+        
+            if (updateDepth == 0)
+            {
+                RecalculateDirtyStats();
+            }
+        }
     }
     
     #endregion
@@ -470,5 +608,75 @@ public class StatSet
         return statModifierBuffer.Count;
     }
     
+    /// <summary>
+    /// Recalculates only the stats that have been marked dirty since the last recalculation.
+    /// </summary>
+    /// <remarks>
+    /// This is the core optimization: instead of recalculating all stats on every change,
+    /// we only recalculate stats that are actually affected by source changes.
+    /// </remarks>
+    private void RecalculateDirtyStats()
+    {
+        // Early exit if nothing changed
+        if (dirtyStats.Count == 0) return;
+        
+        // Collect all modifiers from all sources once
+        // (This is still O(sources), but we only filter for dirty stats)
+        CollectAllStatModifiers();
+        
+        // Recalculate only dirty stats
+        foreach (var statId in dirtyStats)
+        {
+            if (!stats.TryGetValue(statId, out var stat))
+            {
+                // Stat was removed or doesn't exist—skip it
+                continue;
+            }
+            
+            var previous = stat.Value;
+            var current = stat.Recalculate(statModifierBuffer);
+            
+            const float epsilon = 0.001f;
+            if (Math.Abs(previous - current) > epsilon)
+            {
+                // This avoids potential race issues if subscribers change between check and call.
+                var handler = OnStatChanged;
+                handler?.Invoke(stat, previous, current);
+            }
+        }
+        
+        // Clear dirty set for next batch
+        dirtyStats.Clear();
+    }
+    
+    /// <summary>
+    /// Marks stats affected by the given source as dirty.
+    /// </summary>
+    /// <param name="source">The source whose affected stats should be marked.</param>
+    private void MarkAffectedStatsDirty(IStatModifierSource source)
+    {
+        statModifierBuffer.Clear();
+        source.CollectAllModifiers(ref statModifierBuffer);
+        // Get all modifiers from the source and mark their target stats as dirty
+        foreach (var modifier in statModifierBuffer)
+        {
+            dirtyStats.Add(modifier.Target);
+        }
+    }
+    
+    /// <summary>
+    /// Marks all registered stats as dirty.
+    /// </summary>
+    /// <remarks>
+    /// Used when we can't determine which stats are affected (e.g., ClearSources, ClearStats).
+    /// </remarks>
+    private void MarkAllStatsDirty()
+    {
+        foreach (var kvp in stats)
+        {
+            var statId = kvp.Key;
+            dirtyStats.Add(statId);
+        }
+    }
     #endregion
 }
