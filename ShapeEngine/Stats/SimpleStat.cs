@@ -1,11 +1,5 @@
 namespace ShapeEngine.Stats;
 
-//TODO: Fix min/max bounds using priority -> should strictes bound win or should I add flag to decide if priority is used?
-// No Min/Max Modifier Priority Override If I have:
-// - Min modifier: 10 (priority 5)
-// - Min modifier: 20 (priority 3)
-// - The result is min = 10 (higher priority), even though 20 is a stricter bound. Some games want "highest minimum wins regardless of priority". Consider a flag.
-
 /// <summary>
 /// Represents a simple stat with a base value and modifiers that affect it.
 /// Use SimpleStat When:
@@ -47,6 +41,29 @@ public class SimpleStat
     /// </remarks>
     public const float PermanentDuration = -1f;
 
+    /// <summary>
+    /// Determines how tied priorities are resolved when multiple <see cref="StatModifierKind.Min"/> or <see cref="StatModifierKind.Max"/> modifiers compete.
+    /// When <c>true</c>, the modifier with the higher ID takes precedence.
+    /// When <c>false</c>, the stricter bound is applied (highest minimum or lowest maximum).
+    /// </summary>
+    /// <example>
+    /// <para>Min Modifier Tie Resolution:</para>
+    /// <list type="bullet">
+    /// <item><description>Min modifier: 10 (priority 5)</description></item>
+    /// <item><description>Min modifier: 20 (priority 3)</description></item>
+    /// <item><description>When <c>true</c>: value of 10 is used (higher ID wins).</description></item>
+    /// <item><description>When <c>false</c>: value of 20 is used (stricter lower bound wins).</description></item>
+    /// </list>
+    /// <para>Max Modifier Tie Resolution:</para>
+    /// <list type="bullet">
+    /// <item><description>Max modifier: 100 (priority 5)</description></item>
+    /// <item><description>Max modifier: 60 (priority 3)</description></item>
+    /// <item><description>When <c>true</c>: value of 100 is used (higher ID wins).</description></item>
+    /// <item><description>When <c>false</c>: value of 60 is used (stricter upper bound wins).</description></item>
+    /// </list>
+    /// </example>
+    public static bool BoundsModifierTieBehaviourId = true;
+    
     /// <summary>
     /// Represents a modifier applied to a stat.
     /// </summary>
@@ -92,11 +109,18 @@ public class SimpleStat
         /// If Priority is equal, the ID is used to determine the order, where highest ID wins.
         /// </summary>
         /// <param name="other">The other modifier to compare against.</param>
+        /// <param name="modifierKind">What type of modifier is used.</param>
         /// <returns>Returns true if this modifier is more important than the other; otherwise false.</returns>
-        public bool TakesPriority(Modifier other)
+        public bool TakesPriority(Modifier other, StatModifierKind modifierKind)
         {
             if (Priority == other.Priority)
             {
+                if ((modifierKind == StatModifierKind.Min || modifierKind == StatModifierKind.Max) && !BoundsModifierTieBehaviourId)
+                {
+                    //Stricter bounds takes priority.
+                    return modifierKind == StatModifierKind.Min ? Value > other.Value : Value < other.Value;
+                }
+                
                 return Id > other.Id;
             }
             return Priority > other.Priority;
@@ -914,7 +938,7 @@ public class SimpleStat
         for (int i = 0; i < minModifierCount; i++)
         {
             var currentModifier = minModifiers[i];
-            if (minModifier == null || currentModifier.TakesPriority(minModifier.Value))
+            if (minModifier == null || currentModifier.TakesPriority(minModifier.Value, StatModifierKind.Min))
             {
                 minModifier = currentModifier;
             }
@@ -923,7 +947,7 @@ public class SimpleStat
         for (int i = 0; i < maxModifierCount; i++)
         {
             var currentModifier = maxModifiers[i];
-            if (maxModifier == null || currentModifier.TakesPriority(maxModifier.Value))
+            if (maxModifier == null || currentModifier.TakesPriority(maxModifier.Value, StatModifierKind.Max))
             {
                 maxModifier = currentModifier;
             }
@@ -996,7 +1020,7 @@ public class SimpleStat
         for (var i = 0; i < count; i++)
         {
             var curModifier = modifiers[i];
-            if (overrideModifier == null || curModifier.TakesPriority(overrideModifier.Value))
+            if (overrideModifier == null || curModifier.TakesPriority(overrideModifier.Value, StatModifierKind.Override))
             {
                 overrideModifier = curModifier;
                 overrideFound = true;
