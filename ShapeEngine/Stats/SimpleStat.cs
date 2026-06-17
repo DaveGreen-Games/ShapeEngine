@@ -1,7 +1,5 @@
 namespace ShapeEngine.Stats;
 
-//TODO: SimpleStat: maxStacks <= 0 fails validation in AddModifier -> maxStacks of 0 or less should mean unlimited stacks!
-
 //TODO: Fix min/max bounds using priority -> should strictes bound win or should I add flag to decide if priority is used?
 // No Min/Max Modifier Priority Override If I have:
 // - Min modifier: 10 (priority 5)
@@ -486,7 +484,7 @@ public class SimpleStat
     /// <param name="maxStacks">The maximum number of stacks allowed for this modifier.</param>
     /// <param name="priority">The priority of the modifier (used for override, min, and max kinds).</param>
     /// <returns>True if the modifier was successfully added or updated; otherwise, false.</returns>
-    public bool AddModifier(uint id, float value, StatModifierKind kind, float duration = PermanentDuration, int stacks = 1, int maxStacks = 1, int priority = 0)
+    public bool AddModifier(uint id, float value, StatModifierKind kind, float duration = PermanentDuration, int stacks = 1, int maxStacks = 0, int priority = 0)
     {
         switch (kind)
         {
@@ -677,12 +675,12 @@ public class SimpleStat
     /// <returns>True if successful; otherwise, false.</returns>
     private bool AddModifier(ref Modifier[] modifiers, ref int count, uint id, float value, float duration, int stacks, int maxStacks, int priority)
     {
-        if (stacks <= 0 || maxStacks <= 0)
+        if (stacks <= 0)
         {
             return false;
         }
 
-        if (stacks > maxStacks)
+        if (maxStacks > 0 && stacks > maxStacks)
         {
             stacks = maxStacks;
         }
