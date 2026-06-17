@@ -23,6 +23,18 @@ namespace ShapeEngine.Stats;
 /// <item>Formula: ((Base + Flat) * (1 + AdditivePercent)) * MultiplicativeFactor</item>
 /// </list>
 /// </summary>
+/// <summary>
+///Use <see cref="StatSet"/> When:
+/// <list type="bullet">
+/// <item>RPGs/Complex Games: Many stats, many sources, complex interactions</item>
+/// <item>Buff/Debuff systems: Timed effects, stacking, reapplication</item>
+/// <item>Equipment systems: Items affecting multiple stats</item>
+/// <item>UI-heavy: Tooltips showing all active effects</item>
+/// <item>Modding support: Clean API for external content</item>
+/// <item>Long-term project: Complexity pays off over time</item>
+/// </list>
+/// For a simpler alternative, see <see cref="SimpleStat"/>.
+/// </summary>
 /// <remarks>
 /// Main flow:
 /// <list type="bullet">

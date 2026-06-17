@@ -6,11 +6,17 @@ namespace ShapeEngine.Stats;
 // - Min modifier: 20 (priority 3)
 // - The result is min = 10 (higher priority), even though 20 is a stricter bound. Some games want "highest minimum wins regardless of priority". Consider a flag.
 
-//TODO: Add explanation to summary for when to use SimpleStat and when to use StatSet
-
-
 /// <summary>
 /// Represents a simple stat with a base value and modifiers that affect it.
+/// Use SimpleStat When:
+/// <list type="bullet">
+/// <item>Small-scale games: Mobile puzzle game with 3-5 stats</item>
+/// <item>Prototypes: Quick iteration, don't need polish</item>
+/// <item>Isolated systems: One-off calculations, temporary stats</item>
+/// <item>Performance-critical: Thousands of stat instances updated per frame</item>
+/// <item>No UI needs: Players don't need to see "why" values are what they are</item>
+/// </list>
+/// For are more advanced systems, use <see cref="StatSet"/>.
 /// </summary>
 /// <remarks>
 /// <list type="bullet">
@@ -26,7 +32,7 @@ namespace ShapeEngine.Stats;
 /// <item>Additive percentage modifiers are summed up and then multiplied with the current value. Stacks apply.</item>
 /// <item>Each multiplicative modifier is multiplied with the current value separately for the amount of stacks it has.</item>
 /// <item>If at least 1 override modifier is active the override value with the highest priority is used to set the current value directly. No flat or percentage modifiers are applied. Stacks are ignored.</item>
-/// <item>The min & max modifiers with the highest priority are used to clamp the current value. Stacks are ignored.</item>
+/// <item>The min and max modifiers with the highest priority are used to clamp the current value. Stacks are ignored.</item>
 /// <item>The stats bounds are used (if set) to clamp the current value.</item>
 /// <item>If priority is tied for 2 modifiers, the modifier with the higher ID wins.</item>
 /// </list>
