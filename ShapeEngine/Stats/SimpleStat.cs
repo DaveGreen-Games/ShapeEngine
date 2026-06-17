@@ -8,8 +8,6 @@ namespace ShapeEngine.Stats;
 // - Min modifier: 20 (priority 3)
 // - The result is min = 10 (higher priority), even though 20 is a stricter bound. Some games want "highest minimum wins regardless of priority". Consider a flag.
 
-//TODO: Use uint for IDs instead of int
-
 //TODO: Add explanation to summary for when to use SimpleStat and when to use StatSet
 
 
@@ -53,7 +51,7 @@ public class SimpleStat
         /// <summary>
         /// Unique identifier for the modifier.
         /// </summary>
-        public int Id;
+        public uint Id;
 
         /// <summary>
         /// The modifier value.
@@ -461,7 +459,7 @@ public class SimpleStat
     /// <param name="id">The unique identifier of the modifier.</param>
     /// <param name="kind">The kind of modifier to check for.</param>
     /// <returns>True if the modifier is found; otherwise, false.</returns>
-    public bool HasModifier(int id, StatModifierKind kind)
+    public bool HasModifier(uint id, StatModifierKind kind)
     {
         switch (kind)
         {
@@ -488,7 +486,7 @@ public class SimpleStat
     /// <param name="maxStacks">The maximum number of stacks allowed for this modifier.</param>
     /// <param name="priority">The priority of the modifier (used for override, min, and max kinds).</param>
     /// <returns>True if the modifier was successfully added or updated; otherwise, false.</returns>
-    public bool AddModifier(int id, float value, StatModifierKind kind, float duration = PermanentDuration, int stacks = 1, int maxStacks = 1, int priority = 0)
+    public bool AddModifier(uint id, float value, StatModifierKind kind, float duration = PermanentDuration, int stacks = 1, int maxStacks = 1, int priority = 0)
     {
         switch (kind)
         {
@@ -509,7 +507,7 @@ public class SimpleStat
     /// <param name="id">The unique identifier of the modifier to remove.</param>
     /// <param name="kind">The kind of modifier to remove.</param>
     /// <returns>True if the modifier was found and removed; otherwise, false.</returns>
-    public bool RemoveModifier(int id, StatModifierKind kind)
+    public bool RemoveModifier(uint id, StatModifierKind kind)
     {
         switch (kind)
         {
@@ -535,7 +533,7 @@ public class SimpleStat
     /// If stacks reach 0 or less, the modifier is removed.
     /// Adding stacks refreshes the duration of timed modifiers.
     /// </remarks>
-    public bool AdjustModifierStacks(int id, StatModifierKind kind, int stacks)
+    public bool AdjustModifierStacks(uint id, StatModifierKind kind, int stacks)
     {
         if (stacks == 0) return false;
 
@@ -677,7 +675,7 @@ public class SimpleStat
     /// <param name="maxStacks">The maximum number of stacks.</param>
     /// <param name="priority">The priority of the modifier.</param>
     /// <returns>True if successful; otherwise, false.</returns>
-    private bool AddModifier(ref Modifier[] modifiers, ref int count, int id, float value, float duration, int stacks, int maxStacks, int priority)
+    private bool AddModifier(ref Modifier[] modifiers, ref int count, uint id, float value, float duration, int stacks, int maxStacks, int priority)
     {
         if (stacks <= 0 || maxStacks <= 0)
         {
@@ -736,7 +734,7 @@ public class SimpleStat
     /// <param name="count">The current count of modifiers in the array.</param>
     /// <param name="id">The unique identifier of the modifier to remove.</param>
     /// <returns>True if found and removed; otherwise, false.</returns>
-    private bool RemoveModifier(Modifier[] modifiers, ref int count, int id)
+    private bool RemoveModifier(Modifier[] modifiers, ref int count, uint id)
     {
         //find modifier
         for (var i = 0; i < count; i++)
@@ -764,7 +762,7 @@ public class SimpleStat
     /// <param name="id">The unique identifier of the modifier.</param>
     /// <param name="stacks">The number of stacks to add or remove.</param>
     /// <returns>True if found and adjusted; otherwise, false.</returns>
-    private bool AdjustModifierStacks(Modifier[] modifiers, ref int count, int id, int stacks)
+    private bool AdjustModifierStacks(Modifier[] modifiers, ref int count, uint id, int stacks)
     {
         if (stacks == 0) return false;
         
@@ -1075,7 +1073,7 @@ public class SimpleStat
     /// <param name="count">The current count of modifiers in the array.</param>
     /// <param name="id">The unique identifier to look for.</param>
     /// <returns>True if found; otherwise, false.</returns>
-    private static bool ContainsModifier(Modifier[] modifiers, int count, int id)
+    private static bool ContainsModifier(Modifier[] modifiers, int count, uint id)
     {
         if (count <= 0) return false;
         if (count == 1) return modifiers[0].Id == id;
