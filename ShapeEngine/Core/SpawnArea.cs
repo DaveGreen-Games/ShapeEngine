@@ -4,517 +4,610 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.RectDef;
 
-namespace ShapeEngine.Core
+namespace ShapeEngine.Core;
+
+/// <summary>
+/// Provides a simple area for managing <see cref="GameObject"/> instances with  adding/removing, updating, and drawing functions.
+/// Does not provide a collision system.
+/// <see cref="CollisionHandler"/> provides a collision system if needed.
+/// </summary>
+/// <remarks>
+/// SpawnArea manages collections of <see cref="GameObject"/>s, organized by layer, and provides update, draw, and removal logic.
+/// It supports parallax, area clearing, and event hooks for object addition/removal.
+/// </remarks>
+public class SpawnArea : IDrawable, IBounds
 {
+    #region Public Members
     /// <summary>
-    /// Provides a simple area for managing <see cref="GameObject"/> instances with  adding/removing, updating, and drawing functions.
-    /// Does not provide a collision system.
-    /// <see cref="CollisionHandler"/> provides a collision system if needed.
+    /// Occurs when a <see cref="GameObject"/> is added to the area.
+    /// <list type="bullet">
+    /// <item><description>GameObject: The object being added.</description></item>
+    /// </list>
     /// </summary>
-    /// <remarks>
-    /// SpawnArea manages collections of <see cref="GameObject"/>s, organized by layer, and provides update, draw, and removal logic.
-    /// It supports parallax, area clearing, and event hooks for object addition/removal.
-    /// </remarks>
-    public class SpawnArea : IDrawable, IBounds
+    public event Action<GameObject>? OnGameObjectAdded;
+    /// <summary>
+    /// Occurs when a <see cref="GameObject"/> is removed from the area.
+    /// <list type="bullet">
+    /// <item><description>GameObject: The object being removed.</description></item>
+    /// </list>
+    /// </summary>
+    public event Action<GameObject>? OnGameObjectRemoved;
+    
+    /// <summary>
+    /// The initial capacity for new layers.
+    /// </summary>
+    public int NewLayerStartCapacity = 128;
+    /// <summary>
+    /// Gets the total number of game objects in the area.
+    /// </summary>
+    public int Count { get; private set; }
+    
+    /// <summary>
+    /// Gets or sets the parallax position for the area.
+    /// </summary>
+    public Vector2 ParallaxePosition { get; set; } = new(0f);
+    #endregion
+    
+    #region Private Members
+    private readonly SortedList<uint, List<GameObject>> allObjects = new();
+    private readonly List<GameObject> drawToGameTextureObjects = [];
+    private readonly List<GameObject> drawToGameUiTextureObjects = [];
+
+    private Rect bounds;
+    private bool hasValidBounds;
+    
+    private Rect clearArea;
+    private bool clearAreaActive;
+    private BitFlag clearAreaMask;
+
+    private List<GameObject> removalList = new(1024);
+    
+    private bool isUpdating;
+    private readonly HashSet<GameObject> objectSet = new();
+    private readonly HashSet<GameObject> queuedAdditions = new();
+    private readonly HashSet<GameObject> queuedRemovals = new();
+    #endregion
+    
+    #region Constructors
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpawnArea"/> class with no bounds.
+    /// </summary>
+    public SpawnArea()
     {
-        #region Public Members
-        /// <summary>
-        /// Occurs when a <see cref="GameObject"/> is added to the area.
-        /// <list type="bullet">
-        /// <item><description>GameObject: The object being added.</description></item>
-        /// </list>
-        /// </summary>
-        public event Action<GameObject>? OnGameObjectAdded;
-        /// <summary>
-        /// Occurs when a <see cref="GameObject"/> is removed from the area.
-        /// <list type="bullet">
-        /// <item><description>GameObject: The object being removed.</description></item>
-        /// </list>
-        /// </summary>
-        public event Action<GameObject>? OnGameObjectRemoved;
+        bounds = new(0f, 0f, 0f, 0f);
         
-        /// <summary>
-        /// The initial capacity for new layers.
-        /// </summary>
-        public int NewLayerStartCapacity = 128;
-        /// <summary>
-        /// Gets the total number of game objects in the area.
-        /// </summary>
-        public int Count { get; private set; }
+        if(bounds.Width <= 0f || bounds.Height <= 0f)
+        {
+            hasValidBounds = false;
+        }
         
-        /// <summary>
-        /// Gets or sets the parallax position for the area.
-        /// </summary>
-        public Vector2 ParallaxePosition { get; set; } = new(0f);
-        #endregion
+        hasValidBounds = true;
+    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpawnArea"/> class with the specified position and size.
+    /// </summary>
+    /// <param name="x">The x-coordinate of the spawn area's position.</param>
+    /// <param name="y">The y-coordinate of the spawn area's position.</param>
+    /// <param name="w">The width of the spawn area.</param>
+    /// <param name="h">The height of the spawn area.</param>
+    public SpawnArea(float x, float y, float w, float h)
+    {
+        bounds = new(x, y, w, h);
         
-        #region Private Members
-        private readonly SortedList<uint, List<GameObject>> allObjects = new();
-        private readonly List<GameObject> drawToGameTextureObjects = [];
-        private readonly List<GameObject> drawToGameUiTextureObjects = [];
+        if(bounds.Width <= 0f || bounds.Height <= 0f)
+        {
+            hasValidBounds = false;
+        }
+        
+        hasValidBounds = true;
+    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpawnArea"/> class with the specified bounds.
+    /// </summary>
+    /// <param name="bounds">The bounds of the spawn area.</param>
+    public SpawnArea(Rect bounds)
+    {
+        this.bounds = bounds;
+        
+        if(bounds.Width <= 0f || bounds.Height <= 0f)
+        {
+            hasValidBounds = false;
+        }
+        
+        hasValidBounds = true;
+    }
+    #endregion
+    
+    #region Get GameObjects
+    /// <summary>
+    /// Retrieves a list of game objects in the specified layer that match the given criteria.
+    /// </summary>
+    /// <param name="layer">The layer to search.</param>
+    /// <param name="match">The criteria that game objects must match.</param>
+    /// <returns>A list of matching game objects, or <c>null</c> if none found.</returns>
+    public List<GameObject>? GetGameObjects(uint layer, Predicate<GameObject> match)
+    {
+        if (Count <= 0) return null;
+        return HasLayer(layer) ? allObjects[layer].FindAll(match) : null;
+    }
 
-        private Rect bounds;
-        private bool hasValidBounds;
-        
-        private Rect clearArea;
-        private bool clearAreaActive;
-        private BitFlag clearAreaMask;
+    /// <summary>
+    /// Fills the provided list with game objects in the specified layer that match the given criteria.
+    /// </summary>
+    /// <param name="layer">The layer to search.</param>
+    /// <param name="match">The criteria that game objects must match.</param>
+    /// <param name="result">The list to fill with matching game objects.</param>
+    public void GetGameObjects(uint layer, Predicate<GameObject> match, ref List<GameObject> result)
+    {
+        if (Count <= 0) return;
+        if (!HasLayer(layer)) return;
 
-        private List<GameObject> removalList = new(1024);
-        
-        #endregion
-        
-        #region Constructors
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SpawnArea"/> class with no bounds.
-        /// </summary>
-        public SpawnArea()
+        foreach (var obj in allObjects[layer])
         {
-            bounds = new(0f, 0f, 0f, 0f);
-            
-            if(bounds.Width <= 0f || bounds.Height <= 0f)
-            {
-                hasValidBounds = false;
-            }
-            
-            hasValidBounds = true;
+            if (!match.Invoke(obj)) continue;
+            result.Add(obj);
         }
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SpawnArea"/> class with the specified position and size.
-        /// </summary>
-        /// <param name="x">The x-coordinate of the spawn area's position.</param>
-        /// <param name="y">The y-coordinate of the spawn area's position.</param>
-        /// <param name="w">The width of the spawn area.</param>
-        /// <param name="h">The height of the spawn area.</param>
-        public SpawnArea(float x, float y, float w, float h)
+    }
+    
+    /// <summary>
+    /// Retrieves a list of game objects in the spawn area that match the given criteria, across all layers specified by the layer mask.
+    /// </summary>
+    /// <param name="layerMask">The layer mask specifying which layers to include in the search.</param>
+    /// <param name="result">The list to fill with matching game objects.</param>
+    public void GetGameObjects(BitFlag layerMask, ref List<GameObject> result)
+    {
+        if (Count <= 0) return;
+        foreach (var kvp in allObjects)
         {
-            bounds = new(x, y, w, h);
-            
-            if(bounds.Width <= 0f || bounds.Height <= 0f)
+            if (layerMask.Has(kvp.Key))
             {
-                hasValidBounds = false;
-            }
-            
-            hasValidBounds = true;
-        }
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SpawnArea"/> class with the specified bounds.
-        /// </summary>
-        /// <param name="bounds">The bounds of the spawn area.</param>
-        public SpawnArea(Rect bounds)
-        {
-            this.bounds = bounds;
-            
-            if(bounds.Width <= 0f || bounds.Height <= 0f)
-            {
-                hasValidBounds = false;
-            }
-            
-            hasValidBounds = true;
-        }
-        #endregion
-        
-        #region Game Object 
-        /// <summary>
-        /// Retrieves a list of game objects in the specified layer that match the given criteria.
-        /// </summary>
-        /// <param name="layer">The layer to search.</param>
-        /// <param name="match">The criteria that game objects must match.</param>
-        /// <returns>A list of matching game objects, or <c>null</c> if none found.</returns>
-        public List<GameObject>? GetGameObjects(uint layer, Predicate<GameObject> match)
-        {
-            if (Count <= 0) return null;
-            return HasLayer(layer) ? allObjects[layer].FindAll(match) : null;
-        }
-        /// <summary>
-        /// Fills the provided list with game objects in the specified layer that match the given criteria.
-        /// </summary>
-        /// <param name="layer">The layer to search.</param>
-        /// <param name="match">The criteria that game objects must match.</param>
-        /// <param name="result">The list to fill with matching game objects.</param>
-        public void GetGameObjects(uint layer, Predicate<GameObject> match, ref List<GameObject> result)
-        {
-            if (Count <= 0) return;
-            if (!HasLayer(layer)) return;
-
-            foreach (var obj in allObjects[layer])
-            {
-                if (!match.Invoke(obj)) continue;
-                result.Add(obj);
-            }
-        }
-        /// <summary>
-        /// Retrieves a list of game objects in the spawn area that match the given criteria, across all layers specified by the layer mask.
-        /// </summary>
-        /// <param name="layerMask">The layer mask specifying which layers to include in the search.</param>
-        /// <param name="result">The list to fill with matching game objects.</param>
-        public void GetGameObjects(BitFlag layerMask, ref List<GameObject> result)
-        {
-            if (Count <= 0) return;
-            foreach (var kvp in allObjects)
-            {
-                if (layerMask.Has(kvp.Key))
+                if (kvp.Value.Count > 0)
                 {
-                    if (kvp.Value.Count > 0)
-                    {
-                        result.AddRange(kvp.Value);
-                    }
-                    
+                    result.AddRange(kvp.Value);
                 }
-            }
-        }
-        /// <summary>
-        /// Retrieves a list of game objects in the specified layers that match the given criteria.
-        /// </summary>
-        /// <param name="layerMask">The layer mask specifying which layers to include in the search.</param>
-        /// <param name="match">The criteria that game objects must match.</param>
-        /// <param name="result">The list to fill with matching game objects.</param>
-        public void GetGameObjects(BitFlag layerMask, Predicate<GameObject> match, ref List<GameObject> result)
-        {
-            if (Count <= 0) return;
-            
-            foreach (var kvp in allObjects)
-            {
-                if (layerMask.Has(kvp.Key))
-                {
-                    if (kvp.Value.Count > 0)
-                    {
-                        result.AddRange(kvp.Value.FindAll(match));
-                    }
-                    
-                }
-            }
-        }
-        /// <summary>
-        /// Retrieves all game objects in the spawn area.
-        /// </summary>
-        /// <returns>A list of all game objects in the spawn area, or <c>null</c> if there are none.</returns>
-        public List<GameObject>? GetAllGameObjects()
-        {
-            if (Count <= 0) return null;
-            List<GameObject> objects = new(Count);
-            foreach (var layerGroup in allObjects.Values)
-            {
-                objects.AddRange(layerGroup);
-            }
-            return objects;
-        }
-        /// <summary>
-        /// Fills the provided list with all game objects in the spawn area.
-        /// </summary>
-        /// <param name="result">The list to fill with all game objects.</param>
-        public void GetAllGameObjects(ref List<GameObject> result)
-        {
-            if (Count <= 0) return;
-            
-            foreach (var layerGroup in allObjects.Values)
-            {
-                result.AddRange(layerGroup);
-            }
-        }
-        /// <summary>
-        /// Retrieves a list of all game objects in the spawn area that match the given criteria.
-        /// </summary>
-        /// <param name="match">The criteria that game objects must match.</param>
-        /// <param name="result">The list to fill with matching game objects.</param>
-        public void GetAllGameObjects(Predicate<GameObject> match, ref List<GameObject> result)
-        {
-            if (Count <= 0) return;
-
-            
-            foreach (var layerGroup in allObjects.Values)
-            {
-                result.AddRange(layerGroup.FindAll(match));
-            }
-        }
-        /// <summary>
-        /// Retrieves a list of all game objects in the spawn area that match the given criteria.
-        /// </summary>
-        /// <param name="match">The criteria that game objects must match.</param>
-        /// <returns>A list of matching game objects, or <c>null</c> if none found.</returns>
-        public List<GameObject>? GetAllGameObjects(Predicate<GameObject> match)
-        {
-            if (Count <= 0) return null;
-            List<GameObject> objects = new(Count / 2);
-            foreach (var layerGroup in allObjects.Values)
-            {
-                objects.AddRange(layerGroup.FindAll(match));
-            }
-            return objects;
-        }
-
-        /// <summary>
-        /// Adds a game object to the spawn area.
-        /// </summary>
-        /// <param name="gameObject">The game object to add.</param>
-        public void AddGameObject(GameObject gameObject)
-        {
-            var layer = gameObject.Layer;
-            AddLayer(layer, NewLayerStartCapacity <= 0 ? 4 : NewLayerStartCapacity);
-
-            allObjects[layer].Add(gameObject);
-            
-            Count++;
-            GameObjectWasAdded(gameObject);
-            OnGameObjectAdded?.Invoke(gameObject);
-            gameObject.OnSpawned(this);
-        }
-        /// <summary>
-        /// Adds multiple game objects to the spawn area.
-        /// </summary>
-        /// <param name="areaObjects">The game objects to add.</param>
-        public void AddGameObjects(params GameObject[] areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
-        /// <summary>
-        /// Adds multiple game objects to the spawn area.
-        /// </summary>
-        /// <param name="areaObjects">The game objects to add.</param>
-        public void AddGameObjects(IEnumerable<GameObject> areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
-        /// <summary>
-        /// Removes a game object from the spawn area.
-        /// </summary>
-        /// <param name="gameObject">The game object to remove.</param>
-        /// <returns><c>true</c> if the game object was successfully removed; otherwise, <c>false</c>.</returns>
-        public bool RemoveGameObject(GameObject gameObject)
-        {
-            if (!allObjects.TryGetValue(gameObject.Layer, out var o)) return false;
-            if (!o.Remove(gameObject)) return false;
-            
-            Count--;
-            GameObjectWasRemoved(gameObject);
-            OnGameObjectRemoved?.Invoke(gameObject);
-            gameObject.OnDespawned(this);
-            return true;
-
-        }
-        /// <summary>
-        /// Removes multiple game objects from the spawn area.
-        /// </summary>
-        /// <param name="areaObjects">The game objects to remove.</param>
-        public void RemoveGameObjects(params GameObject[] areaObjects)
-        {
-            foreach (var ao in areaObjects)
-            {
-                RemoveGameObject(ao);
-            }
-        }
-        /// <summary>
-        /// Removes multiple game objects from the spawn area.
-        /// </summary>
-        /// <param name="areaObjects">The game objects to remove.</param>
-        public void RemoveGameObjects(IEnumerable<GameObject> areaObjects)
-        {
-            foreach (var ao in areaObjects)
-            {
-                RemoveGameObject(ao);
-            }
-        }
-        /// <summary>
-        /// Removes game objects from the specified layer that match the given criteria.
-        /// </summary>
-        /// <param name="layer">The layer to remove game objects from.</param>
-        /// <param name="match">The criteria that game objects must match to be removed.</param>
-        /// <param name="result">The list to fill with removed game objects.</param>
-        public void RemoveGameObjects(uint layer, Predicate<GameObject> match, ref List<GameObject> result)
-        {
-            if (!allObjects.ContainsKey(layer)) return;
-            removalList.Clear();
-            GetGameObjects(layer, match, ref removalList);
-            foreach (var o in removalList)
-            {
-                if(!RemoveGameObject(o)) continue;
-                result.Add(o);
-            }
-
-        }
-        /// <summary>
-        /// Removes game objects from the spawn area that match the given criteria,
-        /// across all layers specified by the layer mask.
-        /// </summary>
-        /// <param name="layerMask">The layer mask specifying which layers to include in the removal.</param>
-        /// <param name="result">The list to fill with removed game objects.</param>
-        public void RemoveGameObjects(BitFlag layerMask, ref List<GameObject> result)
-        {
-            removalList.Clear();
-            GetGameObjects(layerMask, ref removalList);
-            foreach (var o in removalList)
-            {
-                if (!RemoveGameObject(o)) continue;
-                result.Add(o);
-            }
-
-        }
-        /// <summary>
-        /// Removes game objects from the specified layers that match the given criteria.
-        /// </summary>
-        /// <param name="layerMask">The layer mask specifying which layers to include in the removal.</param>
-        /// <param name="match">The criteria that game objects must match to be removed.</param>
-        /// <param name="result">The list to fill with removed game objects.</param>
-        public void RemoveGameObjects(BitFlag layerMask, Predicate<GameObject> match, ref List<GameObject> result)
-        {
-            removalList.Clear();
-            GetGameObjects(layerMask, match, ref removalList);
-            foreach (var o in removalList)
-            {
-                if (!RemoveGameObject(o)) continue;
-                result.Add(o);
-            }
-
-        }
-        /// <summary>
-        /// Removes all game objects from the spawn area that match the given criteria.
-        /// </summary>
-        /// <param name="match">The criteria that game objects must match to be removed.</param>
-        public void RemoveGameObjects(Predicate<GameObject> match)
-        {
-            // var objs = GetAllGameObjects(match);
-            removalList.Clear();
-            GetAllGameObjects(match, ref removalList);
-            foreach (var o in removalList)
-            {
-                RemoveGameObject(o);
-            }
-        }
-        #endregion
-        
-        #region Public Methods
-        /// <summary>
-        /// Determines whether the specified layer exists in the spawn area.
-        /// </summary>
-        /// <param name="layer">The layer to check.</param>
-        /// <returns><c>true</c> if the layer exists; otherwise, <c>false</c>.</returns>
-        public bool HasLayer(uint layer) { return allObjects.ContainsKey(layer); }
-        
-        /// <summary>
-        /// Clears a specified area of the spawn area, removing all game objects within it that match the layer mask.
-        /// </summary>
-        /// <param name="area">The area to clear.</param>
-        /// <param name="areaLayerMask">The layer mask specifying which layers to clear.</param>
-        public void ClearArea(Rect area, BitFlag areaLayerMask)
-        {
-            clearArea = area;
-            clearAreaMask = areaLayerMask;
-            clearAreaActive = true;
-        }
-        #endregion
-
-        #region Private Methods
-
-        private void AddLayer(uint layer, int capacityEstimate = 128)
-        {
-            if (!allObjects.ContainsKey(layer))
-            {
-                allObjects.Add(layer, new(capacityEstimate));
-            }
-        }
-
-        #endregion
-        
-        #region Virtual Methods
-        
-        /// <summary>
-        /// Called when a game object is added to the spawn area.
-        /// </summary>
-        /// <param name="obj">The game object that was added.</param>
-        /// <remarks>Override for custom logic.</remarks>
-        protected virtual void GameObjectWasAdded(GameObject obj) { }
-        /// <summary>
-        /// Called when a game object is removed from the spawn area.
-        /// </summary>
-        /// <param name="obj">The game object that was removed.</param>
-        /// /// <remarks>Override for custom logic.</remarks>
-        protected virtual void GameObjectWasRemoved(GameObject obj) { }
-
-        /// <summary>
-        /// Clears all game objects from the spawn area.
-        /// </summary>
-        public virtual void Clear()
-        {
-            drawToGameTextureObjects.Clear();
-            drawToGameUiTextureObjects.Clear();
-
-            foreach (var layer in allObjects.Keys)
-            {
-                ClearLayer(layer);
-            }
-            Count = 0;
-        }
-        /// <summary>
-        /// Clears all game objects from the specified layer.
-        /// </summary>
-        /// <param name="layer">The layer to clear.</param>
-        public virtual void ClearLayer(uint layer)
-        {
-            if (!allObjects.TryGetValue(layer, out var objects)) return;
-
-            for (int i = objects.Count - 1; i >= 0; i--)
-            {
-                var obj = objects[i];
-                objects.RemoveAt(i);
-                GameObjectWasRemoved(obj);
-                obj.OnDespawned(this);
-                Count--;
                 
             }
         }
-
-        /// <summary>
-        /// Initializes the spawn area. Override to add custom initialization logic.
-        /// </summary>
-        public virtual void Start() { }
-        /// <summary>
-        /// Closes the spawn area, clearing all objects. Override to add custom closing logic.
-        /// </summary>
-        /// <remarks>Calls <see cref="Clear"/> function.</remarks>
-        public virtual void Close()
-        {
-            Clear();
-        }
-
-        /// <summary>
-        /// Draws debug information for the spawn area.
-        /// </summary>
-        /// <param name="boundsColor">The color for the bounds.</param>
-        /// <param name="borderColor">The color for the border.</param>
-        /// <param name="fillColor">The color for the fill.</param>
-        public virtual void DrawDebug(ColorRgba boundsColor, ColorRgba borderColor, ColorRgba fillColor)
-        {
-            this.bounds.DrawLines(15f, boundsColor);
-        }
+    }
+    
+    /// <summary>
+    /// Retrieves a list of game objects in the specified layers that match the given criteria.
+    /// </summary>
+    /// <param name="layerMask">The layer mask specifying which layers to include in the search.</param>
+    /// <param name="match">The criteria that game objects must match.</param>
+    /// <param name="result">The list to fill with matching game objects.</param>
+    public void GetGameObjects(BitFlag layerMask, Predicate<GameObject> match, ref List<GameObject> result)
+    {
+        if (Count <= 0) return;
         
-        /// <summary>
-        /// Draws the game objects that are marked for drawing to the game area.
-        /// </summary>
-        /// <param name="game">The screen information for the game area.</param>
-        public virtual void DrawGame(ScreenInfo game)
+        foreach (var kvp in allObjects)
         {
-            foreach (var obj in drawToGameTextureObjects)
+            if (layerMask.Has(kvp.Key))
             {
-                obj.DrawGame(game);
+                if (kvp.Value.Count > 0)
+                {
+                    result.AddRange(kvp.Value.FindAll(match));
+                }
+                
             }
         }
-        /// <summary>
-        /// Draws the game objects that are marked for drawing to the game UI area.
-        /// </summary>
-        /// <param name="gameUi">The screen information for the game UI area.</param>
-        public virtual void DrawGameUI(ScreenInfo gameUi)
+    }
+    
+    /// <summary>
+    /// Retrieves all game objects in the spawn area.
+    /// </summary>
+    /// <returns>A list of all game objects in the spawn area, or <c>null</c> if there are none.</returns>
+    public List<GameObject>? GetAllGameObjects()
+    {
+        if (Count <= 0) return null;
+        List<GameObject> objects = new(Count);
+        foreach (var layerGroup in allObjects.Values)
         {
-            foreach (var obj in drawToGameUiTextureObjects)
-            {
-                obj.DrawGameUI(gameUi);
-            }
+            objects.AddRange(layerGroup);
+        }
+        return objects;
+    }
+    
+    /// <summary>
+    /// Fills the provided list with all game objects in the spawn area.
+    /// </summary>
+    /// <param name="result">The list to fill with all game objects.</param>
+    public void GetAllGameObjects(ref List<GameObject> result)
+    {
+        if (Count <= 0) return;
+        
+        foreach (var layerGroup in allObjects.Values)
+        {
+            result.AddRange(layerGroup);
+        }
+    }
+    
+    /// <summary>
+    /// Retrieves a list of all game objects in the spawn area that match the given criteria.
+    /// </summary>
+    /// <param name="match">The criteria that game objects must match.</param>
+    /// <param name="result">The list to fill with matching game objects.</param>
+    public void GetAllGameObjects(Predicate<GameObject> match, ref List<GameObject> result)
+    {
+        if (Count <= 0) return;
+
+        
+        foreach (var layerGroup in allObjects.Values)
+        {
+            result.AddRange(layerGroup.FindAll(match));
+        }
+    }
+    
+    /// <summary>
+    /// Retrieves a list of all game objects in the spawn area that match the given criteria.
+    /// </summary>
+    /// <param name="match">The criteria that game objects must match.</param>
+    /// <returns>A list of matching game objects, or <c>null</c> if none found.</returns>
+    public List<GameObject>? GetAllGameObjects(Predicate<GameObject> match)
+    {
+        if (Count <= 0) return null;
+        List<GameObject> objects = new(Count / 2);
+        foreach (var layerGroup in allObjects.Values)
+        {
+            objects.AddRange(layerGroup.FindAll(match));
+        }
+        return objects;
+    }
+
+    #endregion
+    
+    #region Add Gameobjects
+    
+    /// <summary>
+    /// Adds a game object to the spawn area.
+    /// If SpawnArea is currently updating, the <paramref name="gameObject"/> will be added at the end of the update loop."/>
+    /// </summary>
+    /// <param name="gameObject">The game object to add.</param>
+    public void AddGameObject(GameObject gameObject)
+    {
+        if (objectSet.Contains(gameObject)) return;
+        if (queuedAdditions.Contains(gameObject)) return;
+        
+        if (isUpdating)
+        {
+            queuedRemovals.Remove(gameObject);
+            queuedAdditions.Add(gameObject);
+            return;
         }
 
-        #endregion
+        AddGameObjectImmediate(gameObject);
+    }
+
+    /// <summary>
+    /// Adds multiple game objects to the spawn area.
+    /// If SpawnArea is currently updating, the <paramref name="areaObjects"/> will be added at the end of the update loop."/>
+    /// </summary>
+    /// <param name="areaObjects">The game objects to add.</param>
+    public void AddGameObjects(params GameObject[] areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
+    
+    /// <summary>
+    /// Adds multiple game objects to the spawn area.
+    /// If SpawnArea is currently updating, the <paramref name="areaObjects"/> will be added at the end of the update loop."/>
+    /// </summary>
+    /// <param name="areaObjects">The game objects to add.</param>
+    public void AddGameObjects(IEnumerable<GameObject> areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
+    
+    #endregion
+    
+    #region Remove Gameobjects
+    
+    /// <summary>
+    /// Removes a game object from the spawn area.
+    /// If SpawnArea is currently updating, the <paramref name="gameObject"/> will be removed at the end of the update loop."/>
+    /// </summary>
+    /// <param name="gameObject">The game object to remove.</param>
+    /// <returns><c>true</c> if the game object was successfully removed; otherwise, <c>false</c>.</returns>
+    public bool RemoveGameObject(GameObject gameObject)
+    {
+        if (isUpdating)
+        {
+            if (queuedAdditions.Remove(gameObject)) return true;
+            if (!objectSet.Contains(gameObject)) return false;
+            return queuedRemovals.Add(gameObject);
+        }
+
+        return RemoveGameObjectImmediate(gameObject);
+
+    }
+    
+    /// <summary>
+    /// Removes multiple game objects from the spawn area.
+    /// If SpawnArea is currently updating, the <paramref name="areaObjects"/> will be removed at the end of the update loop."/>
+    /// </summary>
+    /// <param name="areaObjects">The game objects to remove.</param>
+    public void RemoveGameObjects(params GameObject[] areaObjects)
+    {
+        foreach (var ao in areaObjects)
+        {
+            RemoveGameObject(ao);
+        }
+    }
+    
+    /// <summary>
+    /// Removes multiple game objects from the spawn area.
+    /// If SpawnArea is currently updating, the <paramref name="areaObjects"/> will be removed at the end of the update loop."/>
+    /// </summary>
+    /// <param name="areaObjects">The game objects to remove.</param>
+    public void RemoveGameObjects(IEnumerable<GameObject> areaObjects)
+    {
+        foreach (var ao in areaObjects)
+        {
+            RemoveGameObject(ao);
+        }
+    }
+    
+    /// <summary>
+    /// Removes game objects from the specified layer that match the given criteria.
+    /// If SpawnArea is currently updating, all gameobjects in <paramref name="result"/> will be removed at the end of the update loop."/>
+    /// </summary>
+    /// <param name="layer">The layer to remove game objects from.</param>
+    /// <param name="match">The criteria that game objects must match to be removed.</param>
+    /// <param name="result">The list to fill with removed game objects.</param>
+    public void RemoveGameObjects(uint layer, Predicate<GameObject> match, ref List<GameObject> result)
+    {
+        if (!allObjects.ContainsKey(layer)) return;
+        removalList.Clear();
+        GetGameObjects(layer, match, ref removalList);
+        foreach (var o in removalList)
+        {
+            if(!RemoveGameObject(o)) continue;
+            result.Add(o);
+        }
+
+    }
+    
+    /// <summary>
+    /// Removes game objects from the spawn area that match the given criteria,
+    /// across all layers specified by the layer mask.
+    /// If SpawnArea is currently updating, all gameobjects in <paramref name="result"/> will be removed at the end of the update loop."/>
+    /// </summary>
+    /// <param name="layerMask">The layer mask specifying which layers to include in the removal.</param>
+    /// <param name="result">The list to fill with removed game objects.</param>
+    public void RemoveGameObjects(BitFlag layerMask, ref List<GameObject> result)
+    {
+        removalList.Clear();
+        GetGameObjects(layerMask, ref removalList);
+        foreach (var o in removalList)
+        {
+            if (!RemoveGameObject(o)) continue;
+            result.Add(o);
+        }
+
+    }
+    
+    /// <summary>
+    /// Removes game objects from the specified layers that match the given criteria.
+    /// If SpawnArea is currently updating, all gameobjects in <paramref name="result"/> will be removed at the end of the update loop."/>
+    /// </summary>
+    /// <param name="layerMask">The layer mask specifying which layers to include in the removal.</param>
+    /// <param name="match">The criteria that game objects must match to be removed.</param>
+    /// <param name="result">The list to fill with removed game objects.</param>
+    public void RemoveGameObjects(BitFlag layerMask, Predicate<GameObject> match, ref List<GameObject> result)
+    {
+        removalList.Clear();
+        GetGameObjects(layerMask, match, ref removalList);
+        foreach (var o in removalList)
+        {
+            if (!RemoveGameObject(o)) continue;
+            result.Add(o);
+        }
+
+    }
+    
+    /// <summary>
+    /// Removes all game objects from the spawn area that match the given criteria.
+    /// If SpawnArea is currently updating, all gameobjects found will be removed at the end of the update loop."/>
+    /// </summary>
+    /// <param name="match">The criteria that game objects must match to be removed.</param>
+    public void RemoveGameObjects(Predicate<GameObject> match)
+    {
+        removalList.Clear();
+        GetAllGameObjects(match, ref removalList);
+        foreach (var o in removalList)
+        {
+            RemoveGameObject(o);
+        }
+    }
+    #endregion
+    
+    #region Public Methods
+    /// <summary>
+    /// Determines whether the specified layer exists in the spawn area.
+    /// </summary>
+    /// <param name="layer">The layer to check.</param>
+    /// <returns><c>true</c> if the layer exists; otherwise, <c>false</c>.</returns>
+    public bool HasLayer(uint layer) { return allObjects.ContainsKey(layer); }
+    
+    /// <summary>
+    /// Clears a specified area of the spawn area, removing all game objects within it that match the layer mask.
+    /// </summary>
+    /// <param name="area">The area to clear.</param>
+    /// <param name="areaLayerMask">The layer mask specifying which layers to clear.</param>
+    public void ClearArea(Rect area, BitFlag areaLayerMask)
+    {
+        clearArea = area;
+        clearAreaMask = areaLayerMask;
+        clearAreaActive = true;
+    }
+    #endregion
+
+    #region Private Methods
+
+    private void AddLayer(uint layer, int capacityEstimate = 128)
+    {
+        if (!allObjects.ContainsKey(layer))
+        {
+            allObjects.Add(layer, new(capacityEstimate));
+        }
+    }
+
+    private void AddGameObjectImmediate(GameObject gameObject)
+    {
+        if (!objectSet.Add(gameObject)) return;
+        var layer = gameObject.Layer;
+        AddLayer(layer, NewLayerStartCapacity <= 0 ? 4 : NewLayerStartCapacity);
+
+        allObjects[layer].Add(gameObject);
+
+        Count++;
+        GameObjectWasAdded(gameObject);
+        OnGameObjectAdded?.Invoke(gameObject);
+        gameObject.ResolveOnSpawned(this);
+    }
+
+    private bool RemoveGameObjectImmediate(GameObject gameObject)
+    {
+        if (!objectSet.Remove(gameObject)) return false;
+        if (!allObjects.TryGetValue(gameObject.Layer, out var objects)) return false;
         
-        #region Open Framerate
-        /// <summary>
-        /// Updates the spawn area and all contained game objects. This method is called with variable time steps.
-        /// </summary>
-        /// <param name="time">The current game time.</param>
-        /// <param name="game">The screen information for the game area.</param>
-        /// <param name="gameUi">The screen information for the game UI area.</param>
-        /// <param name="ui">The screen information for the UI area.</param>
-        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        if (!objects.Remove(gameObject)) return false;
+
+        Count--;
+        GameObjectWasRemoved(gameObject);
+        OnGameObjectRemoved?.Invoke(gameObject);
+        gameObject.ResolveOnDespawned(this);
+        return true;
+    }
+    
+    private void ApplyQueuedChanges()
+    {
+        foreach (var obj in queuedRemovals)
+        {
+            RemoveGameObjectImmediate(obj);
+        }
+
+        queuedRemovals.Clear();
+
+        foreach (var obj in queuedAdditions)
+        {
+            AddGameObjectImmediate(obj);
+        }
+
+        queuedAdditions.Clear();
+    }
+    #endregion
+    
+    #region Virtual Methods
+    
+    /// <summary>
+    /// Called when a game object is added to the spawn area.
+    /// </summary>
+    /// <param name="obj">The game object that was added.</param>
+    /// <remarks>Override for custom logic.</remarks>
+    protected virtual void GameObjectWasAdded(GameObject obj) { }
+  
+    /// <summary>
+    /// Called when a game object is removed from the spawn area.
+    /// </summary>
+    /// <param name="obj">The game object that was removed.</param>
+    /// /// <remarks>Override for custom logic.</remarks>
+    protected virtual void GameObjectWasRemoved(GameObject obj) { }
+
+    /// <summary>
+    /// Clears all game objects from the spawn area.
+    /// </summary>
+    public virtual void Clear()
+    {
+        drawToGameTextureObjects.Clear();
+        drawToGameUiTextureObjects.Clear();
+
+        foreach (var layer in allObjects.Keys)
+        {
+            ClearLayer(layer);
+        }
+        
+        Count = 0;
+    }
+  
+    /// <summary>
+    /// Clears all game objects from the specified layer.
+    /// </summary>
+    /// <param name="layer">The layer to clear.</param>
+    public virtual void ClearLayer(uint layer)
+    {
+        if (!allObjects.TryGetValue(layer, out var objects)) return;
+
+        for (int i = objects.Count - 1; i >= 0; i--)
+        {
+            var obj = objects[i];
+            objects.RemoveAt(i);
+            objectSet.Remove(obj);
+            
+            Count--;
+            
+            obj.ResolveOnDespawned(this);
+            GameObjectWasRemoved(obj);
+            OnGameObjectRemoved?.Invoke(obj);
+            
+        }
+    }
+
+    /// <summary>
+    /// Initializes the spawn area. Override to add custom initialization logic.
+    /// </summary>
+    public virtual void Start() { }
+ 
+    /// <summary>
+    /// Closes the spawn area, clearing all objects. Override to add custom closing logic.
+    /// </summary>
+    /// <remarks>Calls <see cref="Clear"/> function.</remarks>
+    public virtual void Close()
+    {
+        Clear();
+    }
+
+    /// <summary>
+    /// Draws debug information for the spawn area.
+    /// </summary>
+    /// <param name="boundsColor">The color for the bounds.</param>
+    /// <param name="borderColor">The color for the border.</param>
+    /// <param name="fillColor">The color for the fill.</param>
+    public virtual void DrawDebug(ColorRgba boundsColor, ColorRgba borderColor, ColorRgba fillColor)
+    {
+        this.bounds.DrawLines(15f, boundsColor);
+    }
+    
+    /// <summary>
+    /// Draws the game objects that are marked for drawing to the game area.
+    /// </summary>
+    /// <param name="game">The screen information for the game area.</param>
+    public virtual void DrawGame(ScreenInfo game)
+    {
+        foreach (var obj in drawToGameTextureObjects)
+        {
+            obj.DrawGame(game);
+        }
+    }
+  
+    /// <summary>
+    /// Draws the game objects that are marked for drawing to the game UI area.
+    /// </summary>
+    /// <param name="gameUi">The screen information for the game UI area.</param>
+    public virtual void DrawGameUI(ScreenInfo gameUi)
+    {
+        foreach (var obj in drawToGameUiTextureObjects)
+        {
+            obj.DrawGameUI(gameUi);
+        }
+    }
+    
+    /// <summary>
+    /// Updates the spawn area and all contained game objects.
+    /// </summary>
+    /// <param name="time">The current game time.</param>
+    /// <param name="game">The screen information for the game area.</param>
+    /// <param name="gameUi">The screen information for the game UI area.</param>
+    /// <param name="ui">The screen information for the UI area.</param>
+    public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    {
+        isUpdating = true;
+
+        try
         {
             drawToGameTextureObjects.Clear();
             drawToGameUiTextureObjects.Clear();
@@ -523,7 +616,7 @@ namespace ShapeEngine.Core
             {
                 clearAreaActive = false;
             }
-                
+            
             foreach (var layer in allObjects)
             {
                 var objs = allObjects[layer.Key];
@@ -538,12 +631,12 @@ namespace ShapeEngine.Core
                         RemoveGameObject(obj);
                         continue;
                     }
-                        
+                    
                     obj.UpdateParallaxe(ParallaxePosition);
-                        
+                    
                     if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
                     if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
-                        
+                    
                     obj.Update(time, game, gameUi, ui);
 
                     if (obj.IsDead || HasValidBounds() && obj.HasLeftBounds(bounds))
@@ -555,53 +648,59 @@ namespace ShapeEngine.Core
 
             clearAreaActive = false;
         }
-
-        #endregion
-        
-        #region Bounds
-        /// <summary>
-        /// Gets the bounds of the spawn area. Use <see cref="HasValidBounds"/> to check if the bounds are valid.
-        /// </summary>
-        /// <remarks>
-        /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
-        /// Objects that have left the bounds are automatically removed.
-        /// If bounds are invalid, this enforcement is disabled.
-        /// </remarks>
-        public Rect GetBounds()
+        finally
         {
-            return bounds;
+            isUpdating = false;
+            ApplyQueuedChanges();
         }
-        /// <summary>
-        /// Sets the bounds of the spawn area. A width or height less than or equal to zero will invalidate the bounds.
-        /// </summary>
-        /// <param name="newBounds">The new bounds to set for the spawn area.</param>
-        /// <remarks>
-        /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
-        /// Objects that have left the bounds are automatically removed.
-        /// If bounds are invalid, this enforcement is disabled.
-        /// </remarks>
-        public virtual void SetBounds(Rect newBounds)
-        {
-            bounds = newBounds;
-            
-            if(bounds.Width <= 0f || bounds.Height <= 0f)
-            {
-                hasValidBounds = false;
-            }
-            
-            hasValidBounds = true;
-        }
-
-        /// <summary>
-        /// Returns whether the spawn area has valid bounds. Valid bounds have a width and height greater than zero.
-        /// </summary>
-        /// <remarks>
-        /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
-        /// Objects that have left the bounds are automatically removed.
-        /// If bounds are invalid, this enforcement is disabled.
-        /// </remarks>
-        public bool HasValidBounds() => hasValidBounds;
-
-        #endregion
     }
+
+    #endregion
+    
+    #region Bounds
+    /// <summary>
+    /// Gets the bounds of the spawn area. Use <see cref="HasValidBounds"/> to check if the bounds are valid.
+    /// </summary>
+    /// <remarks>
+    /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
+    /// Objects that have left the bounds are automatically removed.
+    /// If bounds are invalid, this enforcement is disabled.
+    /// </remarks>
+    public Rect GetBounds()
+    {
+        return bounds;
+    }
+    /// <summary>
+    /// Sets the bounds of the spawn area. A width or height less than or equal to zero will invalidate the bounds.
+    /// </summary>
+    /// <param name="newBounds">The new bounds to set for the spawn area.</param>
+    /// <remarks>
+    /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
+    /// Objects that have left the bounds are automatically removed.
+    /// If bounds are invalid, this enforcement is disabled.
+    /// </remarks>
+    public virtual void SetBounds(Rect newBounds)
+    {
+        bounds = newBounds;
+        
+        if(bounds.Width <= 0f || bounds.Height <= 0f)
+        {
+            hasValidBounds = false;
+        }
+        
+        hasValidBounds = true;
+    }
+
+    /// <summary>
+    /// Returns whether the spawn area has valid bounds. Valid bounds have a width and height greater than zero.
+    /// </summary>
+    /// <remarks>
+    /// When bounds are valid, <see cref="GameObject.HasLeftBounds"/> is checked for each object.
+    /// Objects that have left the bounds are automatically removed.
+    /// If bounds are invalid, this enforcement is disabled.
+    /// </remarks>
+    public bool HasValidBounds() => hasValidBounds;
+
+    #endregion
 }
+

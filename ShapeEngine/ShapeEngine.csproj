@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>5.2.0</Version>
+	<Version>5.3.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,13 +18,22 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>5.2.0</AssemblyVersion>
-	<FileVersion>5.2.0</FileVersion>
+	<AssemblyVersion>5.3.0</AssemblyVersion>
+	<FileVersion>5.3.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2026</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+
+	#5.3 Release Notes
+	Resolved an issue where spawning or removing GameObjects during the SpawnArea update loop was not possible.
+	Previously, modifying the collection of managed GameObjects within a SpawnArea during its own update loop would cause issues. To fix this, 
+	SpawnArea now uses internal deferred queues (addition and removal queues) that are active during the update loop. 
+	Any additions or removals requested during this phase are safely queued and processed afterward; otherwise, the operations execute immediately as before.
+	Additionally, added a safety lock to GameObject.Layer. A GameObject's layer can no longer be modified while it is managed by a SpawnArea, 
+	preventing potential leaks and state inconsistency.
+		
 	#5.2 Release Notes 
 		
 	##Stats system redesign
