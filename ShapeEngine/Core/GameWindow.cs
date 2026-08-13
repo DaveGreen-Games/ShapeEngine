@@ -761,8 +761,20 @@ public sealed class GameWindow
     {
         mousePos = Vector2.Clamp(mousePos, new Vector2(0, 0), CurScreenSize.ToVector2());
 
-        var mx = (int)MathF.Round(mousePos.X);
-        var my = (int)MathF.Round(mousePos.Y);
+        // GetMousePosition applies raylib's mouse scale (1/dpi on a HighDPI window) but SetMousePosition
+        // takes raw pixels, so the position has to be converted back. It must be the DPI scale itself, not
+        // a render/screen size ratio - those are rounded integers, and since this runs every frame, being
+        // slightly off makes the cursor creep instead of holding still.
+        var dpiScale = Raylib.IsWindowState(ConfigFlags.HighDpiWindow) ? Raylib.GetWindowScaleDPI() : Vector2.One;
+
+        var mx = (int)MathF.Round(mousePos.X * dpiScale.X);
+        var my = (int)MathF.Round(mousePos.Y * dpiScale.Y);
+
+        // Skip when the cursor is already there: re-issuing a position every frame round trips through the
+        // OS, which can report back a neighbouring pixel and leave the cursor oscillating between the two.
+        var current = MousePosition;
+        if (mx == (int)MathF.Round(current.X * dpiScale.X) && my == (int)MathF.Round(current.Y * dpiScale.Y)) return;
+
         Raylib.SetMousePosition(mx, my);
     }
     
