@@ -761,12 +761,17 @@ public sealed class GameWindow
     {
         mousePos = Vector2.Clamp(mousePos, new Vector2(0, 0), CurScreenSize.ToVector2());
 
-        // GetMousePosition applies raylib's mouse scale (1/dpi on a HighDPI window) but SetMousePosition
-        // takes raw pixels, so the position has to be converted back. It must be the DPI scale itself, not
-        // a render/screen size ratio - those are rounded integers, and since this runs every frame, being
-        // slightly off makes the cursor creep instead of holding still.
-        var dpiScale = Raylib.IsWindowState(ConfigFlags.HighDpiWindow) ? Raylib.GetWindowScaleDPI() : Vector2.One;
-
+        // - On windows GetMousePosition applies raylib's mouse scale (1/dpi on a HighDPI window) but SetMousePosition
+        //  takes raw pixels, so the position has to be converted back. It must be the DPI scale itself, not
+        //  a render/screen size ratio - those are rounded integers, and since this runs every frame, being
+        //  slightly off makes the cursor creep instead of holding still.
+        //
+        // - On macOS (GLFW) uses logical points instead of physical pixels for cursor positioning,
+        //  so DPI scaling must not be applied or the cursor coordinates will overscale.
+        //  On a Retina (2x DPI) display, a window of size 800x600 points has a framebuffer of 1600x1200 physical pixels.
+        //  However, GLFW and macOS window management expect the cursor coordinates to remain in points (0 to 800), not physical framebuffer pixels (0 to 1600).
+        var dpiScale = Raylib.IsWindowState(ConfigFlags.HighDpiWindow) && !Game.IsOSX() ? Raylib.GetWindowScaleDPI() : Vector2.One;
+        
         var mx = (int)MathF.Round(mousePos.X * dpiScale.X);
         var my = (int)MathF.Round(mousePos.Y * dpiScale.Y);
 
@@ -774,7 +779,7 @@ public sealed class GameWindow
         // OS, which can report back a neighbouring pixel and leave the cursor oscillating between the two.
         var current = MousePosition;
         if (mx == (int)MathF.Round(current.X * dpiScale.X) && my == (int)MathF.Round(current.Y * dpiScale.Y)) return;
-
+        
         Raylib.SetMousePosition(mx, my);
     }
     
