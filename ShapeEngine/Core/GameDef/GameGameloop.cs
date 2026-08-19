@@ -106,7 +106,10 @@ public partial class Game
             {
                 if (Input.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
                 {
-                    Window.MoveMouse(ChangeMousePos(dt, Window.MousePosition, Window.ScreenArea));
+                    if (ChangeMousePos(dt, Window.MousePosition, Window.ScreenArea, out var newMousePos))
+                    {
+                        Window.MoveMouse(newMousePos);
+                    }
                 }
             }
 

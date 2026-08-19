@@ -239,6 +239,9 @@ public partial class Game
     {
     }
 
+    /// <deprecated>
+    /// This function will be removed in a future version. Use <see cref="ChangeMousePos(float, Vector2, Rect, out Vector2)"/> instead.
+    /// </deprecated>
     /// <summary>
     /// Allows modification of the mouse position before it's used for input processing.
     /// </summary>
@@ -246,7 +249,22 @@ public partial class Game
     /// <param name="mousePos">The current mouse position.</param>
     /// <param name="screenArea">The screen area rectangle.</param>
     /// <returns>The modified mouse position.</returns>
+    [Obsolete("Use ChangeMousePos(float, Vector2, Rect, out Vector2) instead.", error: false)]
     protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea) => mousePos;
+
+    /// <summary>
+    /// Allows modification of the mouse position before it's used for input processing.
+    /// </summary>
+    /// <param name="dt">Delta time since the last frame.</param>
+    /// <param name="mousePos">The current mouse position.</param>
+    /// <param name="screenArea">The screen area rectangle.</param>
+    /// <param name="newMousePos">The modified mouse position.</param>
+    /// <returns>Whether the mouse position was modified and should be changed.</returns>
+    protected virtual bool ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea, out Vector2 newMousePos)
+    {
+        newMousePos = mousePos;
+        return false;
+    }
 
     /// <summary>
     /// Called when an input button is pressed.
