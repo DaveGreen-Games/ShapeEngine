@@ -535,9 +535,10 @@ public class GameloopExamples : Game
         contentPackAll.Clear();
     }
 
-    protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
+    protected override bool ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea, out Vector2 newMousePos)
     {
-        if (!MouseControlEnabled) return mousePos;
+        newMousePos = mousePos;
+        if (!MouseControlEnabled) return false;
         
         if (Input.CurrentInputDeviceType == InputDeviceType.Gamepad && Input.GamepadManager.LastUsedGamepad != null && 
             Input.GamepadManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
@@ -550,10 +551,14 @@ public class GameloopExamples : Game
 
             var movement = new Vector2(x, y);
             float l = movement.Length();
-            if (l <= 0f) return mousePos;
+            if (l <= 0f)
+            {
+                return false;
+            }
             
             var dir = movement / l;
-            return mousePos + dir * l * speed;
+            newMousePos = mousePos + dir * l * speed;
+            return true;
         }
         
         if (Input.CurrentInputDeviceType == InputDeviceType.Keyboard)
@@ -568,11 +573,12 @@ public class GameloopExamples : Game
 
             var movement = new Vector2(x, y);
             if (movement.LengthSquared() <= 0f) mouseMovementTimer = 0f;
-            return mousePos + movement.Normalize() * speed;
+            newMousePos = mousePos + movement.Normalize() * speed;
+            return true;
         }
 
         mouseMovementTimer = 0f;
-        return mousePos;
+        return false;
     }
 
     protected override void EndRun()
